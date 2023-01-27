@@ -1,0 +1,4 @@
+[submodule "development/external/ckan"]
+	path = development/external/ckan
+	url = https://github.com/ckan/ckan
+	branch = ckan-2.9.7
