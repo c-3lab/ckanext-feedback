@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# In order to not upload CKAN source code, ignore everything in development/external
+development/external
