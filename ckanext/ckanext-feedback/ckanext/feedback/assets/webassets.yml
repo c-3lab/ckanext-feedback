@@ -1,0 +1,14 @@
+# feedback-js:
+#   filter: rjsmin
+#   output: ckanext-feedback/%(version)s-feedback.js
+#   contents:
+#     - js/feedback.js
+#   extra:
+#     preload:
+#       - base/main
+
+# feedback-css:
+#   filter: cssrewrite
+#   output: ckanext-feedback/%(version)s-feedback.css
+#   contents:
+#     - css/feedback.css
