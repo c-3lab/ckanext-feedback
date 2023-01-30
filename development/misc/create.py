@@ -2,8 +2,6 @@
 
 import click
 
-#class UtilizationSummary(domain_object.DomainObject):
-
 @click.group(name=u'create', short_help=u"Create database tables")
 def create():
     """Create the required database tables.
@@ -14,4 +12,4 @@ def create():
 def create_tables():
     """Create the required database tables.
     """
-    click.secho(u'「createのcreate_tables」コマンドが実行されました。', fg=u'green', bold=True)
+    click.secho(u'The create_tables command was executed successfully.', fg=u'green', bold=True)
