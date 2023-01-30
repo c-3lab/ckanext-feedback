@@ -18,16 +18,16 @@ setup(
     # http://packaging.python.org/en/latest/tutorial.html#version
     version='0.0.1',
 
-    description='''''',
+    description='''the extension to feedback on CKAN datasets such as review,number of downloads,use-cases,resolved-problems and way of use''',
     long_description=long_description,
     long_description_content_type="text/markdown",
 
     # The project's main homepage.
-    url='https://github.com//ckanext-feedback',
+    url='https://github.com/C3Lab/ckanext-feedback',
 
     # Author details
-    author='''Nicholas Williams''',
-    author_email='''n-williams@abelsoft.co.jp''',
+    author='''C3Lab''',
+    author_email='''info.c3lab@gmail.com''',
 
     # Choose your license
     license='AGPL',
@@ -50,7 +50,7 @@ setup(
 
 
     # What does your project relate to?
-    keywords='''CKAN''',
+    keywords='''CKAN ckan, extension, opendata, open-data, review''',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
