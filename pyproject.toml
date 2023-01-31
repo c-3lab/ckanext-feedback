@@ -27,6 +27,7 @@ isort = "^5.11.4"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
 mypy = "^0.991"
+pytest-ckan = "0.0.12"
 
 [build-system]
 requires = ["poetry-core"]
