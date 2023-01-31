@@ -34,6 +34,7 @@ jobs:
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
       run: |
         curl -sSL https://install.python-poetry.org | python3 -
+        export PATH="/github/home/.local/bin:$PATH
         poetry install --with dev
     - name: Setup extension
       # Extra initialization steps
