@@ -43,6 +43,7 @@ jobs:
         ln -fs /opt/Python-3.8.16/Python /usr/bin/python3.8
         cd /opt
         rm -r Python-3.8.16.tgz
+        cd
         curl -sSL https://install.python-poetry.org | python3 -
         /github/home/.local/bin/poetry install --with dev
     - name: Setup extension
