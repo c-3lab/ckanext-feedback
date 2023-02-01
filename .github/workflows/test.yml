@@ -33,6 +33,7 @@ jobs:
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
       run: |
+        sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
         DIR=`pwd`
         cd /opt
         wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz
@@ -50,8 +51,6 @@ jobs:
     - name: Setup extension
       # Extra initialization steps
       run: |
-        sudo sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
-
         ckan -c test.ini db init
     - name: Run tests
       run: pytest --ckan-ini=test.ini --cov=ckanext.feedback --disable-warnings ckanext/feedback
