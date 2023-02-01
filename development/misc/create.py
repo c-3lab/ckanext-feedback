@@ -144,12 +144,13 @@ def get_connection():
     "-r",
     "--resource",
     is_flag=True,
-    help=("create tables which are " "resource_feedback, resource_feedback_reply."),
+    help=("create tables which are resource_feedback, resource_feedback_reply."),
 )
 @click.option(
-    "-c", "--count", is_flag=True, help=("create table which is " "resource_summary")
+    "-c", "--count", is_flag=True, help=("create table which is resource_summary")
 )
-@click.option("-A", "--alltables", is_flag=True)
+@click.option("-A", "--alltables", is_flag=True, help=("create all tables")
+)
 def table(alltables, utilization, resource, count):
 
     with get_connection() as conn:
