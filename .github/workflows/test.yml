@@ -33,8 +33,9 @@ jobs:
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
       run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        /github/home/.local/bin/poetry install --with dev
+        pip install -r requirements.txt
+        pip install -r dev-requirements.txt
+        pip install -e .
     - name: Setup extension
       # Extra initialization steps
       run: |
