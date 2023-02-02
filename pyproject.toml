@@ -11,6 +11,11 @@ keywords = ["ckan", "ckan extension", "opendata", "open-data", "review"]
 classifiers = [
 "Programming Language :: Python :: 3.8",
 ]
+include = [
+    "README.md",
+    "LICENSE",
+    "ckanext/feedback/*.html *.json *.js *.less *.css *.mo *.yml"
+    ]
 
 [tool.poetry.dependencies]
 python = "3.8.16"
@@ -22,6 +27,7 @@ isort = "^5.11.4"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
 mypy = "^0.991"
+pytest-ckan = "0.0.12"
 
 [build-system]
 requires = ["poetry-core"]
