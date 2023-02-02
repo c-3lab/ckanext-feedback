@@ -13,20 +13,11 @@ classifiers = [
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3.8",
 ]
-packages = [
-    { include = "ckanext" },
-    { include = "README.md" },
-    { include = "LICENSE" }
-]
-
-[tool.poetry.plugins."ckan.plugins"]
-feedback = "ckanext.feedback.plugin:FeedbackPlugin"
-
-[tool.poetry.plugins."babel.extractors"]
-ckan = "ckan.lib.extract:extract_ckan"
-
-[tool.setuptools.packages.find]
-exclude = ["development", "**/test*"]
+include = [
+    "README.md",
+    "LICENSE",
+    "ckanext/feedback/*.html *.json *.js *.less *.css *.mo *.yml"
+    ]
 
 [tool.poetry.dependencies]
 python = "3.8.16"
@@ -39,6 +30,7 @@ isort = "^5.11.4"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
 mypy = "^0.991"
+pytest-ckan = "0.0.12"
 
 [build-system]
 requires = ["poetry-core"]
