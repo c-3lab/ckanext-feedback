@@ -28,7 +28,6 @@ RUN apt-get -q -y update \
 # Define CKAN environment variables
 ENV CKAN_HOME=/usr/lib/ckan
 ENV CKAN_VENV=$CKAN_HOME/venv
-
 ENV CKAN_CONFIG=/etc/ckan
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
 
