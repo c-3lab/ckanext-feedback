@@ -6,7 +6,7 @@ services:
   ckan:
     build:
       context: ../../../../
-      dockerfile: ../development/misc/Dockerfile
+      dockerfile: Dockerfile
     volumes:
       - ckan_config:/etc/ckan
       - ckan_home:/usr/lib/ckan
