@@ -19,6 +19,12 @@ include = [
 "ckanext/feedback/*.html *.json *.js *.less *.css *.mo *.yml"
 ]
 
+[project.entry-points."ckan.plugins"]
+feedback = "ckanext.feedback.plugin:FeedbackPlugin"
+
+[project.entry-points."babel.extractors"]
+ckan = "ckan.lib.extract:extract_ckan"
+
 [tool.setuptools.packages.find]
 where = ["ckanext"]
 exclude = ["tests"]
