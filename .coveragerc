@@ -1,5 +1,4 @@
-[report]
+[run]
 omit =
-    */site-packages/*
     */python?.?/*
-    ckan/*
+    development/*
