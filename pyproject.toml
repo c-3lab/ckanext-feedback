@@ -12,10 +12,10 @@ classifiers = [
 "Programming Language :: Python :: 3.8",
 ]
 include = [
-    "README.md",
-    "LICENSE",
-    "ckanext/feedback/*.html *.json *.js *.less *.css *.mo *.yml"
-    ]
+"README.md",
+"LICENSE",
+"ckanext/feedback/*.html *.json *.js *.less *.css *.mo *.yml"
+]
 
 [tool.poetry.dependencies]
 python = "3.8.16"
