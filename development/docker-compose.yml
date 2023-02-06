@@ -5,6 +5,7 @@ version: "3"
 services:
   ckan:
     build:
+      # The overridden file's directory development/external/ckan/contrib/docker is used as the base context
       context: ../../../../
       dockerfile: Dockerfile
     volumes:
