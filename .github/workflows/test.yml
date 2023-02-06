@@ -59,6 +59,6 @@ jobs:
 
     - name: Run tests
       run: | 
-        # pytest --ckan-ini=test.ini --cov=ckanext.feedback --disable-warnings ckanext/feedback
+        # /github/home/.local/bin/poetry run pytest --ckan-ini=test.ini --cov=ckanext.feedback --disable-warnings ckanext/feedback
 
     # necessary to modify "Setup extension" and "Run tests" at the CI setting phaze
