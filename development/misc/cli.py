@@ -30,7 +30,7 @@ from ckan.cli import (
     less,
     generate,
     user,
-    create
+    feedback
 )
 
 from ckan.cli import seed
@@ -222,4 +222,4 @@ ckan.add_command(minify.minify)
 ckan.add_command(less.less)
 ckan.add_command(generate.generate)
 ckan.add_command(user.user)
-ckan.add_command(create.create)
+ckan.add_command(feedback.feedback)
