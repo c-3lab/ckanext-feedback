@@ -12,6 +12,6 @@ services:
       - ckan_config:/etc/ckan
       - ckan_home:/usr/lib/ckan
       - ckan_storage:/var/lib/ckan
-      # Return to the root directory from development/external/ckan/contrib/docker
+      # Mount the root directory from within development/external/ckan/contrib/docker
       - ../../../../../:/opt/ckanext-feedback
       - /opt/ckanext-feedback/development/
