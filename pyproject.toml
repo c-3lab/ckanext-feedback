@@ -26,7 +26,6 @@ feedback = "ckanext.feedback.plugin:FeedbackPlugin"
 ckan = "ckan.lib.extract:extract_ckan"
 
 [tool.setuptools.packages.find]
-where = ["ckanext"]
 exclude = ["development", "tests"]
 
 [tool.poetry.dependencies]
