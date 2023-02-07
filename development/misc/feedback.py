@@ -160,7 +160,7 @@ def table(modules, host, port, name, user, password):
     with get_connection(user, password, host, port, name) as conn:
         with conn.cursor() as cur:
 
-            if module is None:
+            if modules is None:
                 try:
                     cur.execute(UTILIZATION_CLEAN)
                     cur.execute(UTILIZATION)
