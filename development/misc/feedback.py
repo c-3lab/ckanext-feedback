@@ -160,7 +160,22 @@ def table(modules, host, port, name, user, password):
     with get_connection(user, password, host, port, name) as conn:
         with conn.cursor() as cur:
 
-            if bool(modules):
+            if module is None:
+                try:
+                    cur.execute(UTILIZATION_CLEAN)
+                    cur.execute(UTILIZATION)
+                    cur.execute(REVIEW_CLEAN)
+                    cur.execute(REVIEW)
+                    cur.execute(DOWNLOAD_CLEAN)
+                    cur.execute(DOWNLOAD)
+                    conn.commit()
+                except Exception as e:
+                    tk.error_shout(e)
+                else:
+                    click.secho(
+                        "Initialize all modules: SUCCESS", fg="green", bold=True
+                    )
+            else:
                 if "utilization" in modules:
                     try:
                         cur.execute(UTILIZATION_CLEAN)
@@ -194,18 +209,3 @@ def table(modules, host, port, name, user, password):
                         click.secho(
                             "Initialize download: SUCCESS", fg="green", bold=True
                         )
-            else:
-                try:
-                    cur.execute(UTILIZATION_CLEAN)
-                    cur.execute(UTILIZATION)
-                    cur.execute(REVIEW_CLEAN)
-                    cur.execute(REVIEW)
-                    cur.execute(DOWNLOAD_CLEAN)
-                    cur.execute(DOWNLOAD)
-                    conn.commit()
-                except Exception as e:
-                    tk.error_shout(e)
-                else:
-                    click.secho(
-                        "Initialize all modules: SUCCESS", fg="green", bold=True
-                    )
