@@ -64,18 +64,6 @@ UTILIZATION = """
         PRIMARY KEY (id),
         FOREIGN KEY (utilization_feedback_id) REFERENCES utilization_feedback (id)
     );
-
-    CREATE TABLE utilization_summary (
-        id TEXT NOT NULL,
-        resource_id TEXT NOT NULL,
-        utilization INTEGER,
-        download INTEGER,
-        issue_resolution INTEGER,
-        created TIMESTAMP,
-        updated TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (resource_id) REFERENCES resource (id)
-    );
     """
 
 REVIEW = """
@@ -213,6 +201,8 @@ def table(modules, host, port, name, user, password):
                     cur.execute(UTILIZATION)
                     cur.execute(REVIEW_CLEAN)
                     cur.execute(REVIEW)
+                    cur.execute(DOWNLOAD_CLEAN)
+                    cur.execute(DOWNLOAD)
                     conn.commit()
                 except Exception as e:
                     tk.error_shout(e)
