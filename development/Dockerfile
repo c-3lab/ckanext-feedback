@@ -1,6 +1,6 @@
 FROM python:3.8.16-bullseye
 
-MAINTAINER Abelsoft
+MAINTAINER C3Lab <info.c3lab@gmail.com>
 
 # Set timezone
 ENV TZ=Asia/Tokyo
