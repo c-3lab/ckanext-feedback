@@ -27,7 +27,7 @@ ckan = "ckan.lib.extract:extract_ckan"
 
 [tool.setuptools.packages.find]
 where = ["ckanext"]
-exclude = ["tests"]
+exclude = ["development", "tests"]
 
 [tool.poetry.dependencies]
 python = "3.8.16"
