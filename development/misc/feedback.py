@@ -161,40 +161,39 @@ def table(modules, host, port, name, user, password):
         with conn.cursor() as cur:
 
             if bool(modules):
-                for module in modules:
-                    if module == "utilization":
-                        try:
-                            cur.execute(UTILIZATION_CLEAN)
-                            cur.execute(UTILIZATION)
-                            conn.commit()
-                        except Exception as e:
-                            tk.error_shout(e)
-                        else:
-                            click.secho(
-                                "Initialize utilization: SUCCESS", fg="green", bold=True
-                            )
-                    if module == "resource":
-                        try:
-                            cur.execute(REVIEW_CLEAN)
-                            cur.execute(REVIEW)
-                            conn.commit()
-                        except Exception as e:
-                            tk.error_shout(e)
-                        else:
-                            click.secho(
-                                "Initialize resource: SUCCESS", fg="green", bold=True
-                            )
-                    if module == "download":
-                        try:
-                            cur.execute(DOWNLOAD_CLEAN)
-                            cur.execute(DOWNLOAD)
-                            conn.commit()
-                        except Exception as e:
-                            tk.error_shout(e)
-                        else:
-                            click.secho(
-                                "Initialize download: SUCCESS", fg="green", bold=True
-                            )
+                if "utilization" in modules:
+                    try:
+                        cur.execute(UTILIZATION_CLEAN)
+                        cur.execute(UTILIZATION)
+                        conn.commit()
+                    except Exception as e:
+                        tk.error_shout(e)
+                    else:
+                        click.secho(
+                            "Initialize utilization: SUCCESS", fg="green", bold=True
+                        )
+                if "resource" in modules:
+                    try:
+                        cur.execute(REVIEW_CLEAN)
+                        cur.execute(REVIEW)
+                        conn.commit()
+                    except Exception as e:
+                        tk.error_shout(e)
+                    else:
+                        click.secho(
+                            "Initialize resource: SUCCESS", fg="green", bold=True
+                        )
+                if "download" in modules:
+                    try:
+                        cur.execute(DOWNLOAD_CLEAN)
+                        cur.execute(DOWNLOAD)
+                        conn.commit()
+                    except Exception as e:
+                        tk.error_shout(e)
+                    else:
+                        click.secho(
+                            "Initialize download: SUCCESS", fg="green", bold=True
+                        )
             else:
                 try:
                     cur.execute(UTILIZATION_CLEAN)
