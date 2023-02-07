@@ -1,11 +1,32 @@
+import os
 import psycopg2
 import click
 
+import ckan.plugins.toolkit as tk
+
 DB_HOST = "db"
-DB_PORT = "5432"
-DB_NAME = "ckan"
-DB_USER = "ckan"
-DB_PASS = "ckan"
+DB_PORT = os.environ.get('POSTGRES_PORT')
+DB_NAME = os.environ.get('POSTGRES_DB')
+DB_USER = os.environ.get('POSTGRES_USER')
+DB_PASS = os.environ.get('POSTGRES_PASSWORD')
+
+UTILIZATION_CLEAN = """
+    DROP TABLE IF EXISTS utilization CASCADE;
+    DROP TABLE IF EXISTS utilization_feedback CASCADE;
+    DROP TABLE IF EXISTS utilization_feedback_reply CASCADE;
+    DROP TABLE IF EXISTS utilization_summary CASCADE;
+    DROP TYPE IF EXISTS genre1;
+    """
+
+REVIEW_CLEAN = """
+    DROP TABLE IF EXISTS resource_feedback CASCADE;
+    DROP TABLE IF EXISTS resource_feedback_reply CASCADE;
+    DROP TYPE IF EXISTS genre2;
+    """
+
+DOWNLOAD_CLEAN = """
+    DROP TABLE IF EXISTS utilization_summary CASCADE;
+    """
 
 UTILIZATION = """
     CREATE TABLE utilization (
@@ -20,48 +41,20 @@ UTILIZATION = """
         PRIMARY KEY (id),
         FOREIGN KEY (resource_id) REFERENCES resource (id)
     );
-    """
 
-UTILIZATION_SUMMARY = """
-    CREATE TABLE utilization_summary (
-        id TEXT NOT NULL,
-        utilization_id TEXT NOT NULL,
-        issue_resolution INTEGER,
-        created TIMESTAMP,
-        updated TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (utilization_id) REFERENCES utilization (id)
-    );
-    """
-
-UTILIZATION_FEEDBACK = """
     CREATE TYPE genre1 AS ENUM ('1', '2');
     CREATE TABLE utilization_feedback (
         id TEXT NOT NULL,
         utilization_id TEXT NOT NULL,
         type genre1 NOT NULL,
-        desctiption TEXT,
+        description TEXT,
         created TIMESTAMP,
         approval BOOLEAN DEFAULT false,
         approved TIMESTAMP,
         PRIMARY KEY (id),
         FOREIGN KEY (utilization_id) REFERENCES utilization (id)
     );
-    """
 
-ISSUE_RESOLUTION = """
-    CREATE TABLE issue_resolution (
-        id TEXT NOT NULL,
-        utilization_id TEXT NOT NULL,
-        description TEXT,
-        created TIMESTAMP,
-        creator_user_id TEXT,
-        PRIMARY KEY (id),
-        FOREIGN KEY (utilization_id) REFERENCES utilization (id)
-    );
-    """
-
-UTILIZATION_FEEDBACK_REPLY = """
     CREATE TABLE utilization_feedback_reply (
         id TEXT NOT NULL,
         utilization_feedback_id TEXT NOT NULL,
@@ -71,9 +64,21 @@ UTILIZATION_FEEDBACK_REPLY = """
         PRIMARY KEY (id),
         FOREIGN KEY (utilization_feedback_id) REFERENCES utilization_feedback (id)
     );
+
+    CREATE TABLE utilization_summary (
+        id TEXT NOT NULL,
+        resource_id TEXT NOT NULL,
+        utilization INTEGER,
+        download INTEGER,
+        issue_resolution INTEGER,
+        created TIMESTAMP,
+        updated TIMESTAMP,
+        PRIMARY KEY (id),
+        FOREIGN KEY (resource_id) REFERENCES resource (id)
+    );
     """
 
-RESOURCE_FEEDBACK = """
+REVIEW = """
     CREATE TYPE genre2 AS ENUM ('1', '2');
     CREATE TABLE resource_feedback (
         id TEXT NOT NULL,
@@ -87,26 +92,26 @@ RESOURCE_FEEDBACK = """
         PRIMARY KEY (id),
         FOREIGN KEY (resource_id) REFERENCES resource (id)
     );
-    """
 
-RESOURCE_FEEDBACK_REPLY = """
     CREATE TABLE resource_feedback_reply (
         id TEXT NOT NULL,
         resource_feedback_id TEXT NOT NULL,
-        desctiption TEXT,
+        description TEXT,
         created TIMESTAMP,
-        created_user_id TEXT,
+        creator_user_id TEXT,
         PRIMARY KEY (id),
         FOREIGN KEY (resource_feedback_id) REFERENCES resource_feedback (id)
+        
     );
     """
 
-RESOURCE_SUMMARY = """
-    CREATE TABLE resource_summary (
+DOWNLOAD = """
+    CREATE TABLE utilization_summary (
         id TEXT NOT NULL,
         resource_id TEXT NOT NULL,
         utilization INTEGER,
         download INTEGER,
+        issue_resolution INTEGER,
         created TIMESTAMP,
         updated TIMESTAMP,
         PRIMARY KEY (id),
@@ -114,65 +119,70 @@ RESOURCE_SUMMARY = """
     );
     """
 
-
 @click.group(short_help="create tables to use extension")
-def create():
+def feedback():
     pass
 
 
-def get_connection():
-    return psycopg2.connect(
-        "postgresql://{user}:{password}@{host}:{port}/{dbname}".format(
-            user=DB_USER, password=DB_PASS, host=DB_HOST, port=DB_PORT, dbname=DB_NAME
+def get_connection(user, password, host, port, name):
+    try:
+        connector = psycopg2.connect(
+            "postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}".format(
+                db_user=user, db_password=password, db_host=host, db_port=port, db_name=name
+            )
         )
-    )
+    except Exception as e:
+        tk.error_shout(e)
+    else:
+        return connector
 
 
-@create.command(name="table", short_help="create tables in ckan db.")
-@click.option(
-    "-u",
-    "--utilization",
-    is_flag=True,
-    help=(
-        "create tables which are "
-        "utilization, utilization_summary, "
-        "utilization_feedback, issue_resolution, "
-        "utilization_feedback_reply."
-    ),
-)
-@click.option(
-    "-r",
-    "--resource",
-    is_flag=True,
-    help=("create tables which are resource_feedback, resource_feedback_reply."),
-)
-@click.option(
-    "-c", "--count", is_flag=True, help=("create table which is resource_summary")
-)
-@click.option("-A", "--alltables", is_flag=True, help=("create all tables")
-)
-def table(alltables, utilization, resource, count):
-
-    with get_connection() as conn:
+@feedback.command(name="init", short_help="create tables in ckan db.")
+@click.option("-m", "--modules", multiple=True, type=click.Choice(["utilization", "review", "download"]))
+@click.option("-h", "--host", default="db")
+@click.option("-p", "--port", default=DB_PORT)
+@click.option("-n", "--name", default=DB_PORT)
+@click.option("-u", "--user", default=DB_USER)
+@click.option("-pw", "--password", default=DB_PASS)
+def table(modules, host, port, name, user, password):
+    with get_connection(user, password, host, port, name) as conn:
         with conn.cursor() as cur:
 
-            if alltables:
-                utilization = True
-                resource = True
-                count = True
-
-            if utilization:
-                cur.execute(UTILIZATION)
-                cur.execute(UTILIZATION_SUMMARY)
-                cur.execute(UTILIZATION_FEEDBACK)
-                cur.execute(ISSUE_RESOLUTION)
-                cur.execute(UTILIZATION_FEEDBACK_REPLY)
-
-            if resource:
-                cur.execute(RESOURCE_FEEDBACK)
-                cur.execute(RESOURCE_FEEDBACK_REPLY)
-
-            if count:
-                cur.execute(RESOURCE_SUMMARY)
+            if (bool(modules)):
+                for module in modules:
+                    if module == "utilization":
+                        try:
+                            cur.execute(UTILIZATION_CLEAN)
+                            cur.execute(UTILIZATION)
+                        except Exception as e:
+                                tk.error_shout(e)
+                        else:
+                            click.secho('Initialize utilization: SUCCESS', fg=u'green', bold=True)
+                    if module == "review":
+                        try:
+                            cur.execute(REVIEW_CLEAN)
+                            cur.execute(REVIEW)
+                        except Exception as e:
+                            tk.error_shout(e)
+                        else:
+                            click.secho('Initialize review: SUCCESS', fg=u'green', bold=True)
+                    if module == "download":
+                        try:
+                            cur.execute(DOWNLOAD_CLEAN)
+                            cur.execute(DOWNLOAD)
+                        except Exception as e:
+                            tk.error_shout(e)
+                        else:
+                            click.secho('Initialize download: SUCCESS', fg=u'green', bold=True)
+            else:
+                try:
+                    cur.execute(UTILIZATION_CLEAN)
+                    cur.execute(UTILIZATION)
+                    cur.execute(REVIEW_CLEAN)
+                    cur.execute(REVIEW)
+                except Exception as e:
+                    tk.error_shout(e)
+                else:
+                    click.secho('Initialization: SUCCESS', fg=u'green', bold=True)
 
             conn.commit()
