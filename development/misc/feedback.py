@@ -163,7 +163,7 @@ def init(modules, host, port, name, user, password):
             else:
                 click.secho("Clean all modules: SUCCESS", fg="green", bold=True)
 
-            if modules is None:
+            if not modules:
                 try:
                     cur.execute(UTILIZATION)
                     cur.execute(RESOURCE)
