@@ -10,22 +10,15 @@ DB_NAME = os.getenv("POSTGRES_DB", "ckan")
 DB_USER = os.getenv("POSTGRES_USER", "ckan")
 DB_PASS = os.getenv("POSTGRES_PASSWORD", "ckan")
 
-UTILIZATION_CLEAN = """
+CLEAN = """
     DROP TABLE IF EXISTS utilization CASCADE;
     DROP TABLE IF EXISTS utilization_feedback CASCADE;
     DROP TABLE IF EXISTS utilization_feedback_reply CASCADE;
     DROP TABLE IF EXISTS utilization_summary CASCADE;
-    DROP TYPE IF EXISTS genre1;
-    """
-
-REVIEW_CLEAN = """
     DROP TABLE IF EXISTS resource_feedback CASCADE;
     DROP TABLE IF EXISTS resource_feedback_reply CASCADE;
+    DROP TYPE IF EXISTS genre1;
     DROP TYPE IF EXISTS genre2;
-    """
-
-DOWNLOAD_CLEAN = """
-    DROP TABLE IF EXISTS utilization_summary CASCADE;
     """
 
 UTILIZATION = """
@@ -151,7 +144,7 @@ def get_connection(user, password, host, port, name):
     "-u", "--user", default=DB_USER, help="specify the user name of postgresql"
 )
 @click.option(
-    "-pw",
+    "-P",
     "--password",
     default=DB_PASS,
     help="specify the password to connect postgresql",
@@ -160,15 +153,20 @@ def table(modules, host, port, name, user, password):
     with get_connection(user, password, host, port, name) as conn:
         with conn.cursor() as cur:
 
+            try:
+                cur.execute(CLEAN)
+            except Exception as e:
+                tk.error_shout(e)
+            else:
+                click.secho(
+                    "Clean all modules: SUCCESS", fg="green", bold=True
+                )
+
             if modules is None:
                 try:
-                    cur.execute(UTILIZATION_CLEAN)
                     cur.execute(UTILIZATION)
-                    cur.execute(REVIEW_CLEAN)
                     cur.execute(REVIEW)
-                    cur.execute(DOWNLOAD_CLEAN)
                     cur.execute(DOWNLOAD)
-                    conn.commit()
                 except Exception as e:
                     tk.error_shout(e)
                 else:
@@ -178,9 +176,7 @@ def table(modules, host, port, name, user, password):
             else:
                 if "utilization" in modules:
                     try:
-                        cur.execute(UTILIZATION_CLEAN)
                         cur.execute(UTILIZATION)
-                        conn.commit()
                     except Exception as e:
                         tk.error_shout(e)
                     else:
@@ -189,9 +185,7 @@ def table(modules, host, port, name, user, password):
                         )
                 if "resource" in modules:
                     try:
-                        cur.execute(REVIEW_CLEAN)
                         cur.execute(REVIEW)
-                        conn.commit()
                     except Exception as e:
                         tk.error_shout(e)
                     else:
@@ -200,12 +194,12 @@ def table(modules, host, port, name, user, password):
                         )
                 if "download" in modules:
                     try:
-                        cur.execute(DOWNLOAD_CLEAN)
                         cur.execute(DOWNLOAD)
-                        conn.commit()
                     except Exception as e:
                         tk.error_shout(e)
                     else:
                         click.secho(
                             "Initialize download: SUCCESS", fg="green", bold=True
                         )
+            
+            conn.commit()
