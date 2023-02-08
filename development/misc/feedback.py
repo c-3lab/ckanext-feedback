@@ -59,7 +59,7 @@ UTILIZATION = """
     );
     """
 
-REVIEW = """
+RESOURCE = """
     CREATE TYPE genre2 AS ENUM ('1', '2');
     CREATE TABLE resource_feedback (
         id TEXT NOT NULL,
@@ -149,7 +149,7 @@ def get_connection(user, password, host, port, name):
     default=DB_PASS,
     help="specify the password to connect postgresql",
 )
-def table(modules, host, port, name, user, password):
+def init(modules, host, port, name, user, password):
     with get_connection(user, password, host, port, name) as conn:
         with conn.cursor() as cur:
 
@@ -165,7 +165,7 @@ def table(modules, host, port, name, user, password):
             if modules is None:
                 try:
                     cur.execute(UTILIZATION)
-                    cur.execute(REVIEW)
+                    cur.execute(RESOURCE)
                     cur.execute(DOWNLOAD)
                 except Exception as e:
                     tk.error_shout(e)
@@ -185,7 +185,7 @@ def table(modules, host, port, name, user, password):
                         )
                 if "resource" in modules:
                     try:
-                        cur.execute(REVIEW)
+                        cur.execute(RESOURCE)
                     except Exception as e:
                         tk.error_shout(e)
                     else:
