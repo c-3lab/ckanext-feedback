@@ -19,10 +19,10 @@ packages = [
     { include = "LICENSE" }
 ]
 
-[project.entry-points."ckan.plugins"]
+[tool.poetry.plugins."ckan.plugins"]
 feedback = "ckanext.feedback.plugin:FeedbackPlugin"
 
-[project.entry-points."babel.extractors"]
+[tool.poetry.plugins."babel.extractors"]
 ckan = "ckan.lib.extract:extract_ckan"
 
 [tool.setuptools.packages.find]
