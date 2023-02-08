@@ -11,7 +11,7 @@ ckan feedback init
 
 #### 成功時
 
-* 以下のログが出力される
+* 以下のログが出力される(緑色太字)
 ```
 Clean all modules: SUCCESS
 Initialize all modules: SUCCESS
@@ -45,17 +45,17 @@ ckan --config=/etc/ckan/production.ini feedback init -m utilization
 
 #### 成功時
 
-* ```utilization```指定時は以下のログが出力される
+* ```utilization```指定時は以下のログが出力される(緑色太字)
 ```
 Clean all modules: SUCCESS
 Initialize utilization: SUCCESS
 ```
-* ```resource```指定時は以下のログが出力される
+* ```resource```指定時は以下のログが出力される(緑色太字)
 ```
 Clean all modules: SUCCESS
 Initialize resource: SUCCESS
 ```
-* ```download```指定時は以下のログが出力される
+* ```download```指定時は以下のログが出力される(緑色太字)
 ```
 Clean all modules: SUCCESS
 Initialize download: SUCCESS
