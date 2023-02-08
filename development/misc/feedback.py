@@ -83,7 +83,7 @@ RESOURCE = """
         creator_user_id TEXT,
         PRIMARY KEY (id),
         FOREIGN KEY (resource_feedback_id) REFERENCES resource_feedback (id)
-        
+
     );
     """
 
@@ -161,9 +161,7 @@ def init(modules, host, port, name, user, password):
                 tk.error_shout(e)
                 sys.exit()
             else:
-                click.secho(
-                    "Clean all modules: SUCCESS", fg="green", bold=True
-                )
+                click.secho("Clean all modules: SUCCESS", fg="green", bold=True)
 
             if modules is None:
                 try:
@@ -208,5 +206,5 @@ def init(modules, host, port, name, user, password):
                         click.secho(
                             "Initialize download: SUCCESS", fg="green", bold=True
                         )
-            
+
             conn.commit()
