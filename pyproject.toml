@@ -14,12 +14,9 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
 ]
 packages = [
-    { include = "ckanext" }
-]
-include = [
-    "README.md",
-    "LICENSE",
-    "ckanext/feedback/*.html *.json *.js *.less *.css *.mo *.yml"
+    { include = "ckanext" },
+    { include = "README.md" },
+    { include = "LICENSE" }
 ]
 
 [project.entry-points."ckan.plugins"]
