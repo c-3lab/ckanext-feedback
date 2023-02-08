@@ -1,4 +1,5 @@
 import os
+import sys
 import psycopg2
 import click
 
@@ -119,6 +120,7 @@ def get_connection(user, password, host, port, name):
         )
     except Exception as e:
         tk.error_shout(e)
+        sys.exit()
     else:
         return connector
 
@@ -157,6 +159,7 @@ def init(modules, host, port, name, user, password):
                 cur.execute(CLEAN)
             except Exception as e:
                 tk.error_shout(e)
+                sys.exit()
             else:
                 click.secho(
                     "Clean all modules: SUCCESS", fg="green", bold=True
@@ -169,6 +172,7 @@ def init(modules, host, port, name, user, password):
                     cur.execute(DOWNLOAD)
                 except Exception as e:
                     tk.error_shout(e)
+                    sys.exit()
                 else:
                     click.secho(
                         "Initialize all modules: SUCCESS", fg="green", bold=True
@@ -179,6 +183,7 @@ def init(modules, host, port, name, user, password):
                         cur.execute(UTILIZATION)
                     except Exception as e:
                         tk.error_shout(e)
+                        sys.exit()
                     else:
                         click.secho(
                             "Initialize utilization: SUCCESS", fg="green", bold=True
@@ -188,6 +193,7 @@ def init(modules, host, port, name, user, password):
                         cur.execute(RESOURCE)
                     except Exception as e:
                         tk.error_shout(e)
+                        sys.exit()
                     else:
                         click.secho(
                             "Initialize resource: SUCCESS", fg="green", bold=True
@@ -197,6 +203,7 @@ def init(modules, host, port, name, user, password):
                         cur.execute(DOWNLOAD)
                     except Exception as e:
                         tk.error_shout(e)
+                        sys.exit()
                     else:
                         click.secho(
                             "Initialize download: SUCCESS", fg="green", bold=True
