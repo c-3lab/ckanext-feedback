@@ -25,15 +25,13 @@ def get_utilizations(keyword):
         .order_by(Utilization.created.desc())
     )
     if keyword:
-        rows = rows.filter(
-            or_(
-                Utilization.title.like(f'%{keyword}%'),
-                Resource.name.like(f'%{keyword}%'),
-                Package.name.like(f'%{keyword}%'),
-            )
+        rows = (
+            session.query(Utilization)
+            .filter(Utilization.title.like(f"%{keyword}%"))
+            .all()
         )
-    # Set "rows" as the final query results
-    rows = rows.all()
+    else:
+        rows = session.query(Utilization).all()
 
     return rows
 
