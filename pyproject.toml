@@ -19,6 +19,12 @@ packages = [
     { include = "LICENSE" }
 ]
 
+[tool.poetry.plugins."ckan.plugins"]
+feedback = "ckanext.feedback.plugin:FeedbackPlugin"
+
+[tool.poetry.plugins."babel.extractors"]
+ckan = "ckan.lib.extract:extract_ckan"
+
 [tool.setuptools.packages.find]
 where = ["ckanext"]
 exclude = ["tests"]

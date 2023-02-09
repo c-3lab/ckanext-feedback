@@ -90,9 +90,9 @@
                     {% block select_status %}
                       <form class="section site-search top-centered-content">
                       <span class="status-label"><p>ステータス</p></span>
-                      <input type="checkbox" id="waiting" name="waiting" onclick="filter()">
+                      <input type="checkbox" id="waiting_for_approval" name="waiting_for_approval" value="waiting">
                       <label for="waiting_for_approval" class="normal-font-weight middle-vertical-aligned">承認待ち</label>
-                      <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="filter()">
+                      <input class="spaced-left" type="checkbox" id="approved" name="approved" value="approved">
                       <label for="approved" class="normal-font-weight middle-vertical-aligned">承認済</label>
                     </form>
                     {% endblock %}
@@ -114,7 +114,7 @@
                     <th class="big-column">タイトル</th>
                     <th class="big-column">データセット</th>
                     <th class="medium-column">データリソース</th>
-                    <th class="small-column">登録日</th>
+                    <th class="small-column">更新日</th>
                     {% if c.userobj.sysadmin %}
                       <th class="small-column">ステータス</th>
                     {% endif %}
@@ -159,11 +159,11 @@
                 {% endblock %}
               #}
               {% block primary_content %}
-                    
+                  
               {% endblock %}
-            </div>
-          {% endblock %}
-        </div>
+            {% endblock %}
+          </div>
+        {% endblock %}
       </div>
     {% endblock -%}
 

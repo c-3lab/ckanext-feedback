@@ -3,6 +3,11 @@ import ckan.model.meta as meta
 import ckan.model.domain_object as domain_object
 import datetime
 
+import ckan.model.domain_object as domain_object
+import ckan.model.meta as meta
+import ckan.model.domain_object as domain_object
+import datetime
+
 __all__ = ["utilization", "utilization_comment", "utilization_summary"]
 
 # Declare the utilization table
