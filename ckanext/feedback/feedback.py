@@ -98,7 +98,7 @@ DOWNLOAD = """
 
 @click.group()
 def feedback():
-    pass
+    """CLI tool for ckanext-feedback plugin."""
 
 
 def get_connection(user, password, host, port, name):
