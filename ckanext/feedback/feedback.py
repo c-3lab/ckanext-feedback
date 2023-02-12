@@ -101,7 +101,7 @@ def feedback():
     """CLI tool for ckanext-feedback plugin."""
 
 
-def get_connection(user, password, host, port, name):
+def get_connection(host, port, dbname, user, password):
     try:
         connector = psycopg2.connect(
             "postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}".format(
@@ -146,8 +146,8 @@ def get_connection(user, password, host, port, name):
     default="ckan",
     help="specify the password to connect postgresql",
 )
-def init(modules, host, port, name, user, password):
-    with get_connection(user, password, host, port, name) as connection:
+def init(modules, host, port, dbname, user, password):
+    with get_connection(host, port, dbname, user, password) as connection:
         with connection.cursor() as cursor:
             try:
                 cursor.execute(CLEAN)
