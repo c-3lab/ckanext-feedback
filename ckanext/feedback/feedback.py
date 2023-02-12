@@ -36,7 +36,7 @@ UTILIZATION = """
         FOREIGN KEY (resource_id) REFERENCES resource (id)
     );
 
-    CREATE TYPE genre1 AS ENUM ('1', '2');
+    CREATE TYPE genre1 AS ENUM ("1", "2");
     CREATE TABLE utilization_feedback (
         id TEXT NOT NULL,
         utilization_id TEXT NOT NULL,
@@ -61,7 +61,7 @@ UTILIZATION = """
     """
 
 RESOURCE = """
-    CREATE TYPE genre2 AS ENUM ('1', '2');
+    CREATE TYPE genre2 AS ENUM ("1", "2");
     CREATE TABLE resource_feedback (
         id TEXT NOT NULL,
         resource_id TEXT NOT NULL,
@@ -133,7 +133,7 @@ def get_connection(user, password, host, port, name):
     "--modules",
     multiple=True,
     type=click.Choice(["utilization", "resource", "download"]),
-    help="specify the module you want to use from 'utilization', 'resource', 'download'",
+    help="specify the module you want to use from "utilization", "resource", "download"",
 )
 @click.option(
     "-h", "--host", default=DB_HOST, help="specify the host name of postgresql"
