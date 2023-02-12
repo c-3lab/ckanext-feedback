@@ -141,7 +141,7 @@ def get_connection(user, password, host, port, name):
 @click.option(
     "-p", "--port", default=DB_PORT, help="specify the port number of postgresql"
 )
-@click.option("-n", "--name", default=DB_NAME, help="specify the name of postgresql")
+@click.option("-d", "--dbname", default=DB_NAME, help="specify the name of postgresql")
 @click.option(
     "-u", "--user", default=DB_USER, help="specify the user name of postgresql"
 )
