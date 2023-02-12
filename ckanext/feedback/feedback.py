@@ -5,12 +5,6 @@ import click
 
 import ckan.plugins.toolkit as tk
 
-DB_HOST = os.getenv("POSTGRES_HOST", "db")
-DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME = os.getenv("POSTGRES_DB", "ckan")
-DB_USER = os.getenv("POSTGRES_USER", "ckan")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "ckan")
-
 CLEAN = """
     DROP TABLE IF EXISTS utilization CASCADE;
     DROP TABLE IF EXISTS utilization_feedback CASCADE;
@@ -136,19 +130,20 @@ def get_connection(user, password, host, port, name):
     help="specify the module you want to use from "utilization", "resource", "download"",
 )
 @click.option(
-    "-h", "--host", default=DB_HOST, help="specify the host name of postgresql"
+    "-h", "--host", envvar="POSTGRES_HOST", default="db", help="specify the host name of postgresql"
 )
 @click.option(
-    "-p", "--port", default=DB_PORT, help="specify the port number of postgresql"
+    "-p", "--port", envvar="POSTGRES_PORT", default="5432", help="specify the port number of postgresql"
 )
-@click.option("-d", "--dbname", default=DB_NAME, help="specify the name of postgresql")
+@click.option("-d", "--dbname", envvar="POSTGRES_DB", default="ckan", help="specify the name of postgresql")
 @click.option(
-    "-u", "--user", default=DB_USER, help="specify the user name of postgresql"
+    "-u", "--user", envvar="POSTGRES_USER", default="ckan", help="specify the user name of postgresql"
 )
 @click.option(
     "-P",
     "--password",
-    default=DB_PASS,
+    envvar="POSTGRES_PASSWORD",
+    default="ckan",
     help="specify the password to connect postgresql",
 )
 def init(modules, host, port, name, user, password):
