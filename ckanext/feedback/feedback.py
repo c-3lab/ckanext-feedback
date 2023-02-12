@@ -147,11 +147,10 @@ def get_connection(user, password, host, port, name):
     help="specify the password to connect postgresql",
 )
 def init(modules, host, port, name, user, password):
-    with get_connection(user, password, host, port, name) as conn:
-        with conn.cursor() as cur:
-
+    with get_connection(user, password, host, port, name) as connection:
+        with connection.cursor() as cursor:
             try:
-                cur.execute(CLEAN)
+                cursor.execute(CLEAN)
             except Exception as e:
                 tk.error_shout(e)
                 sys.exit(1)
@@ -160,9 +159,9 @@ def init(modules, host, port, name, user, password):
 
             if not modules:
                 try:
-                    cur.execute(UTILIZATION)
-                    cur.execute(RESOURCE)
-                    cur.execute(DOWNLOAD)
+                    cursor.execute(UTILIZATION)
+                    cursor.execute(RESOURCE)
+                    cursor.execute(DOWNLOAD)
                 except Exception as e:
                     tk.error_shout(e)
                     sys.exit(1)
@@ -173,7 +172,7 @@ def init(modules, host, port, name, user, password):
             else:
                 if "utilization" in modules:
                     try:
-                        cur.execute(UTILIZATION)
+                        cursor.execute(UTILIZATION)
                     except Exception as e:
                         tk.error_shout(e)
                         sys.exit(1)
@@ -183,7 +182,7 @@ def init(modules, host, port, name, user, password):
                         )
                 if "resource" in modules:
                     try:
-                        cur.execute(RESOURCE)
+                        cursor.execute(RESOURCE)
                     except Exception as e:
                         tk.error_shout(e)
                         sys.exit(1)
@@ -193,7 +192,7 @@ def init(modules, host, port, name, user, password):
                         )
                 if "download" in modules:
                     try:
-                        cur.execute(DOWNLOAD)
+                        cursor.execute(DOWNLOAD)
                     except Exception as e:
                         tk.error_shout(e)
                         sys.exit(1)
@@ -202,4 +201,4 @@ def init(modules, host, port, name, user, password):
                             "Initialize download: SUCCESS", fg="green", bold=True
                         )
 
-            conn.commit()
+            connection.commit()
