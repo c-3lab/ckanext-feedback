@@ -169,36 +169,35 @@ def init(modules, host, port, dbname, user, password):
                     click.secho(
                         "Initialize all modules: SUCCESS", fg="green", bold=True
                     )
-            else:
-                if "utilization" in modules:
-                    try:
-                        cursor.execute(UTILIZATION)
-                    except Exception as e:
-                        tk.error_shout(e)
-                        sys.exit(1)
-                    else:
-                        click.secho(
-                            "Initialize utilization: SUCCESS", fg="green", bold=True
-                        )
-                if "resource" in modules:
-                    try:
-                        cursor.execute(RESOURCE)
-                    except Exception as e:
-                        tk.error_shout(e)
-                        sys.exit(1)
-                    else:
-                        click.secho(
-                            "Initialize resource: SUCCESS", fg="green", bold=True
-                        )
-                if "download" in modules:
-                    try:
-                        cursor.execute(DOWNLOAD)
-                    except Exception as e:
-                        tk.error_shout(e)
-                        sys.exit(1)
-                    else:
-                        click.secho(
-                            "Initialize download: SUCCESS", fg="green", bold=True
-                        )
+            elif "utilization" in modules:
+                try:
+                    cursor.execute(UTILIZATION)
+                except Exception as e:
+                    tk.error_shout(e)
+                    sys.exit(1)
+                else:
+                    click.secho(
+                        "Initialize utilization: SUCCESS", fg="green", bold=True
+                    )
+            elif "resource" in modules:
+                try:
+                    cursor.execute(RESOURCE)
+                except Exception as e:
+                    tk.error_shout(e)
+                    sys.exit(1)
+                else:
+                    click.secho(
+                        "Initialize resource: SUCCESS", fg="green", bold=True
+                    )
+            elif "download" in modules:
+                try:
+                    cursor.execute(DOWNLOAD)
+                except Exception as e:
+                    tk.error_shout(e)
+                    sys.exit(1)
+                else:
+                    click.secho(
+                        "Initialize download: SUCCESS", fg="green", bold=True
+                    )
 
             connection.commit()
