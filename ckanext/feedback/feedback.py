@@ -96,7 +96,7 @@ DOWNLOAD = """
     """
 
 
-@click.group(short_help="create tables to use extension")
+@click.group()
 def feedback():
     pass
 
