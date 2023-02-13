@@ -5,7 +5,7 @@ import click
 
 import ckan.plugins.toolkit as tk
 
-CLEAN = """
+CLEAN = '''
     DROP TABLE IF EXISTS utilization CASCADE;
     DROP TABLE IF EXISTS utilization_feedback CASCADE;
     DROP TABLE IF EXISTS utilization_feedback_reply CASCADE;
@@ -14,9 +14,9 @@ CLEAN = """
     DROP TABLE IF EXISTS resource_feedback_reply CASCADE;
     DROP TYPE IF EXISTS genre1;
     DROP TYPE IF EXISTS genre2;
-    """
+    '''
 
-UTILIZATION = """
+UTILIZATION = '''
     CREATE TABLE utilization (
         id TEXT NOT NULL,
         resource_id TEXT NOT NULL,
@@ -30,7 +30,7 @@ UTILIZATION = """
         FOREIGN KEY (resource_id) REFERENCES resource (id)
     );
 
-    CREATE TYPE genre1 AS ENUM ("1", "2");
+    CREATE TYPE genre1 AS ENUM ('1', '2');
     CREATE TABLE utilization_feedback (
         id TEXT NOT NULL,
         utilization_id TEXT NOT NULL,
@@ -52,10 +52,10 @@ UTILIZATION = """
         PRIMARY KEY (id),
         FOREIGN KEY (utilization_feedback_id) REFERENCES utilization_feedback (id)
     );
-    """
+    '''
 
-RESOURCE = """
-    CREATE TYPE genre2 AS ENUM ("1", "2");
+RESOURCE = '''
+    CREATE TYPE genre2 AS ENUM ('1', '2');
     CREATE TABLE resource_feedback (
         id TEXT NOT NULL,
         resource_id TEXT NOT NULL,
@@ -79,9 +79,9 @@ RESOURCE = """
         FOREIGN KEY (resource_feedback_id) REFERENCES resource_feedback (id)
 
     );
-    """
+    '''
 
-DOWNLOAD = """
+DOWNLOAD = '''
     CREATE TABLE utilization_summary (
         id TEXT NOT NULL,
         resource_id TEXT NOT NULL,
@@ -93,18 +93,18 @@ DOWNLOAD = """
         PRIMARY KEY (id),
         FOREIGN KEY (resource_id) REFERENCES resource (id)
     );
-    """
+    '''
 
 
 @click.group()
 def feedback():
-    """CLI tool for ckanext-feedback plugin."""
+    '''CLI tool for ckanext-feedback plugin.'''
 
 
 def get_connection(host, port, dbname, user, password):
     try:
         connector = psycopg2.connect(
-            "postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}".format(
+            'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'.format(
                 db_user=user,
                 db_password=password,
                 db_host=host,
@@ -120,52 +120,52 @@ def get_connection(host, port, dbname, user, password):
 
 
 @feedback.command(
-    name="init", short_help="create tables in ckan db to activate modules."
+    name='init', short_help='create tables in ckan db to activate modules.'
 )
 @click.option(
-    "-m",
-    "--modules",
+    '-m',
+    '--modules',
     multiple=True,
-    type=click.Choice(["utilization", "resource", "download"]),
-    help="specify the module you want to use from "utilization", "resource", "download"",
+    type=click.Choice(['utilization', 'resource', 'download']),
+    help='specify the module you want to use from utilization, resource, download',
 )
 @click.option(
-    "-h", "--host", envvar="POSTGRES_HOST", default="db", help="specify the host name of postgresql"
+    '-h', '--host', envvar='POSTGRES_HOST', default='db', help='specify the host name of postgresql'
 )
 @click.option(
-    "-p", "--port", envvar="POSTGRES_PORT", default="5432", help="specify the port number of postgresql"
+    '-p', '--port', envvar='POSTGRES_PORT', default='5432', help='specify the port number of postgresql'
 )
-@click.option("-d", "--dbname", envvar="POSTGRES_DB", default="ckan", help="specify the name of postgresql")
+@click.option('-d', '--dbname', envvar='POSTGRES_DB', default='ckan', help='specify the name of postgresql')
 @click.option(
-    "-u", "--user", envvar="POSTGRES_USER", default="ckan", help="specify the user name of postgresql"
+    '-u', '--user', envvar='POSTGRES_USER', default='ckan', help='specify the user name of postgresql'
 )
 @click.option(
-    "-P",
-    "--password",
-    envvar="POSTGRES_PASSWORD",
-    default="ckan",
-    help="specify the password to connect postgresql",
+    '-P',
+    '--password',
+    envvar='POSTGRES_PASSWORD',
+    default='ckan',
+    help='specify the password to connect postgresql',
 )
 def init(modules, host, port, dbname, user, password):
     with get_connection(host, port, dbname, user, password) as connection:
         with connection.cursor() as cursor:
             try:
                 cursor.execute(CLEAN)
-                click.secho("Clean all modules: SUCCESS", fg="green", bold=True)
+                click.secho('Clean all modules: SUCCESS', fg='green', bold=True)
                 if not modules:
                     cursor.execute(UTILIZATION)
                     cursor.execute(RESOURCE)
                     cursor.execute(DOWNLOAD)
-                    click.secho("Initialize all modules: SUCCESS", fg="green", bold=True)
-                elif "utilization" in modules:
+                    click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
+                elif 'utilization' in modules:
                     cursor.execute(UTILIZATION)
-                    click.secho("Initialize utilization: SUCCESS", fg="green", bold=True)
-                elif "resource" in modules:
+                    click.secho('Initialize utilization: SUCCESS', fg='green', bold=True)
+                elif 'resource' in modules:
                     cursor.execute(RESOURCE)
-                    click.secho("Initialize resource: SUCCESS", fg="green", bold=True)
-                elif "download" in modules:
+                    click.secho('Initialize resource: SUCCESS', fg='green', bold=True)
+                elif 'download' in modules:
                     cursor.execute(DOWNLOAD)
-                    click.secho("Initialize download: SUCCESS", fg="green", bold=True)
+                    click.secho('Initialize download: SUCCESS', fg='green', bold=True)
             except Exception as e:
                 tk.error_shout(e)
                 sys.exit(1)
