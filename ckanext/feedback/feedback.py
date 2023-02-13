@@ -5,71 +5,6 @@ import click
 
 import ckan.plugins.toolkit as tk
 
-UTILIZATION = '''
-    CREATE TABLE utilization (
-        id TEXT NOT NULL,
-        resource_id TEXT NOT NULL,
-        title TEXT,
-        url TEXT,
-        description TEXT,
-        created TIMESTAMP,
-        approval BOOLEAN DEFAULT false,
-        approved TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (resource_id) REFERENCES resource (id)
-    );
-
-    CREATE TYPE genre1 AS ENUM ('1', '2');
-    CREATE TABLE utilization_feedback (
-        id TEXT NOT NULL,
-        utilization_id TEXT NOT NULL,
-        type genre1 NOT NULL,
-        description TEXT,
-        created TIMESTAMP,
-        approval BOOLEAN DEFAULT false,
-        approved TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (utilization_id) REFERENCES utilization (id)
-    );
-
-    CREATE TABLE utilization_feedback_reply (
-        id TEXT NOT NULL,
-        utilization_feedback_id TEXT NOT NULL,
-        description TEXT,
-        created TIMESTAMP,
-        creator_user_id TEXT,
-        PRIMARY KEY (id),
-        FOREIGN KEY (utilization_feedback_id) REFERENCES utilization_feedback (id)
-    );
-    '''
-
-RESOURCE = '''
-    CREATE TYPE genre2 AS ENUM ('1', '2');
-    CREATE TABLE resource_feedback (
-        id TEXT NOT NULL,
-        resource_id TEXT NOT NULL,
-        type genre2 NOT NULL,
-        description TEXT,
-        rating INTEGER,
-        created TIMESTAMP,
-        approval BOOLEAN DEFAULT false,
-        approved TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (resource_id) REFERENCES resource (id)
-    );
-
-    CREATE TABLE resource_feedback_reply (
-        id TEXT NOT NULL,
-        resource_feedback_id TEXT NOT NULL,
-        description TEXT,
-        created TIMESTAMP,
-        creator_user_id TEXT,
-        PRIMARY KEY (id),
-        FOREIGN KEY (resource_feedback_id) REFERENCES resource_feedback (id)
-
-    );
-    '''
-
 DOWNLOAD = '''
     CREATE TABLE utilization_summary (
         id TEXT NOT NULL,
@@ -241,6 +176,47 @@ def init(modules, host, port, dbname, user, password):
                 resource_id TEXT NOT NULL,
                 utilization INTEGER,
                 comment INTEGER,
+                created TIMESTAMP,
+                updated TIMESTAMP,
+                PRIMARY KEY (id),
+                FOREIGN KEY (resource_id) REFERENCES resource (id)
+            );
+        """)
+
+    def _create_resource_tabels(cursor):
+        cursor.execute("""
+            CREATE TYPE genre2 AS ENUM ('1', '2');
+            CREATE TABLE resource_comment (
+                id TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                category genre2 NOT NULL,
+                content TEXT,
+                rating INTEGER,
+                created TIMESTAMP,
+                approval BOOLEAN DEFAULT false,
+                approved TIMESTAMP,
+                approval_user_id TEXT,
+                PRIMARY KEY (id),
+                FOREIGN KEY (resource_id) REFERENCES resource (id),
+                FOREIGN KEY (approval_user_id) REFERENCES user (id)
+            );
+
+            CREATE TABLE resource_comment_reply (
+                id TEXT NOT NULL,
+                resource_comment_id TEXT NOT NULL,
+                content TEXT,
+                created TIMESTAMP,
+                creator_user_id TEXT,
+                PRIMARY KEY (id),
+                FOREIGN KEY (resource_comment_id) REFERENCES resource_comment (id),
+                FOREIGN KEY (creator_user_id) REFERENCES user (id)
+            );
+
+            CREATE TABLE reource_comment_summary (
+                id TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                comment INTEGER,
+                rating NUMERIC,
                 created TIMESTAMP,
                 updated TIMESTAMP,
                 PRIMARY KEY (id),
