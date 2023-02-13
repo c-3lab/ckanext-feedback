@@ -5,6 +5,3 @@ git submodule update --init --recursive
 cp external/ckan/contrib/docker/.env.template external/ckan/contrib/docker/.env
 # Build and compose docker containers
 docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
-# Copy cli.py and create.py to the CKAN container ckan/cli/ folder
-docker cp misc/cli.py ckan:/usr/lib/ckan/venv/src/ckan/ckan/cli/cli.py
-docker cp misc/create.py ckan:/usr/lib/ckan/venv/src/ckan/ckan/cli/create.py
