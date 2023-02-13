@@ -5,21 +5,6 @@ import click
 
 import ckan.plugins.toolkit as tk
 
-DOWNLOAD = '''
-    CREATE TABLE utilization_summary (
-        id TEXT NOT NULL,
-        resource_id TEXT NOT NULL,
-        utilization INTEGER,
-        download INTEGER,
-        issue_resolution INTEGER,
-        created TIMESTAMP,
-        updated TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (resource_id) REFERENCES resource (id)
-    );
-    '''
-
-
 @click.group()
 def feedback():
     '''CLI tool for ckanext-feedback plugin.'''
@@ -217,6 +202,19 @@ def init(modules, host, port, dbname, user, password):
                 resource_id TEXT NOT NULL,
                 comment INTEGER,
                 rating NUMERIC,
+                created TIMESTAMP,
+                updated TIMESTAMP,
+                PRIMARY KEY (id),
+                FOREIGN KEY (resource_id) REFERENCES resource (id)
+            );
+        """)
+
+    def _create_download_tables(cursor):
+        cursor.execute("""
+            CREATE TABLE download_summary (
+                id TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                download INTEGER,
                 created TIMESTAMP,
                 updated TIMESTAMP,
                 PRIMARY KEY (id),
