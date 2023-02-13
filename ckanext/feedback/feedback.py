@@ -105,72 +105,76 @@ def init(modules, host, port, dbname, user, password):
 
             connection.commit()
 
-    def _drop_utilization_tables(cursor):
-        cursor.execute(
-            '''
-            DROP TABLE IF EXISTS utilization CASCADE;
-            DROP TABLE IF EXISTS issue_resolution_summary CASCADE;
-            DROP TABLE IF EXISTS issue_resolution CASCADE;
-            DROP TABLE IF EXISTS utilization_comment CASCADE;
-            DROP TABLE IF EXISTS utilization_summary CASCADE;
-            DROP TYPE IF EXISTS genre1;
+
+def _drop_utilization_tables(cursor):
+    cursor.execute(
         '''
-        )
+        DROP TABLE IF EXISTS utilization CASCADE;
+        DROP TABLE IF EXISTS issue_resolution_summary CASCADE;
+        DROP TABLE IF EXISTS issue_resolution CASCADE;
+        DROP TABLE IF EXISTS utilization_comment CASCADE;
+        DROP TABLE IF EXISTS utilization_summary CASCADE;
+        DROP TYPE IF EXISTS genre1;
+    '''
+    )
 
-    def _drop_resource_tables(cursor):
-        cursor.execute(
-            '''
-            DROP TABLE IF EXISTS resource_comment CASCADE;
-            DROP TABLE IF EXISTS resource_comment_reply CASCADE;
-            DROP TABLE IF EXISTS resource_comment_summary CASCADE;
-            DROP TYPE IF EXISTS genre2;
+
+def _drop_resource_tables(cursor):
+    cursor.execute(
         '''
-        )
+        DROP TABLE IF EXISTS resource_comment CASCADE;
+        DROP TABLE IF EXISTS resource_comment_reply CASCADE;
+        DROP TABLE IF EXISTS resource_comment_summary CASCADE;
+        DROP TYPE IF EXISTS genre2;
+    '''
+    )
 
-    def _drop_download_tables(cursor):
-        cursor.execute(
-            '''
-            DROP TABLE IF EXISTS download_summary CASCADE;
+
+def _drop_download_tables(cursor):
+    cursor.execute(
         '''
-        )
+        DROP TABLE IF EXISTS download_summary CASCADE;
+    '''
+    )
 
-    def _create_utilization_tables(cursor):
-        cursor.execute(
-            '''
-            CREATE TABLE utilization (
-                id TEXT NOT NULL,
-                resource_id TEXT NOT NULL,
-                title TEXT,
-                description TEXT,
-                created TIMESTAMP,
-                approval BOOLEAN DEFAULT false,
-                approved TIMESTAMP,
-                approval_user_id TEXT,
-                PRIMARY KEY (id),
-                FOREIGN KEY (resource_id) REFERENCES resource (id),
-                FOREIGN KEY (approval_user_id) REFERENCES user (id)
-            );
 
-            CREATE TABLE issue_resolution_summary (
-                id TEXT NOT NULL,
-                utilization_id TEXT NOT NULL,
-                issue_resolution INTEGER,
-                created TIMESTAMP,
-                updated TIMESTAMP,
-                PRIMARY KEY (id),
-                FOREIGN KEY (utilization_id) REFERENCES utilization (id)
-            );
+def _create_utilization_tables(cursor):
+    cursor.execute(
+        '''
+        CREATE TABLE utilization (
+            id TEXT NOT NULL,
+            resource_id TEXT NOT NULL,
+            title TEXT,
+            description TEXT,
+            created TIMESTAMP,
+            approval BOOLEAN DEFAULT false,
+            approved TIMESTAMP,
+            approval_user_id TEXT,
+            PRIMARY KEY (id),
+            FOREIGN KEY (resource_id) REFERENCES resource (id),
+            FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
+        );
 
-            CREATE TABLE issue_resolution (
-                id TEXT NOT NULL,
-                utilization_id TEXT NOT NULL,
-                description TEXT,
-                created TIMESTAMP,
-                creator_user_id TEXT,
-                PRIMARY KEY (id),
-                FOREIGN KEY (utilization_id) REFERENCES utilization (id),
-                FOREIGN KEY (creator_user_id) REFERENCES user (id)
-            );
+        CREATE TABLE issue_resolution_summary (
+            id TEXT NOT NULL,
+            utilization_id TEXT NOT NULL,
+            issue_resolution INTEGER,
+            created TIMESTAMP,
+            updated TIMESTAMP,
+            PRIMARY KEY (id),
+            FOREIGN KEY (utilization_id) REFERENCES utilization (id)
+        );
+
+        CREATE TABLE issue_resolution (
+            id TEXT NOT NULL,
+            utilization_id TEXT NOT NULL,
+            description TEXT,
+            created TIMESTAMP,
+            creator_user_id TEXT,
+            PRIMARY KEY (id),
+            FOREIGN KEY (utilization_id) REFERENCES utilization (id),
+            FOREIGN KEY (creator_user_id) REFERENCES public.user (id)
+        );
 
             CREATE TYPE genre1 AS ENUM ('1', '2');
             CREATE TABLE utilization_comment (
@@ -184,7 +188,7 @@ def init(modules, host, port, dbname, user, password):
                 approval_user_id TEXT,
                 PRIMARY KEY (id),
                 FOREIGN KEY (utilization_id) REFERENCES utilization (id),
-                FOREIGN KEY (approval_user_id) REFERENCES user (id)
+                FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
             );
 
             CREATE TABLE utilization_summary (
@@ -198,62 +202,64 @@ def init(modules, host, port, dbname, user, password):
                 FOREIGN KEY (resource_id) REFERENCES resource (id)
             );
         '''
-        )
+    )
 
-    def _create_resource_tabels(cursor):
-        cursor.execute(
-            '''
-            CREATE TYPE genre2 AS ENUM ('1', '2');
-            CREATE TABLE resource_comment (
-                id TEXT NOT NULL,
-                resource_id TEXT NOT NULL,
-                category genre2 NOT NULL,
-                content TEXT,
-                rating INTEGER,
-                created TIMESTAMP,
-                approval BOOLEAN DEFAULT false,
-                approved TIMESTAMP,
-                approval_user_id TEXT,
-                PRIMARY KEY (id),
-                FOREIGN KEY (resource_id) REFERENCES resource (id),
-                FOREIGN KEY (approval_user_id) REFERENCES user (id)
-            );
 
-            CREATE TABLE resource_comment_reply (
-                id TEXT NOT NULL,
-                resource_comment_id TEXT NOT NULL,
-                content TEXT,
-                created TIMESTAMP,
-                creator_user_id TEXT,
-                PRIMARY KEY (id),
-                FOREIGN KEY (resource_comment_id) REFERENCES resource_comment (id),
-                FOREIGN KEY (creator_user_id) REFERENCES user (id)
-            );
-
-            CREATE TABLE reource_comment_summary (
-                id TEXT NOT NULL,
-                resource_id TEXT NOT NULL,
-                comment INTEGER,
-                rating NUMERIC,
-                created TIMESTAMP,
-                updated TIMESTAMP,
-                PRIMARY KEY (id),
-                FOREIGN KEY (resource_id) REFERENCES resource (id)
-            );
+def _create_resource_tabels(cursor):
+    cursor.execute(
         '''
-        )
+        CREATE TYPE genre2 AS ENUM ('1', '2');
+        CREATE TABLE resource_comment (
+            id TEXT NOT NULL,
+            resource_id TEXT NOT NULL,
+            category genre2 NOT NULL,
+            content TEXT,
+            rating INTEGER,
+            created TIMESTAMP,
+            approval BOOLEAN DEFAULT false,
+            approved TIMESTAMP,
+            approval_user_id TEXT,
+            PRIMARY KEY (id),
+            FOREIGN KEY (resource_id) REFERENCES resource (id),
+            FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
+        );
 
-    def _create_download_tables(cursor):
-        cursor.execute(
-            '''
-            CREATE TABLE download_summary (
-                id TEXT NOT NULL,
-                resource_id TEXT NOT NULL,
-                download INTEGER,
-                created TIMESTAMP,
-                updated TIMESTAMP,
-                PRIMARY KEY (id),
-                FOREIGN KEY (resource_id) REFERENCES resource (id)
-            );
+         CREATE TABLE resource_comment_reply (
+            id TEXT NOT NULL,
+            resource_comment_id TEXT NOT NULL,
+            content TEXT,
+            created TIMESTAMP,
+            creator_user_id TEXT,
+            PRIMARY KEY (id),
+            FOREIGN KEY (resource_comment_id) REFERENCES resource_comment (id),
+            FOREIGN KEY (creator_user_id) REFERENCES public.user (id)
+        );
+
+         CREATE TABLE reource_comment_summary (
+            id TEXT NOT NULL,
+            resource_id TEXT NOT NULL,
+            comment INTEGER,
+            rating NUMERIC,
+            created TIMESTAMP,
+            updated TIMESTAMP,
+            PRIMARY KEY (id),
+            FOREIGN KEY (resource_id) REFERENCES resource (id)
+        );
+    '''
+    )
+
+
+def _create_download_tables(cursor):
+    cursor.execute(
         '''
-        )
+        CREATE TABLE download_summary (
+            id TEXT NOT NULL,
+            resource_id TEXT NOT NULL,
+            download INTEGER,
+            created TIMESTAMP,
+            updated TIMESTAMP,
+            PRIMARY KEY (id),
+            FOREIGN KEY (resource_id) REFERENCES resource (id)
+        );
+    '''
+    )
