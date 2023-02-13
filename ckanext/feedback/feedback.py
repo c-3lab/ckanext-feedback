@@ -144,12 +144,12 @@ def init(modules, host, port, dbname, user, password):
                 _drop_download_tables(cursor)
                 click.secho('Clean all modules: SUCCESS', fg='green', bold=True)
                 if not modules:
-                    cursor.execute(UTILIZATION)
+                    _create_utilization_tables(cursor)
                     cursor.execute(RESOURCE)
                     cursor.execute(DOWNLOAD)
                     click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
                 elif 'utilization' in modules:
-                    cursor.execute(UTILIZATION)
+                    _create_utilization_tables(cursor)
                     click.secho('Initialize utilization: SUCCESS', fg='green', bold=True)
                 elif 'resource' in modules:
                     cursor.execute(RESOURCE)
@@ -182,6 +182,70 @@ def init(modules, host, port, dbname, user, password):
     def _drop_download_tables(cursor):
         cursor.execute("""
             DROP TABLE IF EXISTS download_summary CASCADE;
+        """)
+
+    def _create_utilization_tables(cursor):
+        cursor.execute("""
+            CREATE TABLE utilization (
+                id TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                title TEXT,
+                description TEXT,
+                created TIMESTAMP,
+                approval BOOLEAN DEFAULT false,
+                approved TIMESTAMP,
+                approval_user_id TEXT,
+                PRIMARY KEY (id),
+                FOREIGN KEY (resource_id) REFERENCES resource (id),
+                FOREIGN KEY (approval_user_id) REFERENCES user (id)
+            );
+
+            CREATE TABLE issue_resolution_summary (
+                id TEXT NOT NULL,
+                utilization_id TEXT NOT NULL,
+                issue_resolution INTEGER,
+                created TIMESTAMP,
+                updated TIMESTAMP,
+                PRIMARY KEY (id),
+                FOREIGN KEY (utilization_id) REFERENCES utilization (id)
+            );
+
+            CREATE TABLE issue_resolution (
+                id TEXT NOT NULL,
+                utilization_id TEXT NOT NULL,
+                description TEXT,
+                created TIMESTAMP,
+                creator_user_id TEXT,
+                PRIMARY KEY (id),
+                FOREIGN KEY (utilization_id) REFERENCES utilization (id),
+                FOREIGN KEY (creator_user_id) REFERENCES user (id)
+            );
+
+            CREATE TYPE genre1 AS ENUM ('1', '2');
+            CREATE TABLE utilization_comment (
+                id TEXT NOT NULL,
+                utilization_id TEXT NOT NULL,
+                category genre1 NOT NULL,
+                content TEXT,
+                created TIMESTAMP,
+                approval BOOLEAN DEFAULT false,
+                approved TIMESTAMP,
+                approval_user_id TEXT,
+                PRIMARY KEY (id),
+                FOREIGN KEY (utilization_id) REFERENCES utilization (id),
+                FOREIGN KEY (approval_user_id) REFERENCES user (id)
+            );
+
+            CREATE TABLE utilization_summary (
+                id TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                utilization INTEGER,
+                comment INTEGER,
+                created TIMESTAMP,
+                updated TIMESTAMP,
+                PRIMARY KEY (id),
+                FOREIGN KEY (resource_id) REFERENCES resource (id)
+            );
         """)
 
             connection.commit()
