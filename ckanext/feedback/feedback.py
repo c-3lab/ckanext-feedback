@@ -1,9 +1,9 @@
-import os
 import sys
 import psycopg2
 import click
 
 import ckan.plugins.toolkit as tk
+
 
 @click.group()
 def feedback():
@@ -18,7 +18,7 @@ def get_connection(host, port, dbname, user, password):
                 db_password=password,
                 db_host=host,
                 db_port=port,
-                db_name=name,
+                db_name=dbname,
             )
         )
     except Exception as e:
@@ -39,14 +39,32 @@ def get_connection(host, port, dbname, user, password):
     help='specify the module you want to use from utilization, resource, download',
 )
 @click.option(
-    '-h', '--host', envvar='POSTGRES_HOST', default='db', help='specify the host name of postgresql'
+    '-h',
+    '--host',
+    envvar='POSTGRES_HOST',
+    default='db',
+    help='specify the host name of postgresql',
 )
 @click.option(
-    '-p', '--port', envvar='POSTGRES_PORT', default='5432', help='specify the port number of postgresql'
+    '-p',
+    '--port',
+    envvar='POSTGRES_PORT',
+    default='5432',
+    help='specify the port number of postgresql',
 )
-@click.option('-d', '--dbname', envvar='POSTGRES_DB', default='ckan', help='specify the name of postgresql')
 @click.option(
-    '-u', '--user', envvar='POSTGRES_USER', default='ckan', help='specify the user name of postgresql'
+    '-d',
+    '--dbname',
+    envvar='POSTGRES_DB',
+    default='ckan',
+    help='specify the name of postgresql',
+)
+@click.option(
+    '-u',
+    '--user',
+    envvar='POSTGRES_USER',
+    default='ckan',
+    help='specify the user name of postgresql',
 )
 @click.option(
     '-P',
@@ -65,47 +83,60 @@ def init(modules, host, port, dbname, user, password):
                 click.secho('Clean all modules: SUCCESS', fg='green', bold=True)
                 if not modules:
                     _create_utilization_tables(cursor)
-                    cursor.execute(RESOURCE)
-                    cursor.execute(DOWNLOAD)
-                    click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
+                    _create_resource_tabels(cursor)
+                    _create_download_tables(cursor)
+                    click.secho(
+                        'Initialize all modules: SUCCESS', fg='green', bold=True
+                    )
                 elif 'utilization' in modules:
                     _create_utilization_tables(cursor)
-                    click.secho('Initialize utilization: SUCCESS', fg='green', bold=True)
+                    click.secho(
+                        'Initialize utilization: SUCCESS', fg='green', bold=True
+                    )
                 elif 'resource' in modules:
-                    cursor.execute(RESOURCE)
+                    _create_resource_tabels(cursor)
                     click.secho('Initialize resource: SUCCESS', fg='green', bold=True)
                 elif 'download' in modules:
-                    cursor.execute(DOWNLOAD)
+                    _create_download_tables(cursor)
                     click.secho('Initialize download: SUCCESS', fg='green', bold=True)
             except Exception as e:
                 tk.error_shout(e)
                 sys.exit(1)
 
+            connection.commit()
+
     def _drop_utilization_tables(cursor):
-        cursor.execute('''
+        cursor.execute(
+            '''
             DROP TABLE IF EXISTS utilization CASCADE;
             DROP TABLE IF EXISTS issue_resolution_summary CASCADE;
             DROP TABLE IF EXISTS issue_resolution CASCADE;
             DROP TABLE IF EXISTS utilization_comment CASCADE;
             DROP TABLE IF EXISTS utilization_summary CASCADE;
             DROP TYPE IF EXISTS genre1;
-        ''')
+        '''
+        )
 
     def _drop_resource_tables(cursor):
-        cursor.execute('''
+        cursor.execute(
+            '''
             DROP TABLE IF EXISTS resource_comment CASCADE;
             DROP TABLE IF EXISTS resource_comment_reply CASCADE;
             DROP TABLE IF EXISTS resource_comment_summary CASCADE;
             DROP TYPE IF EXISTS genre2;
-        ''')
+        '''
+        )
 
     def _drop_download_tables(cursor):
-        cursor.execute('''
+        cursor.execute(
+            '''
             DROP TABLE IF EXISTS download_summary CASCADE;
-        ''')
+        '''
+        )
 
     def _create_utilization_tables(cursor):
-        cursor.execute('''
+        cursor.execute(
+            '''
             CREATE TABLE utilization (
                 id TEXT NOT NULL,
                 resource_id TEXT NOT NULL,
@@ -166,10 +197,12 @@ def init(modules, host, port, dbname, user, password):
                 PRIMARY KEY (id),
                 FOREIGN KEY (resource_id) REFERENCES resource (id)
             );
-        ''')
+        '''
+        )
 
     def _create_resource_tabels(cursor):
-        cursor.execute('''
+        cursor.execute(
+            '''
             CREATE TYPE genre2 AS ENUM ('1', '2');
             CREATE TABLE resource_comment (
                 id TEXT NOT NULL,
@@ -207,10 +240,12 @@ def init(modules, host, port, dbname, user, password):
                 PRIMARY KEY (id),
                 FOREIGN KEY (resource_id) REFERENCES resource (id)
             );
-        ''')
+        '''
+        )
 
     def _create_download_tables(cursor):
-        cursor.execute('''
+        cursor.execute(
+            '''
             CREATE TABLE download_summary (
                 id TEXT NOT NULL,
                 resource_id TEXT NOT NULL,
@@ -220,6 +255,5 @@ def init(modules, host, port, dbname, user, password):
                 PRIMARY KEY (id),
                 FOREIGN KEY (resource_id) REFERENCES resource (id)
             );
-        ''')
-
-            connection.commit()
+        '''
+        )
