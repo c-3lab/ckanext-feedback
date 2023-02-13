@@ -5,17 +5,6 @@ import click
 
 import ckan.plugins.toolkit as tk
 
-CLEAN = '''
-    DROP TABLE IF EXISTS utilization CASCADE;
-    DROP TABLE IF EXISTS utilization_feedback CASCADE;
-    DROP TABLE IF EXISTS utilization_feedback_reply CASCADE;
-    DROP TABLE IF EXISTS utilization_summary CASCADE;
-    DROP TABLE IF EXISTS resource_feedback CASCADE;
-    DROP TABLE IF EXISTS resource_feedback_reply CASCADE;
-    DROP TYPE IF EXISTS genre1;
-    DROP TYPE IF EXISTS genre2;
-    '''
-
 UTILIZATION = '''
     CREATE TABLE utilization (
         id TEXT NOT NULL,
@@ -150,7 +139,9 @@ def init(modules, host, port, dbname, user, password):
     with get_connection(host, port, dbname, user, password) as connection:
         with connection.cursor() as cursor:
             try:
-                cursor.execute(CLEAN)
+                _drop_utilization_tables(cursor)
+                _drop_resource_tables(cursor)
+                _drop_download_tables(cursor)
                 click.secho('Clean all modules: SUCCESS', fg='green', bold=True)
                 if not modules:
                     cursor.execute(UTILIZATION)
@@ -169,5 +160,28 @@ def init(modules, host, port, dbname, user, password):
             except Exception as e:
                 tk.error_shout(e)
                 sys.exit(1)
+
+    def _drop_utilization_tables(cursor):
+        cursor.execute("""
+            DROP TABLE IF EXISTS utilization CASCADE;
+            DROP TABLE IF EXISTS issue_resolution_summary CASCADE;
+            DROP TABLE IF EXISTS issue_resolution CASCADE;
+            DROP TABLE IF EXISTS utilization_comment CASCADE;
+            DROP TABLE IF EXISTS utilization_summary CASCADE;
+            DROP TYPE IF EXISTS genre1;
+        """)
+
+    def _drop_resource_tables(cursor):
+        cursor.execute("""
+            DROP TABLE IF EXISTS resource_comment CASCADE;
+            DROP TABLE IF EXISTS resource_comment_reply CASCADE;
+            DROP TABLE IF EXISTS resource_comment_summary CASCADE;
+            DROP TYPE IF EXISTS genre2;
+        """)
+
+    def _drop_download_tables(cursor):
+        cursor.execute("""
+            DROP TABLE IF EXISTS download_summary CASCADE;
+        """)
 
             connection.commit()
