@@ -25,8 +25,19 @@ ckan feedback init [options]
 ##### 実行例
 
 ```
+# ckanext-feedback plugins に関わる全てのテーブルに対して初期化を行う
 ckan --config=/etc/ckan/production.ini feedback init
+
+# utilization(利活用方法)機能に関わるテーブルに対して初期化を行う
 ckan --config=/etc/ckan/production.ini feedback init -m utilization
+
+# resource(データリソース)機能に関わるテーブルに対して初期化を行う
+ckan --config=/etc/ckan/production.ini feedback init -m resource
+
+# download(ダウンロード)機能に関わるテーブルに対して初期化を行う
+ckan --config=/etc/ckan/production.ini feedback init -m download
+
+# resource(データリソース)機能とdownload(ダウンロード)機能に関わるテーブルに対して初期化を行う
 ckan --config=/etc/ckan/production.ini feedback init -m resource -m download
 ```
 
@@ -78,10 +89,21 @@ PosgreSQLに接続するためのパスワードを指定する。
 ##### 実行例
 
 ```
+# ホスト名として"postgresdb"を指定する
 ckan --config=/etc/ckan/production.ini feedback init -h postgresdb
+
+# ポート番号として"5000"を指定する
 ckan --config=/etc/ckan/production.ini feedback init -p 5000
+
+# データベース名として"ckandb"を指定する
 ckan --config=/etc/ckan/production.ini feedback init -d ckandb
+
+# ユーザ名として"root"を指定する
 ckan --config=/etc/ckan/production.ini feedback init -u root
+
+# パスワードとして"root"を指定する
 ckan --config=/etc/ckan/production.ini feedback init -P root
+
+# ホスト名として"postgresdb", ユーザ名として"root", パスワードとして"root"を指定する
 ckan --config=/etc/ckan/production.ini feedback init -h postgresdb -u root -P root
 ```
