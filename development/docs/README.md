@@ -41,6 +41,8 @@ ckan --config=/etc/ckan/production.ini feedback init -m download
 ckan --config=/etc/ckan/production.ini feedback init -m resource -m download
 ```
 
+※ ckanコマンドを実行する際は```--config=/etc/ckan/production.ini```としてconfigファイルを指定する必要がある
+
 #### -h, --host <host_name>
 
 **任意項目**
