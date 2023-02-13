@@ -82,30 +82,30 @@ def init(modules, host, port, dbname, user, password):
                 sys.exit(1)
 
     def _drop_utilization_tables(cursor):
-        cursor.execute("""
+        cursor.execute('''
             DROP TABLE IF EXISTS utilization CASCADE;
             DROP TABLE IF EXISTS issue_resolution_summary CASCADE;
             DROP TABLE IF EXISTS issue_resolution CASCADE;
             DROP TABLE IF EXISTS utilization_comment CASCADE;
             DROP TABLE IF EXISTS utilization_summary CASCADE;
             DROP TYPE IF EXISTS genre1;
-        """)
+        ''')
 
     def _drop_resource_tables(cursor):
-        cursor.execute("""
+        cursor.execute('''
             DROP TABLE IF EXISTS resource_comment CASCADE;
             DROP TABLE IF EXISTS resource_comment_reply CASCADE;
             DROP TABLE IF EXISTS resource_comment_summary CASCADE;
             DROP TYPE IF EXISTS genre2;
-        """)
+        ''')
 
     def _drop_download_tables(cursor):
-        cursor.execute("""
+        cursor.execute('''
             DROP TABLE IF EXISTS download_summary CASCADE;
-        """)
+        ''')
 
     def _create_utilization_tables(cursor):
-        cursor.execute("""
+        cursor.execute('''
             CREATE TABLE utilization (
                 id TEXT NOT NULL,
                 resource_id TEXT NOT NULL,
@@ -166,10 +166,10 @@ def init(modules, host, port, dbname, user, password):
                 PRIMARY KEY (id),
                 FOREIGN KEY (resource_id) REFERENCES resource (id)
             );
-        """)
+        ''')
 
     def _create_resource_tabels(cursor):
-        cursor.execute("""
+        cursor.execute('''
             CREATE TYPE genre2 AS ENUM ('1', '2');
             CREATE TABLE resource_comment (
                 id TEXT NOT NULL,
@@ -207,10 +207,10 @@ def init(modules, host, port, dbname, user, password):
                 PRIMARY KEY (id),
                 FOREIGN KEY (resource_id) REFERENCES resource (id)
             );
-        """)
+        ''')
 
     def _create_download_tables(cursor):
-        cursor.execute("""
+        cursor.execute('''
             CREATE TABLE download_summary (
                 id TEXT NOT NULL,
                 resource_id TEXT NOT NULL,
@@ -220,6 +220,6 @@ def init(modules, host, port, dbname, user, password):
                 PRIMARY KEY (id),
                 FOREIGN KEY (resource_id) REFERENCES resource (id)
             );
-        """)
+        ''')
 
             connection.commit()
