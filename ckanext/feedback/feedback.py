@@ -13,7 +13,7 @@ def feedback():
 def get_connection(host, port, dbname, user, password):
     try:
         connector = psycopg2.connect(
-            f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+            f'postgresql://{user}:{password}@{host}:{port}/{dbname}'
         )
     except Exception as e:
         tk.error_shout(e)
@@ -172,31 +172,31 @@ def _create_utilization_tables(cursor):
             FOREIGN KEY (creator_user_id) REFERENCES public.user (id)
         );
 
-            CREATE TYPE genre1 AS ENUM ('1', '2');
-            CREATE TABLE utilization_comment (
-                id TEXT NOT NULL,
-                utilization_id TEXT NOT NULL,
-                category genre1 NOT NULL,
-                content TEXT,
-                created TIMESTAMP,
-                approval BOOLEAN DEFAULT false,
-                approved TIMESTAMP,
-                approval_user_id TEXT,
-                PRIMARY KEY (id),
-                FOREIGN KEY (utilization_id) REFERENCES utilization (id),
-                FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
-            );
+        CREATE TYPE utilization_comment_category AS ENUM ('Request', 'Question', 'Advertise', 'Thank');
+        CREATE TABLE utilization_comment (
+            id TEXT NOT NULL,
+            utilization_id TEXT NOT NULL,
+            category utilization_comment_category NOT NULL,
+            content TEXT,
+            created TIMESTAMP,
+            approval BOOLEAN DEFAULT false,
+            approved TIMESTAMP,
+            approval_user_id TEXT,
+            PRIMARY KEY (id),
+            FOREIGN KEY (utilization_id) REFERENCES utilization (id),
+            FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
+        );
 
-            CREATE TABLE utilization_summary (
-                id TEXT NOT NULL,
-                resource_id TEXT NOT NULL,
-                utilization INTEGER,
-                comment INTEGER,
-                created TIMESTAMP,
-                updated TIMESTAMP,
-                PRIMARY KEY (id),
-                FOREIGN KEY (resource_id) REFERENCES resource (id)
-            );
+        CREATE TABLE utilization_summary (
+            id TEXT NOT NULL,
+            resource_id TEXT NOT NULL,
+            utilization INTEGER,
+            comment INTEGER,
+            created TIMESTAMP,
+            updated TIMESTAMP,
+            PRIMARY KEY (id),
+            FOREIGN KEY (resource_id) REFERENCES resource (id)
+        );
         """
     )
 
@@ -204,11 +204,11 @@ def _create_utilization_tables(cursor):
 def _create_resource_tabels(cursor):
     cursor.execute(
         """
-        CREATE TYPE genre2 AS ENUM ('1', '2');
+        CREATE TYPE resource_comment_category AS ENUM ('Request', 'Question', 'Advertise', 'Thank');
         CREATE TABLE resource_comment (
             id TEXT NOT NULL,
             resource_id TEXT NOT NULL,
-            category genre2 NOT NULL,
+            category resource_comment_category NOT NULL,
             content TEXT,
             rating INTEGER,
             created TIMESTAMP,
