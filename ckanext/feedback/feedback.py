@@ -110,7 +110,7 @@ def _drop_utilization_tables(cursor):
         DROP TABLE IF EXISTS issue_resolution CASCADE;
         DROP TABLE IF EXISTS utilization_comment CASCADE;
         DROP TABLE IF EXISTS utilization_summary CASCADE;
-        DROP TYPE IF EXISTS genre1;
+        DROP TYPE IF EXISTS utilization_comment_category;
     """
     )
 
@@ -121,7 +121,7 @@ def _drop_resource_tables(cursor):
         DROP TABLE IF EXISTS resource_comment CASCADE;
         DROP TABLE IF EXISTS resource_comment_reply CASCADE;
         DROP TABLE IF EXISTS resource_comment_summary CASCADE;
-        DROP TYPE IF EXISTS genre2;
+        DROP TYPE IF EXISTS resource_comment_category;
     """
     )
 
@@ -235,7 +235,7 @@ def _create_resource_tabels(cursor):
             FOREIGN KEY (creator_user_id) REFERENCES public.user (id)
         );
 
-         CREATE TABLE reource_comment_summary (
+         CREATE TABLE resource_comment_summary (
             id TEXT NOT NULL,
             resource_id TEXT NOT NULL,
             comment INTEGER,
