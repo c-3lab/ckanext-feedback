@@ -43,7 +43,7 @@ def get_connection(host, port, dbname, user, password):
     '-p',
     '--port',
     envvar='POSTGRES_PORT',
-    default='5432',
+    default=5432,
     help='specify the port number of postgresql',
 )
 @click.option(
