@@ -13,13 +13,7 @@ def feedback():
 def get_connection(host, port, dbname, user, password):
     try:
         connector = psycopg2.connect(
-            'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'.format(
-                db_user=user,
-                db_password=password,
-                db_host=host,
-                db_port=port,
-                db_name=dbname,
-            )
+            f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
         )
     except Exception as e:
         tk.error_shout(e)
