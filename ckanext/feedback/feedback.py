@@ -172,7 +172,9 @@ def _create_utilization_tables(cursor):
             FOREIGN KEY (creator_user_id) REFERENCES public.user (id)
         );
 
-        CREATE TYPE utilization_comment_category AS ENUM ('Request', 'Question', 'Advertise', 'Thank');
+        CREATE TYPE utilization_comment_category AS ENUM (
+            'Request', 'Question', 'Advertise', 'Thank'
+            );
         CREATE TABLE utilization_comment (
             id TEXT NOT NULL,
             utilization_id TEXT NOT NULL,
@@ -204,7 +206,9 @@ def _create_utilization_tables(cursor):
 def _create_resource_tabels(cursor):
     cursor.execute(
         """
-        CREATE TYPE resource_comment_category AS ENUM ('Request', 'Question', 'Advertise', 'Thank');
+        CREATE TYPE resource_comment_category AS ENUM (
+            'Request', 'Question', 'Advertise', 'Thank'
+            );
         CREATE TABLE resource_comment (
             id TEXT NOT NULL,
             resource_id TEXT NOT NULL,
