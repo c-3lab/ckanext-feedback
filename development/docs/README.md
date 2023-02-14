@@ -47,7 +47,7 @@ ckan --config=/etc/ckan/production.ini feedback init -m resource -m download
 
 **任意項目**
 
-PosgreSQLコンテナのホスト名を指定する。  
+PostgreSQLコンテナのホスト名を指定する。  
 指定しない場合、以下の順で参照された値を使用する。
 1. 環境変数 ```POSTGRES_HOST```
 2. CKANのデフォルト値 ```db```
@@ -56,7 +56,7 @@ PosgreSQLコンテナのホスト名を指定する。
 
 **任意項目**
 
-PosgreSQLコンテナのポート番号を指定する。  
+PostgreSQLコンテナのポート番号を指定する。  
 指定しない場合、以下の順で参照された値を使用する。
 1. 環境変数 ```POSTGRES_PORT```
 2. CKANのデフォルト値 ```5432```
@@ -65,7 +65,7 @@ PosgreSQLコンテナのポート番号を指定する。
 
 **任意項目**
 
-PosgreSQLのデータベース名を指定する。  
+PostgreSQLのデータベース名を指定する。  
 指定しない場合、以下の順で参照された値を使用する。
 1. 環境変数 ```POSTGRES_DB```
 2. CKANのデフォルト値 ```ckan```
@@ -74,7 +74,7 @@ PosgreSQLのデータベース名を指定する。
 
 **任意項目**
 
-PosgreSQLに接続するためのユーザ名を指定する。  
+PostgreSQLに接続するためのユーザ名を指定する。  
 指定しない場合、以下の順で参照された値を使用する。
 1. 環境変数 ```POSTGRES_USER```
 2. CKANのデフォルト値 ```ckan```
@@ -83,7 +83,7 @@ PosgreSQLに接続するためのユーザ名を指定する。
 
 **任意項目**
 
-PosgreSQLに接続するためのパスワードを指定する。  
+PostgreSQLに接続するためのパスワードを指定する。  
 指定しない場合、以下の順で参照された値を使用する。
 1. 環境変数 ```POSTGRES_PASSWORD```
 2. CKANのデフォルト値 ```ckan```
