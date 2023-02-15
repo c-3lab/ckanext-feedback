@@ -172,10 +172,10 @@
                       <label for="waiting_for_approval" class="normal-font-weight middle-vertical-aligned">承認待ち</label>
                       <input class="spaced-left" type="checkbox" id="approved" name="approved" value="approved">
                       <label for="approved" class="normal-font-weight middle-vertical-aligned">承認済</label>
-                    </form>
                     {% endblock %}
                   {% endif %}
                 {% endif %}
+                </form>
                 <hr>
               {% endif %}
               {% if h.show_record_count(self) == True %} 
