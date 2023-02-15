@@ -4,8 +4,10 @@ from flask import Blueprint
 from ckan.config.routing import SubMapper
 import ckanext.feedback.services.utilization.search as searchService
 from ckan.common import config
-from ckan.plugins import toolkit
+from flask import Blueprint  # type: ignore
 
+import ckanext.feedback.controllers.utilization as utilization
+import ckanext.feedback.services.utilization.search as searchService  # type: ignore
 from ckanext.feedback.command import feedback
 
 # Render HTML pages
