@@ -24,7 +24,7 @@ def get_data():
             .join(Package, Package.id == Resource.package_id)
         )
     # Retrieve the "keyword" parameter from search.html
-    keyword = request.args.get("keyword")
+    keyword = request.args.get('keyword')
     if keyword:
         rows = (
             rows.filter(
@@ -36,8 +36,8 @@ def get_data():
             )
         )
     # Retrieve the "waiting" and "approval" parameters from search.html
-    waiting = request.args.get("waiting")
-    approval = request.args.get("approval")
+    waiting = request.args.get('waiting')
+    approval = request.args.get('approval')
     if waiting and not approval:
         rows = (
             rows.filter(Utilization.approval == False)  # noqa
@@ -54,7 +54,7 @@ def get_data():
 
 # If "keyword" exists show it in the search box upon page load
 def keep_keyword():
-    if request.args.get("keyword"):
-        return request.args.get("keyword")
+    if request.args.get('keyword'):
+        return request.args.get('keyword')
     else:
-        return ""
+        return ''

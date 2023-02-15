@@ -30,7 +30,8 @@ def get_connection(host, port, dbname, user, password):
     '--modules',
     multiple=True,
     type=click.Choice(['utilization', 'resource', 'download']),
-    help='specify the module you want to use from utilization, resource, download',
+    help='specify the module you want to use from utilization, resource, \
+        download',
 )
 @click.option(
     '-h',
@@ -79,22 +80,26 @@ def init(modules, host, port, dbname, user, password):
                     _create_resource_tabels(cursor)
                     _create_download_tables(cursor)
                     click.secho(
-                        'Initialize all modules: SUCCESS', fg='green', bold=True
+                        'Initialize all modules: SUCCESS', fg='green',
+                        bold=True
                     )
                 elif 'utilization' in modules:
                     _drop_utilization_tables(cursor)
                     _create_utilization_tables(cursor)
                     click.secho(
-                        'Initialize utilization: SUCCESS', fg='green', bold=True
+                        'Initialize utilization: SUCCESS', fg='green',
+                        bold=True
                     )
                 elif 'resource' in modules:
                     _drop_resource_tables(cursor)
                     _create_resource_tabels(cursor)
-                    click.secho('Initialize resource: SUCCESS', fg='green', bold=True)
+                    click.secho('Initialize resource: SUCCESS', fg='green',
+                                bold=True)
                 elif 'download' in modules:
                     _drop_download_tables(cursor)
                     _create_download_tables(cursor)
-                    click.secho('Initialize download: SUCCESS', fg='green', bold=True)
+                    click.secho('Initialize download: SUCCESS', fg='green',
+                                bold=True)
             except Exception as e:
                 tk.error_shout(e)
                 sys.exit(1)
