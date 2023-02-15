@@ -13,8 +13,17 @@ def get_data():
     keyword = request.args.get("keyword")
     if keyword:
         rows = (
-            session.query(Utilization)
-            .filter(Utilization.title.like(f"%{keyword}%"))
+            session.query(
+                Utilization.title,
+                Utilization.created,
+                Utilization.approval,
+                Resource.name.label('resource_name'),
+                Resource.id.label('resource_id'),
+                Package.name.label('package_name'),
+            )
+            .join(Resource, Resource.id == Utilization.resource_id)
+            .join(Package, Package.id == Resource.package_id)
+            .filter(Utilization.title.like(f'%{keyword}%'))
             .all()
         )
     else:
