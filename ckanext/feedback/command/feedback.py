@@ -1,8 +1,8 @@
 import sys
-import psycopg2
-import click
 
 import ckan.plugins.toolkit as tk
+import click
+import psycopg2
 
 
 @click.group()
