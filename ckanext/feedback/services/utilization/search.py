@@ -23,6 +23,7 @@ def get_data():
             .join(Resource, Resource.id == Utilization.resource_id)
             .join(Package, Package.id == Resource.package_id)
         )
+    # Retrieve the "keyword" parameter from search.html
     keyword = request.args.get("keyword")
     if keyword:
         rows = (
@@ -34,6 +35,18 @@ def get_data():
                 )
             )
         )
+    # Retrieve the "waiting" and "approval" parameters from search.html
+    waiting = request.args.get("waiting")
+    approval = request.args.get("approval")
+    if waiting and not approval:
+        rows = (
+            rows.filter(Utilization.approval == False)  # noqa
+        )
+    elif approval and not waiting:
+        rows = (
+            rows.filter(Utilization.approval == True)  # noqa
+        )
+    # Set "rows" as the final query results
     rows = rows.all()
 
     return rows
