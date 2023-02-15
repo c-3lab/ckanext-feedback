@@ -99,7 +99,5 @@ class FeedbackPlugin(p.SingletonPlugin):
             "show_record_table_issue_resolution_count":
                 FeedbackPlugin.show_record_table_issue_resolution_count,
             "get_data": searchService.get_data,
-            "keep_keyword": searchService.keep_keyword,
-            "get_package_info": searchService.get_package_info,
-            "get_resource_info": searchService.get_resource_info,
+            "keep_keyword": searchService.keep_keyword
         }
