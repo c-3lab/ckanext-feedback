@@ -1,6 +1,7 @@
 from ckan.common import request
 from ckan.model.package import Package
 from ckan.model.resource import Resource
+from sqlalchemy import or_  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
 from ckanext.feedback.models.utilization import Utilization
@@ -10,9 +11,7 @@ session = Session()
 
 # Get data from the Utilization table
 def get_data():
-    keyword = request.args.get("keyword")
-    if keyword:
-        rows = (
+    rows = (
             session.query(
                 Utilization.title,
                 Utilization.created,
@@ -23,11 +22,19 @@ def get_data():
             )
             .join(Resource, Resource.id == Utilization.resource_id)
             .join(Package, Package.id == Resource.package_id)
-            .filter(Utilization.title.like(f'%{keyword}%'))
-            .all()
         )
-    else:
-        rows = session.query(Utilization).all()
+    keyword = request.args.get("keyword")
+    if keyword:
+        rows = (
+            rows.filter(
+                or_(
+                    Utilization.title.like(f'%{keyword}%'),
+                    Resource.name.like(f'%{keyword}%'),
+                    Package.name.like(f'%{keyword}%')
+                )
+            )
+        )
+    rows = rows.all()
 
     return rows
 
