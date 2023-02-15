@@ -178,8 +178,8 @@
                 {% endif %}
                 <hr>
               {% endif %}
-              {% if h.show_record_count() == True %} 
-                <p class="bottom-centered-content">検索結果：{{ h.get_data_count() }}件</p>
+              {% if h.show_record_count(self) == True %} 
+                <p class="bottom-centered-content">検索結果：{{ h.get_data()|length }}件</p>
               {% endif %}
               {% if h.show_record_table() == True %} 
                 {% block result_table %}
@@ -193,7 +193,7 @@
                       <th class="small-column">ステータス</th>
                     {% endif %}
                   </tr>
-                  {% if h.get_data_count() %}
+                  {% if h.get_data()|length > 0 %}
                     {% for row in h.get_data() %}
                     <tr>
                       <td class="left-aligned-text">{{ row.title }}

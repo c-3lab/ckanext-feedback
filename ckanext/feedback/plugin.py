@@ -90,13 +90,16 @@ class FeedbackPlugin(p.SingletonPlugin):
         # Template helper function names should begin with the name of the
         # extension they belong to, to avoid clashing with functions from
         # other extensions.
-        return {'show_search_bar': FeedbackPlugin.show_search_bar,
-            'show_status_selection': FeedbackPlugin.show_status_selection,
-            'show_record_count': FeedbackPlugin.show_record_count,
-            'show_record_table': FeedbackPlugin.show_record_table,
-            'show_record_table_badge': FeedbackPlugin.show_record_table_badge,
-            'show_record_table_issue_resolution_count': FeedbackPlugin.show_record_table_issue_resolution_count,
-            'get_data': searchService.get_data,
-            'get_data_count': searchService.get_data_count,
-            'keep_keyword': searchService.keep_keyword
+        return {
+            "show_search_bar": FeedbackPlugin.show_search_bar,
+            "show_status_selection": FeedbackPlugin.show_status_selection,
+            "show_record_count": FeedbackPlugin.show_record_count,
+            "show_record_table": FeedbackPlugin.show_record_table,
+            "show_record_table_badge": FeedbackPlugin.show_record_table_badge,
+            "show_record_table_issue_resolution_count":
+                FeedbackPlugin.show_record_table_issue_resolution_count,
+            "get_data": searchService.get_data,
+            "keep_keyword": searchService.keep_keyword,
+            "get_package_info": searchService.get_package_info,
+            "get_resource_info": searchService.get_resource_info,
         }

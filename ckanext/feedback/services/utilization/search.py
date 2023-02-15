@@ -8,23 +8,6 @@ from ckanext.feedback.models.utilization import Utilization
 session = Session()
 
 
-# Get the count of records in the Utilization table
-def get_data_count():
-    count = 0
-    keyword = request.args.get("keyword")
-    if keyword:
-        rows = (
-            session.query(Utilization)
-            .filter(Utilization.title.like(f"%{keyword}%"))
-            .all()
-        )
-    else:
-        rows = session.query(Utilization).all()
-    for row in rows:
-        count = count + 1
-    return count
-
-
 # Get data from the Utilization table
 def get_data():
     keyword = request.args.get("keyword")
