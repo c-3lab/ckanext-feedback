@@ -24,3 +24,9 @@ feedback-package-item-css:
   output: feedback/%(version)s-package_item.css
   contents:
     - css/package_item.css
+
+feedback-details-css:
+  filter: cssrewrite
+  output: feedback/%(version)s-details.css
+  contents:
+    - css/details.css
