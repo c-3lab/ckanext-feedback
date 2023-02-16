@@ -18,6 +18,10 @@ Example:
 {% set title = package.title or package.name %}
 {% set notes = h.markdown_extract(package.notes, extract_length=truncate) %}
 
+{% block styles %}
+  {% asset 'feedback/feedback-package-item-css' %}
+{% endblock %}
+
 {% block package_item %}
   <li class="{{ item_class or "dataset-item" }}">
     {% block content %}

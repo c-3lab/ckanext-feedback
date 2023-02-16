@@ -17,10 +17,10 @@
       {% include "header.html" %}
     {% endblock -%}
 
-    {% block styles %}
-      {{ super() }}
-      {% asset 'feedback/feedback-css' %}
-    {% endblock %}
+  {% block styles %}
+    {{ super() }}
+    {% asset 'feedback/feedback-search-css' %}
+  {% endblock %}
 
     {# The content block allows you to replace the content of the page if needed #}
     {%- block content %}
