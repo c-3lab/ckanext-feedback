@@ -35,17 +35,6 @@ def get_data():
                 )
             )
         )
-    # Retrieve the "waiting" and "approval" parameters from search.html
-    waiting = request.args.get('waiting')
-    approval = request.args.get('approval')
-    if waiting and not approval:
-        rows = (
-            rows.filter(Utilization.approval == False)  # noqa
-        )
-    elif approval and not waiting:
-        rows = (
-            rows.filter(Utilization.approval == True)  # noqa
-        )
     # Set "rows" as the final query results
     rows = rows.all()
 
