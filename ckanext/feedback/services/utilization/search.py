@@ -30,8 +30,8 @@ def get_utilizations(keyword):
             .filter(Utilization.title.like(f"%{keyword}%"))
             .all()
         )
-    else:
-        rows = session.query(Utilization).all()
+    # Set "rows" as the final query results
+    rows = rows.all()
 
     return rows
 
