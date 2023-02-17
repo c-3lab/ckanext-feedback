@@ -166,12 +166,13 @@
                 {% if h.show_status_selection() == True %}  
                   {% if c.userobj.sysadmin %}
                     {% block select_status %}
-                      <form class="section site-search top-centered-content">
-                      <span class="status-label"><p>ステータス</p></span>
-                      <input type="checkbox" id="waiting" name="waiting" onclick="filter()">
-                      <label for="waiting_for_approval" class="normal-font-weight middle-vertical-aligned">承認待ち</label>
-                      <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="filter()">
-                      <label for="approved" class="normal-font-weight middle-vertical-aligned">承認済</label>
+                      <span class="top-centered-content">
+                        <span class="status-label"><p>ステータス</p></span>
+                        <input type="checkbox" id="waiting" name="waiting" onclick="filter()">
+                        <label for="waiting_for_approval" class="normal-font-weight middle-vertical-aligned">承認待ち</label>
+                        <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="filter()">
+                        <label for="approved" class="normal-font-weight middle-vertical-aligned">承認済</label>
+                      </span>
                     {% endblock %}
                   {% endif %}
                 {% endif %}
