@@ -1,14 +1,11 @@
-import ckan.plugins as p
-import ckan.plugins.toolkit as tk
-from flask import Blueprint
-from ckan.config.routing import SubMapper
-import ckanext.feedback.services.utilization.search as searchService
+import ckan.plugins as plugins
+import ckan.plugins.toolkit as toolkit
 from ckan.common import config
-from flask import Blueprint  # type: ignore
+from flask import Blueprint
 
 import ckanext.feedback.controllers.utilization as utilization
-import ckanext.feedback.services.utilization.search \
-    as searchService  # type: ignore
+import ckanext.feedback.services.utilization.details as detailService
+import ckanext.feedback.services.utilization.search as searchService
 from ckanext.feedback.command import feedback
 
 # Render HTML pages
@@ -28,12 +25,12 @@ def comment():
 def search():
     return tk.render('utilization/search.html')
 
-class FeedbackPlugin(p.SingletonPlugin):
+class FeedbackPlugin(plugins.SingletonPlugin):
     # Declare class implements
-    p.implements(p.IConfigurer)
-    p.implements(p.IClick)
-    p.implements(p.IBlueprint)
-    p.implements(p.ITemplateHelpers)
+    plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.IClick)
+    plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.ITemplateHelpers)
 
     def update_config(self, config):
         # Add this plugin's directories to CKAN's extra paths, so that
@@ -42,24 +39,6 @@ class FeedbackPlugin(p.SingletonPlugin):
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('assets', 'feedback')
-
-        # Retrieve the value for the "ckan.feedback.substitute_templates"
-        # setting from the Config file (/etc/ckan/production.ini) and
-        # return it as a bool.
-        # If the "ckan.feedback.substitute_templates" setting doesn't exist
-        # return False
-        substitute_templates = tk.asbool(
-            config.get('ckan.feedback.substitute_templates', False)
-        )
-
-        # If substitute_templates is True, add the feedback directories below
-        # to CKAN's extra paths
-        if substitute_templates:
-            # Add this plugin's directories to CKAN's extra paths, so that CKAN will use this plugin's custom files.
-            # Paths are relative to this plugin.py file.
-            tk.add_template_directory(config, 'templates')
-            tk.add_public_directory(config, 'public')
-            tk.add_resource('assets', 'feedback')
 
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
@@ -93,49 +72,18 @@ class FeedbackPlugin(p.SingletonPlugin):
     def get_commands(self):
         return [feedback.feedback]
 
-    # Check production.ini settings
-    # Show/hide the main screen search bar
-    def show_search_bar(self):
-        return tk.asbool(config.get(
-            'ckan.feedback.utilization.show_search_bar', False))
+        # Check production.ini settings
+    # Enable/disable the download module
+    def enable_downloads(self):
+        return toolkit.asbool(config.get('ckan.feedback.downloads.enable', False))
 
-    # Show/hide the status selection checkboxes
-    def show_status_selection(self):
-        return tk.asbool(
-            config.get(
-                'ckan.feedback.utilization.show_status_selection', False)
-        )
+    # Enable/disable the resources module
+    def enable_resources(self):
+        return toolkit.asbool(config.get('ckan.feedback.resources.enable', False))
 
-    # Show/hide the record count
-    def show_record_count(self):
-        return tk.asbool(
-            config.get(
-                'ckan.feedback.utilization.show_record_count', False)
-        )
-
-    # Show/hide the record table
-    def show_record_table(self):
-        return tk.asbool(
-            config.get(
-                'ckan.feedback.utilization.show_record_table', False)
-        )
-
-    # Show/hide the record table issue resolution badge
-    def show_record_table_badge(self):
-        return tk.asbool(
-            config.get(
-                'ckan.feedback.utilization.show_record_table_badge', False)
-        )
-
-    # Show/hide the record table issue resolution count
-    def show_record_table_issue_resolution_count(self):
-        return tk.asbool(
-            config.get(
-                'ckan.feedback.utilization.'
-                'show_record_table_issue_resolution_count',
-                False,
-            )
-        )
+    # Enable/disable the utilizations module
+    def enable_utilizations(self):
+        return toolkit.asbool(config.get('ckan.feedback.utilizations.enable', False))
 
     def get_helpers(self):
         '''Register the most_popular_groups() function above as a template
@@ -146,13 +94,10 @@ class FeedbackPlugin(p.SingletonPlugin):
         # extension they belong to, to avoid clashing with functions from
         # other extensions.
         return {
-            'show_search_bar': FeedbackPlugin.show_search_bar,
-            'show_status_selection': FeedbackPlugin.show_status_selection,
-            'show_record_count': FeedbackPlugin.show_record_count,
-            'show_record_table': FeedbackPlugin.show_record_table,
-            'show_record_table_badge': FeedbackPlugin.show_record_table_badge,
-            'show_record_table_issue_resolution_count':
-                FeedbackPlugin.show_record_table_issue_resolution_count,
-            'get_data': searchService.get_data,
-            'keep_keyword': searchService.keep_keyword
+            'enable_downloads': FeedbackPlugin.enable_downloads,
+            'enable_resources': FeedbackPlugin.enable_resources,
+            'enable_utilizations': FeedbackPlugin.enable_utilizations,
+            'get_utilizations': searchService.get_utilizations,
+            'keep_keyword': searchService.keep_keyword,
+            'get_utilization_details': detailService.get_utilization_details
         }

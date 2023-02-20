@@ -1,0 +1,162 @@
+{% if h.enable_utilizations(self) == True %}
+
+{% extends "page.html" %}
+
+{%- block page -%}
+
+  <!-- {% block skip %}
+    <div class="sr-only sr-only-focusable"><a href="#content">{{ _('Skip to content') }}</a></div>
+  {% endblock %} -->
+
+  {#
+  Override the header on a page by page basis by extending this block. If
+  making sitewide header changes it is preferable to override the header.html
+  file.
+  #}
+  {%- block header %}
+    {% include "header.html" %}
+  {% endblock -%}
+
+  {% block styles %}
+    {{ super() }}
+    {% asset 'feedback/feedback-details-css' %}
+  {% endblock %}
+
+  {# The content block allows you to replace the content of the page if needed #}
+  {%- block content %}
+    {% block maintag %}<div class="main">{% endblock %}
+      <div id="content" class="container">
+        {% block main_content %}
+
+          {% block toolbar %}
+            <div class="toolbar" role="navigation" aria-label="{{ _('Breadcrumb') }}">
+              {% block breadcrumb %}
+                {% if self.breadcrumb_content() | trim %}
+                  <ol class="breadcrumb">
+                    {% snippet 'snippets/home_breadcrumb_item.html' %}
+                    {% block breadcrumb_content %}
+                      <li class="inactive"><a href="http://localhost:5000/utilization/search">{{ _('利活用方法') }}</a></li>
+                      <li class="active"><a href="http://localhost:5000/utilization/detail">{{ _('詳細') }}</a></li>
+                    {% endblock %}
+                  </ol>
+                {% endif %}
+              {% endblock %}
+            </div>
+          {% endblock %}
+
+          <div class="row wrapper{% block wrapper_class %}{% endblock %}{% if self.secondary()|trim == '' or c.action=='resource_read' %} no-nav{% endif %}">
+
+            {#
+            The pre_primary block can be used to add content to before the
+            rendering of the main content columns of the page.
+            #}
+            {% block pre_primary %}
+            {% endblock %}
+
+            {% block secondary %}
+              
+            {% endblock %}
+
+            {% block primary %}
+              {% set row = h.get_utilization_details() %}
+              <form class="centered-content" method="get">
+                <br>
+                <button class="btn btn-primary right-aligned spaced-left">編集</button>
+                <button class="btn btn-primary right-aligned">承認</button>
+                <table class="table table-striped table-bordered table-condensed">
+                  <thead>
+                    <th scope="col" class="left-aligned-text">Field</th>
+                    <th scope="col" class="left-aligned-text">Value</th>
+                  </thead>
+                  <tr>
+                    <td class="left-aligned-text bold">データセット</td>
+                    <td class="left-aligned-text"><a href="http://localhost:5000/dataset/{{ row.package_name }}">{{ row.package_name }}</a></td>
+                  </tr>
+                  <br>
+                  <br>
+                  <tr>
+                    <td class="left-aligned-text bold">データリソース</td>
+                    <td class="left-aligned-text"><a href="http://localhost:5000/dataset/{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a></td>
+                  </tr>
+                  <br>
+                  <br>
+                  <tr>
+                    <td class="left-aligned-text bold">タイトル</td>
+                    <td class="left-aligned-text">{{ row.title }}</td>
+                  </tr>
+                  <br>
+                </table>
+                <p class="bold">利活用内容</p>
+                <p>サンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプル</p>
+                <br>
+                <p class="bold">課題解決数</p>
+                <!-- ToDo -->
+                <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">1
+                <button class="btn btn-primary right-aligned">課題解決</button>
+                <br>
+                <br>
+                <p class="bold">コメント数</p>
+                <p>1</p>
+                <br>
+                <p class="bold">コメント</p>
+                <select name="comment-type" id="comment-type">
+                  <option value="request">要望</option>
+                  <option value="inquiry">問合せ</option>
+                </select>
+                <br>
+                <br>
+                <textarea class="form-control" cols="20" rows="5"></textarea>
+                <br>
+                <button class="btn btn-primary right-aligned">コメント送信</button>
+                <br>
+                <br>
+                <br>
+                <p class="bold">2023/01/15 要望</p>
+                <button class="btn btn-primary right-aligned">承認</button>
+                <br>
+                <br>
+                <p>サンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプル</p>
+                <br>
+                <br>
+                <p class="bold">2023/01/10 要望</p>
+                <button class="btn btn-primary right-aligned">承認</button>
+                <br>
+                <br>
+                <p>サンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプル</p>
+                <br>
+                <br>
+                <p class="bold">2023/01/08 問合せ</p>
+                <button class="btn btn-primary right-aligned">承認</button>
+                <br>
+                <br>
+                <p>サンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプル</p>
+                <br>
+                <br>
+              </form>
+            {% endblock %}
+          </div>
+        {% endblock %}
+      </div>
+    </div>
+  {% endblock -%}
+
+  {#
+  Override the footer on a page by page basis by extending this block. If
+  making sitewide header changes it is preferable to override the footer.html-u
+  file.
+  #}
+  {%- block footer %}
+    {% include "footer.html" %}
+  {% endblock -%}
+{%- endblock -%}
+
+{%- block scripts %}
+  {% asset 'base/main' %}
+  {% asset 'base/ckan' %}
+  {% if g.tracking_enabled %}
+    {% asset 'base/tracking' %}
+  {% endif %}
+  {{ super() }}
+{% endblock -%}
+
+{% endif %}

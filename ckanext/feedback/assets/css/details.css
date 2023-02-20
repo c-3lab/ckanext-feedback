@@ -1,8 +1,8 @@
-.big-column {
+.big-button {
   width: 25%;
 }
 
-.bottom-centered-content {
+.centered-content {
   margin-left: 5%;
   margin-right: auto;
   width: 90%
@@ -10,11 +10,6 @@
 
 .centered-text {
   text-align: center;
-}
-
-hr {
-  background: black;
-  height: 1px;
 }
 
 img {
@@ -37,7 +32,7 @@ label:after {
   font-weight: normal;
 }
 
-.medium-column {
+.medium-button {
   width: 20%;
 }
 
@@ -46,17 +41,11 @@ label:after {
   margin-left: 5px;
 }
 
-.search-button {
-  background: rgb(3, 138, 248);
-  border: none;
-  border-radius: 8px;
-  color: white;
+.right-aligned {
   float: right;
-  height: 30px;
-  width: 60px;
 }
 
-.small-column {
+.small-button {
   width: 15%;
 }
 
@@ -64,7 +53,7 @@ label:after {
   margin-left: 10px !important;
 }
 
-.status-label {
+.bold {
   font-weight: bold;
 }
 
