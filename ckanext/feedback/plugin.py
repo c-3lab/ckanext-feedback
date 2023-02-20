@@ -45,24 +45,27 @@ class FeedbackPlugin(plugins.SingletonPlugin):
         blueprint = Blueprint('search', self.__module__)
         # Add target page URLs to rules and add each URL to the blueprint
         rules = [
-            ('/utilization/details', 'details',
-                utilization.UtilizationController.details),
             (
-                '/utilization/registration', 'registration',
+                '/utilization/details',
+                'details',
+                utilization.UtilizationController.details,
+            ),
+            (
+                '/utilization/registration',
+                'registration',
                 utilization.UtilizationController.registration,
             ),
             (
-                '/utilization/comment_approval', 'comment_approval',
-                utilization.UtilizationController.comment_approval
+                '/utilization/comment_approval',
+                'comment_approval',
+                utilization.UtilizationController.comment_approval,
             ),
             (
-                '/utilization/comment', 'comment',
-                utilization.UtilizationController.comment
+                '/utilization/comment',
+                'comment',
+                utilization.UtilizationController.comment,
             ),
-            (
-                '/utilization/search', 'search',
-                utilization.UtilizationController.search
-            ),
+            ('/utilization/search', 'search', utilization.UtilizationController.search),
         ]
         for rule in rules:
             blueprint.add_url_rule(*rule)
@@ -73,6 +76,7 @@ class FeedbackPlugin(plugins.SingletonPlugin):
         return [feedback.feedback]
 
         # Check production.ini settings
+
     # Enable/disable the download module
     def enable_downloads(self):
         return toolkit.asbool(config.get('ckan.feedback.downloads.enable', False))
@@ -99,5 +103,5 @@ class FeedbackPlugin(plugins.SingletonPlugin):
             'enable_utilizations': FeedbackPlugin.enable_utilizations,
             'get_utilizations': searchService.get_utilizations,
             'keep_keyword': searchService.keep_keyword,
-            'get_utilization_details': detailService.get_utilization_details
+            'get_utilization_details': detailService.get_utilization_details,
         }
