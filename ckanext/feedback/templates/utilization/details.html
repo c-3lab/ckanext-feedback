@@ -61,8 +61,10 @@
               {% set row = h.get_utilization_details() %}
               <form class="centered-content" method="get">
                 <br>
-                <button class="btn btn-primary right-aligned spaced-left">編集</button>
-                <button class="btn btn-primary right-aligned">承認</button>
+                {% if c.userobj.sysadmin %}
+                  <button class="btn btn-primary right-aligned spaced-left">編集</button>
+                  <button class="btn btn-primary right-aligned">承認</button>
+                {% endif %}
                 <table class="table table-striped table-bordered table-condensed">
                   <thead>
                     <th scope="col" class="left-aligned-text">Field</th>
@@ -92,7 +94,9 @@
                 <p class="bold">課題解決数</p>
                 <!-- ToDo -->
                 <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">1
-                <button class="btn btn-primary right-aligned">課題解決</button>
+                {% if c.userobj.sysadmin %}
+                  <button class="btn btn-primary right-aligned">課題解決</button>
+                {% endif %}
                 <br>
                 <br>
                 <p class="bold">コメント数</p>
@@ -112,21 +116,27 @@
                 <br>
                 <br>
                 <p class="bold">2023/01/15 要望</p>
-                <button class="btn btn-primary right-aligned">承認</button>
+                {% if c.userobj.sysadmin %}
+                  <button class="btn btn-primary right-aligned">承認</button>
+                {% endif %}
                 <br>
                 <br>
                 <p>サンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプル</p>
                 <br>
                 <br>
                 <p class="bold">2023/01/10 要望</p>
-                <button class="btn btn-primary right-aligned">承認</button>
+                {% if c.userobj.sysadmin %}
+                  <button class="btn btn-primary right-aligned">承認</button>
+                {% endif %}
                 <br>
                 <br>
                 <p>サンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプル</p>
                 <br>
                 <br>
                 <p class="bold">2023/01/08 問合せ</p>
-                <button class="btn btn-primary right-aligned">承認</button>
+                {% if c.userobj.sysadmin %}
+                  <button class="btn btn-primary right-aligned">承認</button>
+                {% endif %}
                 <br>
                 <br>
                 <p>サンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプルサンプル</p>
