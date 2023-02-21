@@ -1,12 +1,12 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.common import config
-from flask import Blueprint
 
-import ckanext.feedback.controllers.utilization as utilization
 import ckanext.feedback.services.utilization.details as detailService
-import ckanext.feedback.services.utilization.search as searchService
 from ckanext.feedback.command import feedback
+from ckanext.feedback.views.utilization import (
+    utilization_blueprint as utilization_blueprint,
+)
 
 # Render HTML pages
 # utilization/details.html
@@ -42,41 +42,14 @@ class FeedbackPlugin(plugins.SingletonPlugin):
 
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
-        blueprint = Blueprint('search', self.__module__)
-        # Add target page URLs to rules and add each URL to the blueprint
-        rules = [
-            (
-                '/utilization/details',
-                'details',
-                utilization.UtilizationController.details,
-            ),
-            (
-                '/utilization/registration',
-                'registration',
-                utilization.UtilizationController.registration,
-            ),
-            (
-                '/utilization/comment_approval',
-                'comment_approval',
-                utilization.UtilizationController.comment_approval,
-            ),
-            (
-                '/utilization/comment',
-                'comment',
-                utilization.UtilizationController.comment,
-            ),
-            ('/utilization/search', 'search', utilization.UtilizationController.search),
-        ]
-        for rule in rules:
-            blueprint.add_url_rule(*rule)
-
-        return blueprint
+        blueprints = []
+        blueprints.append(utilization_blueprint)
+        return blueprints
 
     def get_commands(self):
         return [feedback.feedback]
 
-        # Check production.ini settings
-
+    # Check production.ini settings
     # Enable/disable the download module
     def enable_downloads(self):
         return toolkit.asbool(config.get('ckan.feedback.downloads.enable', False))
@@ -98,10 +71,8 @@ class FeedbackPlugin(plugins.SingletonPlugin):
         # extension they belong to, to avoid clashing with functions from
         # other extensions.
         return {
-            'enable_downloads': FeedbackPlugin.enable_downloads,
-            'enable_resources': FeedbackPlugin.enable_resources,
-            'enable_utilizations': FeedbackPlugin.enable_utilizations,
-            'get_utilizations': searchService.get_utilizations,
-            'keep_keyword': searchService.keep_keyword,
+            'enable_downloads': self.enable_downloads(),
+            'enable_resources': self.enable_resources(),
+            'enable_utilizations': self.enable_utilizations(),
             'get_utilization_details': detailService.get_utilization_details,
         }
