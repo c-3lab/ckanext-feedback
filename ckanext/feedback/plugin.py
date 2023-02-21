@@ -2,7 +2,6 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.common import config
 
-import ckanext.feedback.services.utilization.details as detailService
 from ckanext.feedback.command import feedback
 from ckanext.feedback.views.utilization import (
     utilization_blueprint as utilization_blueprint,
@@ -74,5 +73,4 @@ class FeedbackPlugin(plugins.SingletonPlugin):
             'enable_downloads': self.enable_downloads(),
             'enable_resources': self.enable_resources(),
             'enable_utilizations': self.enable_utilizations(),
-            'get_utilization_details': detailService.get_utilization_details,
         }

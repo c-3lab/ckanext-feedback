@@ -12,6 +12,15 @@
   text-align: center;
 }
 
+h1 {
+  margin-bottom: -75px;
+}
+
+.divider {
+  background: #000000;
+  height: 1px;
+}
+
 img {
   margin-left: 10px;
 }
