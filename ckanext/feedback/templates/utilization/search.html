@@ -72,18 +72,17 @@
             {% block search_by_keyword %}
               <form class="top-centered-content" method="get">
                 <br>
-                <p>キーワード検索</p>
+                <h4>キーワード検索</h4>
                 <div class="input-group search-input-group">
                   <input id="field-giant-search" type="text" class="form-control input-lg" name="keyword" placeholder="{{ _('キーワード検索...') }}" aria-label="{{ _('Search utilizaton data') }}" autocomplete="off" value="{{ keyword }}"/>
                   <span class="input-group-btn">
                     <button class="btn btn-default btn-lg" type="submit" aria-label="{{ _('Submit') }}"><i class="fa fa-search"></i></button>
                   </span>
                 </div>
-                <br>
             {% endblock %}
             {% if c.userobj.sysadmin %}
               {% block select_status %}
-                <span class="status-label"><p>ステータス</p></span>
+                <span><h4>ステータス</h4>
                 <input type="checkbox" id="waiting" name="waiting" onclick="filter()">
                 <label for="waiting_for_approval" class="normal-font-weight middle-vertical-aligned">承認待ち</label>
                 <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="filter()">
