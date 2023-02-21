@@ -1,7 +1,17 @@
 from sqlalchemy import *
 import ckan.model.meta as meta
-import ckan.model.domain_object as domain_object
-import datetime
+from ckan.model.resource import Resource
+from sqlalchemy import (
+    BOOLEAN,
+    TIMESTAMP,
+    Column,
+    Enum,
+    ForeignKey,
+    Integer,
+    Table,
+    Text,
+    orm,
+)
 
 __all__ = ['utilization', 'utilization_comment', 'utilization_summary']
 
@@ -24,10 +34,8 @@ utilization_comment = Table(
     'utilization_comment',
     meta.metadata,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('utilization_id', Text, ForeignKey('utilization.id'),
-           nullable=False),
-    Column('category', Enum('承認待ち', '承認済', name='category_enum'),
-           nullable=False),
+    Column('utilization_id', Text, ForeignKey('utilization.id'), nullable=False),
+    Column('category', Enum('承認待ち', '承認済', name='category_enum'), nullable=False),
     Column('content', Text),
     Column('created', TIMESTAMP),
     Column('approval', BOOLEAN, default=False),
@@ -75,6 +83,7 @@ class UtilizationSummary(domain_object.DomainObject):
     created: datetime.datetime
     updated: datetime.datetime
 
-meta.mapper(Utilization, utilization)
+
+meta.mapper(Utilization, utilization, properties={'resource': orm.relation(Resource)})
 meta.mapper(UtilizationComment, utilization_comment)
 meta.mapper(UtilizationSummary, utilization_summary)

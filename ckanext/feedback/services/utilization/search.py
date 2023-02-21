@@ -1,49 +1,36 @@
-from ckan.common import request
 from ckan.model.package import Package
 from ckan.model.resource import Resource
-from sqlalchemy import or_  # type: ignore
-from sqlalchemy.orm import Session  # type: ignore
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 from ckanext.feedback.models.utilization import Utilization
 
 session = Session()
 
 
-# Get data from the Utilization table
-def get_data():
+# Get records from the Utilization table
+def get_utilizations(keyword):
     rows = (
-            session.query(
-                Utilization.title,
-                Utilization.created,
-                Utilization.approval,
-                Resource.name.label('resource_name'),
-                Resource.id.label('resource_id'),
-                Package.name.label('package_name'),
-            )
-            .join(Resource, Resource.id == Utilization.resource_id)
-            .join(Package, Package.id == Resource.package_id)
+        session.query(
+            Utilization.title,
+            Utilization.created,
+            Utilization.approval,
+            Resource.name.label('resource_name'),
+            Resource.id.label('resource_id'),
+            Package.name.label('package_name'),
         )
-    # Retrieve the "keyword" parameter from search.html
-    keyword = request.args.get('keyword')
+        .join(Resource, Resource.id == Utilization.resource_id)
+        .join(Package, Package.id == Resource.package_id)
+    )
     if keyword:
-        rows = (
-            rows.filter(
-                or_(
-                    Utilization.title.like(f'%{keyword}%'),
-                    Resource.name.like(f'%{keyword}%'),
-                    Package.name.like(f'%{keyword}%')
-                )
+        rows = rows.filter(
+            or_(
+                Utilization.title.like(f'%{keyword}%'),
+                Resource.name.like(f'%{keyword}%'),
+                Package.name.like(f'%{keyword}%'),
             )
         )
     # Set "rows" as the final query results
     rows = rows.all()
 
     return rows
-
-
-# If "keyword" exists show it in the search box upon page load
-def keep_keyword():
-    if request.args.get('keyword'):
-        return request.args.get('keyword')
-    else:
-        return ''
