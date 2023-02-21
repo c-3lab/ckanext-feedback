@@ -3,6 +3,7 @@ from flask import Blueprint
 from ckanext.feedback.controllers import utilization
 
 utilization_blueprint = Blueprint('search', __name__, url_prefix=u'/utilization')
+
 # Add target page URLs to rules and add each URL to the blueprint
 rules = [
     (
