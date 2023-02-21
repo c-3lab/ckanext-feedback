@@ -12,8 +12,7 @@ def get_utilization_details():
     row = (
         session.query(
             Utilization.title,
-            Utilization.created,
-            Utilization.approval,
+            Utilization.description,
             Resource.name.label('resource_name'),
             Resource.id.label('resource_id'),
             Package.name.label('package_name'),
