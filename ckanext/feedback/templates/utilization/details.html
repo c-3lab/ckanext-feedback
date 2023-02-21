@@ -65,7 +65,7 @@
                   <button class="btn btn-primary right-aligned spaced-left">編集</button>
                   <button class="btn btn-primary right-aligned">承認</button>
                   <br>
-                  <hr>
+                  <hr class="divider">
                 {% endif %}
                 <h1>{{ row.title }}</h1>
                 <table class="table table-striped table-bordered table-condensed">
@@ -121,10 +121,12 @@
                   <br>
                   <br>
                 </form>
-                <hr class="divider">
+                {% if comments|length %}
+                  <hr class="divider">
+                {% endif %}
                 <form name="approval_form">
                   <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
-                  <input type="hidden" id="approval_user" name="approval_user" value="{{ c.userobj.id }}"
+                  <input type="hidden" id="approval_user" name="approval_user" value="{{ c.userobj.id }}"/>
                   {% for comment in comments %}
                     <span>
                       {% if c.userobj.sysadmin and comment.approval == false %}
