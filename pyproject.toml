@@ -34,7 +34,7 @@ python = "3.8.16"
 [tool.poetry.group.dev.dependencies]
 pyproject-flake8 = "^6.0.0.post1"
 flake8-quotes = "^3.3.2"
-black = "^22.12.0"
+black = "^23.1.0"
 isort = "^5.11.4"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
@@ -50,9 +50,11 @@ extend-ignore = "E203,W503,W504"
 inline-quotes = "single"
 multiline-quotes = "single"
 docstring-quotes = "single"
+exclude = "tmp, build"
 
 [tool.black]
 skip-string-normalization = true
+preview = true
 
 [tool.isort]
 include_trailing_comma = true
