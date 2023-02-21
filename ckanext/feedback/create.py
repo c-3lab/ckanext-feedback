@@ -28,10 +28,8 @@ utilization_comment = Table(
     'utilization_comment',
     metadata_obj,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('utilization_id', Text, ForeignKey('utilization.id'),
-           nullable=False),
-    Column('category', Enum('承認待ち', '承認済', name='category_enum'),
-           nullable=False),
+    Column('utilization_id', Text, ForeignKey('utilization.id'), nullable=False),
+    Column('category', Enum('承認待ち', '承認済', name='category_enum'), nullable=False),
     Column('content', Text),
     Column('created', TIMESTAMP),
     Column('approval', BOOLEAN, default=False),
@@ -44,8 +42,7 @@ issue_resolution = Table(
     'issue_resolution',
     metadata_obj,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('utilization_id', Text, ForeignKey('utilization.id'),
-           nullable=False),
+    Column('utilization_id', Text, ForeignKey('utilization.id'), nullable=False),
     Column('description', Text),
     Column('created', TIMESTAMP),
     Column('creator_user_id', Text, ForeignKey('user.id')),
@@ -56,8 +53,7 @@ issue_resolution_summary = Table(
     'issue_resolution_summary',
     metadata_obj,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('utilization_id', Text, ForeignKey('utilization.id'),
-           nullable=False),
+    Column('utilization_id', Text, ForeignKey('utilization.id'), nullable=False),
     Column('issue_resolution', Integer),
     Column('created', TIMESTAMP),
     Column('updated', TIMESTAMP),
@@ -69,8 +65,7 @@ resource_comment = Table(
     metadata_obj,
     Column('id', Text, primary_key=True, nullable=False),
     Column('resource_id', Text, ForeignKey('resource.id'), nullable=False),
-    Column('category', Enum('承認待ち', '承認済', name='category_enum'),
-           nullable=False),
+    Column('category', Enum('承認待ち', '承認済', name='category_enum'), nullable=False),
     Column('content', Text),
     Column('rating', Integer),
     Column('created', TIMESTAMP),
@@ -84,8 +79,9 @@ resource_comment_reply = Table(
     'resource_comment_reply',
     metadata_obj,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('resource_comment_id', Text, ForeignKey('resource_comment.id'),
-           nullable=False),
+    Column(
+        'resource_comment_id', Text, ForeignKey('resource_comment.id'), nullable=False
+    ),
     Column('content', Text),
     Column('created', TIMESTAMP),
     Column('creator_user_id', Text, ForeignKey('user.id')),
@@ -138,7 +134,7 @@ def show_tables():
 try:
     metadata_obj.create_all(engine)
     print('テーブルの作成が成功しました。')
-except (Exception) as e:
+except Exception as e:
     print('テーブルの作成が失敗しました。理由：', e)
     engine.dispose()
     print('接続を閉じました。')

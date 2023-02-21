@@ -1,6 +1,6 @@
 import sys
 
-import ckan.plugins.toolkit as tk
+import ckan.plugins.toolkit as toolkit
 import click
 import psycopg2
 
@@ -16,7 +16,7 @@ def get_connection(host, port, dbname, user, password):
             f'postgresql://{user}:{password}@{host}:{port}/{dbname}'
         )
     except Exception as e:
-        tk.error_shout(e)
+        toolkit.error_shout(e)
         sys.exit(1)
     else:
         return connector
@@ -30,8 +30,7 @@ def get_connection(host, port, dbname, user, password):
     '--modules',
     multiple=True,
     type=click.Choice(['utilization', 'resource', 'download']),
-    help='specify the module you want to use from utilization, resource, \
-        download',
+    help='specify the module you want to use from utilization, resource, download',
 )
 @click.option(
     '-h',
@@ -80,28 +79,24 @@ def init(modules, host, port, dbname, user, password):
                     _create_resource_tabels(cursor)
                     _create_download_tables(cursor)
                     click.secho(
-                        'Initialize all modules: SUCCESS', fg='green',
-                        bold=True
+                        'Initialize all modules: SUCCESS', fg='green', bold=True
                     )
                 elif 'utilization' in modules:
                     _drop_utilization_tables(cursor)
                     _create_utilization_tables(cursor)
                     click.secho(
-                        'Initialize utilization: SUCCESS', fg='green',
-                        bold=True
+                        'Initialize utilization: SUCCESS', fg='green', bold=True
                     )
                 elif 'resource' in modules:
                     _drop_resource_tables(cursor)
                     _create_resource_tabels(cursor)
-                    click.secho('Initialize resource: SUCCESS', fg='green',
-                                bold=True)
+                    click.secho('Initialize resource: SUCCESS', fg='green', bold=True)
                 elif 'download' in modules:
                     _drop_download_tables(cursor)
                     _create_download_tables(cursor)
-                    click.secho('Initialize download: SUCCESS', fg='green',
-                                bold=True)
+                    click.secho('Initialize download: SUCCESS', fg='green', bold=True)
             except Exception as e:
-                tk.error_shout(e)
+                toolkit.error_shout(e)
                 sys.exit(1)
 
             connection.commit()
@@ -155,7 +150,6 @@ def _create_utilization_tables(cursor):
             FOREIGN KEY (resource_id) REFERENCES resource (id),
             FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
         );
-
         CREATE TABLE issue_resolution_summary (
             id TEXT NOT NULL,
             utilization_id TEXT NOT NULL,
@@ -165,7 +159,6 @@ def _create_utilization_tables(cursor):
             PRIMARY KEY (id),
             FOREIGN KEY (utilization_id) REFERENCES utilization (id)
         );
-
         CREATE TABLE issue_resolution (
             id TEXT NOT NULL,
             utilization_id TEXT NOT NULL,
@@ -176,7 +169,6 @@ def _create_utilization_tables(cursor):
             FOREIGN KEY (utilization_id) REFERENCES utilization (id),
             FOREIGN KEY (creator_user_id) REFERENCES public.user (id)
         );
-
         CREATE TYPE utilization_comment_category AS ENUM (
             'Request', 'Question', 'Advertise', 'Thank'
             );
@@ -193,7 +185,6 @@ def _create_utilization_tables(cursor):
             FOREIGN KEY (utilization_id) REFERENCES utilization (id),
             FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
         );
-
         CREATE TABLE utilization_summary (
             id TEXT NOT NULL,
             resource_id TEXT NOT NULL,
@@ -228,7 +219,6 @@ def _create_resource_tabels(cursor):
             FOREIGN KEY (resource_id) REFERENCES resource (id),
             FOREIGN KEY (approval_user_id) REFERENCES public.user (id)
         );
-
          CREATE TABLE resource_comment_reply (
             id TEXT NOT NULL,
             resource_comment_id TEXT NOT NULL,
@@ -239,7 +229,6 @@ def _create_resource_tabels(cursor):
             FOREIGN KEY (resource_comment_id) REFERENCES resource_comment (id),
             FOREIGN KEY (creator_user_id) REFERENCES public.user (id)
         );
-
          CREATE TABLE resource_comment_summary (
             id TEXT NOT NULL,
             resource_id TEXT NOT NULL,
