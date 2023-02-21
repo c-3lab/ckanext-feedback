@@ -1,6 +1,6 @@
 import sys
 
-import ckan.plugins.toolkit as tk
+import ckan.plugins.toolkit as toolkit
 import click
 import psycopg2
 
@@ -30,8 +30,7 @@ def get_connection(host, port, dbname, user, password):
     '--modules',
     multiple=True,
     type=click.Choice(['utilization', 'resource', 'download']),
-    help='specify the module you want to use from utilization, resource, \
-        download',
+    help='specify the module you want to use from utilization, resource, download',
 )
 @click.option(
     '-h',
