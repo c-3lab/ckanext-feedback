@@ -1,4 +1,6 @@
-from sqlalchemy import *
+import datetime
+
+import ckan.model.domain_object as domain_object
 import ckan.model.meta as meta
 from ckan.model.resource import Resource
 from sqlalchemy import (
@@ -55,6 +57,7 @@ utilization_summary = Table(
     Column('updated', TIMESTAMP),
 )
 
+
 class Utilization(domain_object.DomainObject):
     id: str
     resource_id: str
@@ -65,6 +68,7 @@ class Utilization(domain_object.DomainObject):
     approved: datetime.datetime
     approval_user_id: str
 
+
 class UtilizationComment(domain_object.DomainObject):
     id: str
     utilization_id: str
@@ -74,6 +78,7 @@ class UtilizationComment(domain_object.DomainObject):
     approval: bool
     approved: datetime.datetime
     approval_user_id: str
+
 
 class UtilizationSummary(domain_object.DomainObject):
     id: str
