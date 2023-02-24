@@ -93,8 +93,9 @@
                   <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
                   <h4>コメント</h4>
                   <select name="comment_type" id="comment_type">
-                    <option value="Request">要望</option>
-                    <option value="Question">問合せ</option>
+                    {% for category in categories %}
+                      <option value="{{ category.name }}">{{ category.value }}</option>
+                    {% endfor %}
                   </select>
                   <br>
                   <br>
@@ -116,8 +117,14 @@
                       {% if c.userobj.sysadmin and comment.approval == false %}
                         <button class="btn btn-primary right-aligned" id="comment_id" name="comment_id" value="{{ comment.id }}">承認</button>
                       {% endif %}
-                      <!-- ToDo -->
-                      <h4>{{ comment.created.strftime('%Y/%m/%d') }} 要望</h4>
+                      <h4>
+                        {{ comment.created.strftime('%Y/%m/%d') }}
+                        {% for category in categories %}
+                          {% if comment.category in category.name %}
+                            {{ category.value }}
+                          {% endif %}
+                        {% endfor %}
+                      </h4>
                     </span>
                     <br>
                     <p>{{ comment.content }}</p>

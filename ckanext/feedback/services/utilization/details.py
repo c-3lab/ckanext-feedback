@@ -6,7 +6,11 @@ from ckan.model.resource import Resource
 from sqlalchemy import insert, update
 from sqlalchemy.orm import Session
 
-from ckanext.feedback.models.utilization import Utilization, UtilizationComment
+from ckanext.feedback.models.utilization import (
+    Utilization,
+    Utilization_comment_category,
+    UtilizationComment,
+)
 
 session = Session()
 
@@ -34,6 +38,7 @@ def get_utilization_comments(utilization_id):
     rows = (
         session.query(
             UtilizationComment.id,
+            UtilizationComment.category,
             UtilizationComment.content,
             UtilizationComment.created,
             UtilizationComment.approval,
@@ -42,7 +47,15 @@ def get_utilization_comments(utilization_id):
         .order_by(UtilizationComment.created.desc())
         .all()
     )
+
     return rows
+
+
+# Get category enum names and values
+def get_categories():
+    # rows = Utilization_comment_category
+
+    return Utilization_comment_category
 
 
 # Submit comment
