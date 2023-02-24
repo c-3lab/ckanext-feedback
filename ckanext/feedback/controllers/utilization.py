@@ -9,17 +9,18 @@ class UtilizationController:
     # Render HTML pages
     # utilization/details.html
     def details():
-        utilization_id = request.args.get('utilization_id', '')
-        comment_id = request.args.get('comment_id', '')
-        comment_type = request.args.get('comment_type', '')
-        comment_content = request.args.get('comment_content', '')
-        approval_user = request.args.get('approval_user', '')
+        if request.method == 'POST':
+            utilization_id = request.form.get('utilization_id', '')
+            comment_id = request.form.get('comment_id')
+            comment_type = request.form.get('comment_type', '')
+            comment_content = request.form.get('comment_content', '')
+            approval_user = request.form.get('approval_user')
+            detail_service.submit_comment(utilization_id, comment_type, comment_content)
+            detail_service.submit_approval(comment_id, approval_user)
+        else:
+            utilization_id = request.args.get('utilization_id', '')
         details = detail_service.get_utilization_details(utilization_id)
         comments = detail_service.get_utilization_comments(utilization_id)
-        submit_comment = detail_service.submit_comment(
-            utilization_id, comment_type, comment_content
-        )
-        submit_approval = detail_service.submit_approval(comment_id, approval_user)
 
         return toolkit.render(
             'utilization/details.html',
@@ -27,8 +28,6 @@ class UtilizationController:
                 'utilization_id': utilization_id,
                 'details': details,
                 'comments': comments,
-                'submit_comment': submit_comment,
-                'submit_approval': submit_approval,
             },
         )
 

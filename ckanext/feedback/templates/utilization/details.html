@@ -35,8 +35,8 @@
                   <ol class="breadcrumb">
                     {% snippet 'snippets/home_breadcrumb_item.html' %}
                     {% block breadcrumb_content %}
-                      <li class="inactive"><a href="http://localhost:5000/utilization/search">{{ _('利活用方法') }}</a></li>
-                      <li class="active"><a href="http://localhost:5000/utilization/detail">{{ _('詳細') }}</a></li>
+                      <li class="inactive"><a href="{{ h.url_for('utilization.search') }}">{{ _('利活用方法') }}</a></li>
+                      <li class="active"><a href="{{ h.url_for('utilization.details', utilization_id=utilization_id) }}">{{ _('詳細') }}</a></li>
                     {% endblock %}
                   </ol>
                 {% endif %}
@@ -59,7 +59,7 @@
 
             {% block primary %}
               {% set row = details %}
-              <div class="centered-content" method="get">
+              <div class="centered-content">
                 <br>
                 {% if c.userobj.sysadmin %}
                   <button class="btn btn-primary right-aligned spaced-left">編集</button>
@@ -68,29 +68,13 @@
                   <hr class="divider">
                 {% endif %}
                 <h1>{{ row.title }}</h1>
-                <table class="table table-striped table-bordered table-condensed">
-                  <thead>
-                    <th scope="col" class="left-aligned-text">Field</th>
-                    <th scope="col" class="left-aligned-text">Value</th>
-                  </thead>
-                  <tr>
-                    <td class="left-aligned-text bold">データセット</td>
-                    <td class="left-aligned-text"><a href="http://localhost:5000/dataset/{{ row.package_name }}">{{ row.package_name }}</a></td>
-                  </tr>
-                  <br>
-                  <br>
-                  <tr>
-                    <td class="left-aligned-text bold">データリソース</td>
-                    <td class="left-aligned-text"><a href="http://localhost:5000/dataset/{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a></td>
-                  </tr>
-                  <br>
-                  <br>
-                  <tr>
-                    <td class="left-aligned-text bold">タイトル</td>
-                    <td class="left-aligned-text">{{ row.title }}</td>
-                  </tr>
-                  <br>
-                </table>
+                <hr>
+                <h4>データセット</h4>
+                <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_name }}</a>
+                <hr>
+                <h4>データリソース</h4>
+                <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
+                <hr>
                 <h4>利活用内容</h4>
                 <p>{{ row.description }}</p>
                 <hr>
@@ -105,7 +89,7 @@
                 <h4>コメント数</h4>
                 <p>{{ comments|length }}</p>
                 <hr>
-                <form name="comment_form">
+                <form name="comment_form" method="post">
                   <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
                   <h4>コメント</h4>
                   <select name="comment_type" id="comment_type">
@@ -124,7 +108,7 @@
                 {% if comments|length %}
                   <hr class="divider">
                 {% endif %}
-                <form name="approval_form">
+                <form name="approval_form" method="post">
                   <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
                   <input type="hidden" id="approval_user" name="approval_user" value="{{ c.userobj.id }}"/>
                   {% for comment in comments %}

@@ -47,7 +47,6 @@ def get_utilization_comments(utilization_id):
 
 # Submit comment
 def submit_comment(utilization_id, comment_type, comment_content):
-    # ToDo
     if comment_type and comment_content:
         try:
             session.execute(
@@ -70,7 +69,6 @@ def submit_comment(utilization_id, comment_type, comment_content):
 
 # Submit comment approval
 def submit_approval(comment_id, approval_user):
-    # ToDo
     try:
         session.execute(
             update(UtilizationComment)
