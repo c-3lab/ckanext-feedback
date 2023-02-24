@@ -21,6 +21,7 @@ def get_utilizations(keyword):
         )
         .join(Resource, Resource.id == Utilization.resource_id)
         .join(Package, Package.id == Resource.package_id)
+        .order_by(Utilization.created.desc())
     )
     if keyword:
         rows = rows.filter(
