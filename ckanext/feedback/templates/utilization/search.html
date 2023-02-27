@@ -61,13 +61,15 @@
               {% block search_by_keyword %}
                 <form class="top-centered-content" method="get">
                   <br>
-                  <h4>キーワード検索</h4>
-                  <div class="input-group search-input-group">
-                    <input id="field-giant-search" type="text" class="form-control input-lg" name="keyword" placeholder="{{ _('キーワード検索...') }}" aria-label="{{ _('Search utilizaton data') }}" autocomplete="off" value="{{ keyword }}"/>
-                    <span class="input-group-btn">
-                      <button class="btn btn-default btn-lg" type="submit" aria-label="{{ _('Submit') }}"><i class="fa fa-search"></i></button>
-                    </span>
-                  </div>
+                  {% if not transitioned %}
+                    <h4>キーワード検索</h4>
+                    <div class="input-group search-input-group">
+                      <input id="field-giant-search" type="text" class="form-control input-lg" name="keyword" placeholder="{{ _('キーワード検索...') }}" aria-label="{{ _('Search utilizaton data') }}" autocomplete="off" value="{{ keyword }}"/>
+                      <span class="input-group-btn">
+                        <button class="btn btn-default btn-lg" type="submit" aria-label="{{ _('Submit') }}"><i class="fa fa-search"></i></button>
+                      </span>
+                    </div>
+                  {% endif %}
               {% endblock %}
               {% if c.userobj.sysadmin %}
                 {% block select_status %}
