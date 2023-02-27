@@ -37,6 +37,10 @@ class UtilizationController:
     def registration():
         return toolkit.render('utilization/registration.html')
 
+    # utilization/edit.html
+    def edit():
+        return toolkit.render('utilization/edit.html')
+
     # utilization/comment_approval.html
     def comment_approval():
         return toolkit.render('utilization/comment_approval.html')

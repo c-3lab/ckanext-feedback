@@ -17,6 +17,11 @@ rules = [
         utilization.UtilizationController.registration,
     ),
     (
+        '/edit',
+        'edit',
+        utilization.UtilizationController.edit,
+    ),
+    (
         '/comment_approval',
         'comment_approval',
         utilization.UtilizationController.comment_approval,
@@ -29,7 +34,7 @@ rules = [
     ('/search', 'search', utilization.UtilizationController.search),
 ]
 for rule in rules:
-    blueprint.add_url_rule(*rule)
+    blueprint.add_url_rule(*rule, methods=['GET', 'POST'])
 
 
 def get_utilization_blueprint():
