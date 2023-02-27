@@ -82,9 +82,14 @@
                 {% endblock %}
               {% endif %}
               </form>
-              <hr>
-              <h4 class="bottom-centered-content" id="data-count">検索結果：{{ utilizations|length }}件</h4>
+              {% if not transitioned or c.userobj.sysadmin %}
+                <hr>
+              {% endif %}
               {% block result_table %}
+                {% if not c.userobj.sysadmin %}
+                  {% set utilizations = approved_utilizations %}
+                {% endif %}
+                <h4 class="bottom-centered-content" id="data-count">検索結果：{{ utilizations|length }}件</h4>
                 <table class="table table-striped table-bordered table-condensed table-toggle-more bottom-centered-content" id="results-table">
                   <tr class="table-header">
                     <th class="big-column">タイトル</th>

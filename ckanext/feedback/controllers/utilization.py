@@ -27,6 +27,7 @@ class UtilizationController:
         keyword = request.args.get('keyword', '')
         transitioned = request.args.get('transitioned', '')
         utilizations = search_service.get_utilizations(keyword)
+        approved_utilizations = search_service.get_approved_utilizations(keyword)
 
         return toolkit.render(
             'utilization/search.html',
@@ -34,5 +35,6 @@ class UtilizationController:
                 'keyword': keyword,
                 'transitioned': transitioned,
                 'utilizations': utilizations,
+                'approved_utilizations': approved_utilizations,
             },
         )
