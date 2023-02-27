@@ -4,11 +4,12 @@ import click
 
 from ckan.plugins import toolkit
 
-from sqlalchemy import *
+from sqlalchemy import create_engine
 
 from ckanext.feedback.services.utilization.summary import init_utilization_tables
 from ckanext.feedback.services.resource.summary import init_resource_tables
 from ckanext.feedback.services.download.summary import init_download_tables
+
 
 @click.group()
 def feedback():
@@ -17,9 +18,7 @@ def feedback():
 
 def get_engine(host, port, dbname, user, password):
     try:
-        engine = create_engine(
-            f'postgresql://{user}:{password}@{host}:{port}/{dbname}'
-        )
+        engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{dbname}')
     except Exception as e:
         toolkit.error_shout(e)
         sys.exit(1)
@@ -79,14 +78,10 @@ def init(modules, host, port, dbname, user, password):
             init_utilization_tables(engine)
             init_resource_tables(engine)
             init_download_tables(engine)
-            click.secho(
-                'Initialize all modules: SUCCESS', fg='green', bold=True
-            )
+            click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
         elif 'utilization' in modules:
             init_utilization_tables(engine)
-            click.secho(
-                'Initialize utilization: SUCCESS', fg='green', bold=True
-            )
+            click.secho('Initialize utilization: SUCCESS', fg='green', bold=True)
         elif 'resource' in modules:
             init_resource_tables(engine)
             click.secho('Initialize resource: SUCCESS', fg='green', bold=True)
@@ -96,5 +91,5 @@ def init(modules, host, port, dbname, user, password):
     except Exception as e:
         toolkit.error_shout(e)
         sys.exit(1)
-        
+
     engine.dispose()
