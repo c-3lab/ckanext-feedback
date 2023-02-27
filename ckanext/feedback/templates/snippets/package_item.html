@@ -72,7 +72,7 @@ Example:
                   <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
                   <div class="utilization-data">
                     <!-- ToDo -->
-                    <p>利活用数：<a href="http://localhost:5000/utilization/search?package_name={{ package.name }}">数字</a></p>
+                    <p>利活用数：<a href="{{ h.url_for('utilization.search', keyword=package.name, transitioned=true) }}">数字</a></p>
                     <p>評価：
                       <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
                       <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>

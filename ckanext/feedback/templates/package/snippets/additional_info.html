@@ -23,7 +23,7 @@
         <!-- ToDo -->
         <tr>
           <th scope="row">{{ _('利活用数') }}</th>
-          <td><a href="http://localhost:5000/utilization/search?package_name={{ pkg_dict.name }}">数字</a></td>
+          <td><a href="{{ h.url_for('utilization.search', keyword=pkg_dict.name, transitioned=true) }}">数字</a></td>
         </tr>
         {% if pkg_dict.author_email %}
           <tr>
