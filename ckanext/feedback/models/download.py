@@ -2,8 +2,8 @@ import ckan.model.domain_object as domain_object
 import ckan.model.meta as meta
 from sqlalchemy import (
     MetaData,
-    Column,
     Table,
+    Column,
     ForeignKey,
     Text,
     Integer,

@@ -8,7 +8,7 @@ from ckanext.feedback.models.utilization import (
 )
 
 
-def init_utilization_tables(engine):
+def drop_utilization_tables(engine):
     metadata.bind = engine
     metadata.reflect(only=['user', 'resource'])
     issue_resolution_summary.drop(engine, checkfirst=True)
@@ -16,6 +16,12 @@ def init_utilization_tables(engine):
     utilization_summary.drop(engine, checkfirst=True)
     utilization_comment.drop(engine, checkfirst=True)
     utilization.drop(engine, checkfirst=True)
+    metadata.clear()
+
+
+def create_utilization_tables(engine):
+    metadata.bind = engine
+    metadata.reflect(only=['user', 'resource'])
     utilization.create(engine)
     utilization_comment.create(engine)
     utilization_summary.create(engine)

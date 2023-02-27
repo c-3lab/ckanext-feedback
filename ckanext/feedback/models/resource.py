@@ -1,14 +1,14 @@
 import enum
 from sqlalchemy import (
     MetaData,
-    Column,
     Table,
+    Column,
     ForeignKey,
+    Integer,
+    Text,
+    BOOLEAN,
     TIMESTAMP,
     Enum,
-    Text,
-    Integer,
-    BOOLEAN,
 )
 
 metadata = MetaData()

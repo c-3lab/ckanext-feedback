@@ -4,11 +4,11 @@ from sqlalchemy import (
     Table,
     Column,
     ForeignKey,
-    Text,
     Integer,
+    Text,
+    BOOLEAN,
     TIMESTAMP,
     Enum,
-    BOOLEAN,
 )
 
 metadata = MetaData()
