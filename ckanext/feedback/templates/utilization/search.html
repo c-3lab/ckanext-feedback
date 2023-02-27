@@ -57,46 +57,28 @@
                 
               {% endblock %}
 
-            {#
-            The pre_primary block can be used to add content to before the
-            rendering of the main content columns of the page.
-            #}
-            {% block pre_primary %}
-            {% endblock %}
-
-            {% block secondary %}
-              
-            {% endblock %}
-
-            {% block primary %}
-            {% block search_by_keyword %}
-              <form class="top-centered-content" method="get">
-                <br>
-                <h4>キーワード検索</h4>
-                <div class="input-group search-input-group">
-                  <input id="field-giant-search" type="text" class="form-control input-lg" name="keyword" placeholder="{{ _('キーワード検索...') }}" aria-label="{{ _('Search utilizaton data') }}" autocomplete="off" value="{{ keyword }}"/>
-                  <span class="input-group-btn">
-                    <button class="btn btn-default btn-lg" type="submit" aria-label="{{ _('Submit') }}"><i class="fa fa-search"></i></button>
-                  </span>
-                </div>
-            {% endblock %}
-            {% if c.userobj.sysadmin %}
-              {% block select_status %}
-                <span><h4>ステータス</h4>
-                <input type="checkbox" id="waiting" name="waiting" onclick="filter()">
-                <label for="waiting_for_approval" class="normal-font-weight middle-vertical-aligned">承認待ち</label>
-                <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="filter()">
-                <label for="approved" class="normal-font-weight middle-vertical-aligned">承認済</label>
-                </span>
+              {% block primary %}
+              {% block search_by_keyword %}
+                <form class="top-centered-content" method="get">
+                  <br>
+                  {% if not transitioned %}
+                    <h4>キーワード検索</h4>
+                    <div class="input-group search-input-group">
+                      <input id="field-giant-search" type="text" class="form-control input-lg" name="keyword" placeholder="{{ _('キーワード検索...') }}" aria-label="{{ _('Search utilizaton data') }}" autocomplete="off" value="{{ keyword }}"/>
+                      <span class="input-group-btn">
+                        <button class="btn btn-default btn-lg" type="submit" aria-label="{{ _('Submit') }}"><i class="fa fa-search"></i></button>
+                      </span>
+                    </div>
+                  {% endif %}
               {% endblock %}
               {% if c.userobj.sysadmin %}
                 {% block select_status %}
-                  <span class="status-label"><p>ステータス</p></span>
-                  <input type="checkbox" id="waiting" name="waiting" value="False">
+                  <span><h4>ステータス</h4>
+                  <input type="checkbox" id="waiting" name="waiting" onclick="filter()">
                   <label for="waiting_for_approval" class="normal-font-weight middle-vertical-aligned">承認待ち</label>
-                  <input class="spaced-left" type="checkbox" id="approval" name="approval" value="True">
+                  <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="filter()">
                   <label for="approved" class="normal-font-weight middle-vertical-aligned">承認済</label>
-                </form>
+                  </span>
                 {% endblock %}
               {% endif %}
               </form>
@@ -113,7 +95,7 @@
                     <th class="big-column">タイトル</th>
                     <th class="big-column">データセット</th>
                     <th class="medium-column">データリソース</th>
-                    <th class="small-column">更新日</th>
+                    <th class="small-column">登録日</th>
                     {% if c.userobj.sysadmin %}
                       <th class="small-column">ステータス</th>
                     {% endif %}
