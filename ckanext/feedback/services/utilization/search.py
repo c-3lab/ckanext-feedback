@@ -12,6 +12,7 @@ session = Session()
 def get_utilizations(keyword):
     rows = (
         session.query(
+            Utilization.id,
             Utilization.title,
             Utilization.created,
             Utilization.approval,
