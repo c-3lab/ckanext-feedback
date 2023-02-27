@@ -90,6 +90,9 @@
                   <br>
                   <hr>
                   <h4>コメント数</h4>
+                  {% if not c.userobj.sysadmin %}
+                    {% set comments = approved_comments %}
+                  {% endif %}
                   <p>{{ comments|length }}</p>
                   <hr>
                   <form name="comment_form" method="post">

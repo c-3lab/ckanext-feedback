@@ -51,6 +51,27 @@ def get_utilization_comments(utilization_id):
     return rows
 
 
+# Get approved comments related to the Utilization record
+def get_approved_utilization_comments(utilization_id):
+    rows = (
+        session.query(
+            UtilizationComment.id,
+            UtilizationComment.category,
+            UtilizationComment.content,
+            UtilizationComment.created,
+            UtilizationComment.approval,
+        )
+        .filter(
+            UtilizationComment.utilization_id == utilization_id,
+            UtilizationComment.approval == 'true',
+        )
+        .order_by(UtilizationComment.created.desc())
+        .all()
+    )
+
+    return rows
+
+
 # Get category enum names and values
 def get_categories():
     # rows = Utilization_comment_category
