@@ -1,6 +1,6 @@
-{% if h.enable_utilizations %}
+{% if h.is_enabled_utilizations  %}
 
-{% extends "page.html" %}
+  {% extends "page.html" %}
 
   {%- block page -%}
 
@@ -17,10 +17,10 @@
       {% include "header.html" %}
     {% endblock -%}
 
-  {% block styles %}
-    {{ super() }}
-    {% asset 'feedback/feedback-search-css' %}
-  {% endblock %}
+    {% block styles %}
+      {{ super() }}
+      {% asset 'feedback/feedback-search-css' %}
+    {% endblock %}
 
     {# The content block allows you to replace the content of the page if needed #}
     {%- block content %}
@@ -115,33 +115,48 @@
                     <th class="medium-column">データリソース</th>
                     <th class="small-column">更新日</th>
                     {% if c.userobj.sysadmin %}
-                      {% if row.approval == True %}
-                        <td>承認済</td>
-                      {% else %}
-                        <td>承認待ち</td>
-                      {% endif %}
+                      <th class="small-column">ステータス</th>
                     {% endif %}
                   </tr>
-                {% endfor %}
-              </table>
-            {% endblock %}
-            {% endblock %}
-            {#
-            The primary_content block can be used to add content to the page.
-            This is the main block that is likely to be used within a template.
-
-            Example:
-
-              {% block primary_content %}
-                <h1>My page content</h1>
-                <p>Some content for the page</p>
+                  {% for row in utilizations %}
+                    <tr>
+                      <td class="left-aligned-text"><a href="{{ h.url_for('utilization.details', utilization_id=row.id) }}">{{ row.title }}</a>
+                        <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28"/>
+                        <!-- ToDo -->  
+                        <span class="spaced-left">10,000</span>
+                      </td>
+                      <td>{{ row.package_name }}</td>
+                      <td>{{ row.resource_name }}</td>
+                      <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
+                      {% if c.userobj.sysadmin %}
+                        {% if row.approval == True %}
+                          <td>承認済</td>
+                        {% else %}
+                          <td>承認待ち</td>
+                        {% endif %}
+                      {% endif %}
+                    </tr>
+                  {% endfor %}
+                </table>
               {% endblock %}
-            #}
-            {% block primary_content %}
-                  
-            {% endblock %}
-          </div>
-        {% endblock %}
+              {% endblock %}
+              {#
+              The primary_content block can be used to add content to the page.
+              This is the main block that is likely to be used within a template.
+
+              Example:
+
+                {% block primary_content %}
+                  <h1>My page content</h1>
+                  <p>Some content for the page</p>
+                {% endblock %}
+              #}
+              {% block primary_content %}
+                    
+              {% endblock %}
+            </div>
+          {% endblock %}
+        </div>
       </div>
     {% endblock -%}
 
@@ -164,24 +179,4 @@
     {% endif %}
     {{ super() }}
   {% endblock -%}
-
-  {#
-  Override the footer on a page by page basis by extending this block. If
-  making sitewide header changes it is preferable to override the footer.html-u
-  file.
-  #}
-  {%- block footer %}
-    {% include "footer.html" %}
-  {% endblock -%}
-{%- endblock -%}
-
-{%- block scripts %}
-  {% asset 'base/main' %}
-  {% asset 'base/ckan' %}
-  {% asset 'feedback/feedback-search-js' %}
-  {% if g.tracking_enabled %}
-    {% asset 'base/tracking' %}
-  {% endif %}
-  {{ super() }}
-{% endblock -%}
 {% endif %}

@@ -1,6 +1,3 @@
-from sqlalchemy import *
-import ckan.model.meta as meta
-import ckan.model.domain_object as domain_object
 import datetime
 import enum
 
@@ -90,6 +87,7 @@ class Utilization(domain_object.DomainObject):
     approved: datetime.datetime
     approval_user_id: str
 
+
 class UtilizationComment(domain_object.DomainObject):
     id: str
     utilization_id: str
@@ -99,6 +97,7 @@ class UtilizationComment(domain_object.DomainObject):
     approval: bool
     approved: datetime.datetime
     approval_user_id: str
+
 
 class UtilizationSummary(domain_object.DomainObject):
     id: str

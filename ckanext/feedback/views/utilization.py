@@ -2,7 +2,7 @@ from flask import Blueprint
 
 from ckanext.feedback.controllers import utilization
 
-utilization_blueprint = Blueprint('utilization', __name__, url_prefix=u'/utilization')
+blueprint = Blueprint('utilization', __name__, url_prefix='/utilization')
 
 # Add target page URLs to rules and add each URL to the blueprint
 rules = [
@@ -29,4 +29,8 @@ rules = [
     ('/search', 'search', utilization.UtilizationController.search),
 ]
 for rule in rules:
-    utilization_blueprint.add_url_rule(*rule, methods=['GET', 'POST'])
+    blueprint.add_url_rule(*rule)
+
+
+def get_utilization_blueprint():
+    return blueprint
