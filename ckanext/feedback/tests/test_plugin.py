@@ -1,4 +1,4 @@
-"""
+'''
 Tests for plugin.py.
 
 Tests are written using the pytest library (https://docs.pytest.org), and you
@@ -39,15 +39,16 @@ For functional tests that involve requests to the application, you can use the
         assert response.status_code == 200
 
 
-To temporary patch the CKAN configuration for the duration of a test you can use:
+To temporary patch the CKAN configuration for the duration of a
+test you can use:
 
     import pytest
 
     @pytest.mark.ckan_config("ckanext.myext.some_key", "some_value")
     def test_some_action():
         pass
-"""
-import ckanext.feedback.plugin as plugin
+'''
+
 
 def test_plugin():
     pass

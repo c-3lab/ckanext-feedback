@@ -7,8 +7,8 @@
 #     preload:
 #       - base/main
 
-# feedback-css:
-#   filter: cssrewrite
-#   output: ckanext-feedback/%(version)s-feedback.css
-#   contents:
-#     - css/feedback.css
+feedback-css:
+  filter: cssrewrite
+  output: feedback/%(version)s-search.css
+  contents:
+    - css/search.css

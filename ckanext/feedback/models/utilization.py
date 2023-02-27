@@ -1,4 +1,7 @@
 import enum
+import datetime
+from ckan.model import domain_object, meta
+from ckan.model.resource import Resource
 from sqlalchemy import (
     MetaData,
     Table,
@@ -9,6 +12,7 @@ from sqlalchemy import (
     BOOLEAN,
     TIMESTAMP,
     Enum,
+    orm,
 )
 
 metadata = MetaData()
@@ -114,3 +118,39 @@ utilization_summary = Table(
     Column('created', TIMESTAMP),
     Column('updated', TIMESTAMP),
 )
+
+
+class Utilization(domain_object.DomainObject):
+    id: str
+    resource_id: str
+    title: str
+    description: str
+    created: datetime.datetime
+    approval: bool
+    approved: datetime.datetime
+    approval_user_id: str
+
+
+class UtilizationComment(domain_object.DomainObject):
+    id: str
+    utilization_id: str
+    category: str
+    content: str
+    created: datetime.datetime
+    approval: bool
+    approved: datetime.datetime
+    approval_user_id: str
+
+
+class UtilizationSummary(domain_object.DomainObject):
+    id: str
+    resource_id: str
+    utilization: int
+    comment: int
+    created: datetime.datetime
+    updated: datetime.datetime
+
+
+meta.mapper(Utilization, utilization, properties={'resource': orm.relation(Resource)})
+meta.mapper(UtilizationComment, utilization_comment)
+meta.mapper(UtilizationSummary, utilization_summary)
