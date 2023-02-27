@@ -118,9 +118,6 @@
                       <th class="small-column">ステータス</th>
                     {% endif %}
                   </tr>
-                  {% if not c.userobj.sysadmin %}
-                    {% set utilizations = approved_utilizations %}
-                  {% endif %}
                   {% for row in utilizations %}
                     <tr>
                       <td class="left-aligned-text"><a href="{{ h.url_for('utilization.details', utilization_id=row.id) }}">{{ row.title }}</a>
