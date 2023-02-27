@@ -1,161 +1,164 @@
-{% if h.enable_utilizations %}
+{% if h.is_enabled_utilizations %}
 
-{% extends "page.html" %}
+  {% extends "page.html" %}
 
-{%- block page -%}
+  {%- block page -%}
 
-  <!-- {% block skip %}
-    <div class="sr-only sr-only-focusable"><a href="#content">{{ _('Skip to content') }}</a></div>
-  {% endblock %} -->
+    <!-- {% block skip %}
+      <div class="sr-only sr-only-focusable"><a href="#content">{{ _('Skip to content') }}</a></div>
+    {% endblock %} -->
 
-  {#
-  Override the header on a page by page basis by extending this block. If
-  making sitewide header changes it is preferable to override the header.html
-  file.
-  #}
-  {%- block header %}
-    {% include "header.html" %}
-  {% endblock -%}
+    {#
+    Override the header on a page by page basis by extending this block. If
+    making sitewide header changes it is preferable to override the header.html
+    file.
+    #}
+    {%- block header %}
+      {% include "header.html" %}
+    {% endblock -%}
 
-  {% block styles %}
-    {{ super() }}
-    {% asset 'feedback/feedback-details-css' %}
-  {% endblock %}
+    {% block styles %}
+      {{ super() }}
+      {% asset 'feedback/feedback-details-css' %}
+    {% endblock %}
 
-  {# The content block allows you to replace the content of the page if needed #}
-  {%- block content %}
-    {% block maintag %}<div class="main">{% endblock %}
-      <div id="content" class="container">
-        {% block main_content %}
+    {# The content block allows you to replace the content of the page if needed #}
+    {%- block content %}
+      {% block maintag %}<div class="main">{% endblock %}
+        <div id="content" class="container">
+          {% block main_content %}
 
-          {% block toolbar %}
-            <div class="toolbar" role="navigation" aria-label="{{ _('Breadcrumb') }}">
-              {% block breadcrumb %}
-                {% if self.breadcrumb_content() | trim %}
-                  <ol class="breadcrumb">
-                    {% snippet 'snippets/home_breadcrumb_item.html' %}
-                    {% block breadcrumb_content %}
-                      <li class="inactive"><a href="{{ h.url_for('utilization.search') }}">{{ _('利活用方法') }}</a></li>
-                      <li class="active"><a href="{{ h.url_for('utilization.details', utilization_id=utilization_id) }}">{{ _('詳細') }}</a></li>
-                    {% endblock %}
-                  </ol>
-                {% endif %}
+            {% block toolbar %}
+              <div class="toolbar" role="navigation" aria-label="{{ _('Breadcrumb') }}">
+                {% block breadcrumb %}
+                  {% if self.breadcrumb_content() | trim %}
+                    <ol class="breadcrumb">
+                      {% snippet 'snippets/home_breadcrumb_item.html' %}
+                      {% block breadcrumb_content %}
+                        <li class="inactive"><a href="{{ h.url_for('utilization.search') }}">{{ _('利活用方法') }}</a></li>
+                        <li class="active"><a href="{{ h.url_for('utilization.details', utilization_id=utilization_id) }}">{{ _('詳細') }}</a></li>
+                      {% endblock %}
+                    </ol>
+                  {% endif %}
+                {% endblock %}
+              </div>
+            {% endblock %}
+
+            <div class="row wrapper{% block wrapper_class %}{% endblock %}{% if self.secondary()|trim == '' or c.action=='resource_read' %} no-nav{% endif %}">
+
+              {#
+              The pre_primary block can be used to add content to before the
+              rendering of the main content columns of the page.
+              #}
+              {% block pre_primary %}
+              {% endblock %}
+
+              {% block secondary %}
+                
+              {% endblock %}
+
+              {% block primary %}
+                {% set row = details %}
+                <div class="centered-content">
+                  <br>
+                  {% if c.userobj.sysadmin %}
+                    <form name="admin_form" method="post">
+                      <input type="hidden" id="resource_id" name="resource_id" value="{{ row.resource_id }}"/>
+                      <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit') }}?utilization_id={{ utilization_id }}&resource_id={{ row.resource_id }}">編集</a>
+                      <button class="btn btn-primary right-aligned">承認</button>
+                      <br>
+                    </form>
+                    <hr class="divider">
+                  {% endif %}
+                  <h1>{{ row.title }}</h1>
+                  <hr>
+                  <h4>データセット</h4>
+                  <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_name }}</a>
+                  <hr>
+                  <h4>データリソース</h4>
+                  <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
+                  <hr>
+                  <h4>利活用内容</h4>
+                  <p>{{ row.description }}</p>
+                  <hr>
+                  <h4>課題解決数</h4>
+                  <!-- ToDo -->
+                  <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">1
+                  {% if c.userobj.sysadmin %}
+                    <button class="btn btn-primary right-aligned">課題解決</button>
+                  {% endif %}
+                  <br>
+                  <hr>
+                  <h4>コメント数</h4>
+                  <p>{{ comments|length }}</p>
+                  <hr>
+                  <form name="comment_form" method="post">
+                    <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
+                    <h4>コメント</h4>
+                    <select name="comment_type" id="comment_type">
+                      {% for category in categories %}
+                        <option value="{{ category.name }}">{{ category.value }}</option>
+                      {% endfor %}
+                    </select>
+                    <br>
+                    <br>
+                    <textarea class="form-control" cols="20" rows="5" id="comment_content" name="comment_content"></textarea>
+                    <br>
+                    <button class="btn btn-primary right-aligned">コメント送信</button>
+                    <br>
+                    <br>
+                    <br>
+                  </form>
+                  {% if comments|length %}
+                    <hr class="divider">
+                  {% endif %}
+                  <form name="approval_form" method="post">
+                    <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
+                    <input type="hidden" id="approval_user" name="approval_user" value="{{ c.userobj.id }}"/>
+                    {% for comment in comments %}
+                      <span>
+                        {% if c.userobj.sysadmin and comment.approval == false %}
+                          <button class="btn btn-primary right-aligned" id="comment_id" name="comment_id" value="{{ comment.id }}">承認</button>
+                        {% endif %}
+                        <h4>
+                          {{ comment.created.strftime('%Y/%m/%d') }}
+                          {% for category in categories %}
+                            {% if comment.category in category.name %}
+                              {{ category.value }}
+                            {% endif %}
+                          {% endfor %}
+                        </h4>
+                      </span>
+                      <br>
+                      <p>{{ comment.content }}</p>
+                      <hr class="divider">
+                    {% endfor %}
+                  </form>
+                </div>
               {% endblock %}
             </div>
           {% endblock %}
-
-          <div class="row wrapper{% block wrapper_class %}{% endblock %}{% if self.secondary()|trim == '' or c.action=='resource_read' %} no-nav{% endif %}">
-
-            {#
-            The pre_primary block can be used to add content to before the
-            rendering of the main content columns of the page.
-            #}
-            {% block pre_primary %}
-            {% endblock %}
-
-            {% block secondary %}
-              
-            {% endblock %}
-
-            {% block primary %}
-              {% set row = details %}
-              <div class="centered-content">
-                <br>
-                {% if c.userobj.sysadmin %}
-                  <button class="btn btn-primary right-aligned spaced-left">編集</button>
-                  <button class="btn btn-primary right-aligned">承認</button>
-                  <br>
-                  <hr class="divider">
-                {% endif %}
-                <h1>{{ row.title }}</h1>
-                <hr>
-                <h4>データセット</h4>
-                <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_name }}</a>
-                <hr>
-                <h4>データリソース</h4>
-                <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
-                <hr>
-                <h4>利活用内容</h4>
-                <p>{{ row.description }}</p>
-                <hr>
-                <h4>課題解決数</h4>
-                <!-- ToDo -->
-                <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">1
-                {% if c.userobj.sysadmin %}
-                  <button class="btn btn-primary right-aligned">課題解決</button>
-                {% endif %}
-                <br>
-                <hr>
-                <h4>コメント数</h4>
-                <p>{{ comments|length }}</p>
-                <hr>
-                <form name="comment_form" method="post">
-                  <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
-                  <h4>コメント</h4>
-                  <select name="comment_type" id="comment_type">
-                    {% for category in categories %}
-                      <option value="{{ category.name }}">{{ category.value }}</option>
-                    {% endfor %}
-                  </select>
-                  <br>
-                  <br>
-                  <textarea class="form-control" cols="20" rows="5" id="comment_content" name="comment_content"></textarea>
-                  <br>
-                  <button class="btn btn-primary right-aligned">コメント送信</button>
-                  <br>
-                  <br>
-                  <br>
-                </form>
-                {% if comments|length %}
-                  <hr class="divider">
-                {% endif %}
-                <form name="approval_form" method="post">
-                  <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
-                  <input type="hidden" id="approval_user" name="approval_user" value="{{ c.userobj.id }}"/>
-                  {% for comment in comments %}
-                    <span>
-                      {% if c.userobj.sysadmin and comment.approval == false %}
-                        <button class="btn btn-primary right-aligned" id="comment_id" name="comment_id" value="{{ comment.id }}">承認</button>
-                      {% endif %}
-                      <h4>
-                        {{ comment.created.strftime('%Y/%m/%d') }}
-                        {% for category in categories %}
-                          {% if comment.category in category.name %}
-                            {{ category.value }}
-                          {% endif %}
-                        {% endfor %}
-                      </h4>
-                    </span>
-                    <br>
-                    <p>{{ comment.content }}</p>
-                    <hr class="divider">
-                  {% endfor %}
-                </form>
-              </div>
-            {% endblock %}
-          </div>
-        {% endblock %}
+        </div>
       </div>
-    </div>
-  {% endblock -%}
+    {% endblock -%}
 
-  {#
-  Override the footer on a page by page basis by extending this block. If
-  making sitewide header changes it is preferable to override the footer.html-u
-  file.
-  #}
-  {%- block footer %}
-    {% include "footer.html" %}
-  {% endblock -%}
-{%- endblock -%}
+    {#
+    Override the footer on a page by page basis by extending this block. If
+    making sitewide header changes it is preferable to override the footer.html-u
+    file.
+    #}
+    {%- block footer %}
+      {% include "footer.html" %}
+    {% endblock -%}
+  {%- endblock -%}
 
-{%- block scripts %}
-  {% asset 'base/main' %}
-  {% asset 'base/ckan' %}
-  {% if g.tracking_enabled %}
-    {% asset 'base/tracking' %}
-  {% endif %}
-  {{ super() }}
-{% endblock -%}
+  {%- block scripts %}
+    {% asset 'base/main' %}
+    {% asset 'base/ckan' %}
+    {% if g.tracking_enabled %}
+      {% asset 'base/tracking' %}
+    {% endif %}
+    {{ super() }}
+  {% endblock -%}
 
 {% endif %}
