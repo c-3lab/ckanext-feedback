@@ -1,11 +1,9 @@
-import ckan.plugins as plugins
-import ckan.plugins.toolkit as toolkit
+from ckan import plugins
 from ckan.common import config
+from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
-from ckanext.feedback.views.utilization import (
-    utilization_blueprint as utilization_blueprint,
-)
+from ckanext.feedback.views import utilization
 
 
 class FeedbackPlugin(plugins.SingletonPlugin):
@@ -20,7 +18,7 @@ class FeedbackPlugin(plugins.SingletonPlugin):
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
-        blueprints.append(utilization_blueprint)
+        blueprints.append(utilization.get_utilization_blueprint())
         return blueprints
 
     def get_commands(self):
@@ -28,15 +26,15 @@ class FeedbackPlugin(plugins.SingletonPlugin):
 
     # Check production.ini settings
     # Enable/disable the download module
-    def enable_downloads(self):
+    def is_enabled_downloads(self):
         return toolkit.asbool(config.get('ckan.feedback.downloads.enable', False))
 
     # Enable/disable the resources module
-    def enable_resources(self):
+    def is_enabled_resources(self):
         return toolkit.asbool(config.get('ckan.feedback.resources.enable', False))
 
     # Enable/disable the utilizations module
-    def enable_utilizations(self):
+    def is_enabled_utilizations(self):
         return toolkit.asbool(config.get('ckan.feedback.utilizations.enable', False))
 
     def get_helpers(self):
@@ -48,7 +46,7 @@ class FeedbackPlugin(plugins.SingletonPlugin):
         # extension they belong to, to avoid clashing with functions from
         # other extensions.
         return {
-            'enable_downloads': self.enable_downloads(),
-            'enable_resources': self.enable_resources(),
-            'enable_utilizations': self.enable_utilizations(),
+            'is_enabled_downloads': self.is_enabled_downloads(),
+            'is_enabled_resources': self.is_enabled_resources(),
+            'is_enabled_utilizations': self.is_enabled_utilizations(),
         }
