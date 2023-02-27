@@ -40,7 +40,6 @@ class FeedbackPlugin(plugins.SingletonPlugin):
     def get_helpers(self):
         '''Register the most_popular_groups() function above as a template
         helper function.
-
         '''
         # Template helper function names should begin with the name of the
         # extension they belong to, to avoid clashing with functions from
