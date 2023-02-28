@@ -1,18 +1,26 @@
 import sys
+
 import click
 from ckan.plugins import toolkit
 from sqlalchemy import create_engine
-from ckanext.feedback.services.utilization.summary import (
-    drop_utilization_tables,
-    create_utilization_tables,
+
+from ckanext.feedback.models.download import download_summary
+from ckanext.feedback.models.download import metadata as download_metadata
+from ckanext.feedback.models.resource import metadata as resource_metadata
+from ckanext.feedback.models.resource import (
+    resource_comment,
+    resource_comment_reply,
+    resource_comment_summary,
 )
-from ckanext.feedback.services.resource.summary import (
-    drop_resource_tables,
-    create_resource_tables,
+from ckanext.feedback.models.utilization import (
+    issue_resolution,
+    issue_resolution_summary,
 )
-from ckanext.feedback.services.download.summary import (
-    drop_download_tables,
-    create_download_tables,
+from ckanext.feedback.models.utilization import metadata as utilization_metadata
+from ckanext.feedback.models.utilization import (
+    utilization,
+    utilization_comment,
+    utilization_summary,
 )
 
 
@@ -104,3 +112,57 @@ def init(modules, host, port, dbname, user, password):
         sys.exit(1)
 
     engine.dispose()
+
+
+def drop_utilization_tables(engine):
+    utilization_metadata.bind = engine
+    utilization_metadata.reflect(only=['user', 'resource'])
+    issue_resolution_summary.drop(engine, checkfirst=True)
+    issue_resolution.drop(engine, checkfirst=True)
+    utilization_summary.drop(engine, checkfirst=True)
+    utilization_comment.drop(engine, checkfirst=True)
+    utilization.drop(engine, checkfirst=True)
+    utilization_metadata.clear()
+
+
+def create_utilization_tables(engine):
+    utilization_metadata.bind = engine
+    utilization_metadata.reflect(only=['user', 'resource'])
+    utilization.create(engine)
+    utilization_comment.create(engine)
+    utilization_summary.create(engine)
+    issue_resolution.create(engine)
+    issue_resolution_summary.create(engine)
+    utilization_metadata.clear()
+
+
+def drop_resource_tables(engine):
+    resource_metadata.bind = engine
+    resource_metadata.reflect(only=['user', 'resource'])
+    resource_comment_summary.drop(engine, checkfirst=True)
+    resource_comment_reply.drop(engine, checkfirst=True)
+    resource_comment.drop(engine, checkfirst=True)
+    resource_metadata.clear()
+
+
+def create_resource_tables(engine):
+    resource_metadata.bind = engine
+    resource_metadata.reflect(only=['user', 'resource'])
+    resource_comment.create(engine)
+    resource_comment_reply.create(engine)
+    resource_comment_summary.create(engine)
+    resource_metadata.clear()
+
+
+def drop_download_tables(engine):
+    download_metadata.bind = engine
+    download_metadata.reflect(only=['resource'])
+    download_summary.drop(engine, checkfirst=True)
+    download_metadata.clear()
+
+
+def create_download_tables(engine):
+    download_metadata.bind = engine
+    download_metadata.reflect(only=['resource'])
+    download_summary.create(engine)
+    download_metadata.clear()
