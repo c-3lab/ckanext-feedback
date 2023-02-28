@@ -1,6 +1,7 @@
 from flask import Blueprint
 
 from ckanext.feedback.controllers.download import DownloadController
+from ckanext.feedback.views.app import add_error_handler
 
 blueprint = Blueprint(
     'download',
@@ -18,5 +19,6 @@ blueprint.add_url_rule(
 )
 
 
+@add_error_handler
 def get_download_blueprint():
     return blueprint
