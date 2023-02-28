@@ -9,6 +9,7 @@ class DownloadController:
 
     # extend default download function to count when a resource is downloaded
     def extended_download(package_type, id, resource_id, filename=None):
-        if request.headers.get('Sec-Fetch-Dest') == 'document':
-            increment_resource_downloads(resource_id)
+        if request.headers.get('Sec-Fetch-Dest') != 'document':
+            return
+        increment_resource_downloads(resource_id)
         return download(package_type, id, resource_id, filename=filename)
