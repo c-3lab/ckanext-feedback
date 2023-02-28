@@ -64,8 +64,11 @@
                   {% if c.userobj.sysadmin %}
                     <form name="admin_form" method="post">
                       <input type="hidden" id="resource_id" name="resource_id" value="{{ row.resource_id }}"/>
+                      <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
                       <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit') }}?utilization_id={{ utilization_id }}&resource_id={{ row.resource_id }}">編集</a>
-                      <button class="btn btn-primary right-aligned">承認</button>
+                      {% if row.approval == false %}
+                        <button class="btn btn-primary right-aligned" id="approval_flag" name="approval_flag" value="true" >承認</button>
+                      {% endif %}
                       <br>
                     </form>
                     <hr class="divider">

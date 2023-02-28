@@ -15,6 +15,9 @@ class UtilizationController:
             comment_type = request.form.get('comment_type', '')
             comment_content = request.form.get('comment_content', '')
             approval_user = request.form.get('approval_user')
+            approval_flag = request.form.get('approval_flag', '')
+            if approval_flag == 'true':
+                detail_service.approve_utilization(utilization_id, approval_user)
             detail_service.submit_comment(utilization_id, comment_type, comment_content)
             detail_service.submit_approval(comment_id, approval_user)
         else:
