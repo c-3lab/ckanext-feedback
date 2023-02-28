@@ -1,4 +1,5 @@
 from flask import Blueprint
+
 from ckanext.feedback.controllers.download import DownloadController
 
 blueprint = Blueprint(

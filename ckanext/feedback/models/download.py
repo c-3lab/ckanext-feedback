@@ -1,12 +1,5 @@
 from ckan.model import domain_object, meta
-from sqlalchemy import (
-    TIMESTAMP,
-    Column,
-    ForeignKey,
-    Integer,
-    Table,
-    Text,
-)
+from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Table, Text
 
 __all__ = ['download_summary']
 

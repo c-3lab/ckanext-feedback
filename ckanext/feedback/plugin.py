@@ -1,10 +1,10 @@
 from ckan import plugins
 from ckan.common import config
 from ckan.plugins import toolkit
+
 from ckanext.feedback.command import feedback
 from ckanext.feedback.services.download import summary as summary_service
-from ckanext.feedback.views import download
-from ckanext.feedback.views import utilization
+from ckanext.feedback.views import download, utilization
 
 
 class FeedbackPlugin(plugins.SingletonPlugin):

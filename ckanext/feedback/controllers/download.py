@@ -1,6 +1,7 @@
-from ckanext.feedback.services.download.summary import increment_resource_downloads
 from ckan.views.resource import download
 from flask import request
+
+from ckanext.feedback.services.download.summary import increment_resource_downloads
 
 
 class DownloadController:
