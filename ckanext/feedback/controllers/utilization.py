@@ -11,6 +11,7 @@ class UtilizationController:
     def details():
         if request.method == 'POST':
             utilization_id = request.form.get('utilization_id', '')
+            resource_id = request.form.get('resource_id', '')
             comment_id = request.form.get('comment_id')
             comment_type = request.form.get('comment_type', '')
             comment_content = request.form.get('comment_content', '')
@@ -19,6 +20,7 @@ class UtilizationController:
             if approval_flag == 'true':
                 detail_service.approve_utilization(utilization_id, approval_user)
             detail_service.submit_comment(utilization_id, comment_type, comment_content)
+            detail_service.update_utilization_summary(resource_id)
             detail_service.submit_approval(comment_id, approval_user)
         else:
             utilization_id = request.args.get('utilization_id', '')

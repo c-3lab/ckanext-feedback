@@ -10,6 +10,7 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     Utilization_comment_category,
     UtilizationComment,
+    UtilizationSummary
 )
 
 session = Session()
@@ -130,6 +131,28 @@ def approve_utilization(utilization_id, approval_user):
                 approval=True,
                 approved=datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
                 approval_user_id=approval_user,
+            )
+        )
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+
+
+# Update utilization summary comment count
+def update_utilization_summary(resource_id):
+    count = (
+        session.query(UtilizationSummary.comment)
+        .filter(UtilizationSummary.resource_id == resource_id)
+        .first()
+    )
+    try:
+        session.execute(
+            update(UtilizationSummary)
+            .where(UtilizationSummary.resource_id == resource_id)
+            .values(
+                comment=count.comment + 1,
+                updated=datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
             )
         )
         session.commit()

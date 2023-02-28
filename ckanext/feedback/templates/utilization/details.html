@@ -99,6 +99,7 @@
                   <p>{{ comments|length }}</p>
                   <hr>
                   <form name="comment_form" method="post">
+                    <input type="hidden" id="resource_id" name="resource_id" value="{{ row.resource_id }}"/>
                     <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
                     <h4>コメント</h4>
                     <select name="comment_type" id="comment_type">
