@@ -1,18 +1,16 @@
 import enum
-import datetime
+
 from ckan.model import domain_object, meta
-from ckan.model.resource import Resource
 from sqlalchemy import (
-    MetaData,
-    Table,
-    Column,
-    ForeignKey,
-    Integer,
-    Text,
     BOOLEAN,
     TIMESTAMP,
+    Column,
     Enum,
-    orm,
+    ForeignKey,
+    Integer,
+    MetaData,
+    Table,
+    Text,
 )
 
 metadata = MetaData()
@@ -69,40 +67,6 @@ utilization_comment = Table(
     ),
 )
 
-issue_resolution = Table(
-    'issue_resolution',
-    metadata,
-    Column('id', Text, primary_key=True, nullable=False),
-    Column(
-        'utilization_id',
-        Text,
-        ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=False,
-    ),
-    Column('description', Text),
-    Column('created', TIMESTAMP),
-    Column(
-        'creator_user_id',
-        Text,
-        ForeignKey('user.id', onupdate='CASCADE', ondelete='CASCADE'),
-    ),
-)
-
-issue_resolution_summary = Table(
-    'issue_resolution_summary',
-    metadata,
-    Column('id', Text, primary_key=True, nullable=False),
-    Column(
-        'utilization_id',
-        Text,
-        ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=False,
-    ),
-    Column('issue_resolution', Integer),
-    Column('created', TIMESTAMP),
-    Column('updated', TIMESTAMP),
-)
-
 utilization_summary = Table(
     'utilization_summary',
     metadata,
@@ -121,36 +85,59 @@ utilization_summary = Table(
 
 
 class Utilization(domain_object.DomainObject):
-    id: str
-    resource_id: str
-    title: str
-    description: str
-    created: datetime.datetime
-    approval: bool
-    approved: datetime.datetime
-    approval_user_id: str
+    def __init__(
+        self,
+        id,
+        resource_id,
+        title,
+        description,
+        created,
+        approval,
+        approved,
+        approval_user_id,
+    ):
+        self.id = id
+        self.resource_id = resource_id
+        self.title = title
+        self.description = description
+        self.created = created
+        self.approval = approval
+        self.approved = approved
+        self.approval_user_id = approval_user_id
 
 
 class UtilizationComment(domain_object.DomainObject):
-    id: str
-    utilization_id: str
-    category: str
-    content: str
-    created: datetime.datetime
-    approval: bool
-    approved: datetime.datetime
-    approval_user_id: str
+    def __init__(
+        self,
+        id,
+        utilization_id,
+        category,
+        content,
+        created,
+        approval,
+        approved,
+        approval_user_id,
+    ):
+        self.id = id
+        self.utilization_id = utilization_id
+        self.category = category
+        self.content = content
+        self.created = created
+        self.approval = approval
+        self.approved = approved
+        self.approval_user_id = approval_user_id
 
 
 class UtilizationSummary(domain_object.DomainObject):
-    id: str
-    resource_id: str
-    utilization: int
-    comment: int
-    created: datetime.datetime
-    updated: datetime.datetime
+    def __init__(self, id, resource_id, utilization, comment, created, updated):
+        self.id = id
+        self.resource_id = resource_id
+        self.utilization = utilization
+        self.comment = comment
+        self.created = created
+        self.updated = updated
 
 
-meta.mapper(Utilization, utilization, properties={'resource': orm.relation(Resource)})
+meta.mapper(Utilization, utilization)
 meta.mapper(UtilizationComment, utilization_comment)
 meta.mapper(UtilizationSummary, utilization_summary)

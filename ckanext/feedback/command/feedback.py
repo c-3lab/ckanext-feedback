@@ -6,15 +6,12 @@ from sqlalchemy import create_engine
 
 from ckanext.feedback.models.download import download_summary
 from ckanext.feedback.models.download import metadata as download_metadata
-from ckanext.feedback.models.resource import metadata as resource_metadata
-from ckanext.feedback.models.resource import (
+from ckanext.feedback.models.issue import issue_resolution, issue_resolution_summary
+from ckanext.feedback.models.resource_comment import metadata as resource_metadata
+from ckanext.feedback.models.resource_comment import (
     resource_comment,
     resource_comment_reply,
     resource_comment_summary,
-)
-from ckanext.feedback.models.utilization import (
-    issue_resolution,
-    issue_resolution_summary,
 )
 from ckanext.feedback.models.utilization import metadata as utilization_metadata
 from ckanext.feedback.models.utilization import (
