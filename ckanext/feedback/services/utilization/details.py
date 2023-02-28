@@ -10,7 +10,7 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     Utilization_comment_category,
     UtilizationComment,
-    UtilizationSummary
+    UtilizationSummary,
 )
 
 session = Session()
