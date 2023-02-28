@@ -8,10 +8,6 @@
   width: 90%
 }
 
-.centered-text {
-  text-align: center;
-}
-
 .divider {
   background: #000000;
   height: 1px;
@@ -21,29 +17,8 @@ img {
   margin-left: 10px;
 }
 
-label {
-  margin-bottom: 4px;
-}
-
-label:after {
-  content: "" !important;
-}
-
-.left-aligned-text {
-  text-align: left;
-}
-
-.normal-font-weight {
-  font-weight: normal;
-}
-
 .medium-button {
   width: 20%;
-}
-
-.page-title {
-  margin-top: 5px;
-  margin-left: 5px;
 }
 
 .right-aligned {
@@ -56,31 +31,4 @@ label:after {
 
 .spaced-left {
   margin-left: 10px !important;
-}
-
-.bold {
-  font-weight: bold;
-}
-
-/*table, td, th {
-  border: 1px solid black;
-}*/
-
-/*.table-header {
-  background: #016E8F !important;
-}*/
-
-.top-centered-content {
-  margin-left: 5%;
-  margin-right: auto;
-  width: 70%;
-}
-
-td, th {
-  text-align: center;
-  vertical-align: middle !important;
-}
-
-.middle-vertical-aligned {
-  vertical-align: middle;
 }
