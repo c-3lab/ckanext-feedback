@@ -1,6 +1,7 @@
 from flask import Blueprint
 
 from ckanext.feedback.controllers import utilization
+from ckanext.feedback.views.error_handler import add_error_handler
 
 blueprint = Blueprint('utilization', __name__, url_prefix='/utilization')
 
@@ -32,5 +33,6 @@ for rule in rules:
     blueprint.add_url_rule(*rule)
 
 
+@add_error_handler
 def get_utilization_blueprint():
     return blueprint

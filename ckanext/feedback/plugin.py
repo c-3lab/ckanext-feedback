@@ -3,7 +3,8 @@ from ckan.common import config
 from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
-from ckanext.feedback.views import utilization
+from ckanext.feedback.services.download import summary as summary_service
+from ckanext.feedback.views import download, utilization
 
 
 class FeedbackPlugin(plugins.SingletonPlugin):
@@ -13,6 +14,8 @@ class FeedbackPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.ITemplateHelpers)
 
+    # IConfigurer
+
     def update_config(self, config):
         # Add this plugin's directories to CKAN's extra paths, so that
         # CKAN will use this plugin's custom files.
@@ -21,38 +24,40 @@ class FeedbackPlugin(plugins.SingletonPlugin):
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('assets', 'feedback')
 
-    # Return a flask Blueprint object to be registered by the extension
-    def get_blueprint(self):
-        blueprints = []
-        blueprints.append(utilization.get_utilization_blueprint())
-        return blueprints
+    # IClick
 
     def get_commands(self):
         return [feedback.feedback]
 
+    # IBlueprint
+
+    # Return a flask Blueprint object to be registered by the extension
+    def get_blueprint(self):
+        blueprints = []
+        blueprints.append(utilization.get_utilization_blueprint())
+        blueprints.append(download.get_download_blueprint())
+        return blueprints
+
     # Check production.ini settings
     # Enable/disable the download module
     def is_enabled_downloads(self):
-        return toolkit.asbool(config.get('ckan.feedback.downloads.enable', False))
+        return toolkit.asbool(config.get('ckan.feedback.downloads.enable', True))
 
     # Enable/disable the resources module
     def is_enabled_resources(self):
-        return toolkit.asbool(config.get('ckan.feedback.resources.enable', False))
+        return toolkit.asbool(config.get('ckan.feedback.resources.enable', True))
 
     # Enable/disable the utilizations module
     def is_enabled_utilizations(self):
-        return toolkit.asbool(config.get('ckan.feedback.utilizations.enable', False))
+        return toolkit.asbool(config.get('ckan.feedback.utilizations.enable', True))
+
+    # ITemplateHelpers
 
     def get_helpers(self):
-        '''Register the most_popular_groups() function above as a template
-        helper function.
-
-        '''
-        # Template helper function names should begin with the name of the
-        # extension they belong to, to avoid clashing with functions from
-        # other extensions.
         return {
-            'is_enabled_downloads': self.is_enabled_downloads(),
-            'is_enabled_resources': self.is_enabled_resources(),
-            'is_enabled_utilizations': self.is_enabled_utilizations(),
+            'is_enabled_downloads': self.is_enabled_downloads,
+            'is_enabled_resources': self.is_enabled_resources,
+            'is_enabled_utilizations': self.is_enabled_utilizations,
+            'get_resource_downloads': summary_service.get_resource_downloads,
+            'get_package_downloads': summary_service.get_package_downloads,
         }

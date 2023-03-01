@@ -7,6 +7,12 @@
 #     preload:
 #       - base/main
 
+feedback-tooltip-css:
+  filter: cssrewrite
+  output: feedback/%(version)s-tooltip.css
+  contents:
+    - css/tooltip.css
+    
 feedback-css:
   filter: cssrewrite
   output: feedback/%(version)s-search.css

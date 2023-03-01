@@ -87,17 +87,17 @@
         <ul class="nav nav-pills">
           {% block header_site_navigation_tabs %}
             {% set menu_items = [] %}
-            {{ menu_items.append(('home.index', _('Top'))) or "" }}
-            {{ menu_items.append(('dataset.search', _('Dataset'))) or "" }}
-            {{ menu_items.append(('organization.index', _('Organization'))) or "" }}
-            {{ menu_items.append(('group.index', _('Group'))) or "" }}
+            {% do menu_items.append(('home.index', _('Top'))) %}
+            {% do menu_items.append(('dataset.search', _('Dataset'))) %}
+            {% do menu_items.append(('organization.index', _('Organization'))) %}
+            {% do menu_items.append(('group.index', _('Group'))) %}
             {% if h.is_enabled_utilizations %}
-              {{ menu_items.append(('utilization.search', _('利活用方法'))) or "" }}
+              {% do menu_items.append(('utilization.search', _('利活用方法'))) %}
             {% endif %}
             {% if c.userobj.sysadmin and h.is_enabled_resources %}
-              {{ menu_items.append(('home.about', _('フィードバック一覧'))) or "" }}
+              {% do menu_items.append(('home.about', _('フィードバック一覧'))) %}
             {% endif %}
-            {{ menu_items.append(('home.about', _('About'))) or "" }}
+            {% do menu_items.append(('home.about', _('About'))) %}
             {% for item in menu_items %}
               {{ h.build_nav_main(item)}}
             {% endfor %}
