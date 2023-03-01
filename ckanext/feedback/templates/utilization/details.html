@@ -67,7 +67,7 @@
                       <input type="hidden" id="utilization_id" name="utilization_id" value="{{ utilization_id }}"/>
                       <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit') }}?utilization_id={{ utilization_id }}&resource_id={{ row.resource_id }}">編集</a>
                       {% if row.approval == false %}
-                        <button class="btn btn-primary right-aligned" id="approval_flag" name="approval_flag" value="true" >承認</button>
+                        <button class="btn btn-primary right-aligned" id="approval_flag" name="approval_flag" value="true">承認</button>
                       {% endif %}
                       <br>
                     </form>
@@ -111,7 +111,7 @@
                     <br>
                     <textarea class="form-control" cols="20" rows="5" id="comment_content" name="comment_content"></textarea>
                     <br>
-                    <button class="btn btn-primary right-aligned">コメント送信</button>
+                    <button class="btn btn-primary right-aligned" id="comment_flag" name="comment_flag" value="true">コメント送信</button>
                     <br>
                     <br>
                     <br>

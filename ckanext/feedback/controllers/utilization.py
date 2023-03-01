@@ -17,11 +17,16 @@ class UtilizationController:
             comment_content = request.form.get('comment_content', '')
             approval_user = request.form.get('approval_user')
             approval_flag = request.form.get('approval_flag', '')
+            comment_flag = request.form.get('comment_flag', '')
             if approval_flag == 'true':
                 detail_service.approve_utilization(utilization_id, approval_user)
-            detail_service.submit_comment(utilization_id, comment_type, comment_content)
-            detail_service.update_utilization_summary(resource_id)
-            detail_service.submit_approval(comment_id, approval_user)
+            elif comment_flag == 'true':
+                detail_service.submit_comment(
+                    utilization_id, comment_type, comment_content
+                )
+                detail_service.update_utilization_summary(resource_id)
+            elif comment_id:
+                detail_service.submit_approval(comment_id, approval_user)
         else:
             utilization_id = request.args.get('utilization_id', '')
         details = detail_service.get_utilization_details(utilization_id)
