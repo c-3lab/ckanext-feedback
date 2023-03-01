@@ -1,7 +1,7 @@
 from flask import Blueprint
 
 from ckanext.feedback.controllers import utilization
-from ckanext.feedback.views.app import add_error_handler
+from ckanext.feedback.views.error_handler import add_error_handler
 
 blueprint = Blueprint('utilization', __name__, url_prefix='/utilization')
 
