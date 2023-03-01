@@ -14,6 +14,12 @@ class FeedbackPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.ITemplateHelpers)
 
     def update_config(self, config):
+        # Add this plugin's directories to CKAN's extra paths, so that
+        # CKAN will use this plugin's custom files.
+        # Paths are relative to this plugin.py file.
+        toolkit.add_template_directory(config, 'templates')
+        toolkit.add_public_directory(config, 'public')
+        toolkit.add_resource('assets', 'feedback')
 
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
