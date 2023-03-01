@@ -1,6 +1,6 @@
 import ckan.model.domain_object as domain_object
 import ckan.model.meta as meta
-from sqlalchemy import Metadata, TIMESTAMP, Column, ForeignKey, Integer, Table, Text
+from sqlalchemy import MetaData, TIMESTAMP, Column, ForeignKey, Integer, Table, Text
 
 metadata = MetaData()
 
