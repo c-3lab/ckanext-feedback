@@ -42,7 +42,7 @@ utilization = Table(
     Column(
         'approval_user_id',
         Text,
-        ForeignKey('user.id', onupdate='CASCADE'),
+        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
     ),
 )
 
@@ -64,7 +64,7 @@ utilization_comment = Table(
     Column(
         'approval_user_id',
         Text,
-        ForeignKey('user.id', onupdate='CASCADE'),
+        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
     ),
 )
 
