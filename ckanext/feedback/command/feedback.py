@@ -108,8 +108,6 @@ def init(modules, host, port, dbname, user, password):
         toolkit.error_shout(e)
         sys.exit(1)
 
-    engine.dispose()
-
 
 def drop_utilization_tables(engine):
     utilization_metadata.bind = engine
