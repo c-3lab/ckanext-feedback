@@ -11,7 +11,7 @@ from sqlalchemy import (
     Integer,
     Table,
     Text,
-    orm
+    orm,
 )
 
 metadata = meta.metadata
