@@ -31,7 +31,7 @@ resource_comment = Table(
         'resource_id',
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=False
+        nullable=False,
     ),
     Column('category', Enum(ResourceCommentCategory), nullable=False),
     Column('content', Text),
