@@ -42,7 +42,7 @@ resource_comment = Table(
     Column(
         'approval_user_id',
         Text,
-        ForeignKey('user.id', onupdate='CASCADE', ondelete='CASCADE'),
+        ForeignKey('user.id', onupdate='CASCADE'),
     ),
 )
 
@@ -61,7 +61,7 @@ resource_comment_reply = Table(
     Column(
         'creator_user_id',
         Text,
-        ForeignKey('user.id', onupdate='CASCADE', ondelete='CASCADE'),
+        ForeignKey('user.id', onupdate='CASCADE'),
     ),
 )
 
