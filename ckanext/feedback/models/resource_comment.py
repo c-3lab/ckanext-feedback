@@ -8,12 +8,11 @@ from sqlalchemy import (  # type: ignore
     Enum,
     ForeignKey,
     Integer,
-    MetaData,
     Table,
     Text,
 )
 
-metadata = MetaData()
+metadata = meta.metadata
 
 
 class ResourceCommentCategory(enum.Enum):

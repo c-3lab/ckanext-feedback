@@ -1,8 +1,8 @@
 import ckan.model.domain_object as domain_object
-import ckan.model.meta as meta
-from sqlalchemy import MetaData, TIMESTAMP, Column, ForeignKey, Integer, Table, Text
+from ckan.model import meta
+from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Table, Text
 
-metadata = MetaData()
+metadata = meta.metadata
 
 download_summary = Table(
     'download_summary',

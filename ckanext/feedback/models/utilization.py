@@ -1,6 +1,7 @@
 import enum
 
 from ckan.model import domain_object, meta
+from ckan.model.resource import Resource
 from sqlalchemy import (
     BOOLEAN,
     TIMESTAMP,
@@ -8,12 +9,12 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
-    MetaData,
     Table,
     Text,
+    orm
 )
 
-metadata = MetaData()
+metadata = meta.metadata
 
 
 class UtilizationCommentCategory(enum.Enum):
@@ -138,6 +139,6 @@ class UtilizationSummary(domain_object.DomainObject):
         self.updated = updated
 
 
-meta.mapper(Utilization, utilization)
+meta.mapper(Utilization, utilization, properties={'resource': orm.relation(Resource)})
 meta.mapper(UtilizationComment, utilization_comment)
 meta.mapper(UtilizationSummary, utilization_summary)
