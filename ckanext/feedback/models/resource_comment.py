@@ -27,7 +27,12 @@ resource_comment = Table(
     'resource_comment',
     metadata,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('resource_id', Text, nullable=False),
+    Column(
+        'resource_id',
+        Text,
+        ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False
+    ),
     Column('category', Enum(ResourceCommentCategory), nullable=False),
     Column('content', Text),
     Column('rating', Integer),
