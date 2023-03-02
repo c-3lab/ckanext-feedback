@@ -10,8 +10,6 @@ from sqlalchemy import (  # type: ignore
 
 from ckanext.feedback.models.utilization import metadata
 
-__all__ = ['issue_resolution', 'issue_resolution_summary']
-
 # Declare the issue_resolution table
 issue_resolution = Table(
     'issue_resolution',

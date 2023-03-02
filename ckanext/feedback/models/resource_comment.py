@@ -13,8 +13,6 @@ from sqlalchemy import (  # type: ignore
     Text,
 )
 
-__all__ = ['resource_comment', 'resource_comment_reply', 'resource_comment_summary']
-
 metadata = MetaData()
 
 
