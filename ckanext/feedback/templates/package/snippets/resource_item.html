@@ -15,7 +15,7 @@
   {% endif %}
   {% if h.is_enabled_utilizations() %}
     <div class="utilization-data bubble">
-      <i class="fa fa-pencil-square-o"></i><a href="{{ h.url_for('utilization.search', id=res.id, disable_keyword=true) }}">数字</a>
+      <i class="fa fa-pencil-square-o"></i><a href="{{ h.url_for('utilization.search', id=res.id, disable_keyword=true) }}">{{ h.get_resource_utilization_summary(res.id) }}</a>
     </div>
   {% endif %}
 {% endblock %}
