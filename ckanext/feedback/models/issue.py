@@ -15,10 +15,10 @@ issue_resolution = Table(
     'issue_resolution',
     metadata,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('utilization_id', Text, ForeignKey('utilization.id'), nullable=False),
+    Column('utilization_id', Text, ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'), nullable=False),
     Column('description', Text),
     Column('created', TIMESTAMP),
-    Column('creator_user_id', Text, ForeignKey('user.id')),
+    Column('creator_user_id', Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')),
 )
 
 # Declare the issue_resolution_summary table
@@ -26,7 +26,7 @@ issue_resolution_summary = Table(
     'issue_resolution_summary',
     metadata,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('utilization_id', Text, ForeignKey('utilization.id'), nullable=False),
+    Column('utilization_id', Text, ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'), nullable=False),
     Column('issue_resolution', Integer),
     Column('created', TIMESTAMP),
     Column('updated', TIMESTAMP),
