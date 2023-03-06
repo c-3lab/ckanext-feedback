@@ -13,6 +13,13 @@
       <div class="description">{{ _('Downloads') }}</div>
     </div>
   {% endif %}
+  {% if h.is_enabled_utilizations() %}
+  <div class = "bubble">
+      <img id="issue-resolution" src='/images/issue_resolution_badge.png'>
+      {{ h.get_resource_issue_resolutions(res.id) }}
+      <div class="description">課題解決数</div>
+    </div>
+  {% endif %}
 {% endblock %}
 
 {% block resource_item_explore %}

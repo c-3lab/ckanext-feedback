@@ -31,6 +31,12 @@ feedback-package-item-css:
   contents:
     - css/package_item.css
 
+feedback-detail-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-detail.js
+  contents:
+    - js/detail.js
+
 feedback-details-css:
   filter: cssrewrite
   output: feedback/%(version)s-details.css

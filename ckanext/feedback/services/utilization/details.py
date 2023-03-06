@@ -11,7 +11,7 @@ from ckanext.feedback.models.utilization import (
     UtilizationCommentCategory,
     UtilizationSummary,
 )
-
+from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
 
 # Get details from the Utilization record
 def get_utilization(utilization_id):
@@ -80,6 +80,39 @@ def get_utilization_comment_categories():
     return UtilizationCommentCategory
 
 
+# Get issues resolved related to the Utilization record
+def get_issue_resolution(utilization_id):
+    rows = (
+        session.query(
+            IssueResolution.description,
+            IssueResolution.created
+        )
+        .filter(IssueResolution.utilization_id == utilization_id)
+        .order_by(IssueResolution.created.desc())
+        .all()
+    )
+    return rows
+
+
+# Create issue resolution
+def create_issue_resolution(utilization_id, issue_resolution_description, creator):
+    try:
+        session.execute(
+            insert(IssueResolution).values(
+                id=str(uuid.uuid4()),
+                utilization_id=utilization_id,
+                description=issue_resolution_description,
+                created=datetime.now(),
+                creator_user_id=creator,
+            )
+        )
+        increment_issue_resolution_summary(utilization_id)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+
+
 # Increment utilization summary comment count
 def increment_utilization_summary(resource_id):
     summary = (
@@ -89,3 +122,29 @@ def increment_utilization_summary(resource_id):
     )
     summary.comment = summary.comment + 1
     summary.updated = datetime.now()
+
+# Increment issue resolution count
+def increment_issue_resolution_summary(utilization_id):
+    try:
+        if (session.query(IssueResolutionSummary).filter(IssueResolutionSummary.utilization_id == utilization_id).count() > 0):
+            session.execute(
+                update(IssueResolutionSummary)
+                .where(IssueResolutionSummary.utilization_id == utilization_id)
+                .values(
+                    issue_resolution=len(get_issue_resolution(utilization_id)),
+                    updated=datetime.now(),
+                )
+            )
+        else:
+            session.execute(
+                insert(IssueResolutionSummary).values(
+                    id=str(uuid.uuid4()),
+                    utilization_id=utilization_id,
+                    issue_resolution=1,
+                    created=datetime.now(),
+                    updated=datetime.now(),
+                )
+            )
+    except Exception as e:
+        session.rollback()
+        raise e

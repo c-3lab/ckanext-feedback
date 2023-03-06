@@ -83,10 +83,11 @@
                   <p>{{ row.description }}</p>
                   <hr>
                   <h4>課題解決数</h4>
-                  <!-- ToDo -->
-                  <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">1
+                  <a href='#issue-resolution-detail' data-toggle='modal'>
+                    <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">
+                  </a>{{ issue_resolutions|length }}
                   {% if c.userobj.sysadmin %}
-                    <button class="btn btn-primary right-aligned">課題解決</button>
+                    <button class='btn btn-primary right-aligned' data-toggle='modal' data-target='#issue-resolution-form'>課題解決</button>
                   {% endif %}
                   <br>
                   <hr>
@@ -137,6 +138,67 @@
           {% endblock %}
         </div>
       </div>
+
+      <div id='issue-resolution-form' class='modal fade' tabindex='-1'>
+        <form class='top-centered-content' method='post'>
+        <div class='modal-dialog'>
+          <div class='modal-content'>
+    
+            <div class='modal-header'>
+              <button type='button' class='close' data-dismiss='modal'>&times;</button>
+              <h2 class='modal-title'>{{ _('課題解決内容入力') }}</h2>
+            </div>
+            <div class='modal-body'>
+              <div class='form-group control-full'>
+                <label class='control-label' for='code'>{{ _('入力欄') }}</label>
+                <div class='controls '>
+                  <textarea id='description' name='issue_resolution_description' cols='20' rows='3' placeholder='' class='form-control'></textarea>
+                </div>
+                <div>
+                  <p id='description-error' class='alert alert-error' style='display: none;'>{{ _('課題解決内容を入力してください') }}</p>
+                </div>
+              </div>
+            </div>
+            <div class='modal-footer'>
+              <button class='btn btn-primary right-aligned' onclick='return check_description()'>{{ _('認定') }}</button>
+              <input type='hidden' id='utilization_id' name='utilization_id' value='{{ utilization_id }}'/>
+              <input type='hidden' id='creator' name='creator' value='{{ c.userobj.id }}'/>
+            </div>
+          </div>
+        </div>
+        </form>
+      </div>
+    
+      <div id='issue-resolution-detail' class='modal fade' tabindex='-1'>
+        <div class='modal-dialog modal-dialog-centered modal-lg'>
+          <div class='modal-content'>
+            <div class='modal-header'>
+              <button type='button' class='close' data-dismiss='modal'>&times;</button>
+              <h2 class='modal-title'>{{ _('課題解決内容詳細') }}</h>
+            </div>
+            <div id="issue-resolution-table" class='modal-body'>
+              <div>
+                <table class='table table-bordered table-striped table-responsive'>
+                  <thead class='table-header'>
+                    <tr>
+                      <th class='col-md-3'>{{ _('認定日') }}</th>
+                      <th>{{ _('課題解決内容') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for issue_resolution in issue_resolutions %}
+                      <tr>
+                        <td>{{ issue_resolution.created }}</td>
+                        <td>{{ issue_resolution.description }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     {% endblock -%}
 
     {#
@@ -152,6 +214,7 @@
   {%- block scripts %}
     {% asset 'base/main' %}
     {% asset 'base/ckan' %}
+    {% asset 'feedback/feedback-detail-js' %}
     {% if g.tracking_enabled %}
       {% asset 'base/tracking' %}
     {% endif %}

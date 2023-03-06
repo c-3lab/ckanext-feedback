@@ -16,6 +16,7 @@ class UtilizationController:
         utilization = detail_service.get_utilization(utilization_id)
         comments = detail_service.get_utilization_comments(utilization_id, approval)
         categories = detail_service.get_utilization_comment_categories()
+        issue_resolutions = detail_service.get_issue_resolution(utilization_id)
 
         return toolkit.render(
             'utilization/details.html',
@@ -24,6 +25,7 @@ class UtilizationController:
                 'utilization': utilization,
                 'comments': comments,
                 'categories': categories,
+                'issue_resolutions': issue_resolutions,
             },
         )
 
