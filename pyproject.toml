@@ -19,6 +19,9 @@ packages = [
     { include = "LICENSE" }
 ]
 
+[tool.poetry]
+include = ["**/*.mo"]
+
 [tool.poetry.plugins."ckan.plugins"]
 feedback = "ckanext.feedback.plugin:FeedbackPlugin"
 
