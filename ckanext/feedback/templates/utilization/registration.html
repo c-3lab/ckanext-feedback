@@ -1,1 +1,109 @@
-<p>REGISTRATION</p>
+{% if h.is_enabled_utilizations() %}
+
+  {% extends "page.html" %}
+
+  {%- block page -%}
+
+    <!-- {% block skip %}
+      <div class="sr-only sr-only-focusable"><a href="#content">{{ _('Skip to content') }}</a></div>
+    {% endblock %} -->
+
+    {#
+    Override the header on a page by page basis by extending this block. If
+    making sitewide header changes it is preferable to override the header.html
+    file.
+    #}
+    {%- block header %}
+      {% include "header.html" %}
+    {% endblock -%}
+
+    {% block styles %}
+      {{ super() }}
+      {% asset 'feedback/feedback-registration-css' %}
+    {% endblock %}
+
+    {# The content block allows you to replace the content of the page if needed #}
+    {%- block content %}
+      {% block maintag %}<div class="main">{% endblock %}
+        <div id="content" class="container">
+          {% block main_content %}
+
+            {% block toolbar %}
+              <div class="toolbar" role="navigation" aria-label="{{ _('Breadcrumb') }}">
+                {% block breadcrumb %}
+                  {% if self.breadcrumb_content() | trim %}
+                    <ol class="breadcrumb">
+                      {% snippet 'snippets/home_breadcrumb_item.html' %}
+                      {% block breadcrumb_content %}
+                        {% set row = resource_details %}
+                        <li class="inactive"><a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ _('データセット') }}</a></li>
+                        <li class="inactive"><a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ _('データリソース') }}</a></li>
+                        <li class="active"><a href="">{{ _('利活用方法登録') }}</a></li>
+                      {% endblock %}
+                    </ol>
+                  {% endif %}
+                {% endblock %}
+              </div>
+            {% endblock %}
+
+            <div class="row wrapper{% block wrapper_class %}{% endblock %}{% if self.secondary()|trim == '' or c.action=='resource_read' %} no-nav{% endif %}">
+
+              {#
+              The pre_primary block can be used to add content to before the
+              rendering of the main content columns of the page.
+              #}
+              {% block pre_primary %}
+              {% endblock %}
+
+              {% block secondary %}
+                
+              {% endblock %}
+
+              {% block primary %}
+                {% set row = resource_details %}
+                <div class="centered-content">
+                  <br>
+                  <h4>データセット</h4>
+                  <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_name }}</a>
+                  <hr>
+                  <h4>データリソース</h4>
+                  <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
+                  <hr>
+                  <form name="content_form" action="{{ url_for('utilization.create_summary', resource_id=row.resource_id ) }}" method="post">
+                    <h4>タイトル</h4>
+                    <input type="text" class="title" id="title" name="title"/>
+                    <br>
+                    <hr>
+                    <h4>内容</h4>
+                    <textarea class="form-control" cols="20" rows="5" id="content" name="content"></textarea>
+                    <br>
+                    <button class="btn btn-primary right-aligned">登録</button>
+                  </form>
+                </div>
+              {% endblock %}
+            </div>
+          {% endblock %}
+        </div>
+      </div>
+    {% endblock -%}
+
+    {#
+    Override the footer on a page by page basis by extending this block. If
+    making sitewide header changes it is preferable to override the footer.html-u
+    file.
+    #}
+    {%- block footer %}
+      {% include "footer.html" %}
+    {% endblock -%}
+  {%- endblock -%}
+
+  {%- block scripts %}
+    {% asset 'base/main' %}
+    {% asset 'base/ckan' %}
+    {% if g.tracking_enabled %}
+      {% asset 'base/tracking' %}
+    {% endif %}
+    {{ super() }}
+  {% endblock -%}
+
+{% endif %}

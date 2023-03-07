@@ -9,6 +9,16 @@ blueprint = Blueprint('utilization', __name__, url_prefix='/utilization')
 rules = [
     ('/search', 'search', utilization.UtilizationController.search),
     (
+        '/registration/<resource_id>',
+        'registration',
+        utilization.UtilizationController.registration,
+    ),
+    (
+        '/registration/<resource_id>/create_summary',
+        'create_summary',
+        utilization.UtilizationController.create_summary,
+    ),
+    (
         '/<utilization_id>',
         'details',
         utilization.UtilizationController.details,
@@ -29,11 +39,6 @@ rules = [
         utilization.UtilizationController.approve_comment,
     ),
     (
-        '/registration',
-        'registration',
-        utilization.UtilizationController.registration,
-    ),
-    (
         '/comment_approval',
         'comment_approval',
         utilization.UtilizationController.comment_approval,
@@ -43,7 +48,6 @@ rules = [
         'comment',
         utilization.UtilizationController.comment,
     ),
-    
 ]
 for rule in rules:
     blueprint.add_url_rule(*rule, methods=['GET', 'POST'])

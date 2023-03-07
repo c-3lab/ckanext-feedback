@@ -3,6 +3,7 @@ from ckan.plugins import toolkit
 from flask import redirect, url_for
 
 import ckanext.feedback.services.utilization.details as detail_service
+import ckanext.feedback.services.utilization.registration as registration_service
 import ckanext.feedback.services.utilization.search as search_service
 from ckanext.feedback.models.session import session
 
@@ -56,9 +57,27 @@ class UtilizationController:
         return redirect(url_for('utilization.details', utilization_id=utilization_id))
 
     # utilization/registration.html
-    @staticmethod
-    def registration():
-        return toolkit.render('utilization/registration.html')
+    def registration(resource_id):
+        resource_details = registration_service.get_resource_details(resource_id)
+
+        return toolkit.render(
+            'utilization/registration.html',
+            {
+                'resource_details': resource_details,
+            },
+        )
+
+    # utilization/<resource_id>/create_summary
+    def create_summary(resource_id):
+        title = request.form.get('title', '')
+        content = request.form.get('content', '')
+        utilization_id = registration_service.create_utilization(
+            resource_id, title, content
+        )
+        registration_service.create_utilization_summary(resource_id)
+        session.commit()
+
+        return redirect(url_for('utilization.details', utilization_id=utilization_id))
 
     # utilization/comment_approval.html
     @staticmethod
