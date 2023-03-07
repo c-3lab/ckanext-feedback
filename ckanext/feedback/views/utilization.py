@@ -19,6 +19,11 @@ rules = [
         utilization.UtilizationController.create_summary,
     ),
     (
+        '/edit',
+        'edit',
+        utilization.UtilizationController.edit,
+    ),
+    (
         '/<utilization_id>',
         'details',
         utilization.UtilizationController.details,
