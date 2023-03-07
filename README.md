@@ -2,7 +2,7 @@
 
 このCKAN Extensionは大きく3つのモジュールを提供します。
 * データの利活用方法に関するモジュール
-* データへのレビューに関するモジュール
+* リソースへのレビューに関するモジュール
 * ダウンロードに関するモジュール
 
 ## 現状の課題
@@ -51,8 +51,34 @@
 
 ## インストール
 
-1. CKANの仮想環境をアクティブにする
-```. $VIRTUAL_ENV/bin/activate
+### 共通処理
+
+1. CKANの仮想環境をアクティブにする  
+```. $VIRTUAL_ENV/bin/activate```
+
+2. 仮想環境にckanext-feedbackをインストールする  
+```pip install ckanext-feedback```
+
+3. CKAN config fileの```ckan.plugins```に```feedback```を追加する  
+```vim /etc/ckan/production.ini```
+以下の行に```feedback```を追加  
+```ckan.plugins = stats ・・・ recline_view feedback```
+
+### オンオフ機能
+
+* ckanext-feedbackには以下の3つのモジュールがあり、それぞれのモジュールのオンオフを切り替えることが出来ます。
+    * utilization(データの利活用方法に関するモジュール)
+    * resource(リソースへのレビューに関するモジュール)
+    * download(ダウンロードに関するモジュール)
+
+
+
+
+
+
+
+
+
     
 
 
