@@ -42,7 +42,7 @@ isort = "^5.11.4"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
 mypy = "^0.991"
-Babel = "^2.12.1"
+Babel = "2.7.0"
 
 [build-system]
 requires = ["poetry-core"]
