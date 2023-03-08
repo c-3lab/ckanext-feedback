@@ -1,13 +1,19 @@
-from ckan.model import domain_object, meta
+import ckan.model.domain_object as domain_object
+from ckan.model import meta
 from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Table, Text
 
-__all__ = ['download_summary']
+metadata = meta.metadata
 
 download_summary = Table(
     'download_summary',
-    meta.metadata,
+    metadata,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('resource_id', Text, ForeignKey('resource.id'), nullable=False),
+    Column(
+        'resource_id',
+        Text,
+        ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    ),
     Column('download', Integer),
     Column('created', TIMESTAMP),
     Column('updated', TIMESTAMP),

@@ -1,4 +1,4 @@
-import datetime
+import enum
 
 from ckan.model import domain_object, meta
 from sqlalchemy import (  # type: ignore
@@ -12,42 +12,68 @@ from sqlalchemy import (  # type: ignore
     Text,
 )
 
-__all__ = ['resource_comment', 'resource_comment_reply', 'resource_comment_summary']
+metadata = meta.metadata
 
-# Declare the resource_comment table
+
+class ResourceCommentCategory(enum.Enum):
+    request = 'Request'
+    question = 'Question'
+    advertise = 'Advertise'
+    thank = 'Thank'
+
+
 resource_comment = Table(
     'resource_comment',
-    meta.metadata,
+    metadata,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('resource_id', Text, ForeignKey('resource.id'), nullable=False),
-    Column('category', Enum('承認待ち', '承認済', name='category_enum'), nullable=False),
+    Column(
+        'resource_id',
+        Text,
+        ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    ),
+    Column('category', Enum(ResourceCommentCategory), nullable=False),
     Column('content', Text),
     Column('rating', Integer),
     Column('created', TIMESTAMP),
     Column('approval', BOOLEAN, default=False),
     Column('approved', TIMESTAMP),
-    Column('approval_user_id', Text, ForeignKey('user.id')),
+    Column(
+        'approval_user_id',
+        Text,
+        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
+    ),
 )
 
-# Declare the resource_comment_reply table
 resource_comment_reply = Table(
     'resource_comment_reply',
-    meta.metadata,
+    metadata,
     Column('id', Text, primary_key=True, nullable=False),
     Column(
-        'resource_comment_id', Text, ForeignKey('resource_comment.id'), nullable=False
+        'resource_comment_id',
+        Text,
+        ForeignKey('resource_comment.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
     ),
     Column('content', Text),
     Column('created', TIMESTAMP),
-    Column('creator_user_id', Text, ForeignKey('user.id')),
+    Column(
+        'creator_user_id',
+        Text,
+        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
+    ),
 )
 
-# Declare the resource_comment_summary table
 resource_comment_summary = Table(
     'resource_comment_summary',
-    meta.metadata,
+    metadata,
     Column('id', Text, primary_key=True, nullable=False),
-    Column('resource_id', Text, ForeignKey('resource.id'), nullable=False),
+    Column(
+        'resource_id',
+        Text,
+        ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    ),
     Column('comment', Integer),
     Column('rating', Integer),
     Column('created', TIMESTAMP),
@@ -56,32 +82,46 @@ resource_comment_summary = Table(
 
 
 class ResourceComment(domain_object.DomainObject):
-    id: str
-    resource_id: str
-    category: Enum
-    content: str
-    rating: int
-    created: datetime.datetime
-    approval: bool
-    approved: datetime.datetime
-    approval_user_id: str
+    def __init__(
+        self,
+        id,
+        resource_id,
+        category,
+        content,
+        rating,
+        created,
+        approval,
+        approved,
+        approval_user_id,
+    ):
+        self.id = id
+        self.resource_id = resource_id
+        self.category = category
+        self.content = content
+        self.rating = rating
+        self.created = created
+        self.approval = approval
+        self.approved = approved
+        self.approval_user_id = approval_user_id
 
 
 class ResourceCommentReply(domain_object.DomainObject):
-    id: str
-    resource_comment_id: str
-    content: str
-    created: datetime.datetime
-    creator_user_id: str
+    def __init__(self, id, resource_comment_id, content, created, creator_user_id):
+        self.id = id
+        self.resource_comment_id = resource_comment_id
+        self.content = content
+        self.created = created
+        self.creator_user_id = creator_user_id
 
 
 class ResourceCommentSummary(domain_object.DomainObject):
-    id: str
-    resource_id: str
-    comment: int
-    rating: int
-    created: datetime.datetime
-    updated: datetime.datetime
+    def __init__(self, id, resource_id, comment, rating, created, updated):
+        self.id = id
+        self.resource_id = resource_id
+        self.comment = comment
+        self.rating = rating
+        self.created = created
+        self.updated = updated
 
 
 meta.mapper(ResourceComment, resource_comment)
