@@ -92,10 +92,10 @@
             {% do menu_items.append(('organization.index', _('Organization'))) %}
             {% do menu_items.append(('group.index', _('Group'))) %}
             {% if h.is_enabled_utilizations %}
-              {% do menu_items.append(('utilization.search', _('利活用方法'))) %}
+              {% do menu_items.append(('utilization.search', _('Utilization'))) %}
             {% endif %}
             {% if c.userobj.sysadmin and h.is_enabled_resources %}
-              {% do menu_items.append(('home.about', _('フィードバック一覧'))) %}
+              {% do menu_items.append(('home.about', _('Feedback Comments'))) %}
             {% endif %}
             {% do menu_items.append(('home.about', _('About'))) %}
             {% for item in menu_items %}
