@@ -1,32 +1,18 @@
-import ckan.model.domain_object as domain_object
-from ckan.model import meta
-from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Table, Text
+from ckan import model
+from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Text
+from sqlalchemy.ext.declarative import declarative_base
 
-metadata = meta.metadata
+Base = declarative_base(metadata=model.meta.metadata)
 
-download_summary = Table(
-    'download_summary',
-    metadata,
-    Column('id', Text, primary_key=True, nullable=False),
-    Column(
-        'resource_id',
+
+class DownloadSummary(Base):
+    __tablename__ = 'download_summary'
+    id = Column(Text, primary_key=True, nullable=False)
+    resource_id = Column(
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
-    ),
-    Column('download', Integer),
-    Column('created', TIMESTAMP),
-    Column('updated', TIMESTAMP),
-)
-
-
-class DownloadSummary(domain_object.DomainObject):
-    def __init__(self, id, resource_id, download, created, updated):
-        self.id = id
-        self.resource_id = resource_id
-        self.download = download
-        self.created = created
-        self.updated = updated
-
-
-meta.mapper(DownloadSummary, download_summary)
+    )
+    download = Column(Integer)
+    created = Column(TIMESTAMP)
+    updated = Column(TIMESTAMP)

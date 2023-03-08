@@ -1,18 +1,10 @@
 import enum
 
-from ckan.model import domain_object, meta
-from sqlalchemy import (  # type: ignore
-    BOOLEAN,
-    TIMESTAMP,
-    Column,
-    Enum,
-    ForeignKey,
-    Integer,
-    Table,
-    Text,
-)
+from ckan import model
+from sqlalchemy import BOOLEAN, TIMESTAMP, Column, Enum, ForeignKey, Integer, Text
+from sqlalchemy.ext.declarative import declarative_base
 
-metadata = meta.metadata
+Base = declarative_base(metadata=model.meta.metadata)
 
 
 class ResourceCommentCategory(enum.Enum):
@@ -22,108 +14,49 @@ class ResourceCommentCategory(enum.Enum):
     thank = 'Thank'
 
 
-resource_comment = Table(
-    'resource_comment',
-    metadata,
-    Column('id', Text, primary_key=True, nullable=False),
-    Column(
-        'resource_id',
+class ResourceComment(Base):
+    __tablename__ = 'resource_comment'
+    id = Column(Text, primary_key=True, nullable=False)
+    resource_id = Column(
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
-    ),
-    Column('category', Enum(ResourceCommentCategory), nullable=False),
-    Column('content', Text),
-    Column('rating', Integer),
-    Column('created', TIMESTAMP),
-    Column('approval', BOOLEAN, default=False),
-    Column('approved', TIMESTAMP),
-    Column(
-        'approval_user_id',
-        Text,
-        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-    ),
-)
+    )
+    category = Column(Enum(ResourceCommentCategory), nullable=False)
+    content = Column(Text)
+    rating = Column(Integer)
+    created = Column(TIMESTAMP)
+    approval = Column(BOOLEAN, default=False)
+    approved = Column(TIMESTAMP)
+    approval_user_id = Column(
+        Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
+    )
 
-resource_comment_reply = Table(
-    'resource_comment_reply',
-    metadata,
-    Column('id', Text, primary_key=True, nullable=False),
-    Column(
-        'resource_comment_id',
+
+class ResourceCommentReply(Base):
+    __tablename__ = 'resource_comment_reply'
+    id = Column(Text, primary_key=True, nullable=False)
+    resource_comment_id = Column(
         Text,
         ForeignKey('resource_comment.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
-    ),
-    Column('content', Text),
-    Column('created', TIMESTAMP),
-    Column(
-        'creator_user_id',
-        Text,
-        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-    ),
-)
+    )
+    content = Column(Text)
+    created = Column(TIMESTAMP)
+    creator_user_id = Column(
+        Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
+    )
 
-resource_comment_summary = Table(
-    'resource_comment_summary',
-    metadata,
-    Column('id', Text, primary_key=True, nullable=False),
-    Column(
-        'resource_id',
+
+class ResourceCommentSummary(Base):
+    __tablename__ = 'resource_comment_summary'
+    id = Column(Text, primary_key=True, nullable=False)
+    resource_id = Column(
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
-    ),
-    Column('comment', Integer),
-    Column('rating', Integer),
-    Column('created', TIMESTAMP),
-    Column('updated', TIMESTAMP),
-)
-
-
-class ResourceComment(domain_object.DomainObject):
-    def __init__(
-        self,
-        id,
-        resource_id,
-        category,
-        content,
-        rating,
-        created,
-        approval,
-        approved,
-        approval_user_id,
-    ):
-        self.id = id
-        self.resource_id = resource_id
-        self.category = category
-        self.content = content
-        self.rating = rating
-        self.created = created
-        self.approval = approval
-        self.approved = approved
-        self.approval_user_id = approval_user_id
-
-
-class ResourceCommentReply(domain_object.DomainObject):
-    def __init__(self, id, resource_comment_id, content, created, creator_user_id):
-        self.id = id
-        self.resource_comment_id = resource_comment_id
-        self.content = content
-        self.created = created
-        self.creator_user_id = creator_user_id
-
-
-class ResourceCommentSummary(domain_object.DomainObject):
-    def __init__(self, id, resource_id, comment, rating, created, updated):
-        self.id = id
-        self.resource_id = resource_id
-        self.comment = comment
-        self.rating = rating
-        self.created = created
-        self.updated = updated
-
-
-meta.mapper(ResourceComment, resource_comment)
-meta.mapper(ResourceCommentReply, resource_comment_reply)
-meta.mapper(ResourceCommentSummary, resource_comment_summary)
+    )
+    comment = Column(Integer)
+    rating = Column(Integer)
+    created = Column(TIMESTAMP)
+    updated = Column(TIMESTAMP)
