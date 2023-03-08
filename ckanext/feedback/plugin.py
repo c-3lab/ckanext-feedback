@@ -1,7 +1,7 @@
 from ckan import plugins
 from ckan.common import config
-from ckan.plugins import toolkit
 from ckan.lib.plugins import DefaultTranslation
+from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
 from ckanext.feedback.services.download import summary as summary_service
