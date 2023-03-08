@@ -238,7 +238,9 @@ msgstr "データとリソース"
 msgid ""
 "<p class=\"empty\">This dataset has no data, <a href=\"%(url)s\">why not "
 "add some?</a></p>"
-msgstr "このデータセットにはデータがありません"
+msgstr ""
+" <p class=\"empty\">このデータセットにはデータがありませんので、 <a "
+"href=\"%(url)s\">データを追加しましょう</a>。</p> "
 
 #: ckanext/feedback/templates/package/snippets/resources_list.html:42
 msgid "This dataset has no data"
