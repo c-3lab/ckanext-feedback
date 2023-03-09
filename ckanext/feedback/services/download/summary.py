@@ -38,11 +38,11 @@ def increment_resource_downloads(resource_id):
     )
     if download_summary is None:
         download_summary = DownloadSummary(
-            id = str(uuid.uuid4()),
-            resource_id = resource_id,
-            download = 1,
-            created = datetime.datetime.now(),
-            updated = datetime.datetime.now(),
+            id=str(uuid.uuid4()),
+            resource_id=resource_id,
+            download=1,
+            created=datetime.datetime.now(),
+            updated=datetime.datetime.now(),
         )
         session.add(download_summary)
     else:
