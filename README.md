@@ -116,7 +116,7 @@
    pip install ckanext-feedback
    ```
 
-3. CKAN config fileの`ckan.plugins`に`feedback`を追加する
+3. CKAN config fileの`ckan.plugins`に`feedback`を追加する  
    `vim /etc/ckan/production.ini` 以下の行に`feedback`を追加
    ```
    ckan.plugins = stats ・・・ recline_view feedback
@@ -156,3 +156,47 @@
     ckan config=/etc/ckan/production.ini feedback init -m download
     ```
 
+## ビルド
+
+1. `ckanext-feedback`をローカル環境にGitHub上からクローンする
+    ```
+    git clone https://github.com/c-3lab/ckanext-feedback.git
+    ```
+
+2. `/development/setup.sh`を実行し、コンテナを起動
+
+3. CKAN公式の手順に従い、以下のコマンドを実行
+    ```
+    docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
+    ```
+    ```
+    docker exec -it ckan /usr/local/bin/ckan -c /etc/ckan/production.ini sysadmin add admin
+    ```
+
+4. 以下のコマンドを実行し、ckanコンテナ内に入る
+    ```
+    docker exec -it ckan bash
+    ```
+
+5. CKANの仮想環境をアクティブにする
+   ```
+   . /usr/lib/ckan/venv/bin/activate
+   ```
+
+6. 仮想環境にckanext-feedbackをインストールする
+   ```
+   pip install ckanext-feedback
+   ```
+
+7. CKAN config fileの`ckan.plugins`に`feedback`を追加する
+   `vim /etc/ckan/production.ini` 以下の行に`feedback`を追加
+   ```
+   ckan.plugins = stats ・・・ recline_view feedback
+   ```
+
+8. フィードバック機能に必要なテーブルを作成する  
+   ```
+   ckan *config=/etc/ckan/production.ini feedback init
+   ```
+
+9. 動作確認を行う
