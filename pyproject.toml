@@ -96,6 +96,8 @@ pybabel extract --keywords 'translate isPlural'
                 --width 80
                 --mapping-file babel.cfg
                 --project ckanext-feedback
+                --msgid-bugs-address="info.c3lab@gmail.com"
+                --copyright-holder="C3Lab"
                 ckanext
 """
 babel-init = """
