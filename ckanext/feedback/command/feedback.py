@@ -1,10 +1,8 @@
 import sys
 
 import click
-from ckan import model
 from ckan.plugins import toolkit
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
@@ -109,74 +107,36 @@ def init(modules, host, port, dbname, user, password):
 
 
 def drop_utilization_tables(engine):
-    metadata = model.meta.metadata
-    metadata.bind = engine
-    metadata.reflect(only=['resource', 'user'])
-    Base = declarative_base(metadata)
-    Base.metadata.drop_all(
-        bind=engine,
-        tables=[
-            Utilization.__table__,
-            UtilizationComment.__table__,
-            UtilizationComment.__table__,
-            IssueResolution.__table__,
-            IssueResolutionSummary.__table__,
-        ],
-    )
-    metadata.clear()
+    IssueResolutionSummary.__table__.drop(engine, checkfirst=True)
+    IssueResolution.__table__.drop(engine, checkfirst=True)
+    UtilizationSummary.__table__.drop(engine, checkfirst=True)
+    UtilizationComment.__table__.drop(engine, checkfirst=True)
+    Utilization.__table__.drop(engine, checkfirst=True)
 
 
 def create_utilization_tables(engine):
-    Base = declarative_base(metadata=model.meta.metadata)
-    Base.metadata.create_all(
-        bind=engine,
-        tables=[
-            Utilization.__table__,
-            UtilizationComment.__table__,
-            UtilizationSummary.__table__,
-            IssueResolution.__table__,
-            IssueResolutionSummary.__table__,
-        ],
-    )
+    Utilization.__table__.create(engine)
+    UtilizationComment.__table__.create(engine)
+    UtilizationSummary.__table__.create(engine)
+    IssueResolution.__table__.create(engine)
+    IssueResolutionSummary.__table__.create(engine)
 
 
 def drop_resource_tables(engine):
-    metadata = model.meta.metadata
-    metadata.bind = engine
-    metadata.reflect(only=['resource', 'user'])
-    Base = declarative_base(metadata)
-    Base.metadata.drop_all(
-        bind=engine,
-        tables=[
-            ResourceComment.__table__,
-            ResourceCommentReply.__table__,
-            ResourceCommentSummary.__table__,
-        ],
-    )
-    metadata.clear()
+    ResourceCommentSummary.__table__.drop(engine, checkfirst=True)
+    ResourceCommentReply.__table__.drop(engine, checkfirst=True)
+    ResourceComment.__table__.drop(engine, checkfirst=True)
 
 
 def create_resource_tables(engine):
-    Base = declarative_base(metadata=model.meta.metadata)
-    Base.metadata.create_all(
-        bind=engine,
-        tables=[
-            ResourceComment.__table__,
-            ResourceCommentReply.__table__,
-            ResourceCommentSummary.__table__,
-        ],
-    )
+    ResourceComment.__table__.create(engine)
+    ResourceCommentReply.__table__.create(engine)
+    ResourceCommentSummary.__table__.create(engine)
 
 
 def drop_download_tables(engine):
-    metadata = model.meta.metadata
-    metadata.bind = engine
-    metadata.reflect(only=['resource'])
-    Base = declarative_base(metadata)
-    Base.metadata.drop_all(bind=engine, tables=[DownloadSummary.__table__])
-    metadata.clear()
+    DownloadSummary.__table__.drop(engine, checkfirst=True)
 
 
 def create_download_tables(engine):
-    Base = declarative_base(metadata=model.meta.metadata)
-    Base.metadata.create_all(bind=engine, tables=[DownloadSummary.__table__])
+    DownloadSummary.__table__.create(engine)
