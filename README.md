@@ -91,7 +91,7 @@
    pip install ckanext-feedback
    ```
 
-3. CKAN config fileの`ckan.plugins`に`feedback`を追加する
+3. CKAN config fileの`ckan.plugins`に`feedback`を追加する  
    `vim /etc/ckan/production.ini` 以下の行に`feedback`を追加
    ```
    ckan.plugins = stats ・・・ recline_view feedback
@@ -104,7 +104,7 @@
 
 ### オンオフ機能
 
-* ckanext-feedbackには以下の3つのモジュールがあり、それぞれのモジュールのオンオフを切り替えることが出来ます。
+* ckanext-feedbackには以下の3つのモジュールがあり、各モジュールのオンオフを切り替えることが出来ます。
   * utilization(データの利活用方法に関するモジュール)
   * resource(リソースへのレビューに関するモジュール)
   * download(ダウンロードに関するモジュール)  
