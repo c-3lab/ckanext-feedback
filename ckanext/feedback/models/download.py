@@ -1,8 +1,8 @@
-from ckan import model
+from ckan.model.resource import Resource
 from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Text
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-Base = declarative_base(metadata=model.meta.metadata)
+from ckanext.feedback.models.session import Base
 
 
 class DownloadSummary(Base):
@@ -16,3 +16,5 @@ class DownloadSummary(Base):
     download = Column(Integer)
     created = Column(TIMESTAMP)
     updated = Column(TIMESTAMP)
+
+    resource = relationship(Resource)

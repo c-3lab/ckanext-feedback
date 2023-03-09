@@ -1,10 +1,11 @@
 import enum
 
-from ckan import model
+from ckan.model.resource import Resource
+from ckan.model.user import User
 from sqlalchemy import BOOLEAN, TIMESTAMP, Column, Enum, ForeignKey, Integer, Text
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-Base = declarative_base(metadata=model.meta.metadata)
+from ckanext.feedback.models.session import Base
 
 
 class ResourceCommentCategory(enum.Enum):
@@ -32,6 +33,10 @@ class ResourceComment(Base):
         Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
     )
 
+    resource = relationship(Resource)
+    approval_user = relationship(User)
+    reply = relationship('ResourceCommentReply', uselist=False)
+
 
 class ResourceCommentReply(Base):
     __tablename__ = 'resource_comment_reply'
@@ -47,6 +52,9 @@ class ResourceCommentReply(Base):
         Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
     )
 
+    resource_comment = relationship('ResourceComment', back_populates='reply')
+    creator_user = relationship(User)
+
 
 class ResourceCommentSummary(Base):
     __tablename__ = 'resource_comment_summary'
@@ -60,3 +68,5 @@ class ResourceCommentSummary(Base):
     rating = Column(Integer)
     created = Column(TIMESTAMP)
     updated = Column(TIMESTAMP)
+
+    resource = relationship(Resource)
