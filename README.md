@@ -55,17 +55,25 @@
 ### クイックスタート
 
 1. CKANの仮想環境をアクティブにする\
-   `. /usr/lib/ckan/venv/bin/activate`
+   ```
+   . /usr/lib/ckan/venv/bin/activate
+   ```
 
 2. 仮想環境にckanext*feedbackをインストールする\
-   `pip install ckanext*feedback`
+   ```
+   pip install ckanext*feedback
+   ```
 
 3. CKAN config fileの`ckan.plugins`に`feedback`を追加する\
    `vim /etc/ckan/production.ini` 以下の行に`feedback`を追加\
-   `ckan.plugins = stats ・・・ recline_view feedback`
+   ```
+   ckan.plugins = stats ・・・ recline_view feedback
+   ```
 
 4. フィードバック機能に必要なテーブルを作成する  
-   `ckan *config=/etc/ckan/production.ini feedback init`
+   ```
+   ckan *config=/etc/ckan/production.ini feedback init
+   ```
 
 ### オンオフ機能
 
@@ -78,34 +86,52 @@
 #### 設定手順
 
 1. CKANの仮想環境をアクティブにする\
-   `. /usr/lib/ckan/venv/bin/activate`
+   ```
+   . /usr/lib/ckan/venv/bin/activate
+   ```
 
 2. 仮想環境にckanext*feedbackをインストールする\
-   `pip install ckanext*feedback`
+   ```
+   pip install ckanext*feedback
+   ```
 
 3. CKAN config fileの`ckan.plugins`に`feedback`を追加する\
    `vim /etc/ckan/production.ini` 以下の行に`feedback`を追加\
-   `ckan.plugins = stats ・・・ recline_view feedback`
+   ```
+   ckan.plugins = stats ・・・ recline_view feedback
+   ```
 
    オフにしたい機能がある場合は`ckan.plugins`の下に以下の記述を追記する
 
     * utilizationモジュールをオフにする  
-    `ckan.feedback.utilizations.enable = False`
+    ```
+    ckan.feedback.utilizations.enable = False
+    ```
 
     * resourceモジュールをオフにする  
-    `ckan.feedback.resources.enable = False`
+    ```
+    ckan.feedback.resources.enable = False
+    ```
 
     * downloadモジュールをオフにする  
-    `ckan.feedback.downloads.enable = False`
+    ```
+    ckan.feedback.downloads.enable = False
+    ```
 
 4. それぞれのモジュールに必要なテーブルを作成する(コマンドのオプションで作成するテーブルを指定する)
 
     * utilizationモジュールを利用する場合
-    `ckan config=/etc/ckan/production.ini feedback init -m utilization`
+    ```
+    ckan config=/etc/ckan/production.ini feedback init -m utilization
+    ```
 
     * resourceモジュールを利用する場合
-    `ckan config=/etc/ckan/production.ini feedback init -m resource`
+    ```
+    ckan config=/etc/ckan/production.ini feedback init -m resource
+    ```
 
     * downloadモジュールを利用する場合
-    `ckan config=/etc/ckan/production.ini feedback init -m download`
+    ```
+    ckan config=/etc/ckan/production.ini feedback init -m download
+    ```
 
