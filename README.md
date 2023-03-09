@@ -204,3 +204,11 @@
    ```
    ckan *config=/etc/ckan/production.ini feedback init
    ```
+
+## LICENSE
+
+[AGPLv3 LICENSE](https://github.com/c-3lab/ckanext-feedback/blob/feature/documentation-README/LICENSE)
+
+## CopyRight
+
+Copyright (c) 2023 C3Lab
