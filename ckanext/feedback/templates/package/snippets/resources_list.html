@@ -21,7 +21,7 @@
                 {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, can_edit=can_edit, is_activity_archive=is_activity_archive %}
                 <!-- ToDo -->
                 <div class="utilization-data">
-                  <p>利活用数：</p>
+                  <p>利活用数：<a href="{{ h.url_for('utilization.search', id=resource.id, disable_keyword=true) }}">数字</a></p>
                   <p>評価：
                     <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
                     <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>

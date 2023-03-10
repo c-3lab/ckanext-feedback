@@ -18,6 +18,9 @@ Example:
 {% set title = package.title or package.name %}
 {% set notes = h.markdown_extract(package.notes, extract_length=truncate) %}
 
+{% block styles %}
+  {% asset 'feedback/feedback-package-item-css' %}
+{% endblock %}
 {% block package_item %}
   <li class="{{ item_class or "dataset-item" }}">
     {% block content %}
@@ -69,7 +72,7 @@ Example:
                     <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
                   {% endfor %}
                   <div class="utilization-data">
-                    <p>利活用数：</p>
+                    <p>利活用数：<a href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">数字</a></p>
                     <p>評価：
                       <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
                       <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>

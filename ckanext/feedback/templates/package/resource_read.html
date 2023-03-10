@@ -68,6 +68,10 @@
           </tr>
         {% endif %}
         <tr>
+          <th scope="row">{{ _('利活用数') }}</th>
+          <td><a href="{{ h.url_for('utilization.search', id=resource.id, disable_keyword=true) }}">数字</a></td>
+        </tr>
+        <tr>
           <th scope="row">{{ _('Data last updated') }}</th>
           <td>{{ h.render_datetime(res.last_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
         </tr>
