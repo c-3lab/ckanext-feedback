@@ -124,6 +124,38 @@
     docker exec -it ckan /usr/local/bin/ckan -c /etc/ckan/production.ini sysadmin add admin
     ```
 
+4. 以下のコマンドを実行し、コンテナ内に入る
+    ```
+    docker exec -it ckan bash
+    ```
+
+5. CKANの仮想環境をアクティブにする
+   ```
+   . /usr/lib/ckan/venv/bin/activate
+   ```
+
+6. 仮想環境にckanext-feedbackをインストールする
+   ```
+   pip install /opt/ckanext-feedback
+   ```
+
+7. 以下のコマンドで設定を行うためのファイルを開く  
+   ```
+   vim /etc/ckan/production.ini
+   ```
+
+8. 以下の行に`feedback`を追加
+   ```
+   ckan.plugins = stats ・・・ recline_view feedback
+   ```
+
+9. フィードバック機能に必要なテーブルを作成する  
+   ```
+   ckan --config=/etc/ckan/production.ini feedback init
+   ```
+
+10. `http://localhost:5000`にアクセスし、変更点の確認を行う
+
 ## テスト
 
 ## LICENSE
