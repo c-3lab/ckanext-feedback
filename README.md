@@ -35,7 +35,7 @@
 
 4. フィードバック機能に必要なテーブルを作成する  
    ```
-   ckan *config=/etc/ckan/production.ini feedback init
+   ckan --config=/etc/ckan/production.ini feedback init
    ```
 
 ## オンオフ機能
@@ -44,6 +44,7 @@
   * utilization(データの利活用方法に関するモジュール)
   * resource(リソースへのレビューに関するモジュール)
   * download(ダウンロードに関するモジュール)  
+  
 ※ デフォルトでは全てのモジュールがオンになっています
 
 ### 設定手順
@@ -85,17 +86,17 @@
 
     utilizationモジュールを利用する場合
     ```
-    ckan config=/etc/ckan/production.ini feedback init -m utilization
+    ckan --config=/etc/ckan/production.ini feedback init -m utilization
     ```
 
     resourceモジュールを利用する場合
     ```
-    ckan config=/etc/ckan/production.ini feedback init -m resource
+    ckan --config=/etc/ckan/production.ini feedback init -m resource
     ```
 
     downloadモジュールを利用する場合
     ```
-    ckan config=/etc/ckan/production.ini feedback init -m download
+    ckan --config=/etc/ckan/production.ini feedback init -m download
     ```
 
 ## ビルド方法
