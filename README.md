@@ -107,7 +107,9 @@
     ckan --config=/etc/ckan/production.ini feedback init -m download
     ```
 
-## ビルド方法
+## 開発者向け
+
+### ビルド方法
 
 1. `ckanext-feedback`をローカル環境にGitHub上からクローンする
     ```
@@ -154,7 +156,7 @@
    ckan --config=/etc/ckan/production.ini feedback init
    ```
 
-10. `http://localhost:5000`にアクセスし、変更点の確認を行う
+10. `http://localhost:5000`にアクセスする
 
 ## テスト
 
