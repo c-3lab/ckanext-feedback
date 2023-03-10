@@ -44,7 +44,7 @@
   * utilization(データの利活用方法に関するモジュール)
   * resource(リソースへのレビューに関するモジュール)
   * download(ダウンロードに関するモジュール)  
-  
+
 ※ デフォルトでは全てのモジュールがオンになっています
 
 ### 設定手順
@@ -59,8 +59,12 @@
    pip install ckanext-feedback
    ```
 
-3. CKAN config fileの`ckan.plugins`に`feedback`を追加する  
-   `vim /etc/ckan/production.ini` 以下の行に`feedback`を追加
+3. 以下のコマンドで設定を行うためのファイルを開く  
+   ```
+   vim /etc/ckan/production.ini
+   ```
+
+4. 以下の行に`feedback`を追加
    ```
    ckan.plugins = stats ・・・ recline_view feedback
    ```
@@ -82,7 +86,7 @@
     ckan.feedback.downloads.enable = False
     ```
 
-4. それぞれのモジュールに必要なテーブルを作成する(コマンドのオプションで作成するテーブルを指定する)
+5. それぞれのモジュールに必要なテーブルを作成する(コマンドのオプションで作成するテーブルを指定する)
 
     utilizationモジュールを利用する場合
     ```
@@ -106,7 +110,10 @@
     git clone https://github.com/c-3lab/ckanext-feedback.git
     ```
 
-2. `/development/setup.sh`を実行し、コンテナを起動
+2. 以下のコマンドを実行し、コンテナを起動
+    ```
+    /development/setup.sh
+    ```
 
 3. CKAN公式の手順に従い、以下のコマンドを実行
     ```
