@@ -27,13 +27,17 @@
    pip install ckanext-feedback
    ```
 
-3. CKAN config fileの`ckan.plugins`に`feedback`を追加する  
-   `vim /etc/ckan/production.ini` 以下の行に`feedback`を追加
+3. 以下のコマンドで設定を行うファイルを開く  
+   ```
+   vim /etc/ckan/production.ini
+   ``` 
+   
+4. 以下の行に`feedback`を追加
    ```
    ckan.plugins = stats ・・・ recline_view feedback
    ```
 
-4. フィードバック機能に必要なテーブルを作成する  
+5. フィードバック機能に必要なテーブルを作成する  
    ```
    ckan --config=/etc/ckan/production.ini feedback init
    ```
@@ -110,10 +114,7 @@
     git clone https://github.com/c-3lab/ckanext-feedback.git
     ```
 
-2. 以下のコマンドを実行し、コンテナを起動
-    ```
-    /development/setup.sh
-    ```
+2. `ckanext-feedback/development`下にある`setup.py`を実行し、コンテナを起動
 
 3. CKAN公式の手順に従い、以下のコマンドを実行
     ```
