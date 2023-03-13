@@ -63,7 +63,7 @@
                   <br>
                   {% if c.userobj.sysadmin %}
                     <form name="admin_form" action="{{ url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
-                      <a class="btn btn-primary right-aligned spaced-left" href="#">編集</a>
+                      <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit') }}?utilization_id={{ utilization_id }}&resource_id={{ row.resource_id }}">編集</a>
                       {% if row.approval == false %}
                         <button class="btn btn-primary right-aligned" id="approval_flag" name="approval_flag" value="true">承認</button>
                       {% endif %}

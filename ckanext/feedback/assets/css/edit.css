@@ -1,0 +1,22 @@
+.btn {
+  margin-bottom: 20px;
+}
+
+.centered-content {
+  margin-left: 5%;
+  margin-right: auto;
+  width: 90%
+}
+
+.delete-btn {
+  float: left;
+  background-color: #FF0000;
+}
+
+.update-btn {
+  float: right;
+}
+
+.title {
+  width: 100%;
+}
