@@ -1,0 +1,18 @@
+.centered-content {
+  margin-left: 5%;
+  margin-right: auto;
+  width: 90%
+}
+
+.divider {
+  background: #000000;
+  height: 1px;
+}
+
+.right-aligned {
+  float: right;
+}
+
+.spaced-left {
+  margin-left: 10px;
+}

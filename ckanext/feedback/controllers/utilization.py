@@ -1,15 +1,59 @@
 from ckan.common import c, request
 from ckan.plugins import toolkit
+from flask import redirect, url_for
 
+import ckanext.feedback.services.utilization.details as detail_service
 import ckanext.feedback.services.utilization.search as search_service
+from ckanext.feedback.models.session import session
 
 
 class UtilizationController:
     # Render HTML pages
     # utilization/details.html
     @staticmethod
-    def details():
-        return toolkit.render('utilization/details.html')
+    def details(utilization_id):
+        approval = c.userobj is None or c.userobj.sysadmin is None
+        utilization = detail_service.get_utilization(utilization_id)
+        comments = detail_service.get_utilization_comments(utilization_id, approval)
+        categories = detail_service.get_utilization_comment_categories()
+
+        return toolkit.render(
+            'utilization/details.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': utilization,
+                'comments': comments,
+                'categories': categories,
+            },
+        )
+
+    # utilization/<utilization_id>/approve
+    def approve(utilization_id):
+        approval_user_id = request.form.get('approval_user_id')
+        detail_service.approve_utilization(utilization_id, approval_user_id)
+        session.commit()
+
+        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+
+    # utilization/<utilization_id>/create_comment
+    def create_comment(utilization_id):
+        comment_type = request.form.get('comment_type', '')
+        comment_content = request.form.get('comment_content', '')
+        detail_service.create_utilization_comment(
+            utilization_id, comment_type, comment_content
+        )
+        session.commit()
+
+        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+
+    # utilization/<utilization_id>/approve_comment
+    def approve_comment(utilization_id):
+        comment_id = request.form.get('comment_id')
+        approval_user_id = request.form.get('approval_user_id')
+        detail_service.approve_utilization_comment(comment_id, approval_user_id)
+        session.commit()
+
+        return redirect(url_for('utilization.details', utilization_id=utilization_id))
 
     # utilization/registration.html
     @staticmethod
