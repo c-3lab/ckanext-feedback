@@ -13,6 +13,11 @@
       <div class="description">{{ _('Downloads') }}</div>
     </div>
   {% endif %}
+  {% if h.is_enabled_utilizations() %}
+    <div class="utilization-data bubble">
+      <i class="fa fa-pencil-square-o"></i><a href="{{ h.url_for('utilization.search', id=res.id, disable_keyword=true) }}">数字</a>
+    </div>
+  {% endif %}
 {% endblock %}
 
 {% block resource_item_explore %}
@@ -54,6 +59,14 @@
               <a href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}">
                 <i class="fa fa-pencil-square-o"></i>
                 {{ _('Edit') }}
+              </a>
+            </li>
+          {% endif %}
+          {% if h.is_enabled_utilizations() %}
+            <li>
+              <a href="{{ h.url_for('utilization.registration', name=pkg.name, resource_id=res.id) }}">
+                <i class="fa fa-pencil-square-o"></i>
+                {{ _('利活用方法の登録') }}
               </a>
             </li>
           {% endif %}

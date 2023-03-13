@@ -1,0 +1,17 @@
+.btn {
+  margin-bottom: 20px;
+}
+
+.centered-content {
+  margin-left: 5%;
+  margin-right: auto;
+  width: 90%
+}
+
+.right-aligned {
+  float: right;
+}
+
+.title {
+  width: 100%;
+}
