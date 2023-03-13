@@ -104,8 +104,7 @@
                         <tr>
                           <td class="left-aligned-text"><a href="{{ h.url_for('utilization.details', utilization_id=row.id) }}">{{ row.title }}</a>
                             <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" class="spaced-left" width="28" height="28"/>
-                            <!-- ToDo -->
-                            <span class="spaced-left">10,000</span>
+                            <span class="spaced-left">{{ row.issue_resolution }}</span>
                           </td>
                           <td>{{ row.package_name }}</td>
                           <td>{{ row.resource_name }}</td>

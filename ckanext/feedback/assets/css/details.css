@@ -16,3 +16,8 @@
 .spaced-left {
   margin-left: 10px;
 }
+
+#issue-resolution-table {
+  height: 400px;
+  overflow-y: scroll;
+}

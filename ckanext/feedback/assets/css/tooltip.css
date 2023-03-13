@@ -5,6 +5,10 @@
 .bubble img{
     width: 10px;
 }
+.bubble #issue-resolution{
+    width: 15px;
+    height: 15px
+}
 .description {
     display: none;
     position: absolute;

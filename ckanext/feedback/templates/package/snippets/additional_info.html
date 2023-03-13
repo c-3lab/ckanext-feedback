@@ -11,6 +11,12 @@
     <th scope="row">{{ _('利活用数') }}</th>
     <td><a href="{{ h.url_for('utilization.search', id=pkg_dict.id, disable_keyword=true) }}">数字</a></td>
   </tr>
+  {% if h.is_enabled_utilizations() %}
+    <tr>
+      <th scope="row" class="dataset-label">{{ _('Issue Resolution') }}</th>
+      <td class="dataset-details" property="foaf:homepage">{{ h.get_package_issue_resolutions(pkg_dict.id) }}</td>
+    </tr>
+  {% endif %}
   {% if pkg_dict.url %}
     <tr>
       <th scope="row" class="dataset-label">{{ _('Source') }}</th>
