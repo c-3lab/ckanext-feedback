@@ -71,16 +71,6 @@ Example:
                   {% for resource in h.dict_list_reduce(package.resources, 'format') %}
                     <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
                   {% endfor %}
-                  <div class="utilization-data">
-                    <p>利活用数：<a href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">数字</a></p>
-                    <p>評価：
-                      <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
-                      <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
-                      <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
-                      <img src="/images/empty_rating_star.png" alt="empty rating star" width="16" height="16"/>
-                      <img src="/images/empty_rating_star.png" alt="empty rating star" width="16" height="16"/>
-                    </p>
-                  </div>
                   {% if h.is_enabled_downloads() %}
                     <div class = "bubble">
                       <i class="fa fa-arrow-circle-o-down"></i>
@@ -89,6 +79,20 @@ Example:
                     </div>
                   {% endif %}
                 </li>
+                <li>
+                  {% if h.is_enabled_utilizations() %}
+                    <div class="utilization-data bubble">
+                      <i class="fa fa-pencil-square-o"></i><a href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">{{ h.get_package_utilization_summary(package.id) }}</a>
+                    </div>
+                  {% endif %} 
+                </li> 
+                <p>評価：
+                  <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
+                  <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
+                  <img src="/images/rating_star.png" alt="rating star" width="16" height="16"/>
+                  <img src="/images/empty_rating_star.png" alt="empty rating star" width="16" height="16"/>
+                  <img src="/images/empty_rating_star.png" alt="empty rating star" width="16" height="16"/>
+                </p>
               {% endblock %}
             </ul>
           {% endblock %}

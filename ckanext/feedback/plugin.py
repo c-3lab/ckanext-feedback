@@ -5,6 +5,7 @@ from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
 from ckanext.feedback.services.download import summary as summary_service
+from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import download, utilization
 
 
@@ -62,4 +63,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_enabled_utilizations': self.is_enabled_utilizations,
             'get_resource_downloads': summary_service.get_resource_downloads,
             'get_package_downloads': summary_service.get_package_downloads,
+            'get_resource_utilization_summary': (
+                utilization_summary_service.get_resource_utilization_summary
+            ),
+            'get_package_utilization_summary': (
+                utilization_summary_service.get_package_utilization_summary
+            ),
         }
