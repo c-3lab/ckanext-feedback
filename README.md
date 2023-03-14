@@ -12,8 +12,6 @@
 * 🖼 データを利活用したアプリやシステムの紹介機能
 * 🏆 データを利活用したアプリやシステムの課題解決認定機能
 
-
-
 ## クイックスタート
 
 1. CKANの仮想環境をアクティブにする(CKANコンテナ等の環境内で実行してください)
@@ -39,72 +37,6 @@ ckan.plugins = stats ・・・ recline_view feedback
 5. フィードバック機能に必要なテーブルを作成する
 ```
 ckan --config=/etc/ckan/production.ini feedback init
-```
-
-## オンオフ機能
-
-* ckanext-feedbackには以下の3つのモジュールがあり、各モジュールのオンオフを切り替えることが出来ます。
-  * utilization(データの利活用方法に関するモジュール)
-  * resource(リソースへのレビューに関するモジュール)
-  * download(ダウンロードに関するモジュール)
-
-
-※ デフォルトでは全てのモジュールがオンになっています
-
-### 設定手順
-
-1. CKANの仮想環境をアクティブにする
-```
-. /usr/lib/ckan/venv/bin/activate
-```
-
-2. 仮想環境にckanext-feedbackをインストールする
-```
-pip install ckanext-feedback
-```
-
-3. 以下のコマンドで設定を行うためのファイルを開く
-```
-vim /etc/ckan/production.ini
-```
-
-4. 以下の行に`feedback`を追加
-```
-ckan.plugins = stats ・・・ recline_view feedback
-```
-
-※ オフにしたい機能がある場合は`ckan.plugins`の下に以下の記述を追記する
-
-utilizationモジュールをオフにする
-```
-ckan.feedback.utilizations.enable = False
-```
-
-resourceモジュールをオフにする
-```
-ckan.feedback.resources.enable = False
-```
-
-downloadモジュールをオフにする
-```
-ckan.feedback.downloads.enable = False
- ```
-
-5. それぞれのモジュールに必要なテーブルを作成する(コマンドのオプションで作成するテーブルを指定する)
-
-utilizationモジュールを利用する場合
-```
-ckan --config=/etc/ckan/production.ini feedback init -m utilization
-```
-
-resourceモジュールを利用する場合
-```
-ckan --config=/etc/ckan/production.ini feedback init -m resource
-```
-
-downloadモジュールを利用する場合
-```
-ckan --config=/etc/ckan/production.ini feedback init -m download
 ```
 
 ## 開発者向け
