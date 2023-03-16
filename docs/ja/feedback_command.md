@@ -1,7 +1,5 @@
 # ckan feedback init
 
-## 概要
-
 指定した機能に関係するPostgreSQLのテーブルを初期化する。
 
 ## 実行
