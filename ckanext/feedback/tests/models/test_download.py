@@ -9,9 +9,8 @@ from ckanext.feedback.models.session import session
 
 
 class TestDownloadModel:
-
     @pytest.fixture
-    def init_table(requests):
+    def init_table(self):
         resource = factories.Resource()
         yield resource
         session.query(model.resource.Resource).delete()
