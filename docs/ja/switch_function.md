@@ -9,7 +9,7 @@
 
 ## 設定手順
 
-1. まだインストールをされていない方  
+1. インストールをされていない方  
   [クイックスタート](../../README.md) **1~4番**の手順を参照してください
 
 2. **オフにするモジュール**について、`ckan.plugins`の下に以下の記述を追記する
@@ -29,19 +29,5 @@
       ckan.feedback.downloads.enable = False
       ```
 
-3. **オンにするモジュール**に必要なテーブルを作成する(コマンドのオプションで作成するテーブルを指定する)
-
-    * utilizationモジュールを利用する場合
-      ```
-      ckan --config=/etc/ckan/production.ini feedback init -m utilization
-      ```
-
-    * resourceモジュールを利用する場合
-      ```
-      ckan --config=/etc/ckan/production.ini feedback init -m resource
-      ```
-
-    * downloadモジュールを利用する場合
-      ```
-      ckan --config=/etc/ckan/production.ini feedback init -m download
-      ```
+3. テーブルを作成されていない方  
+  [feedbackコマンド](./feedback_command.md)の```-modules```オプションを参考に**オンにするモジュール**のテーブル作成を行なってください
