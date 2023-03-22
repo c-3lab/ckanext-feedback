@@ -9,56 +9,39 @@
 
 ## 設定手順
 
-1. CKANの仮想環境をアクティブにする
-```
-. /usr/lib/ckan/venv/bin/activate
-```
+1. まだインストールをされていない方  
+  [クイックスタート](../../README.md) **1~4番**の手順を参照してください
 
-2. 仮想環境にckanext-feedbackをインストールする
-```
-pip install ckanext-feedback
-```
+2. オフにする機能について、`ckan.plugins`の下に以下の記述を追記する
 
-3. 以下のコマンドで設定を行うためのファイルを開く
-```
-vim /etc/ckan/production.ini
-```
+    * utilizationモジュールをオフにする場合
+      ```
+      ckan.feedback.utilizations.enable = False
+      ```
 
-4. 以下の行に`feedback`を追加
-```
-ckan.plugins = stats ・・・ recline_view feedback
-```
+    * resourceモジュールをオフにする場合
+      ```
+      ckan.feedback.resources.enable = False
+      ```
 
-5. オフにする機能について、`ckan.plugins`の下に以下の記述を追記する
+    * downloadモジュールをオフにする場合
+      ```
+      ckan.feedback.downloads.enable = False
+      ```
 
-utilizationモジュールをオフにする場合
-```
-ckan.feedback.utilizations.enable = False
-```
+3. それぞれのモジュールに必要なテーブルを作成する(コマンドのオプションで作成するテーブルを指定する)
 
-resourceモジュールをオフにする場合
-```
-ckan.feedback.resources.enable = False
-```
+    * utilizationモジュールを利用する場合
+      ```
+      ckan --config=/etc/ckan/production.ini feedback init -m utilization
+      ```
 
-downloadモジュールをオフにする場合
-```
-ckan.feedback.downloads.enable = False
- ```
+    * resourceモジュールを利用する場合
+      ```
+      ckan --config=/etc/ckan/production.ini feedback init -m resource
+      ```
 
-6. それぞれのモジュールに必要なテーブルを作成する(コマンドのオプションで作成するテーブルを指定する)
-
-utilizationモジュールを利用する場合
-```
-ckan --config=/etc/ckan/production.ini feedback init -m utilization
-```
-
-resourceモジュールを利用する場合
-```
-ckan --config=/etc/ckan/production.ini feedback init -m resource
-```
-
-downloadモジュールを利用する場合
-```
-ckan --config=/etc/ckan/production.ini feedback init -m download
-```
+    * downloadモジュールを利用する場合
+      ```
+      ckan --config=/etc/ckan/production.ini feedback init -m download
+      ```
