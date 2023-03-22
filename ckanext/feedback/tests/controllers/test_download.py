@@ -6,7 +6,8 @@ from flask import session
 
 from ckanext.feedback.services.download.summary import increment_resource_downloads
 from unittest.mock import Mock, MagicMock, patch
-# from urllib import request
+from ckanext.feedback.command.feedback import get_engine, engine
+from ckanext.feedback.models.session import Base
 
 from ckan.tests import factories
 from ckan import model
@@ -24,14 +25,16 @@ def get_download_count(resource_id):
     return count
 
 
+# engine = get_engine('db', 5432, 'ckan', 'ckan', 'ckan')
+
+
 class TestDownloadController:
-    @pytest.fixture
+    @pytest.fixture(autouse=True)
     def init_table(self):
+        DownloadSummary.__table__.create(engine)
         resource = factories.Resource()
         yield resource
-        session.query(model.resource.Resource).delete()
-        session.query(model.package.Package).delete()
-        session.commit()
+        DownloadSummary.__table__.drop(engine, checkfirst=True)
 
     def test_increment_resource_download(self, init_table):
         DownloadController.increment_resource_downloads(init_table['id'])
@@ -54,3 +57,4 @@ class TestDownloadController:
             DownloadController.extended_download('package_type', init_table['package_id'], init_table['id'], None)
             assert get_download_count(init_table['id']) == 1
             assert download
+            

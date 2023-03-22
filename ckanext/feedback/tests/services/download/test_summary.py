@@ -38,7 +38,6 @@ class TestDownloadView:
         increment_resource_downloads(init_table['id'])
         assert get_download_count(init_table['id']) == 2
 
-# (ToDo) test if there are two resources data related to one package_id ?
     def test_get_package_download(self, init_table):
         assert get_package_downloads(init_table['package_id']) == 0
         download_summary = DownloadSummary(
