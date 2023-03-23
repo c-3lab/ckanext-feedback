@@ -2,7 +2,7 @@
 
 * ckanext-feedbackには以下の3つのモジュールがあり、各モジュールのオンオフを切り替えることが出来ます。
   * [Utilization](./utilization.md) (データの利活用方法に関するモジュール)
-  * [Resource](./resource.md) (リソースへのレビューに関するモジュール)
+  * [Resource](./resource.md) (リソースへのコメントに関するモジュール)
   * [Download](./download.md) (ダウンロードに関するモジュール)
 
 ※ デフォルトでは全てのモジュールがオンになっています
