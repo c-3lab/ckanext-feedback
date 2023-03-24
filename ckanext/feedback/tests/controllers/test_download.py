@@ -24,10 +24,10 @@ def get_download_count(resource_id):
     return count
 
 @pytest.mark.ckan_config('ckan.plugins')
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.usefixtures('clean_db', 'with_plugins')
 class TestDownloadController:
-    @pytest.fixture
-    def init_table(self):
+    @pytest.fixture(autouse=True)
+    def init_table(self, clean_db):
         resource = factories.Resource()
         yield resource
         session.query(model.resource.Resource).delete()
