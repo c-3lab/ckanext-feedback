@@ -15,33 +15,39 @@
 ## クイックスタート
 
 1. CKANの仮想環境をアクティブにする(CKANコンテナ等の環境内で実行してください)
-    ```
+
+    ```bash
     . /usr/lib/ckan/venv/bin/activate
     ```
 
 2. 仮想環境にckanext-feedbackをインストールする
-    ```
+
+    ```bash
     pip install ckanext-feedback
     ```
 
 3. 以下のコマンドで設定を行うファイルを開く
-    ```
+
+    ```bash
     vim /etc/ckan/production.ini
     ```
 
 4. 以下の行に`feedback`を追加
-    ```
+
+    ```bash
     ckan.plugins = stats ・・・ recline_view feedback
     ```
 
 5. フィードバック機能に必要なテーブルを作成する
-    ```
+
+    ```bash
     ckan --config=/etc/ckan/production.ini feedback init
     ```
 
 ## 構成
 
 本Extensionは3つのモジュールで構成されています
+
 * [utilization](./docs/ja/utilization.md)
 * [resource](./docs/ja/resource.md)
 * [download](./docs/ja/download.md)  
@@ -54,47 +60,56 @@
 ### ビルド方法
 
 1. `ckanext-feedback`をローカル環境にGitHub上からクローンする
-    ```
+
+    ```bash
     git clone https://github.com/c-3lab/ckanext-feedback.git
     ```
 
 2. `ckanext-feedback/development`下にある`setup.py`を実行し、コンテナを起動
 
 3. CKAN公式の手順に従い、以下のコマンドを実行
-    ```
+
+    ```bash
     docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
     ```
-    ```
+
+    ```bash
     docker exec -it ckan /usr/local/bin/ckan -c /etc/ckan/production.ini sysadmin add admin
     ```
 
 4. 以下のコマンドを実行し、コンテナ内に入る
-    ```
+
+    ```bash
     docker exec -it ckan bash
     ```
 
 5. CKANの仮想環境をアクティブにする
-    ```
+
+    ```bash
     . /usr/lib/ckan/venv/bin/activate
     ```
 
 6. 仮想環境にckanext-feedbackをインストールする
-    ```
+
+    ```bash
     pip install /opt/ckanext-feedback
     ```
 
 7. 以下のコマンドで設定を行うためのファイルを開く
-    ```
+
+    ```bash
     vim /etc/ckan/production.ini
     ```
 
 8. 以下の行に`feedback`を追加
-    ```
+
+    ```bash
     ckan.plugins = stats ・・・ recline_view feedback
     ```
 
 9. フィードバック機能に必要なテーブルを作成する
-    ```
+
+    ```bash
     ckan --config=/etc/ckan/production.ini feedback init
     ```
 

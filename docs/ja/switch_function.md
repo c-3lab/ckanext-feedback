@@ -1,9 +1,9 @@
 # オンオフ機能
 
 * ckanext-feedbackには以下の3つのモジュールがあり、各モジュールのオンオフを切り替えることが出来ます。
-    * [Utilization](./utilization.md) (データの利活用方法に関するモジュール)
-    * [Resource](./resource.md) (リソースへのコメントに関するモジュール)
-    * [Download](./download.md) (ダウンロードに関するモジュール)
+  * [Utilization](./utilization.md) (データの利活用方法に関するモジュール)
+  * [Resource](./resource.md) (リソースへのコメントに関するモジュール)
+  * [Download](./download.md) (ダウンロードに関するモジュール)
 
 ※ デフォルトでは全てのモジュールがオンになっています
 
@@ -14,15 +14,20 @@
 
 2. **オフにするモジュール**について、`ckan.plugins`の下に以下の記述を追記する
     * utilizationモジュールをオフにする場合
-        ```
+
+        ```bash
         ckan.feedback.utilizations.enable = False
         ```
+
     * resourceモジュールをオフにする場合
-        ```
+
+        ```bash
         ckan.feedback.resources.enable = False
         ```
+
     * downloadモジュールをオフにする場合
-        ```
+
+        ```bash
         ckan.feedback.downloads.enable = False
         ```
 
