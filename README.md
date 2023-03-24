@@ -15,29 +15,29 @@
 ## クイックスタート
 
 1. CKANの仮想環境をアクティブにする(CKANコンテナ等の環境内で実行してください)
-```
-. /usr/lib/ckan/venv/bin/activate
-```
+    ```
+    . /usr/lib/ckan/venv/bin/activate
+    ```
 
 2. 仮想環境にckanext-feedbackをインストールする
-```
-pip install ckanext-feedback
-```
+    ```
+    pip install ckanext-feedback
+    ```
 
 3. 以下のコマンドで設定を行うファイルを開く
-```
-vim /etc/ckan/production.ini
-```
+    ```
+    vim /etc/ckan/production.ini
+    ```
 
 4. 以下の行に`feedback`を追加
-```
-ckan.plugins = stats ・・・ recline_view feedback
-```
+    ```
+    ckan.plugins = stats ・・・ recline_view feedback
+    ```
 
 5. フィードバック機能に必要なテーブルを作成する
-```
-ckan --config=/etc/ckan/production.ini feedback init
-```
+    ```
+    ckan --config=/etc/ckan/production.ini feedback init
+    ```
 
 ## 構成
 
@@ -54,49 +54,49 @@ ckan --config=/etc/ckan/production.ini feedback init
 ### ビルド方法
 
 1. `ckanext-feedback`をローカル環境にGitHub上からクローンする
-```
-git clone https://github.com/c-3lab/ckanext-feedback.git
-```
+    ```
+    git clone https://github.com/c-3lab/ckanext-feedback.git
+    ```
 
 2. `ckanext-feedback/development`下にある`setup.py`を実行し、コンテナを起動
 
 3. CKAN公式の手順に従い、以下のコマンドを実行
-```
-docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
-```
-```
-docker exec -it ckan /usr/local/bin/ckan -c /etc/ckan/production.ini sysadmin add admin
-```
+    ```
+    docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
+    ```
+    ```
+    docker exec -it ckan /usr/local/bin/ckan -c /etc/ckan/production.ini sysadmin add admin
+    ```
 
 4. 以下のコマンドを実行し、コンテナ内に入る
-```
-docker exec -it ckan bash
-```
+    ```
+    docker exec -it ckan bash
+    ```
 
 5. CKANの仮想環境をアクティブにする
-```
-. /usr/lib/ckan/venv/bin/activate
-```
+    ```
+    . /usr/lib/ckan/venv/bin/activate
+    ```
 
 6. 仮想環境にckanext-feedbackをインストールする
-```
-pip install /opt/ckanext-feedback
-```
+    ```
+    pip install /opt/ckanext-feedback
+    ```
 
 7. 以下のコマンドで設定を行うためのファイルを開く
-```
-vim /etc/ckan/production.ini
-```
+    ```
+    vim /etc/ckan/production.ini
+    ```
 
 8. 以下の行に`feedback`を追加
-```
-ckan.plugins = stats ・・・ recline_view feedback
-```
+    ```
+    ckan.plugins = stats ・・・ recline_view feedback
+    ```
 
 9. フィードバック機能に必要なテーブルを作成する
-```
-ckan --config=/etc/ckan/production.ini feedback init
-```
+    ```
+    ckan --config=/etc/ckan/production.ini feedback init
+    ```
 
 10. `http://localhost:5000`にアクセスする
 
