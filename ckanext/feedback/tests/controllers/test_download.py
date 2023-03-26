@@ -2,17 +2,17 @@ import pytest
 
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.controllers.download import DownloadController
-from flask import session
+from ckanext.feedback.command.feedback import create_utilization_tables, create_resource_tables, create_download_tables, get_engine
 
-from ckanext.feedback.services.download.summary import increment_resource_downloads
-from unittest.mock import Mock, MagicMock, patch
-# from urllib import request
+from sqlalchemy.sql import exists
 
+from unittest.mock import patch
+
+from flask import Flask
 from ckan.tests import factories
 from ckan import model
 
 from ckanext.feedback.models.session import session
-from flask import Flask, request
 
 
 def get_download_count(resource_id):
@@ -23,11 +23,17 @@ def get_download_count(resource_id):
     )
     return count
 
-@pytest.mark.ckan_config('ckan.plugins')
-@pytest.mark.usefixtures('clean_db', 'with_plugins')
-class TestDownloadController:
-    @pytest.fixture(autouse=True)
-    def init_table(self, clean_db):
+
+@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+class TestDownloadController(object):
+    model.repo.init_db()
+    engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
+    create_utilization_tables(engine)
+    create_resource_tables(engine)
+    create_download_tables(engine)
+
+    @pytest.fixture
+    def init_table(self):
         resource = factories.Resource()
         yield resource
         session.query(model.resource.Resource).delete()
