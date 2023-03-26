@@ -4,8 +4,6 @@ from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.controllers.download import DownloadController
 from ckanext.feedback.command.feedback import create_utilization_tables, create_resource_tables, create_download_tables, get_engine
 
-from sqlalchemy.sql import exists
-
 from unittest.mock import patch
 
 from flask import Flask
@@ -25,7 +23,7 @@ def get_download_count(resource_id):
 
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-class TestDownloadController(object):
+class TestDownloadController():
     model.repo.init_db()
     engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
     create_utilization_tables(engine)
