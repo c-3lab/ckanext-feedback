@@ -81,15 +81,7 @@ def get_engine(host, port, dbname, user, password):
 def init(modules, host, port, dbname, user, password):
     engine = get_engine(host, port, dbname, user, password)
     try:
-        if not modules:
-            drop_utilization_tables(engine)
-            create_utilization_tables(engine)
-            drop_resource_tables(engine)
-            create_resource_tables(engine)
-            drop_download_tables(engine)
-            create_download_tables(engine)
-            click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
-        elif 'utilization' in modules:
+        if 'utilization' in modules:
             drop_utilization_tables(engine)
             create_utilization_tables(engine)
             click.secho('Initialize utilization: SUCCESS', fg='green', bold=True)
@@ -101,6 +93,14 @@ def init(modules, host, port, dbname, user, password):
             drop_download_tables(engine)
             create_download_tables(engine)
             click.secho('Initialize download: SUCCESS', fg='green', bold=True)
+        else:
+            drop_utilization_tables(engine)
+            create_utilization_tables(engine)
+            drop_resource_tables(engine)
+            create_resource_tables(engine)
+            drop_download_tables(engine)
+            create_download_tables(engine)
+            click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
     except Exception as e:
         toolkit.error_shout(e)
         sys.exit(1)
