@@ -37,9 +37,6 @@ class TestDownloadController:
     def test_extended_download(self, mocker):
         resource = factories.Resource()
         self.app = Flask(__name__)
-        #        self.ctx = self.app.app_context()
-        #        self.ctx.push()
-        #        self.ctx.pop()
         download = mocker.patch('ckanext.feedback.controllers.download.download')
 
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
