@@ -54,11 +54,11 @@ class TestFeedbackCommand:
     def test_feedback_error(self):
         runner = CliRunner()
 
-        def mock_function(*args, **kwargs):
+        def mock_function():
             raise Exception('Error message')
 
         with patch(
-            'ckanext.feedback.command.feedback.create_download_tables',
+            'ckanext.feedback.command.feedback.create_utilization_tables',
             side_effect=mock_function,
         ):
             table_result = runner.invoke(feedback, ['init'])
