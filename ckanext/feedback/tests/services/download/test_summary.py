@@ -28,11 +28,13 @@ def get_downloads(resource_id):
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestDownloadServices:
-    model.repo.init_db()
-    engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
-    create_utilization_tables(engine)
-    create_resource_tables(engine)
-    create_download_tables(engine)
+    @classmethod
+    def setup_class(cls):
+        model.repo.init_db()
+        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
+        create_utilization_tables(engine)
+        create_resource_tables(engine)
+        create_download_tables(engine)
 
     def test_increment_resource_downloads(self):
         resource = factories.Resource()
