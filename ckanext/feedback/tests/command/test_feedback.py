@@ -9,7 +9,9 @@ from ckanext.feedback.command.feedback import feedback
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestFeedbackCommand:
-    model.repo.init_db()
+    @classmethod
+    def setup_class(cls):
+        model.repo.init_db()
 
     def test_feedback_default(self):
         runner = CliRunner()
@@ -51,24 +53,24 @@ class TestFeedbackCommand:
         )
         assert 'Initialize all modules: SUCCESS' in result.output
 
-    def test_feedback_error(self):
+    def test_feedback_engine_error(self):
         runner = CliRunner()
-
-        def mock_function():
-            raise Exception('Error message')
-
-        with patch(
-            'ckanext.feedback.command.feedback.create_utilization_tables',
-            side_effect=mock_function,
-        ):
-            table_result = runner.invoke(feedback, ['init'])
-
-        assert table_result.exit_code != 0
 
         with patch(
             'ckanext.feedback.command.feedback.create_engine',
-            side_effect=mock_function,
+            side_effect=Exception('Error message'),
         ):
             engine_result = runner.invoke(feedback, ['init'])
 
         assert engine_result.exit_code != 0
+
+    def test_feedback_session_error(self):
+        runner = CliRunner()
+
+        with patch(
+            'ckanext.feedback.command.feedback.create_utilization_tables',
+            side_effect=Exception('Error message'),
+        ):
+            table_result = runner.invoke(feedback, ['init'])
+
+        assert table_result.exit_code != 0
