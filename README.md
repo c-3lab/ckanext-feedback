@@ -122,6 +122,39 @@
 
 ## テスト
 
+1. 上記のビルド方法に従い、ビルドを行う
+
+2. コンテナ内に入る
+
+    ```bash
+    docker exec -it --user root ckan /bin/bash
+    ```
+
+3. その他の必要なものをインストールする
+
+    ```bash
+    pip install -r /usr/lib/ckan/venv/src/ckan/dev-requirements.txt
+    pip install pytest-ckan
+    ```
+
+4. テスト用DBを作成する
+
+    ```bash
+    createdb ckan_test -O ckan -E utf-8 -h db -U ckan
+    ```
+
+5. ディレクトリを移動
+
+    ```bash
+    cd /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests
+    ```
+
+6. テストを実行
+
+    ```bash
+    CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest -s --ckan-ini=config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings services/utilization/test_details.py
+    ```
+
 ## LICENSE
 
 [AGPLv3 LICENSE](https://github.com/c-3lab/ckanext-feedback/blob/feature/documentation-README/LICENSE)
