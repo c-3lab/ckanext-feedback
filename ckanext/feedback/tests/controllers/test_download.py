@@ -38,17 +38,22 @@ class TestDownloadController:
         resource = factories.Resource()
         self.app = Flask(__name__)
         download = mocker.patch('ckanext.feedback.controllers.download.download')
+        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+            assert get_downloads(resource['id']) == 1
+            assert download
+
+    @patch('ckanext.feedback.controllers.download.download')
+    def test_extended_download_with_preview(self, mocker):
+        resource = factories.Resource()
+        self.app = Flask(__name__)
+        download = mocker.patch('ckanext.feedback.controllers.download.download')
 
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
             assert get_downloads(resource['id']) is None
-            assert download
-
-        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
-            DownloadController.extended_download(
-                'package_type', resource['package_id'], resource['id'], None
-            )
-            assert get_downloads(resource['id']) == 1
             assert download
