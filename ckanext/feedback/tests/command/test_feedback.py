@@ -18,30 +18,24 @@ class TestFeedbackCommand:
         second_result = runner.invoke(feedback, ['init'])
         assert 'Initialize all modules: SUCCESS' in second_result.output
 
-    def test_feedback_utilization_option(self):
+    def test_feedback_utilization(self):
         runner = CliRunner()
-        first_result = runner.invoke(feedback, ['init', '--modules', 'utilization'])
-        assert 'Initialize utilization: SUCCESS' in first_result.output
-        second_result = runner.invoke(feedback, ['init', '--modules', 'utilization'])
-        assert 'Initialize utilization: SUCCESS' in second_result.output
+        result = runner.invoke(feedback, ['init', '--modules', 'utilization'])
+        assert 'Initialize utilization: SUCCESS' in result.output
 
-    def test_feedback_resource_option(self):
+    def test_feedback_resource(self):
         runner = CliRunner()
-        first_result = runner.invoke(feedback, ['init', '--modules', 'resource'])
-        assert 'Initialize resource: SUCCESS' in first_result.output
-        second_result = runner.invoke(feedback, ['init', '--modules', 'resource'])
-        assert 'Initialize resource: SUCCESS' in second_result.output
+        result = runner.invoke(feedback, ['init', '--modules', 'resource'])
+        assert 'Initialize resource: SUCCESS' in result.output
 
-    def test_feedback_download_option(self):
+    def test_feedback_download(self):
         runner = CliRunner()
-        first_result = runner.invoke(feedback, ['init', '--modules', 'download'])
-        assert 'Initialize download: SUCCESS' in first_result.output
-        second_result = runner.invoke(feedback, ['init', '--modules', 'download'])
-        assert 'Initialize download: SUCCESS' in second_result.output
+        result = runner.invoke(feedback, ['init', '--modules', 'download'])
+        assert 'Initialize download: SUCCESS' in result.output
 
     def test_feedback_with_db_option(self):
         runner = CliRunner()
-        first_result = runner.invoke(
+        result = runner.invoke(
             feedback,
             [
                 'init',
@@ -57,24 +51,7 @@ class TestFeedbackCommand:
                 'ckan',
             ],
         )
-        assert 'Initialize all modules: SUCCESS' in first_result.output
-        second_result = runner.invoke(
-            feedback,
-            [
-                'init',
-                '--host',
-                'db',
-                '--port',
-                5432,
-                '--dbname',
-                'ckan',
-                '--user',
-                'ckan',
-                '--password',
-                'ckan',
-            ],
-        )
-        assert 'Initialize all modules: SUCCESS' in second_result.output
+        assert 'Initialize all modules: SUCCESS' in result.output
 
     def test_feedback_error(self):
         runner = CliRunner()
@@ -83,9 +60,17 @@ class TestFeedbackCommand:
             raise Exception('Error message')
 
         with patch(
-            'ckanext.feedback.command.feedback.create_utilization_tables',
+            'ckanext.feedback.command.feedback.create_download_tables',
             side_effect=mock_function,
         ):
             result = runner.invoke(feedback, ['init'])
 
         assert result.exit_code != 0
+
+        with patch(
+            'ckanext.feedback.command.feedback.create_engine',
+            side_effect=mock_function,
+        ):
+            result2 = runner.invoke(feedback, ['init'])
+
+        assert result2.exit_code != 0
