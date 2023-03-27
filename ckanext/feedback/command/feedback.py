@@ -115,11 +115,11 @@ def drop_utilization_tables(engine):
 
 
 def create_utilization_tables(engine):
-    Utilization.__table__.create(engine)
-    UtilizationComment.__table__.create(engine)
-    UtilizationSummary.__table__.create(engine)
-    IssueResolution.__table__.create(engine)
-    IssueResolutionSummary.__table__.create(engine)
+    Utilization.__table__.create(engine, checkfirst=True)
+    UtilizationComment.__table__.create(engine, checkfirst=True)
+    UtilizationSummary.__table__.create(engine, checkfirst=True)
+    IssueResolution.__table__.create(engine, checkfirst=True)
+    IssueResolutionSummary.__table__.create(engine, checkfirst=True)
 
 
 def drop_resource_tables(engine):
@@ -129,9 +129,9 @@ def drop_resource_tables(engine):
 
 
 def create_resource_tables(engine):
-    ResourceComment.__table__.create(engine)
-    ResourceCommentReply.__table__.create(engine)
-    ResourceCommentSummary.__table__.create(engine)
+    ResourceComment.__table__.create(engine, checkfirst=True)
+    ResourceCommentReply.__table__.create(engine, checkfirst=True)
+    ResourceCommentSummary.__table__.create(engine, checkfirst=True)
 
 
 def drop_download_tables(engine):
@@ -139,4 +139,4 @@ def drop_download_tables(engine):
 
 
 def create_download_tables(engine):
-    DownloadSummary.__table__.create(engine)
+    DownloadSummary.__table__.create(engine, checkfirst=True)
