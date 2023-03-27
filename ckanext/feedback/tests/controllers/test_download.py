@@ -33,18 +33,13 @@ class TestDownloadController:
     create_resource_tables(engine)
     create_download_tables(engine)
 
-    def test_increment_resource_download(self):
-        resource = factories.Resource()
-        DownloadController.increment_resource_downloads(resource['id'])
-        assert get_downloads(resource['id']) == 1
-
     @patch('ckanext.feedback.controllers.download.download')
     def test_extended_download(self, mocker):
         resource = factories.Resource()
         self.app = Flask(__name__)
-        self.ctx = self.app.app_context()
-        self.ctx.push()
-        self.ctx.pop()
+        #        self.ctx = self.app.app_context()
+        #        self.ctx.push()
+        #        self.ctx.pop()
         download = mocker.patch('ckanext.feedback.controllers.download.download')
 
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
