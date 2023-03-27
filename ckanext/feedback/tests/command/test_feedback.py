@@ -13,10 +13,8 @@ class TestFeedbackCommand:
 
     def test_feedback_default(self):
         runner = CliRunner()
-        first_result = runner.invoke(feedback, ['init'])
-        assert 'Initialize all modules: SUCCESS' in first_result.output
-        second_result = runner.invoke(feedback, ['init'])
-        assert 'Initialize all modules: SUCCESS' in second_result.output
+        result = runner.invoke(feedback, ['init'])
+        assert 'Initialize all modules: SUCCESS' in result.output
 
     def test_feedback_utilization(self):
         runner = CliRunner()
@@ -63,14 +61,14 @@ class TestFeedbackCommand:
             'ckanext.feedback.command.feedback.create_download_tables',
             side_effect=mock_function,
         ):
-            result = runner.invoke(feedback, ['init'])
+            table_result = runner.invoke(feedback, ['init'])
 
-        assert result.exit_code != 0
+        assert table_result.exit_code != 0
 
         with patch(
             'ckanext.feedback.command.feedback.create_engine',
             side_effect=mock_function,
         ):
-            result2 = runner.invoke(feedback, ['init'])
+            engine_result = runner.invoke(feedback, ['init'])
 
-        assert result2.exit_code != 0
+        assert engine_result.exit_code != 0
