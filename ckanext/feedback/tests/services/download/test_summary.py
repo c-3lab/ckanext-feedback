@@ -27,7 +27,7 @@ def get_downloads(resource_id):
 
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-class TestDownloadView:
+class TestDownloadServices:
     model.repo.init_db()
     engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
     create_utilization_tables(engine)
