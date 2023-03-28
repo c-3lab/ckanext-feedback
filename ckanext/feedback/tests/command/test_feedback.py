@@ -13,29 +13,27 @@ class TestFeedbackCommand:
     def setup_class(cls):
         model.repo.init_db()
 
+    def setup(self):
+        self.runner = CliRunner()
+
     def test_feedback_default(self):
-        runner = CliRunner()
-        result = runner.invoke(feedback, ['init'])
+        result = self.runner.invoke(feedback, ['init'])
         assert 'Initialize all modules: SUCCESS' in result.output
 
     def test_feedback_utilization(self):
-        runner = CliRunner()
-        result = runner.invoke(feedback, ['init', '--modules', 'utilization'])
+        result = self.runner.invoke(feedback, ['init', '--modules', 'utilization'])
         assert 'Initialize utilization: SUCCESS' in result.output
 
     def test_feedback_resource(self):
-        runner = CliRunner()
-        result = runner.invoke(feedback, ['init', '--modules', 'resource'])
+        result = self.runner.invoke(feedback, ['init', '--modules', 'resource'])
         assert 'Initialize resource: SUCCESS' in result.output
 
     def test_feedback_download(self):
-        runner = CliRunner()
-        result = runner.invoke(feedback, ['init', '--modules', 'download'])
+        result = self.runner.invoke(feedback, ['init', '--modules', 'download'])
         assert 'Initialize download: SUCCESS' in result.output
 
     def test_feedback_with_db_option(self):
-        runner = CliRunner()
-        result = runner.invoke(
+        result = self.runner.invoke(
             feedback,
             [
                 'init',
@@ -54,23 +52,19 @@ class TestFeedbackCommand:
         assert 'Initialize all modules: SUCCESS' in result.output
 
     def test_feedback_engine_error(self):
-        runner = CliRunner()
-
         with patch(
             'ckanext.feedback.command.feedback.create_engine',
             side_effect=Exception('Error message'),
         ):
-            engine_result = runner.invoke(feedback, ['init'])
+            result = self.runner.invoke(feedback, ['init'])
 
-        assert engine_result.exit_code != 0
+        assert result.exit_code != 0
 
     def test_feedback_session_error(self):
-        runner = CliRunner()
-
         with patch(
             'ckanext.feedback.command.feedback.create_utilization_tables',
             side_effect=Exception('Error message'),
         ):
-            table_result = runner.invoke(feedback, ['init'])
+            result = self.runner.invoke(feedback, ['init'])
 
-        assert table_result.exit_code != 0
+        assert result.exit_code != 0
