@@ -46,14 +46,19 @@
 
 ## 構成
 
-本Extensionは3つのモジュールで構成されています
+### 本Extensionは3つのモジュールで構成されています
 
 * [utilization](./docs/ja/utilization.md)
 * [resource](./docs/ja/resource.md)
-* [download](./docs/ja/download.md)  
+* [download](./docs/ja/download.md)
 
-特定のモジュールのみを利用することも可能です  
-設定方法は[オンオフ機能の詳細ドキュメント](./docs/ja/switch_function.md)をご覧ください
+### 設定や管理に関するドキュメント
+
+* リソースや利活用方法へのコメントを管理することが出来ます
+  * 詳しくは[管理者用画面ドキュメント](docs/ja/admin.md)をご覧ください
+
+* 特定のモジュールのみを利用することも可能です
+  * 設定方法は[オンオフ機能の詳細ドキュメント](./docs/ja/switch_function.md)をご覧ください
 
 ## 開発者向け
 
