@@ -36,35 +36,35 @@ class TestDownloadServices:
         create_resource_tables(engine)
         create_download_tables(engine)
 
-    def setup(self):
-        self.resource = factories.Resource()
-
     def test_increment_resource_downloads(self):
-        increment_resource_downloads(self.resource['id'])
-        assert get_downloads(self.resource['id']) == 1
-        increment_resource_downloads(self.resource['id'])
-        assert get_downloads(self.resource['id']) == 2
+        resource = factories.Resource()
+        increment_resource_downloads(resource['id'])
+        assert get_downloads(resource['id']) == 1
+        increment_resource_downloads(resource['id'])
+        assert get_downloads(resource['id']) == 2
 
     def test_get_package_download(self):
-        assert get_package_downloads(self.resource['package_id']) == 0
+        resource = factories.Resource()
+        assert get_package_downloads(resource['package_id']) == 0
         download_summary = DownloadSummary(
             id=str('test_id'),
-            resource_id=self.resource['id'],
+            resource_id=resource['id'],
             download=1,
             created='2023-03-31 01:23:45.123456',
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(download_summary)
-        assert get_package_downloads(self.resource['package_id']) == 1
+        assert get_package_downloads(resource['package_id']) == 1
 
     def test_get_resource_download(self):
-        assert get_resource_downloads(self.resource['id']) == 0
+        resource = factories.Resource()
+        assert get_resource_downloads(resource['id']) == 0
         download_summary = DownloadSummary(
             id=str('test_id'),
-            resource_id=self.resource['id'],
+            resource_id=resource['id'],
             download=1,
             created='2023-03-31 01:23:45.123456',
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(download_summary)
-        assert get_resource_downloads(self.resource['id']) == 1
+        assert get_resource_downloads(resource['id']) == 1
