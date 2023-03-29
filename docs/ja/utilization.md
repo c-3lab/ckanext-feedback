@@ -13,8 +13,21 @@
 
 ## 機能説明
 
-【utilization モジュール　イメージ図】  
-![utilization モジュール　イメージ図]()
+【登録画面　イメージ図】  
+
+![utilization モジュール　登録画面　イメージ図](../assets/register_utilization_image.jpg)  
+
+【利活用方法検索画面　イメージ図】  
+
+![utilization モジュール　検索画面　イメージ図](../assets/search_utilization_image.jpg)  
+
+【利活用方法詳細画面　イメージ図】  
+
+![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilizations_image.jpg)  
+
+【リソース詳細画面　イメージ図】  
+
+![utilization モジュール　リソース詳細画面　イメージ図](../assets/utilizations_image.jpg)
 
 * データを利活用したアプリやシステムに対して以下のことが出来ます
   * 利活用方法の紹介
