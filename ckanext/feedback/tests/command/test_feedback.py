@@ -4,7 +4,22 @@ import pytest
 from ckan import model
 from click.testing import CliRunner
 
-from ckanext.feedback.command.feedback import feedback
+from ckanext.feedback.command.feedback import feedback, get_engine
+
+from ckanext.feedback.models.download import DownloadSummary
+from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
+from ckanext.feedback.models.resource_comment import (
+    ResourceComment,
+    ResourceCommentReply,
+    ResourceCommentSummary,
+)
+from ckanext.feedback.models.utilization import (
+    Utilization,
+    UtilizationComment,
+    UtilizationSummary,
+)
+
+engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
 
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
@@ -19,18 +34,37 @@ class TestFeedbackCommand:
     def test_feedback_default(self):
         result = self.runner.invoke(feedback, ['init'])
         assert 'Initialize all modules: SUCCESS' in result.output
+        assert engine.has_table(Utilization.__table__)
+        assert engine.has_table(Utilization.__table__)
+        assert engine.has_table(UtilizationComment.__table__)
+        assert engine.has_table(UtilizationSummary.__table__)
+        assert engine.has_table(IssueResolution.__table__)
+        assert engine.has_table(IssueResolutionSummary.__table__)
+        assert engine.has_table(ResourceComment.__table__)
+        assert engine.has_table(ResourceCommentReply.__table__)
+        assert engine.has_table(ResourceCommentSummary.__table__)
+        assert engine.has_table(DownloadSummary.__table__)
 
     def test_feedback_utilization(self):
-        result = self.runner.invoke(feedback, ['init', '--modules', 'utilization'])
+        result = self.runner.invoke(feedback, ['init', '--modules', 'utilization', '--dbname', 'ckan_test'])
         assert 'Initialize utilization: SUCCESS' in result.output
+        assert engine.has_table(Utilization.__table__)
+        assert engine.has_table(UtilizationComment.__table__)
+        assert engine.has_table(UtilizationSummary.__table__)
+        assert engine.has_table(IssueResolution.__table__)
+        assert engine.has_table(IssueResolutionSummary.__table__)
 
     def test_feedback_resource(self):
-        result = self.runner.invoke(feedback, ['init', '--modules', 'resource'])
+        result = self.runner.invoke(feedback, ['init', '--modules', 'resource', '--dbname', 'ckan_test'])
         assert 'Initialize resource: SUCCESS' in result.output
+        assert engine.has_table(ResourceComment.__table__)
+        assert engine.has_table(ResourceCommentReply.__table__)
+        assert engine.has_table(ResourceCommentSummary.__table__)
 
     def test_feedback_download(self):
-        result = self.runner.invoke(feedback, ['init', '--modules', 'download'])
+        result = self.runner.invoke(feedback, ['init', '--modules', 'download', '--dbname', 'ckan_test'])
         assert 'Initialize download: SUCCESS' in result.output
+        assert engine.has_table(DownloadSummary.__table__)
 
     def test_feedback_with_db_option(self):
         result = self.runner.invoke(
@@ -50,6 +84,16 @@ class TestFeedbackCommand:
             ],
         )
         assert 'Initialize all modules: SUCCESS' in result.output
+        assert engine.has_table(Utilization.__table__)
+        assert engine.has_table(Utilization.__table__)
+        assert engine.has_table(UtilizationComment.__table__)
+        assert engine.has_table(UtilizationSummary.__table__)
+        assert engine.has_table(IssueResolution.__table__)
+        assert engine.has_table(IssueResolutionSummary.__table__)
+        assert engine.has_table(ResourceComment.__table__)
+        assert engine.has_table(ResourceCommentReply.__table__)
+        assert engine.has_table(ResourceCommentSummary.__table__)
+        assert engine.has_table(DownloadSummary.__table__)
 
     def test_feedback_engine_error(self):
         with patch(
