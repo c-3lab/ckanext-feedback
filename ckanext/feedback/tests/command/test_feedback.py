@@ -5,7 +5,6 @@ from ckan import model
 from click.testing import CliRunner
 
 from ckanext.feedback.command.feedback import feedback, get_engine
-
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
 from ckanext.feedback.models.resource_comment import (
@@ -46,7 +45,9 @@ class TestFeedbackCommand:
         assert engine.has_table(DownloadSummary.__table__)
 
     def test_feedback_utilization(self):
-        result = self.runner.invoke(feedback, ['init', '--modules', 'utilization', '--dbname', 'ckan_test'])
+        result = self.runner.invoke(
+            feedback, ['init', '--modules', 'utilization', '--dbname', 'ckan_test']
+        )
         assert 'Initialize utilization: SUCCESS' in result.output
         assert engine.has_table(Utilization.__table__)
         assert engine.has_table(UtilizationComment.__table__)
@@ -55,14 +56,18 @@ class TestFeedbackCommand:
         assert engine.has_table(IssueResolutionSummary.__table__)
 
     def test_feedback_resource(self):
-        result = self.runner.invoke(feedback, ['init', '--modules', 'resource', '--dbname', 'ckan_test'])
+        result = self.runner.invoke(
+            feedback, ['init', '--modules', 'resource', '--dbname', 'ckan_test']
+        )
         assert 'Initialize resource: SUCCESS' in result.output
         assert engine.has_table(ResourceComment.__table__)
         assert engine.has_table(ResourceCommentReply.__table__)
         assert engine.has_table(ResourceCommentSummary.__table__)
 
     def test_feedback_download(self):
-        result = self.runner.invoke(feedback, ['init', '--modules', 'download', '--dbname', 'ckan_test'])
+        result = self.runner.invoke(
+            feedback, ['init', '--modules', 'download', '--dbname', 'ckan_test']
+        )
         assert 'Initialize download: SUCCESS' in result.output
         assert engine.has_table(DownloadSummary.__table__)
 
