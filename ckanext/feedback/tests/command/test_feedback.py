@@ -43,9 +43,9 @@ class TestFeedbackCommand:
                 ResourceComment.__table__,
                 ResourceCommentReply.__table__,
                 ResourceCommentSummary.__table__,
-                DownloadSummary.__table__
+                DownloadSummary.__table__,
             ],
-            checkfirst=True
+            checkfirst=True,
         )
 
     def test_feedback_default(self):
@@ -63,7 +63,8 @@ class TestFeedbackCommand:
 
     def test_feedback_utilization(self):
         result = self.runner.invoke(
-            feedback, ['init', '--modules', 'utilization', '--dbname', engine.url.database]
+            feedback,
+            ['init', '--modules', 'utilization', '--dbname', engine.url.database],
         )
         assert 'Initialize utilization: SUCCESS' in result.output
         assert engine.has_table(Utilization.__table__)
@@ -140,7 +141,9 @@ class TestFeedbackCommand:
             'ckanext.feedback.command.feedback.create_engine',
             side_effect=Exception('Error message'),
         ):
-            result = self.runner.invoke(feedback, ['init', '--dbname', engine.url.database])
+            result = self.runner.invoke(
+                feedback, ['init', '--dbname', engine.url.database]
+            )
 
         assert result.exit_code != 0
         assert not engine.has_table(Utilization.__table__)
@@ -158,7 +161,9 @@ class TestFeedbackCommand:
             'ckanext.feedback.command.feedback.create_utilization_tables',
             side_effect=Exception('Error message'),
         ):
-            result = self.runner.invoke(feedback, ['init', '--dbname', engine.url.database])
+            result = self.runner.invoke(
+                feedback, ['init', '--dbname', engine.url.database]
+            )
 
         assert result.exit_code != 0
         assert not engine.has_table(Utilization.__table__)
