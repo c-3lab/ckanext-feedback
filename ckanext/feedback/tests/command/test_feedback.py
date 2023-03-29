@@ -13,7 +13,7 @@ class TestFeedbackCommand:
     def setup_class(cls):
         model.repo.init_db()
 
-    def setup(self):
+    def setup_method(self, method):
         self.runner = CliRunner()
 
     def test_feedback_default(self):
