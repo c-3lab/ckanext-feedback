@@ -57,6 +57,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def is_enabled_utilizations(self):
         return toolkit.asbool(config.get('ckan.feedback.utilizations.enable', True))
 
+    # Enable/disable resource comment repeated post limit
+    def is_enabled_resources_repeated_post_limit(self):
+        return toolkit.asbool(
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', False
+            )
+        )
+
     # ITemplateHelpers
 
     def get_helpers(self):
@@ -64,6 +72,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_enabled_downloads': self.is_enabled_downloads,
             'is_enabled_resources': self.is_enabled_resources,
             'is_enabled_utilizations': self.is_enabled_utilizations,
+            'is_enabled_resources_repeated_post_limit': (
+                self.is_enabled_resources_repeated_post_limit
+            ),
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,
             'get_resource_utilizations': (
