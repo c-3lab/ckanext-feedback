@@ -1,0 +1,52 @@
+name: Latest Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Python 3.8.16
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8.16"
+
+      - name: Check out
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Copy .env.template as .env
+        run: cp external/ckan/contrib/docker/.env.template external/ckan/contrib/docker/.env
+        working-directory: ./development
+
+      - name: Build images
+        run: docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
+        working-directory: ./development
+
+      - name: Install poetry in CKAN container
+        run: docker exec ckan pip install poetry
+
+      - name: Install packages with poetry
+        run: docker exec -w /opt/ckanext-feedback ckan poetry install
+
+      - name: Generate translation file
+        run: docker exec -w /opt/ckanext-feedback ckan poetry run poe babel-compile
+
+      - name: Check translation file
+        run: ls ckanext/feedback/i18n/ja/LC_MESSAGES
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
