@@ -17,7 +17,7 @@
 ![resource モジュール　コメント登録画面　イメージ図](../assets/register_resource_comment.jpg)
 
 【resource モジュール　データセット詳細画面　イメージ図】  
-![resource モジュール　データセット詳細画面　イメージ図](../assets/dataset_detail_image.jpg)  
+![resource モジュール　データセット詳細画面　イメージ図](../assets/comments_rating_image.jpg)  
 
 * データリソースに対して以下のことが出来ます
   * データリソースごとへのコメント
