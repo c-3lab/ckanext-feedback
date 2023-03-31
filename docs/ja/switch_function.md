@@ -25,7 +25,7 @@
         ckan.feedback.resources.enable = False
         ```
 
-        * リソースに対する１つのコメントに対して、複数回の返信を不可にしたい場合(デフォルトは可能)
+        * リソースに対して１ユーザーにつき、１回のコメントに制限したい場合(デフォルトでは複数回可能)
 
             ```bash
             ckan.feedback.resources.comment.repeated_post_limit.enable = True
