@@ -27,7 +27,7 @@
 
 【リソース詳細画面　イメージ図】  
 
-![utilization モジュール　リソース詳細画面　イメージ図](../assets/utilizations_image.jpg)
+![utilization モジュール　リソース詳細画面　イメージ図](../assets/utilization_comment_image.jpg)
 
 * データを利活用したアプリやシステムに対して以下のことが出来ます
   * 利活用方法の紹介
