@@ -91,29 +91,31 @@
             {% endif %}
             <h4>
               {{ created }}
-              {% for category in categories %}
-                {% if comment.category.name in category.name %}
-                  {{ _(comment.category.value) }}
-                {% endif %}
-              {% endfor %}
-              <span class="group-stars">
-                {% for i in range(comment.rating) %}
-                  <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
-                {% endfor %}
-                {% for i in range(5 - comment.rating) %}
-                  <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
-                {% endfor %}
-              </span>
+              {{ _(comment.category.value) if comment.category }}
+              {% if comment.rating %}
+                <span class="group-stars">
+                  {% for i in range(comment.rating) %}
+                    <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
+                  {% endfor %}
+                  {% for i in range(5 - comment.rating) %}
+                    <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
+                  {% endfor %}
+                </span>
+              {% endif %}
               {% if not comment.approval %}
                 {{ _('Unapproved') }}
               {% endif %}
             </h4>
             <div class="content-align wrap-text {{'unapproved' if not comment.approval }}">
-              <p>{{ comment.content }}</p>
+              {% if comment.content %}
+                <div class="comment-content {{'unapproved' if not comment.approval }}">
+                  <p>{{ comment.content }}</p>
+                </div>
+              {% endif %}
               {% if reply %}
                 <hr>
                 <h4 class="reply">{{ reply.created.strftime('%Y/%m/%d %H:%M') }}</h4>
-                <p class="reply">{{ reply.content }}</p>
+                <p class="comment-content reply">{{ reply.content }}</p>
               {% endif %}
             </div>
             <hr class="divider">

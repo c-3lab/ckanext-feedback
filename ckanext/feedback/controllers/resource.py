@@ -40,10 +40,15 @@ class ResourceController:
     # resource_comment/<resource_id>/comment/new
     @staticmethod
     def create_comment(resource_id):
-        category = request.form.get('category', '')
-        content = request.form.get('comment_content', '')
-        rating = int(request.form.get('rating', 0))
-        if not (category and content and 1 <= rating <= 5):
+        category = None
+        content = None
+        if request.form.get('comment_content'):
+            content = request.form.get('comment_content')
+            category = request.form.get('category')
+        rating = None
+        if request.form.get('rating'):
+            rating = int(request.form.get('rating'))
+        if not ((category and content) or rating):
             toolkit.abort(400)
 
         comment_service.create_resource_comment(resource_id, category, content, rating)

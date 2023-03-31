@@ -8,10 +8,8 @@ function checkRatingAndCommentExists() {
   ratingErrorElement.style.display = 'none';
   commentErrorElement.style.display = 'none';
   
-  if (!rating) {
+  if (!rating && !comment) {
     ratingErrorElement.style.display = '';
-    return false;
-  } else if (!comment) {
     commentErrorElement.style.display = '';
     return false;
   } else {
