@@ -52,6 +52,7 @@
             <th class="small-column">{{ _('Issue resolutions') }}</th>
             <th class="big-column">{{ _('Dataset') }}</th>
             <th class="medium-column">{{ _('Data resource') }}</th>
+            <th class="small-column">{{ _('Comments') }}</th>
             <th class="small-column">{{ _('Registered') }}</th>
             {% if c.userobj.sysadmin %}
               <th class="small-column">{{ _('Status') }}</th>
@@ -74,6 +75,7 @@
               </td>
               <td>{{ row.package_name }}</td>
               <td>{{ row.resource_name }}</td>
+              <td>{{ row.comment }}</td>
               <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
               {% if c.userobj.sysadmin %}
                 {% if row.approval == True %}
