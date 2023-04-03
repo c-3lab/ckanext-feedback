@@ -13,6 +13,7 @@ def get_utilizations(id=None, keyword=None, approval=None):
         session.query(
             Utilization.id,
             Utilization.title,
+            Utilization.comment,
             Utilization.created,
             Utilization.approval,
             Resource.name.label('resource_name'),
