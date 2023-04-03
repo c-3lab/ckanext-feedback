@@ -26,7 +26,7 @@
         ```
 
         * コメントできる回数を各ユーザーごと、１回に制限する場合(ユーザーのCookieを利用)
-            * デフォルトの設定では複数回のコメントが可能です
+            * デフォルトの設定(False)では複数回のコメントが可能です
 
             ```bash
             ckan.feedback.resources.comment.repeated_post_limit.enable = True
