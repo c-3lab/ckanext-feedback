@@ -55,6 +55,6 @@ function isVisible(row){
   const categoryCell = row.getElementsByTagName('td')[5];
   const categories = Array.from(document.querySelectorAll('.category-checkbox'));
   const isMatchedCategory = categories.filter(element => element.checked)
-                                      .some(element => element.getAttribute('name') === categoryCell.getInnerHTML());
+                                      .some(element => element.getAttribute('name') === categoryCell.dataset.category);
   return (isWaiting || isApproval) && isMatchedCategory;
 }

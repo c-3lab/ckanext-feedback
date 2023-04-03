@@ -58,13 +58,13 @@
                     <th class="small-column">
                       <input type="checkbox" id="utilization-comments-checkbox-all" name="utilization-comments-checkbox-all" />
                     </th>
-                    <th class="big-column">{{ _('Comments Body') }}</th>
+                    <th class="medium-column">{{ _('Comments Body') }}</th>
                     <th class="medium-column">{{ _('Utilization Title') }}</th>
                     <th class="medium-column">{{ _('Dataset') }}</th>
                     <th class="medium-column">{{ _('Resource') }}</th>
-                    <th class="small-column">{{ _('Category') }}</th>
+                    <th class="medium-column">{{ _('Category') }}</th>
                     <th class="small-column">{{ _('Created') }}</th>
-                    <th class="small-column">{{ _('Status') }}</th>
+                    <th class="medium-column">{{ _('Status') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -74,18 +74,18 @@
                         <input type="checkbox" id="utilization-comments-checkbox-{{ row.id }}" name="utilization-comments-checkbox" value="{{ row.id }}" />
                       </td>
                       <td class="left-aligned-text">
-                        <a href="{{ h.url_for('utilization.details', utilization_id=row.utilization_id) }}">{{ row.content }}</a>
+                        <a href="{{ h.url_for('utilization.details', utilization_id=row.utilization_id) }}">{{ row.content|truncate(20) }}</a>
                       </td>
                       <td>
-                        <a href="{{ h.url_for('utilization.details', utilization_id=row.utilization_id) }}">{{ row.utilization.title }}</a>
+                        <a href="{{ h.url_for('utilization.details', utilization_id=row.utilization_id) }}">{{ row.utilization.title|truncate(20) }}</a>
                       </td>
                       <td>
-                        <a href="{{ url_for('dataset.search') }}{{ row.utilization.resource.package.title }}">{{ row.utilization.resource.package.title }}</a>
+                        <a href="{{ url_for('dataset.search') }}{{ row.utilization.resource.package.title }}">{{ row.utilization.resource.package.title|truncate(20) }}</a>
                       </td>
                       <td>
-                        <a href="{{ h.url_for('dataset.search') }}{{ row.utilization.resource.package.title }}/resource/{{ row.utilization.resource.id }}">{{ row.utilization.resource.name }}</a>
+                        <a href="{{ h.url_for('dataset.search') }}{{ row.utilization.resource.package.title }}/resource/{{ row.utilization.resource.id }}">{{ row.utilization.resource.name|truncate(20) }}</a>
                       </td>
-                      <td>{{ row.category.value }}</td>
+                      <td data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
                       <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
                       {% if row.approval == True %}
                         <td data-approval="true">{{ _('Approved') }}</td>
@@ -114,13 +114,13 @@
                     <th class="small-column">
                       <input type="checkbox" id="resource-comments-checkbox-all" name="resource-comments-checkbox-all" />
                     </th>
-                    <th class="big-column">{{ _('Comments Body') }}</th>
+                    <th class="medium-column">{{ _('Comments Body') }}</th>
                     <th class="medium-column">{{ _('Rating') }}</th>
                     <th class="medium-column">{{ _('Dataset') }}</th>
                     <th class="medium-column">{{ _('Resource') }}</th>
-                    <th class="small-column">{{ _('Category') }}</th>
+                    <th class="medium-column">{{ _('Category') }}</th>
                     <th class="small-column">{{ _('Created') }}</th>
-                    <th class="small-column">{{ _('Status') }}</th>
+                    <th class="medium-column">{{ _('Status') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -130,18 +130,18 @@
                         <input type="checkbox" id="resource-comments-checkbox-{{ row.id }}" name="resource-comments-checkbox" value="{{ row.id }}" />
                       </td>
                       <td class="left-aligned-text">
-                        <a href="{{ h.url_for('resource_comment.comment', resource_id=row.resource_id) }}">{{ row.content }}</a>
+                        <a href="{{ h.url_for('resource_comment.comment', resource_id=row.resource_id) }}">{{ row.content|truncate(20) }}</a>
                       </td>
                       <td>
                         {{ row.rating }}
                       </td>
                       <td>
-                        <a href="{{ url_for('dataset.search') }}{{ row.resource.package.title }}">{{ row.resource.package.title }}</a>
+                        <a href="{{ url_for('dataset.search') }}{{ row.resource.package.title }}">{{ row.resource.package.title|truncate(20) }}</a>
                       </td>
                       <td>
-                        <a href="{{ h.url_for('dataset.search') }}{{ row.resource.package.title }}/resource/{{ row.resource.id }}">{{ row.resource.name }}</a>
+                        <a href="{{ h.url_for('dataset.search') }}{{ row.resource.package.title }}/resource/{{ row.resource.id }}">{{ row.resource.name|truncate(20) }}</a>
                       </td>
-                      <td>{{ row.category.value }}</td>
+                      <td data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
                       <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
                       {% if row.approval == True %}
                         <td data-approval="true">{{ _('Approved') }}</td>
