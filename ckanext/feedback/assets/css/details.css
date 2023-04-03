@@ -23,6 +23,7 @@
 
 .unapproved {
   color: #808080;
+  background-color: #EEEEEE;
 }
 
 #issue-resolution-table {
