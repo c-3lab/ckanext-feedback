@@ -13,7 +13,7 @@
 
 ### 画面
 
-![管理者用画面イメージ](../assets/admin_comments_image.jpeg)
+![管理者用画面イメージ](../assets/admin_comments_image.jpg)
 
 * カテゴリー
   * チェックボックスにて選択したカテゴリーのコメントのみを表示する
