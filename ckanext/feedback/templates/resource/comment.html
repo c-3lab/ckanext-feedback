@@ -19,12 +19,14 @@
     <article class="module" role="main">
       <div class="module-content">
         <div class="centered-content">
-          <h4>{{ _('Dataset') }}</h4>
-          <a href="{{ h.url_for('dataset.search') }}{{ pkg_dict.name }}">{{ pkg_dict.name }}</a>
-          <hr>
-          <h4>{{ _('Resource') }}</h4>
-          <a href="{{ h.url_for('dataset.search') }}{{ pkg_dict.name }}/resource/{{ resource.id }}">{{ resource.name }}</a>
-          <hr>
+          <div class="wrap-text">
+            <h4>{{ _('Dataset') }}</h4>
+            <a href="{{ h.url_for('dataset.search') }}{{ pkg_dict.name }}">{{ pkg_dict.name }}</a>
+            <hr>
+            <h4>{{ _('Resource') }}</h4>
+            <a href="{{ h.url_for('dataset.search') }}{{ pkg_dict.name }}/resource/{{ resource.id }}">{{ resource.name }}</a>
+            <hr>
+          </div>
           <h4>{{ _('Comments') }}</h4>
           <p>{{ h.get_resource_comments(resource.id) }}</p>
           <hr>
@@ -106,14 +108,14 @@
                 {{ _('Unapproved') }}
               {% endif %}
             </h4>
-            <div class="comment-content {{'unapproved' if not comment.approval }}">
+            <div class="content-align wrap-text {{'unapproved' if not comment.approval }}">
               <p>{{ comment.content }}</p>
+              {% if reply %}
+                <hr>
+                <h4 class="reply">{{ reply.created.strftime('%Y/%m/%d %H:%M') }}</h4>
+                <p class="reply">{{ reply.content }}</p>
+              {% endif %}
             </div>
-            {% if reply %}
-              <hr>
-              <h4 class="reply">{{ reply.created.strftime('%Y/%m/%d %H:%M') }}</h4>
-              <p class="comment-content reply">{{ reply.content }}</p>
-            {% endif %}
             <hr class="divider">
           {% endfor %}
         </div>
@@ -130,7 +132,7 @@
             </div>
             <div class="modal-body">
               <h4 id="selected_comment_header"></h4>
-              <p class="comment-content" id="selected_comment"></p>
+              <p class="content-align wrap-text" id="selected_comment"></p>
               <div class="form-group control-full">
                 <label class="control-label" for="code">{{ _('Input') }}</label>
                 <div class="controls ">

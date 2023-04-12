@@ -73,8 +73,8 @@
                   <div class="division-flex-inner-num">{{ row.issue_resolution }}</div>
                 </div>
               </td>
-              <td>{{ row.package_name }}</td>
-              <td>{{ row.resource_name }}</td>
+              <td>{{ row.package_name|truncate(30) }}</td>
+              <td>{{ row.resource_name|truncate(20) }}</td>
               <td>{{ row.comment }}</td>
               <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
               {% if c.userobj.sysadmin %}

@@ -3,10 +3,7 @@
   padding-top: 5px;
 }
 
-.comment-content {
-  word-wrap: break-word;
-}
-.comment-content > p {
+.content-align > p {
   margin-top: 15px;
   margin-bottom: 15px;
   padding-top: 5px;
@@ -44,4 +41,8 @@
 .unapproved {
   color: #808080;
   background-color: #EEEEEE;
+}
+
+.wrap-text {
+  word-wrap: break-word;
 }

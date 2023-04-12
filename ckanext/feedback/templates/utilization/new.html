@@ -2,6 +2,11 @@
 
   {% extends "package/base.html" %}
 
+  {% block styles %}
+    {{ super() }}
+    {% asset 'feedback/feedback-registration-css' %}
+  {% endblock %}
+
   {% block breadcrumb_content_selected %} class="inactive"{% endblock %}
 
   {% block breadcrumb_content %}
@@ -13,12 +18,14 @@
   {%- block primary %}
     <article class="module" role="main">
       <div class="module-content">
-        <h4>{{ _('Dataset') }}</h4>
-        <a href="{{ h.url_for('dataset.read', id=pkg_dict.name) }}">{{ pkg_dict.name }}</a>
-        <hr>
-        <h4>{{ _('Resource') }}</h4>
-        <a href="{{ h.url_for('resource.read', id=pkg_dict.name, resource_id=resource.id) }}">{{ resource.name }}</a>
-        <hr>
+        <div class="wrap-text">
+          <h4>{{ _('Dataset') }}</h4>
+          <a href="{{ h.url_for('dataset.read', id=pkg_dict.name) }}">{{ pkg_dict.name }}</a>
+          <hr>
+          <h4>{{ _('Resource') }}</h4>
+          <a href="{{ h.url_for('resource.read', id=pkg_dict.name, resource_id=resource.id) }}">{{ resource.name }}</a>
+          <hr>
+        </div>
         <form name="content_form" action="{{ url_for('utilization.create') }}" method="post">
           <input type="hidden" id="return_to_resource" name="return_to_resource" value="{{ return_to_resource }}">
           <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">

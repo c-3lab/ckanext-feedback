@@ -78,3 +78,15 @@ feedback-comment-css:
   output: feedback/%(version)s-comment.css
   contents:
     - css/comment.css
+
+feedback-edit-css:
+  filter: cssrewrite
+  output: feedback/%(version)s-edit.css
+  contents:
+    - css/edit.css
+
+feedback-registration-css:
+  filter: cssrewrite
+  output: feedback/%(version)s-registration.css
+  contents:
+    - css/registration.css

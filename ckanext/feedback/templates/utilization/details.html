@@ -27,17 +27,19 @@
             </form>
             <hr class="divider">
           {% endif %}
-          <h1>{{ row.title }}</h1>
-          <hr>
-          <h4>{{ _('Dataset') }}</h4>
-          <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_name }}</a>
-          <hr>
-          <h4>{{ _('Resource') }}</h4>
-          <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
-          <hr>
-          <h4>{{ _('Utilization description') }}</h4>
-          <p>{{ row.description }}</p>
-          <hr>
+          <div class="wrap-text">
+            <h1>{{ row.title }}</h1>
+            <hr>
+            <h4>{{ _('Dataset') }}</h4>
+            <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_name }}</a>
+            <hr>
+            <h4>{{ _('Resource') }}</h4>
+            <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
+            <hr>
+            <h4>{{ _('Utilization description') }}</h4>
+            <p>{{ row.description }}</p>
+            <hr>
+          </div>
           <h4>{{ _('Issue Resolutions') }}</h4>
           <a href="#issue-resolution-detail" data-toggle="modal">
             {% if issue_resolutions|length > 0 %}
@@ -90,7 +92,7 @@
               {% endfor %}
             </h4>
             <br>
-            <p class="comment-content {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
+            <p class="wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
             <hr class="divider">
           {% endfor %}
         </div>

@@ -2,6 +2,11 @@
 
   {% extends "page.html" %}
 
+  {% block styles %}
+    {{ super() }}
+    {% asset 'feedback/feedback-edit-css' %}
+  {% endblock %}
+
   {% block breadcrumb_content %}
     <li class="inactive"><a href="{{ h.url_for('utilization.search') }}">{{ _('Utilization') }}</a></li>
     <li class="inactive"><a href="{{ h.url_for('utilization.details', utilization_id=utilization_details.id) }}">{{ _('Details') }}</a></li>
@@ -13,12 +18,14 @@
       <div class="module-content">
         {% set message = _('Deleting this utilization will also delete all related comments.\nAre you sure?')  %}
         <input type="hidden" id="message" name="message" value="{{ message }}">
-        <h4>{{ _('Dataset') }}</h4>
-        <a href="{{ h.url_for('dataset.read', id=resource_details.package_name) }}">{{ resource_details.package_name }}</a>
-        <hr>
-        <h4>{{ _('Resource') }}</h4>
-        <a href="{{ h.url_for('resource.read', id=resource_details.package_name, resource_id=resource_details.resource_id) }}">{{ resource_details.resource_name }}</a>
-        <hr>
+        <div class="wrap-text">
+          <h4>{{ _('Dataset') }}</h4>
+          <a href="{{ h.url_for('dataset.read', id=resource_details.package_name) }}">{{ resource_details.package_name }}</a>
+          <hr>
+          <h4>{{ _('Resource') }}</h4>
+          <a href="{{ h.url_for('resource.read', id=resource_details.package_name, resource_id=resource_details.resource_id) }}">{{ resource_details.resource_name }}</a>
+          <hr>
+        </div>
         <form name="content_form" action="{{ url_for('utilization.update', utilization_id=utilization_details.id) }}" method="post">
           <h4>{{ _('Title') }}</h4>
           <input type="text" class="form-control" id="title" name="title" value="{{ utilization_details.title }}"/>
