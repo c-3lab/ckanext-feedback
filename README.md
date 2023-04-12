@@ -46,14 +46,19 @@
 
 ## 構成
 
-本Extensionは3つのモジュールで構成されています
+### 本Extensionは3つのモジュールで構成されています
 
 * [utilization](./docs/ja/utilization.md)
 * [resource](./docs/ja/resource.md)
-* [download](./docs/ja/download.md)  
+* [download](./docs/ja/download.md)
 
-特定のモジュールのみを利用することも可能です  
-設定方法は[オンオフ機能の詳細ドキュメント](./docs/ja/switch_function.md)をご覧ください
+### 設定や管理に関するドキュメント
+
+* リソースや利活用方法へのコメントを管理することが出来ます
+  * 詳しくは[管理者用画面ドキュメント](docs/ja/admin.md)をご覧ください
+
+* 特定のモジュールのみを利用することも可能です
+  * 設定方法は[オンオフ機能の詳細ドキュメント](./docs/ja/switch_function.md)をご覧ください
 
 ## 開発者向け
 
@@ -121,6 +126,39 @@
 * [言語対応(i18n) 詳細ドキュメント](./docs/ja/i18n.md)
 
 ## テスト
+
+1. 上記のビルド方法に従い、ビルドを行う
+
+2. コンテナ内に入る
+
+    ```bash
+    docker exec -it --user root ckan /bin/bash
+    ```
+
+3. その他の必要なものをインストールする
+
+    ```bash
+    pip install -r /usr/lib/ckan/venv/src/ckan/dev-requirements.txt
+    pip install pytest-ckan
+    ```
+
+4. テスト用DBを作成する
+
+    ```bash
+    createdb ckan_test -O ckan -E utf-8 -h db -U ckan
+    ```
+
+5. ディレクトリを移動
+
+    ```bash
+    cd /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests
+    ```
+
+6. テストを実行
+
+    ```bash
+    CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest -s --ckan-ini=config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings ./
+    ```
 
 ## LICENSE
 
