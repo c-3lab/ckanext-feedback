@@ -76,17 +76,43 @@ def create_resource_summary(resource_id):
 
 # Recalculate approved ratings and comments related to the resource summary
 def refresh_resource_summary(resource_id):
-    row = (
+    total_rating = (
         session.query(
-            func.sum(ResourceComment.rating).label('total_rating'),
-            func.count().label('total_comment'),
+            func.sum(ResourceComment.rating),
         )
         .filter(
             ResourceComment.resource_id == resource_id,
             ResourceComment.approval,
+            ResourceComment.rating.isnot(None),
         )
-        .first()
+        .scalar()
     )
+    if total_rating is None:
+        total_rating = 0
+    total_comment = (
+        session.query(ResourceComment)
+        .filter(
+            ResourceComment.resource_id == resource_id,
+            ResourceComment.approval,
+            ResourceComment.rating.isnot(None),
+        )
+        .count()
+    )
+    if total_comment > 0:
+        rating = total_rating / total_comment
+    else:
+        rating = 0
+
+    comment = (
+        session.query(ResourceComment)
+        .filter(
+            ResourceComment.resource_id == resource_id,
+            ResourceComment.approval,
+            ResourceComment.content.isnot(None),
+        )
+        .count()
+    )
+
     summary = (
         session.query(ResourceCommentSummary)
         .filter(ResourceCommentSummary.resource_id == resource_id)
@@ -95,11 +121,11 @@ def refresh_resource_summary(resource_id):
     if summary is None:
         summary = ResourceCommentSummary(
             resource_id=resource_id,
-            rating=row.total_rating / row.total_comment,
-            comment=row.total_comment,
+            rating=rating,
+            comment=comment,
         )
         session.add(summary)
     else:
-        summary.rating = row.total_rating / row.total_comment
-        summary.comment = row.total_comment
+        summary.rating = rating
+        summary.comment = comment
         summary.updated = datetime.now()

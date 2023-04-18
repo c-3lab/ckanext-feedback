@@ -35,7 +35,7 @@ class ResourceComment(Base):
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
     )
-    category = Column(Enum(ResourceCommentCategory), nullable=False)
+    category = Column(Enum(ResourceCommentCategory))
     content = Column(Text)
     rating = Column(Integer)
     created = Column(TIMESTAMP, default=datetime.now)
