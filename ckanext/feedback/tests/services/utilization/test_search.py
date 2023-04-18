@@ -9,6 +9,9 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
     create_resource_tables,
     create_download_tables,
+    drop_utilization_tables,
+    drop_resource_tables,
+    drop_download_tables
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import (
@@ -105,12 +108,15 @@ def convert_utilization_comment_to_tuple(utilization_comment):
     )
 
 
+engine = model.repo.session.get_bind()
+
+
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestUtilizationDetailsService:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
+#        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -128,14 +134,14 @@ class TestUtilizationDetailsService:
         title = 'unapproved title'
         title2 = 'approved title'
         description = 'test description'
-        register_utilization(id, resource['id'], title, description, False, datetime.now())
-        register_utilization(id2, resource2['id'], title2, description, True, datetime.now())
+        register_utilization(id, resource['id'], title, description, False, datetime(1999, 1, 2, 3, 4))
+        register_utilization(id2, resource2['id'], title2, description, True, datetime(2000, 1, 2, 3, 4))
 
         unapproved_utilization = (
             id,
             title,
             0,
-            datetime(2000, 1, 2, 3, 4),
+            datetime(1999, 1, 2, 3, 4),
             False,
             resource['name'],
             resource['id'],

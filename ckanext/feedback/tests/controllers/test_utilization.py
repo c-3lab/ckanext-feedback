@@ -1,10 +1,12 @@
+from unittest.mock import patch
 import pytest
 import six
 import uuid
 from ckan import model
 from ckan.tests import factories
-from flask import request,Flask
+from flask import request, Flask
 from datetime import datetime
+from ckan.common import _, c, request
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -20,15 +22,17 @@ from ckanext.feedback.models.utilization import (
     UtilizationCommentCategory,
 )
 
-def register_utilization(id,resource_id,title,description,approval):
-        utilization = Utilization(
-            id=id,
-            resource_id=resource_id,
-            title=title,
-            description=description,
-            approval=approval
-        )
-        session.add(utilization)
+
+def register_utilization(id, resource_id, title, description, approval):
+    utilization = Utilization(
+        id=id,
+        resource_id=resource_id,
+        title=title,
+        description=description,
+        approval=approval,
+    )
+    session.add(utilization)
+
 
 def get_registered_utilization(resource_id):
     return (
@@ -42,18 +46,22 @@ def get_registered_utilization(resource_id):
         .first()
     )
 
-def register_utilization_comment(id,utilization_id,category,content,created,approval,approved,approval_user_id):
-        utilization_comment = UtilizationComment(
-            id=id,
-            utilization_id=utilization_id,
-            category=category,
-            content=content,
-            created=created,
-            approval=approval,
-            approved=approved,
-            approval_user_id=approval_user_id
-        )
-        session.add(utilization_comment)
+
+def register_utilization_comment(
+    id, utilization_id, category, content, created, approval, approved, approval_user_id
+):
+    utilization_comment = UtilizationComment(
+        id=id,
+        utilization_id=utilization_id,
+        category=category,
+        content=content,
+        created=created,
+        approval=approval,
+        approved=approved,
+        approval_user_id=approval_user_id,
+    )
+    session.add(utilization_comment)
+
 
 def get_registered_utilization_comment(utilization_id):
     return (
@@ -70,6 +78,7 @@ def get_registered_utilization_comment(utilization_id):
         .all()
     )
 
+
 def convert_utilization_comment_to_tuple(utilization_comment):
     return (
         utilization_comment.utilization_id,
@@ -80,19 +89,38 @@ def convert_utilization_comment_to_tuple(utilization_comment):
         utilization_comment.approval_user_id,
     )
 
+
+engine = model.repo.session.get_bind()
+
+
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestUtilizationController:
-
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
 
+#    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+#    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+#    @patch('ckanext.feedback.controllers.utilization.request')
+#    def test_search(self, mock_request, mock_get_utilizations, mock_render):
+#        UtilizationController.search()
+#        mock_get_utilizations.assert_called_once()
+#        #utilization/search
+
+    def test_new(self):
+        pass
+
+    def test_create(self):
+        pass
+
+    def test_details(self):
+        pass
+
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_approve(self,app):
+    def test_approve(self, app):
         dataset = factories.Dataset()
         user = factories.User()
         resource = factories.Resource(package_id=dataset['id'])
@@ -100,26 +128,24 @@ class TestUtilizationController:
         id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
-        register_utilization(id,resource['id'],title,description,False)
+        register_utilization(id, resource['id'], title, description, False)
         utilization_before_approved = get_registered_utilization(resource['id'])
 
         self.app = Flask(__name__)
         user_env = {'REMOTE_USER': six.ensure_str(user['name'])}
         with self.app.test_request_context():
             response = app.post(
-                url='utilization/'+utilization_before_approved.id+'/approve',
+                url='utilization/' + utilization_before_approved.id + '/approve',
                 extra_environ=user_env,
-                data={
-                    'utilization_id':utilization_before_approved.id
-                }
+                data={'utilization_id': utilization_before_approved.id},
             )
         utilization_after_approved = get_registered_utilization(resource['id'])
-        fake_utilization = (id,True,datetime.now(),user['id'])
+        fake_utilization = (id, True, datetime.now(), user['id'])
 
         assert response.status == '200 OK'
         assert utilization_after_approved == fake_utilization
 
-    def test_create_comment(self,app):
+    def test_create_comment(self, app):
         dataset = factories.Dataset()
         user = factories.User()
         resource = factories.Resource(package_id=dataset['id'])
@@ -127,7 +153,7 @@ class TestUtilizationController:
         id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
-        register_utilization(id,resource['id'],title,description,False)
+        register_utilization(id, resource['id'], title, description, False)
         utilization = get_registered_utilization(resource['id'])
 
         self.app = Flask(__name__)
@@ -135,24 +161,33 @@ class TestUtilizationController:
         content = 'test content'
         with self.app.test_request_context():
             response = app.post(
-                url='utilization/'+utilization.id+'/comment/new',
+                url='utilization/' + utilization.id + '/comment/new',
                 extra_environ=user_env,
                 data={
-                    'utilization_id':utilization.id,
-                    'category':UtilizationCommentCategory.REQUEST.name,
-                    'content':content
-                }
+                    'utilization_id': utilization.id,
+                    'category': UtilizationCommentCategory.REQUEST.name,
+                    'content': content,
+                },
             )
         utilization_comments = get_registered_utilization_comment(utilization.id)
         assert response.status == '200 OK'
         assert len(utilization_comments) == 1
-        
-        registered_utilization_comment = convert_utilization_comment_to_tuple(utilization_comments[0])
-        fake_utilization_comment = (id,UtilizationCommentCategory.REQUEST,content,False,None,None)
+
+        registered_utilization_comment = convert_utilization_comment_to_tuple(
+            utilization_comments[0]
+        )
+        fake_utilization_comment = (
+            id,
+            UtilizationCommentCategory.REQUEST,
+            content,
+            False,
+            None,
+            None,
+        )
         assert registered_utilization_comment == fake_utilization_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_approve_comment(self,app):
+    def test_approve_comment(self, app):
         dataset = factories.Dataset()
         user = factories.User()
         resource = factories.Resource(package_id=dataset['id'])
@@ -160,35 +195,66 @@ class TestUtilizationController:
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
-        register_utilization(utilization_id,resource['id'],title,description,False)
+        register_utilization(utilization_id, resource['id'], title, description, False)
         utilization = get_registered_utilization(resource['id'])
 
         comment_id = str(uuid.uuid4())
         category = UtilizationCommentCategory.REQUEST
         content = 'test content'
         created = datetime.now()
-        
-        register_utilization_comment(comment_id,utilization.id,category,content,created,False,None,None)
+
+        register_utilization_comment(
+            comment_id, utilization.id, category, content, created, False, None, None
+        )
         utilization_comments = get_registered_utilization_comment(utilization.id)
         comment_not_approved = utilization_comments[0]
-        assert comment_not_approved.approval == False
+        assert comment_not_approved.approval is False
 
         self.app = Flask(__name__)
         user_env = {'REMOTE_USER': six.ensure_str(user['name'])}
         content = 'test content'
         with self.app.test_request_context():
             response = app.post(
-                url='utilization/'+utilization.id+'/comment/'+comment_not_approved.id+'/approve',
+                url='utilization/'
+                + utilization.id
+                + '/comment/'
+                + comment_not_approved.id
+                + '/approve',
                 extra_environ=user_env,
                 data={
-                    'utilization_id':utilization.id,
-                    'comment_id':comment_not_approved.id,
-                }
+                    'utilization_id': utilization.id,
+                    'comment_id': comment_not_approved.id,
+                },
             )
         utilization_comments = get_registered_utilization_comment(utilization.id)
         comment_approved = utilization_comments[0]
         assert response.status == '200 OK'
-        
+
         tuple_comment_approved = convert_utilization_comment_to_tuple(comment_approved)
-        fake_utilization_comment = (utilization.id,category,content,True,datetime.now(),user['id'])
+        fake_utilization_comment = (
+            utilization.id,
+            category,
+            content,
+            True,
+            datetime.now(),
+            user['id'],
+        )
         assert tuple_comment_approved == fake_utilization_comment
+
+    def test_edit(self):
+        pass
+
+    def test_update(self):
+        pass
+
+    def test_delete(self):
+        pass
+
+    def test_comment(self):
+        pass
+
+    def test_comment_approval(self):
+        pass
+
+    def test_create_issue_resolution(self):
+        pass

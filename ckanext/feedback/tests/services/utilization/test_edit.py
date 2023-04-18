@@ -34,12 +34,15 @@ def register_utilization(id, resource_id, title, description, approval):
     session.add(utilization)
 
 
+engine = model.repo.session.get_bind()
+
+
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestUtilizationDetailsService:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
+#        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
