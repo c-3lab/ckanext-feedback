@@ -28,6 +28,9 @@ class TestFeedbackCommand:
         model.repo.metadata.clear()
         model.repo.init_db()
 
+    def teardown_class(cls):
+        model.repo.metadata.reflect()
+
     def setup_method(self, method):
         self.runner = CliRunner()
 
