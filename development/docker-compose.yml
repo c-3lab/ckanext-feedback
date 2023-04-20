@@ -8,6 +8,7 @@ services:
       # The overridden file's directory development/external/ckan/contrib/docker is used as the base context
       context: ../../../../
       dockerfile: Dockerfile
+    init: true
     volumes:
       - ckan_config:/etc/ckan
       - ckan_home:/usr/lib/ckan
