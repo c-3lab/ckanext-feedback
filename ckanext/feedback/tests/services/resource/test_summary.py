@@ -1,7 +1,7 @@
 import pytest
 from ckan import model
-from ckan.tests import factories
 from ckan.model.user import User
+from ckan.tests import factories
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -9,24 +9,25 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
     get_engine,
 )
-from ckanext.feedback.models.session import session
-from ckanext.feedback.services.resource.summary import (
-    get_package_comments,
-    get_resource_comments,
-    get_package_rating,
-    get_resource_rating,
-    create_resource_summary,
-    refresh_resource_summary,
-)
-from ckanext.feedback.services.resource.comment import (
-    get_resource_comment_categories,
-    create_resource_comment,
-    approve_resource_comment,
-)
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentSummary,
 )
+from ckanext.feedback.models.session import session
+from ckanext.feedback.services.resource.comment import (
+    approve_resource_comment,
+    create_resource_comment,
+    get_resource_comment_categories,
+)
+from ckanext.feedback.services.resource.summary import (
+    create_resource_summary,
+    get_package_comments,
+    get_package_rating,
+    get_resource_comments,
+    get_resource_rating,
+    refresh_resource_summary,
+)
+
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestResourceServices:
@@ -107,37 +108,32 @@ class TestResourceServices:
         resource = factories.Resource()
         create_resource_summary(resource['id'])
 
-        summary = (
-            session.query(ResourceCommentSummary)
-            .first()
-        )
+        summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 0
         assert summary.rating == 0
         assert not summary.updated
-
-        create_resource_comment(resource['id'], get_resource_comment_categories().REQUEST, "test", 3)
+        create_resource_comment(
+            resource['id'], get_resource_comment_categories().REQUEST, "test", 3
+        )
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
         approve_resource_comment(comment_id, user_id)
         refresh_resource_summary(resource['id'])
 
-        summary = (
-            session.query(ResourceCommentSummary)
-            .first()
-        )
+        summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 1
         assert summary.rating == 3.0
         assert summary.updated
 
-        create_resource_comment(resource['id'], get_resource_comment_categories().REQUEST, "test2", 5)
-        comment_id = session.query(ResourceComment).order_by(ResourceComment.id.desc()).first().id
+        create_resource_comment(
+            resource['id'], get_resource_comment_categories().REQUEST, "test2", 5
+        )
+        comment_id = session.query(ResourceComment)
+        comment_id = comment_id.order_by(ResourceComment.id.desc()).first().id
         approve_resource_comment(comment_id, user_id)
         refresh_resource_summary(resource['id'])
 
-        summary = (
-            session.query(ResourceCommentSummary)
-            .first()
-        )
+        summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 2
         assert summary.rating == 4.0
         assert summary.updated

@@ -1,7 +1,7 @@
 import pytest
 from ckan import model
-from ckan.tests import factories
 from ckan.model.user import User
+from ckan.tests import factories
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -9,22 +9,22 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
     get_engine,
 )
-
+from ckanext.feedback.models.resource_comment import (
+    ResourceComment,
+    ResourceCommentCategory,
+)
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.resource.comment import (
-    get_resource,
-    get_resource_comments,
-    get_resource_comment_categories,
-    create_resource_comment,
     approve_resource_comment,
-    get_comment_reply,
     create_reply,
+    create_resource_comment,
+    get_comment_reply,
     get_cookie,
+    get_resource,
+    get_resource_comment_categories,
+    get_resource_comments,
 )
-from ckanext.feedback.models.resource_comment import (
-    ResourceCommentCategory,
-    ResourceComment,
-)
+
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestComments:
@@ -43,7 +43,9 @@ class TestComments:
     def test_get_resource_comments(self):
         assert not get_resource_comments()
         resource = factories.Resource()
-        create_resource_comment(resource['id'], get_resource_comment_categories().REQUEST, "test", 1)
+        create_resource_comment(
+            resource['id'], get_resource_comment_categories().REQUEST, "test", 1
+        )
         assert get_resource_comments()
         assert get_resource_comments(resource['id'])
         assert not get_resource_comments('test')
@@ -57,7 +59,9 @@ class TestComments:
 
     def test_approve_resource_comment(self):
         resource = factories.Resource()
-        create_resource_comment(resource['id'], get_resource_comment_categories().REQUEST, "test", 1)
+        create_resource_comment(
+            resource['id'], get_resource_comment_categories().REQUEST, "test", 1
+        )
 
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
@@ -72,7 +76,9 @@ class TestComments:
 
     def test_create_reply(self):
         resource = factories.Resource()
-        create_resource_comment(resource['id'], get_resource_comment_categories().REQUEST, "test", 1)
+        create_resource_comment(
+            resource['id'], get_resource_comment_categories().REQUEST, "test", 1
+        )
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
         assert not get_comment_reply(comment_id)
@@ -82,4 +88,3 @@ class TestComments:
     def test_get_cookie(self):
         resource = factories.Resource()
         assert not get_cookie(resource['id'])
-
