@@ -128,8 +128,7 @@ class TestResourceServices:
         create_resource_comment(
             resource['id'], get_resource_comment_categories().REQUEST, "test2", 5
         )
-        comment_id = session.query(ResourceComment)
-        comment_id = comment_id.order_by(ResourceComment.id.desc()).first().id
+        comment_id = session.query(ResourceComment).all()[1].id
         approve_resource_comment(comment_id, user_id)
         refresh_resource_summary(resource['id'])
 
