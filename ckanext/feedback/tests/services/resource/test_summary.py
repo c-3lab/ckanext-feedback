@@ -51,6 +51,7 @@ class TestResourceServices:
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(resource_comment_summary)
+        session.commit()
         assert get_package_comments(resource['package_id']) == 1
 
     def test_get_resource_comments(self):
@@ -65,6 +66,7 @@ class TestResourceServices:
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(resource_comment_summary)
+        session.commit()
         assert get_resource_comments(resource['id']) == 1
 
     def test_get_package_rating(self):
@@ -79,6 +81,7 @@ class TestResourceServices:
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(resource_comment_summary)
+        session.commit()
         assert get_package_rating(resource['package_id']) == 1
 
     def test_get_resource_rating(self):
@@ -93,6 +96,7 @@ class TestResourceServices:
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(resource_comment_summary)
+        session.commit()
         assert get_resource_rating(resource['id']) == 1
 
     def test_create_resource_summary(self):
@@ -107,7 +111,7 @@ class TestResourceServices:
     def test_refresh_resource_summary(self):
         resource = factories.Resource()
         create_resource_summary(resource['id'])
-
+        session.commit()
         summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 0
         assert summary.rating == 0
@@ -115,10 +119,12 @@ class TestResourceServices:
         create_resource_comment(
             resource['id'], get_resource_comment_categories().REQUEST, "test", 3
         )
+        session.commit()
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
         approve_resource_comment(comment_id, user_id)
         refresh_resource_summary(resource['id'])
+        session.commit()
 
         summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 1
@@ -128,9 +134,11 @@ class TestResourceServices:
         create_resource_comment(
             resource['id'], get_resource_comment_categories().REQUEST, "test2", 5
         )
+        session.commit()
         comment_id = session.query(ResourceComment).all()[1].id
         approve_resource_comment(comment_id, user_id)
         refresh_resource_summary(resource['id'])
+        session.commit()
 
         summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 2

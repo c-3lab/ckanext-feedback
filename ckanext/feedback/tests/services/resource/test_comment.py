@@ -46,6 +46,7 @@ class TestComments:
         create_resource_comment(
             resource['id'], get_resource_comment_categories().REQUEST, "test", 1
         )
+        session.commit()
         assert get_resource_comments()
         assert get_resource_comments(resource['id'])
         assert not get_resource_comments('test')
@@ -62,13 +63,14 @@ class TestComments:
         create_resource_comment(
             resource['id'], get_resource_comment_categories().REQUEST, "test", 1
         )
-
+        session.commit()
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
 
         assert not get_resource_comments(resource['id'])[0].approval
 
         approve_resource_comment(comment_id, user_id)
+        session.commit()
         assert get_resource_comments(resource['id'])[0].approval
 
     def test_get_comment_reply(self):
@@ -83,6 +85,7 @@ class TestComments:
         user_id = session.query(User).first().id
         assert not get_comment_reply(comment_id)
         create_reply(comment_id, "test_reply", user_id)
+        session.commit()
         assert get_comment_reply(comment_id)
 
     def test_get_cookie(self):
