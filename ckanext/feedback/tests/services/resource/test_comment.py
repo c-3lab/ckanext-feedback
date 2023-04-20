@@ -43,9 +43,8 @@ class TestComments:
     def test_get_resource_comments(self):
         assert not get_resource_comments()
         resource = factories.Resource()
-        create_resource_comment(
-            resource['id'], get_resource_comment_categories().REQUEST, "test", 1
-        )
+        category = get_resource_comment_categories().REQUEST
+        create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
         assert get_resource_comments()
         assert get_resource_comments(resource['id'])
@@ -60,9 +59,8 @@ class TestComments:
 
     def test_approve_resource_comment(self):
         resource = factories.Resource()
-        create_resource_comment(
-            resource['id'], get_resource_comment_categories().REQUEST, "test", 1
-        )
+        category = get_resource_comment_categories().REQUEST
+        create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
@@ -78,13 +76,12 @@ class TestComments:
 
     def test_create_reply(self):
         resource = factories.Resource()
-        create_resource_comment(
-            resource['id'], get_resource_comment_categories().REQUEST, "test", 1
-        )
+        category = get_resource_comment_categories().REQUEST
+        create_resource_comment(resource['id'], category, 'test', 1)
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
         assert not get_comment_reply(comment_id)
-        create_reply(comment_id, "test_reply", user_id)
+        create_reply(comment_id, 'test_reply', user_id)
         session.commit()
         assert get_comment_reply(comment_id)
 

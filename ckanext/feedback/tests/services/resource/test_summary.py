@@ -116,9 +116,8 @@ class TestResourceServices:
         assert summary.comment == 0
         assert summary.rating == 0
         assert not summary.updated
-        create_resource_comment(
-            resource['id'], get_resource_comment_categories().REQUEST, "test", 3
-        )
+        category = get_resource_comment_categories().REQUEST
+        create_resource_comment(resource['id'], category, 'test', 3)
         session.commit()
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
@@ -131,9 +130,7 @@ class TestResourceServices:
         assert summary.rating == 3.0
         assert summary.updated
 
-        create_resource_comment(
-            resource['id'], get_resource_comment_categories().REQUEST, "test2", 5
-        )
+        create_resource_comment(resource['id'], category, 'test2', 5)
         session.commit()
         comment_id = session.query(ResourceComment).all()[1].id
         approve_resource_comment(comment_id, user_id)
