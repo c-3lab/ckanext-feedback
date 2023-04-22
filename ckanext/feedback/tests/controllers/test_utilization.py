@@ -4,9 +4,11 @@ import six
 import uuid
 from ckan import model
 from ckan.tests import factories
-from flask import request, Flask
+from flask import request, Flask, g
 from datetime import datetime
 from ckan.common import _, c, request
+from ckan.model import User, Session
+from ckan.logic import get_action
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -102,16 +104,98 @@ class TestUtilizationController:
         create_resource_tables(engine)
         create_download_tables(engine)
 
-#    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-#    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
-#    @patch('ckanext.feedback.controllers.utilization.request')
-#    def test_search(self, mock_request, mock_get_utilizations, mock_render):
-#        UtilizationController.search()
-#        mock_get_utilizations.assert_called_once()
-#        #utilization/search
+    def setup_method(self, method):
+        self.app = Flask(__name__)
 
-    def test_new(self):
-        pass
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request')
+    def test_search(self, mock_request, mock_get_utilizations, mock_render, app):
+        dataset = factories.Dataset()
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+
+        mock_request.args.get.side_effect = lambda x, default: {
+            'id': resource['id'],
+            'keyword': 'test_keyword',
+            'disable_keyword': 'test_disable_keyword',
+        }.get(x, default)
+
+        with app.flask_app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(resource['id'], 'test_keyword', None)
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': 'test_keyword',
+                'disable_keyword': 'test_disable_keyword',
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request')
+    def test_search_without_user(self, mock_request, mock_get_utilizations, mock_render, app):
+        dataset = factories.Dataset()
+        resource = factories.Resource(package_id=dataset['id'])
+
+        mock_request.args.get.side_effect = lambda x, default: {
+            'id': resource['id'],
+            'keyword': 'test_keyword',
+            'disable_keyword': 'test_disable_keyword',
+        }.get(x, default)
+
+        with app.flask_app.test_request_context(path='/'):
+            g.userobj = None
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(resource['id'], 'test_keyword', True)
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': 'test_keyword',
+                'disable_keyword': 'test_disable_keyword',
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.request')
+    def test_new(self, mock_request, mock_get_resource, mock_render, app):
+        dataset = factories.Dataset()
+        resource = factories.Resource(package_id=dataset['id'])
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+
+        mock_request.args.get.side_effect = lambda x, default: {
+            'resource_id': resource['id'],
+            'return_to_resource': 'True',
+        }.get(x, default)
+
+        mock_get_resource.return_value = resource
+
+        with app.flask_app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            UtilizationController.new()
+
+        context = {'model': None, 'session': Session, 'for_view': True}
+        package = get_action('package_show')(context, {'id': dataset['id']})
+
+        mock_render.assert_called_once_with(
+            'utilization/new.html',
+            {
+                'pkg_dict': package,
+                'return_to_resource': True,
+                'resource': resource,
+            },
+        )
 
     def test_create(self):
         pass
