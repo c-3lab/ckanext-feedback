@@ -136,7 +136,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.url_for')
     @patch('ckanext.feedback.controllers.utilization.redirect')
-    def test_create_return_to_resource_return_to_resource_true(
+    def test_create_return_to_resource_true(
         self,
         mock_redirect,
         mock_url_for,
@@ -181,7 +181,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.url_for')
     @patch('ckanext.feedback.controllers.utilization.redirect')
-    def test_create_return_to_resource_return_to_resource_false(
+    def test_create_return_to_resource_false(
         self,
         mock_redirect,
         mock_url_for,
