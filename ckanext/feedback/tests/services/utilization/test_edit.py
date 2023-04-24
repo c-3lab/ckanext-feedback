@@ -1,21 +1,21 @@
-import pytest
-import ckan.tests.factories as factories
 import uuid
 
+import ckan.tests.factories as factories
+import pytest
 from ckan import model
+
 from ckanext.feedback.command.feedback import (
-    get_engine,
-    create_utilization_tables,
-    create_resource_tables,
     create_download_tables,
+    create_resource_tables,
+    create_utilization_tables,
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization
 from ckanext.feedback.services.utilization.edit import (
-    get_utilization_details,
-    get_resource_details,
-    update_utilization,
     delete_utilization,
+    get_resource_details,
+    get_utilization_details,
+    update_utilization,
 )
 
 
@@ -42,7 +42,6 @@ class TestUtilizationDetailsService:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-#        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -57,8 +56,8 @@ class TestUtilizationDetailsService:
         register_utilization(id, resource['id'], title, description, False)
 
         result = get_utilization_details(id)
-        fake_utilization = get_registered_utilization(id)
-        assert result == fake_utilization
+        utilization = get_registered_utilization(id)
+        assert result == utilization
 
     def test_get_resource_details(self):
         dataset = factories.Dataset()
