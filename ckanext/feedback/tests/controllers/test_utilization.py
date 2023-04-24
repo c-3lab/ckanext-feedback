@@ -1,11 +1,13 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
 import six
 from ckan import model
+from ckan.logic import get_action
+from ckan.model import Resource, Session, User
+from ckan.plugins import toolkit
 from ckan.tests import factories
 from flask import Flask, g
-from ckan.model import User, Session, Resource
-from ckan.logic import get_action
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -14,10 +16,7 @@ from ckanext.feedback.command.feedback import (
 )
 from ckanext.feedback.controllers.utilization import UtilizationController
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.utilization import (
-    Utilization,
-    UtilizationComment,
-)
+from ckanext.feedback.models.utilization import Utilization, UtilizationComment
 
 
 def register_utilization(id, resource_id, title, description, approval):
@@ -300,6 +299,51 @@ class TestUtilizationController:
         mock_url_for.assert_called_once_with('dataset.read', id=package_name)
         mock_redirect.assert_called_with("dataset_read_url")
 
+    @patch("ckanext.feedback.controllers.utilization.toolkit.abort")
+    @patch("ckanext.feedback.controllers.utilization.request")
+    @patch(
+        "ckanext.feedback.controllers.utilization.registration_service.create_utilization"
+    )
+    @patch(
+        "ckanext.feedback.controllers.utilization.summary_service.create_utilization_summary"
+    )
+    @patch("ckanext.feedback.controllers.utilization.session.commit")
+    @patch("ckanext.feedback.controllers.utilization.helpers.flash_success")
+    @patch("ckanext.feedback.controllers.utilization.url_for")
+    @patch("ckanext.feedback.controllers.utilization.redirect")
+    def test_create_without_resource_id_title_description(
+        self,
+        mock_redirect,
+        mock_url_for,
+        mock_flash_success,
+        mock_session_commit,
+        mock_create_utilization_summary,
+        mock_create_utilization,
+        mock_request,
+        mock_toolkit_abort,
+    ):
+        # Set up test data
+        package_name = "test_package"
+        resource_id = ""
+        title = ""
+        description = ""
+        return_to_resource = True
+
+        # Configure mock objects
+        mock_request.form.get.side_effect = [
+            package_name,
+            resource_id,
+            title,
+            description,
+            return_to_resource,
+        ]
+        mock_url_for.return_value = "resource_read_url"
+
+        # Call the method
+        UtilizationController.create()
+
+        mock_toolkit_abort.assert_called_once_with(400)
+
     @patch("ckanext.feedback.controllers.utilization.detail_service.get_utilization")
     @patch(
         "ckanext.feedback.controllers.utilization.detail_service.get_utilization_comments"
@@ -488,6 +532,39 @@ class TestUtilizationController:
         )
         mock_redirect.assert_called_once_with("utilization_details_url")
 
+    @patch("ckanext.feedback.controllers.utilization.toolkit.abort")
+    @patch("ckanext.feedback.controllers.utilization.request")
+    @patch(
+        "ckanext.feedback.controllers.utilization.detail_service.create_utilization_comment"
+    )
+    @patch("ckanext.feedback.controllers.utilization.session.commit")
+    @patch("ckanext.feedback.controllers.utilization.helpers.flash_success")
+    @patch("ckanext.feedback.controllers.utilization.url_for")
+    @patch("ckanext.feedback.controllers.utilization.redirect")
+    def test_create_comment_without_category_content(
+        self,
+        mock_redirect,
+        mock_url_for,
+        mock_flash_success,
+        mock_session_commit,
+        mock_create_utilization_comment,
+        mock_request,
+        mock_toolkit_abort,
+    ):
+        # Set up test data
+        utilization_id = "test_utilization_id"
+        category = ""
+        content = ""
+
+        # Configure mock objects
+        mock_request.form.get.side_effect = [category, content]
+        mock_url_for.return_value = "utilization_details_url"
+
+        # Call the method
+        UtilizationController.create_comment(utilization_id)
+
+        mock_toolkit_abort.assert_called_once_with(400)
+
     @patch(
         "ckanext.feedback.controllers.utilization.detail_service.approve_utilization_comment"
     )
@@ -619,6 +696,46 @@ class TestUtilizationController:
         )
         mock_redirect.assert_called_once_with("utilization_details_url")
 
+    @patch("ckanext.feedback.controllers.utilization.toolkit.abort")
+    @patch("ckanext.feedback.controllers.utilization.request")
+    @patch("ckanext.feedback.controllers.utilization.edit_service.update_utilization")
+    @patch("ckanext.feedback.controllers.utilization.session.commit")
+    @patch("ckanext.feedback.controllers.utilization.helpers.flash_success")
+    @patch("ckanext.feedback.controllers.utilization.url_for")
+    @patch("ckanext.feedback.controllers.utilization.redirect")
+    @patch("ckanext.feedback.controllers.utilization.c")
+    def test_update_without_title_description(
+        self,
+        mock_c,
+        mock_redirect,
+        mock_url_for,
+        mock_flash_success,
+        mock_session_commit,
+        mock_update_utilization,
+        mock_request,
+        mock_toolkit_abort,
+    ):
+        # Set up test data
+        utilization_id = "test_utilization_id"
+        title = ""
+        description = ""
+
+        # Configure mock objects
+        userobj = MagicMock()
+        userobj.sysadmin = True
+        mock_c.configure_mock(userobj=userobj)
+
+        mock_request.form.get.side_effect = [title, description]
+        mock_url_for.return_value = "utilization_details_url"
+
+        # Call the method
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        UtilizationController.update(utilization_id)
+
+        mock_toolkit_abort.assert_called_once_with(400)
+
     @patch("ckanext.feedback.controllers.utilization.detail_service.get_utilization")
     @patch("ckanext.feedback.controllers.utilization.edit_service.delete_utilization")
     @patch(
@@ -686,5 +803,100 @@ class TestUtilizationController:
         UtilizationController.comment_approval()
         mock_render.assert_called_once_with('utilization/comment_approval.html')
 
-    def test_create_issue_resolution(self):
-        pass
+    @patch("ckanext.feedback.controllers.utilization.request")
+    @patch(
+        "ckanext.feedback.controllers.utilization.detail_service.create_issue_resolution"
+    )
+    @patch(
+        "ckanext.feedback.controllers.utilization.summary_service.increment_issue_resolution_summary"
+    )
+    @patch("ckanext.feedback.controllers.utilization.session.commit")
+    @patch("ckanext.feedback.controllers.utilization.url_for")
+    @patch("ckanext.feedback.controllers.utilization.redirect")
+    @patch("ckanext.feedback.controllers.utilization.c")
+    def test_create_issue_resolution(
+        self,
+        mock_c,
+        mock_redirect,
+        mock_url_for,
+        mock_session_commit,
+        mock_increment_issue_resolution_summary,
+        mock_create_issue_resolution,
+        mock_request,
+    ):
+        # Set up test data
+        utilization_id = "test_utilization_id"
+        description = "test_description"
+
+        # Configure mock objects
+        userobj = MagicMock()
+        userobj.sysadmin = True
+        mock_c.configure_mock(userobj=userobj)
+
+        mock_request.form.get.return_value = description
+        mock_url_for.return_value = "utilization_details_url"
+
+        # Call the method
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        result = UtilizationController.create_issue_resolution(utilization_id)
+
+        # Assert the expected behavior
+        mock_create_issue_resolution.assert_called_once_with(
+            utilization_id, description, userobj.id
+        )
+        mock_increment_issue_resolution_summary.assert_called_once_with(utilization_id)
+        mock_session_commit.assert_called_once()
+        mock_url_for.assert_called_once_with(
+            "utilization.details", utilization_id=utilization_id
+        )
+        mock_redirect.assert_called_once_with("utilization_details_url")
+
+    @patch("ckanext.feedback.controllers.utilization.toolkit.abort")
+    @patch("ckanext.feedback.controllers.utilization.request")
+    @patch(
+        "ckanext.feedback.controllers.utilization.detail_service.create_issue_resolution"
+    )
+    @patch(
+        "ckanext.feedback.controllers.utilization.summary_service.increment_issue_resolution_summary"
+    )
+    @patch("ckanext.feedback.controllers.utilization.session.commit")
+    @patch("ckanext.feedback.controllers.utilization.url_for")
+    @patch("ckanext.feedback.controllers.utilization.redirect")
+    @patch("ckanext.feedback.controllers.utilization.c")
+    def test_create_issue_resolution_description_None(
+        self,
+        mock_c,
+        mock_redirect,
+        mock_url_for,
+        mock_session_commit,
+        mock_increment_issue_resolution_summary,
+        mock_create_issue_resolution,
+        mock_request,
+        mock_abort,
+    ):
+        # Set up test data
+        utilization_id = "test_utilization_id"
+        description = ""
+
+        # Configure mock objects
+        userobj = MagicMock()
+        userobj.sysadmin = True
+        mock_c.configure_mock(userobj=userobj)
+
+        mock_request.form.get.return_value = description
+        mock_url_for.return_value = "utilization_details_url"
+
+        # Call the method
+
+        # Call the method
+        with self.app.test_request_context():
+            user_dict = factories.Sysadmin()
+            user = User.get(user_dict['id'])
+            g.userobj = user
+            request = UtilizationController.create_issue_resolution(utilization_id)
+
+        # Assert the expected behavior
+        request.status == "400"
+        mock_abort.assert_called_once_with(400)
