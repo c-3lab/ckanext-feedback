@@ -658,10 +658,8 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.c')
     def test_create_issue_resolution_without_description(
         self,
-        mock_c,
         mock_url_for,
         mock_summary_service,
         mock_detail_service,
@@ -670,10 +668,6 @@ class TestUtilizationController:
     ):
         utilization_id = 'utilization id'
         description = ''
-
-        userobj = MagicMock()
-        userobj.sysadmin = True
-        mock_c.configure_mock(userobj=userobj)
 
         mock_request.form.get.return_value = description
         mock_url_for.return_value = 'utilization details url'
