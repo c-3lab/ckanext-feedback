@@ -146,14 +146,12 @@ class TestUtilizationController:
         mock_registration_service,
         mock_request,
     ):
-        # Set up test data
         package_name = 'package'
         resource_id = 'resource id'
         title = 'title'
         description = 'description'
         return_to_resource = True
 
-        # Configure mock objects
         mock_request.form.get.side_effect = [
             package_name,
             resource_id,
@@ -163,10 +161,8 @@ class TestUtilizationController:
         ]
         mock_url_for.return_value = 'resource read url'
 
-        # Call the method
         UtilizationController.create()
 
-        # Assert the expected behavior
         mock_registration_service.create_utilization.assert_called_with(
             resource_id, title, description
         )
@@ -195,14 +191,12 @@ class TestUtilizationController:
         mock_registration_service,
         mock_request,
     ):
-        # Set up test data
         package_name = 'package'
         resource_id = 'resource id'
         title = 'title'
         description = 'description'
         return_to_resource = False
 
-        # Configure mock objects
         mock_request.form.get.side_effect = [
             package_name,
             resource_id,
@@ -212,10 +206,8 @@ class TestUtilizationController:
         ]
         mock_url_for.return_value = 'dataset read url'
 
-        # Call the method
         UtilizationController.create()
 
-        # Assert the expected behavior
         mock_registration_service.create_utilization.assert_called_with(
             resource_id, title, description
         )
@@ -240,14 +232,12 @@ class TestUtilizationController:
         mock_request,
         mock_toolkit_abort,
     ):
-        # Set up test data
         package_name = 'package'
         resource_id = ''
         title = ''
         description = ''
         return_to_resource = True
 
-        # Configure mock objects
         mock_request.form.get.side_effect = [
             package_name,
             resource_id,
@@ -257,7 +247,6 @@ class TestUtilizationController:
         ]
         mock_url_for.return_value = 'resource read url'
 
-        # Call the method
         UtilizationController.create()
 
         mock_toolkit_abort.assert_called_once_with(400)
@@ -265,11 +254,9 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_approval_true(self, mock_render, mock_detail_service):
-        # Set up test data
         utilization_id = 'utilization id'
         g.userobj = None
 
-        # Configure mock objects
         mock_detail_service.get_utilization.return_value = 'utilization'
         mock_detail_service.get_utilization_comments.return_value = 'comments'
         mock_detail_service.get_utilization_comment_categories.return_value = (
@@ -277,10 +264,8 @@ class TestUtilizationController:
         )
         mock_detail_service.get_issue_resolutions.return_value = 'issue resolutions'
 
-        # Call the method
         UtilizationController.details(utilization_id)
 
-        # Assert the expected behavior
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
         mock_detail_service.get_utilization_comments.assert_called_once_with(
             utilization_id, True
@@ -312,7 +297,6 @@ class TestUtilizationController:
         user = User.get(user_dict['id'])
         g.userobj = user
 
-        # Configure mock objects
         mock_detail_service.get_utilization.return_value = 'utilization'
         mock_detail_service.get_utilization_comments.return_value = 'comments'
         mock_detail_service.get_utilization_comment_categories.return_value = (
@@ -320,10 +304,8 @@ class TestUtilizationController:
         )
         mock_detail_service.get_issue_resolutions.return_value = 'issue resolutions'
 
-        # Call the method
         UtilizationController.details(utilization_id)
 
-        # Assert the expected behavior
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
         mock_detail_service.get_utilization_comment_categories.assert_called_once()
         mock_detail_service.get_issue_resolutions.assert_called_once_with(
@@ -356,23 +338,19 @@ class TestUtilizationController:
         mock_summary_service,
         mock_detail_service,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         resource_id = 'resource id'
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
 
-        # Configure mock objects
         g.userobj = user
         mock_detail_service.get_utilization.return_value = MagicMock(
             resource_id=resource_id
         )
         mock_url_for.return_value = 'utilization details url'
 
-        # Call the method
         UtilizationController.approve(utilization_id)
 
-        # Assert the expected behavior
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
         mock_detail_service.approve_utilization.assert_called_once_with(
             utilization_id, user.id
@@ -401,19 +379,15 @@ class TestUtilizationController:
         mock_detail_service,
         mock_request,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         category = 'category'
         content = 'content'
 
-        # Configure mock objects
         mock_request.form.get.side_effect = [category, content]
         mock_url_for.return_value = 'utilization details url'
 
-        # Call the method
         UtilizationController.create_comment(utilization_id)
 
-        # Assert the expected behavior
         mock_detail_service.create_utilization_comment.assert_called_once_with(
             utilization_id, category, content
         )
@@ -437,16 +411,13 @@ class TestUtilizationController:
         mock_request,
         mock_toolkit_abort,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         category = ''
         content = ''
 
-        # Configure mock objects
         mock_request.form.get.side_effect = [category, content]
         mock_url_for.return_value = 'utilization details url'
 
-        # Call the method
         UtilizationController.create_comment(utilization_id)
 
         mock_toolkit_abort.assert_called_once_with(400)
@@ -462,20 +433,16 @@ class TestUtilizationController:
         mock_session_commit,
         mock_detail_service,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         comment_id = 'comment id'
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
 
-        # Configure mock objects
         mock_url_for.return_value = 'utilization details url'
 
-        # Call the method
         g.userobj = user
         UtilizationController.approve_comment(utilization_id, comment_id)
 
-        # Assert the expected behavior
         mock_detail_service.approve_utilization_comment.assert_called_once_with(
             comment_id, user.id
         )
@@ -495,22 +462,18 @@ class TestUtilizationController:
         mock_edit_service,
         mock_render,
     ):
-        # Set up test data
         utilization_id = 'test utilization id'
         utilization_details = MagicMock()
         resource_details = MagicMock()
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
 
-        # Configure mock objects
         mock_edit_service.get_utilization_details.return_value = utilization_details
         mock_edit_service.get_resource_details.return_value = resource_details
 
-        # Call the method
         g.userobj = user
         UtilizationController.edit(utilization_id)
 
-        # Assert the expected behavior
         mock_edit_service.get_utilization_details.assert_called_once_with(
             utilization_id
         )
@@ -540,7 +503,6 @@ class TestUtilizationController:
         mock_edit_service,
         mock_request,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         title = 'title'
         description = 'description'
@@ -548,13 +510,11 @@ class TestUtilizationController:
         mock_request.form.get.side_effect = [title, description]
         mock_url_for.return_value = 'utilization details url'
 
-        # Call the method
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
         UtilizationController.update(utilization_id)
 
-        # Assert the expected behavior
         mock_edit_service.update_utilization.assert_called_once_with(
             utilization_id, title, description
         )
@@ -578,16 +538,13 @@ class TestUtilizationController:
         mock_request,
         mock_toolkit_abort,
     ):
-        # Set up test data
         utilization_id = 'test_utilization_id'
         title = ''
         description = ''
 
-        # Configure mock objects
         mock_request.form.get.side_effect = [title, description]
         mock_url_for.return_value = 'utilization_details_url'
 
-        # Call the method
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
@@ -614,11 +571,9 @@ class TestUtilizationController:
         mock_edit_service,
         mock_detail_service,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         resource_id = 'resource id'
 
-        # Configure mock objects
         userobj = MagicMock()
         userobj.sysadmin = True
         mock_c.configure_mock(userobj=userobj)
@@ -629,13 +584,11 @@ class TestUtilizationController:
 
         mock_url_for.return_value = 'utilization search url'
 
-        # Call the method
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
         UtilizationController.delete(utilization_id)
 
-        # Assert the expected behavior
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
         mock_edit_service.delete_utilization.assert_called_once_with(utilization_id)
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
@@ -677,20 +630,17 @@ class TestUtilizationController:
         mock_detail_service,
         mock_request,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         description = 'description'
 
         mock_request.form.get.return_value = description
         mock_url_for.return_value = 'utilization details url'
 
-        # Call the method
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
         UtilizationController.create_issue_resolution(utilization_id)
 
-        # Assert the expected behavior
         mock_detail_service.create_issue_resolution.assert_called_once_with(
             utilization_id, description, user.id
         )
@@ -718,11 +668,9 @@ class TestUtilizationController:
         mock_request,
         mock_abort,
     ):
-        # Set up test data
         utilization_id = 'utilization id'
         description = ''
 
-        # Configure mock objects
         userobj = MagicMock()
         userobj.sysadmin = True
         mock_c.configure_mock(userobj=userobj)
@@ -730,14 +678,10 @@ class TestUtilizationController:
         mock_request.form.get.return_value = description
         mock_url_for.return_value = 'utilization details url'
 
-        # Call the method
-
-        # Call the method
         with self.app.test_request_context():
             user_dict = factories.Sysadmin()
             user = User.get(user_dict['id'])
             g.userobj = user
             UtilizationController.create_issue_resolution(utilization_id)
 
-        # Assert the expected behavior
         mock_abort.assert_called_once_with(400)
