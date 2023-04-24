@@ -813,10 +813,8 @@ class TestUtilizationController:
     @patch("ckanext.feedback.controllers.utilization.session.commit")
     @patch("ckanext.feedback.controllers.utilization.url_for")
     @patch("ckanext.feedback.controllers.utilization.redirect")
-    @patch("ckanext.feedback.controllers.utilization.c")
     def test_create_issue_resolution(
         self,
-        mock_c,
         mock_redirect,
         mock_url_for,
         mock_session_commit,
@@ -828,11 +826,6 @@ class TestUtilizationController:
         utilization_id = "test_utilization_id"
         description = "test_description"
 
-        # Configure mock objects
-        userobj = MagicMock()
-        userobj.sysadmin = True
-        mock_c.configure_mock(userobj=userobj)
-
         mock_request.form.get.return_value = description
         mock_url_for.return_value = "utilization_details_url"
 
@@ -840,11 +833,11 @@ class TestUtilizationController:
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
-        result = UtilizationController.create_issue_resolution(utilization_id)
+        UtilizationController.create_issue_resolution(utilization_id)
 
         # Assert the expected behavior
         mock_create_issue_resolution.assert_called_once_with(
-            utilization_id, description, userobj.id
+            utilization_id, description, user.id
         )
         mock_increment_issue_resolution_summary.assert_called_once_with(utilization_id)
         mock_session_commit.assert_called_once()
