@@ -1,30 +1,31 @@
-import pytest
-import ckan.tests.factories as factories
 import uuid
-
 from datetime import datetime
+
+import ckan.tests.factories as factories
+import pytest
 from ckan import model
+
 from ckanext.feedback.command.feedback import (
-    create_utilization_tables,
-    create_resource_tables,
     create_download_tables,
+    create_resource_tables,
+    create_utilization_tables,
 )
+from ckanext.feedback.models.issue import IssueResolution
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentCategory,
 )
-from ckanext.feedback.models.issue import IssueResolution
 from ckanext.feedback.services.utilization.details import (
-    get_utilization,
     approve_utilization,
-    get_utilization_comments,
-    create_utilization_comment,
     approve_utilization_comment,
-    get_utilization_comment_categories,
     create_issue_resolution,
+    create_utilization_comment,
     get_issue_resolutions,
+    get_utilization,
+    get_utilization_comment_categories,
+    get_utilization_comments,
     refresh_utilization_comments,
 )
 
