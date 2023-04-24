@@ -1,37 +1,26 @@
-import pytest
-import ckan.tests.factories as factories
 import uuid
-
 from datetime import datetime
+
+import ckan.tests.factories as factories
+import pytest
 from ckan import model
+
 from ckanext.feedback.command.feedback import (
-    get_engine,
-    create_utilization_tables,
-    create_resource_tables,
     create_download_tables,
+    create_resource_tables,
+    create_utilization_tables,
 )
+from ckanext.feedback.models.issue import IssueResolutionSummary
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.utilization import (
-    Utilization,
-    UtilizationComment,
-    UtilizationCommentCategory,
-    UtilizationSummary,
-)
-from ckanext.feedback.models.resource_comment import (
-    ResourceComment,
-    ResourceCommentReply,
-    ResourceCommentSummary,
-)
-from ckanext.feedback.models.download import DownloadSummary
-from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
+from ckanext.feedback.models.utilization import Utilization, UtilizationSummary
 from ckanext.feedback.services.utilization.summary import (
-    get_package_utilizations,
-    get_resource_utilizations,
     create_utilization_summary,
-    refresh_utilization_summary,
     get_package_issue_resolutions,
+    get_package_utilizations,
     get_resource_issue_resolutions,
+    get_resource_utilizations,
     increment_issue_resolution_summary,
+    refresh_utilization_summary,
 )
 
 
@@ -51,35 +40,6 @@ def get_issue_resolution_summary(utilization_id):
     )
 
 
-def get_registered_utilization_comment(utilization_id):
-    return (
-        session.query(
-            UtilizationComment.id,
-            UtilizationComment.utilization_id,
-            UtilizationComment.category,
-            UtilizationComment.content,
-            UtilizationComment.created,
-            UtilizationComment.approval,
-            UtilizationComment.approved,
-            UtilizationComment.approval_user_id,
-        )
-        .filter(UtilizationComment.utilization_id == utilization_id)
-        .all()
-    )
-
-
-def get_registered_issue_resolution(utilization_id):
-    return (
-        session.query(
-            IssueResolution.utilization_id,
-            IssueResolution.description,
-            IssueResolution.creator_user_id,
-        )
-        .filter(IssueResolution.utilization_id == utilization_id)
-        .first()
-    )
-
-
 def register_utilization(id, resource_id, title, description, approval):
     utilization = Utilization(
         id=id,
@@ -91,33 +51,15 @@ def register_utilization(id, resource_id, title, description, approval):
     session.add(utilization)
 
 
-def register_utilization_comment(
-    id, utilization_id, category, content, created, approval, approved, approval_user_id
-):
-    utilization_comment = UtilizationComment(
+def resister_issue_resolution_summary(id, utilization_id, created, updated):
+    issue_resolution_summary = IssueResolutionSummary(
         id=id,
         utilization_id=utilization_id,
-        category=category,
-        content=content,
+        issue_resolution=1,
         created=created,
-        approval=approval,
-        approved=approved,
-        approval_user_id=approval_user_id,
+        updated=updated,
     )
-    session.add(utilization_comment)
-
-
-def convert_utilization_comment_to_tuple(utilization_comment):
-    return (
-        utilization_comment.id,
-        utilization_comment.utilization_id,
-        utilization_comment.category,
-        utilization_comment.content,
-        utilization_comment.created,
-        utilization_comment.approval,
-        utilization_comment.approved,
-        utilization_comment.approval_user_id,
-    )
+    session.add(issue_resolution_summary)
 
 
 engine = model.repo.session.get_bind()
@@ -128,7 +70,6 @@ class TestUtilizationDetailsService:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-#        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -179,12 +120,12 @@ class TestUtilizationDetailsService:
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
 
-        id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
 
-        id2 = str(uuid.uuid4())
-        register_utilization(id, resource['id'], title, description, False)
+        register_utilization(
+            str(uuid.uuid4()), resource['id'], title, description, False
+        )
 
         assert len(get_utilization_summary(resource['id'])) == 0
 
@@ -193,7 +134,9 @@ class TestUtilizationDetailsService:
         assert len(get_utilization_summary(resource['id'])) == 1
         assert get_utilization_summary(resource['id'])[0].utilization == 0
 
-        register_utilization(id2, resource['id'], title, description, True)
+        register_utilization(
+            str(uuid.uuid4()), resource['id'], title, description, True
+        )
 
         refresh_utilization_summary(resource['id'])
 
@@ -204,24 +147,16 @@ class TestUtilizationDetailsService:
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
 
-        id = str(uuid.uuid4())
+        utilization_id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
         time = datetime.now()
 
-        register_utilization(id, resource['id'], title, description, True)
+        register_utilization(utilization_id, resource['id'], title, description, True)
 
         assert get_package_issue_resolutions(dataset['id']) == 0
 
-        session.add(
-            IssueResolutionSummary(
-                id=uuid.uuid4(),
-                utilization_id=id,
-                issue_resolution=1,
-                created=time,
-                updated=time,
-            )
-        )
+        resister_issue_resolution_summary(str(uuid.uuid4()), utilization_id, time, time)
 
         assert get_package_issue_resolutions(dataset['id']) == 1
 
@@ -229,24 +164,16 @@ class TestUtilizationDetailsService:
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
 
-        id = str(uuid.uuid4())
+        utilization_id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
         time = datetime.now()
 
-        register_utilization(id, resource['id'], title, description, True)
+        register_utilization(utilization_id, resource['id'], title, description, True)
 
         assert get_resource_issue_resolutions(resource['id']) == 0
 
-        session.add(
-            IssueResolutionSummary(
-                id=uuid.uuid4(),
-                utilization_id=id,
-                issue_resolution=1,
-                created=time,
-                updated=time,
-            )
-        )
+        resister_issue_resolution_summary(str(uuid.uuid4()), utilization_id, time, time)
 
         assert get_resource_issue_resolutions(resource['id']) == 1
 
