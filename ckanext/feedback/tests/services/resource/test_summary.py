@@ -110,6 +110,7 @@ class TestResourceServices:
 
     def test_refresh_resource_summary(self):
         resource = factories.Resource()
+        refresh_resource_summary(resource['id'])
         create_resource_summary(resource['id'])
         session.commit()
         summary = session.query(ResourceCommentSummary).first()
