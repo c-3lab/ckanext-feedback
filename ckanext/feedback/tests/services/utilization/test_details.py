@@ -5,7 +5,6 @@ import uuid
 from datetime import datetime
 from ckan import model
 from ckanext.feedback.command.feedback import (
-    get_engine,
     create_utilization_tables,
     create_resource_tables,
     create_download_tables,
@@ -120,7 +119,6 @@ class TestUtilizationDetailsService:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-#        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -128,6 +126,7 @@ class TestUtilizationDetailsService:
     def test_get_utilization(self):
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
+
         assert get_registered_utilization(resource['id']) is None
 
         id = str(uuid.uuid4())
@@ -135,9 +134,8 @@ class TestUtilizationDetailsService:
         description = 'test description'
         register_utilization(id, resource['id'], title, description, False)
 
-        registered_utilization = get_registered_utilization(resource['id'])
-        result = get_utilization(registered_utilization.id)
-        fake_utilization = (
+        result = get_utilization(id)
+        expected_utilization = (
             title,
             description,
             0,
@@ -146,7 +144,7 @@ class TestUtilizationDetailsService:
             resource['id'],
             dataset['name'],
         )
-        assert result == fake_utilization
+        assert result == expected_utilization
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_approve_utilization(self):
@@ -160,14 +158,18 @@ class TestUtilizationDetailsService:
         description = 'test description'
         register_utilization(id, resource['id'], title, description, False)
 
-        utilization_before_approved = get_registered_utilization(resource['id'])
-        approve_utilization(utilization_before_approved.id, user['id'])
-        utilization_after_approved = get_registered_utilization(resource['id'])
-        fake_utilization = (id, True, test_datetime, user['id'])
-        assert utilization_after_approved == fake_utilization
+        result = get_registered_utilization(resource['id'])
+        unapproved_utilization = (id, False, None, None)
+        assert result == unapproved_utilization
+
+        approve_utilization(id, user['id'])
+
+        result = get_registered_utilization(resource['id'])
+        approved_utilization = (id, True, test_datetime, user['id'])
+        assert result == approved_utilization
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_approval_is_none(self):
+    def test_get_utilization_comments_utilization_id_and_approval_are_None(self):
         dataset = factories.Dataset()
         user = factories.User()
         resource = factories.Resource(package_id=dataset['id'])
@@ -176,78 +178,72 @@ class TestUtilizationDetailsService:
         title = 'test title'
         description = 'test description'
         register_utilization(utilization_id, resource['id'], title, description, False)
-        registered_utilization = get_registered_utilization(resource['id'])
+        utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
         approved = datetime.now()
-        comment_id_one = str(uuid.uuid4())
+        unapproved_comment_id = str(uuid.uuid4())
         category_request = UtilizationCommentCategory.REQUEST
-        content_one = 'test content1'
+        unapproved_content = 'unapproved content'
         register_utilization_comment(
-            comment_id_one,
-            registered_utilization.id,
+            unapproved_comment_id,
+            utilization.id,
             category_request,
-            content_one,
+            unapproved_content,
             created,
             False,
             None,
             None,
         )
-        utilization_comments = get_utilization_comments(registered_utilization.id, None)
+        comments = get_utilization_comments(utilization.id, None)
 
-        assert len(utilization_comments) == 1
-        registered_utilization_comment = convert_utilization_comment_to_tuple(
-            utilization_comments[0]
-        )
-        fake_utilization_comment_not_approved = (
-            comment_id_one,
-            registered_utilization.id,
+        assert len(comments) == 1
+        comment = convert_utilization_comment_to_tuple(comments[0])
+        unapproved_comment = (
+            unapproved_comment_id,
+            utilization.id,
             category_request,
-            content_one,
+            unapproved_content,
             created,
             False,
             None,
             None,
         )
-        assert registered_utilization_comment == fake_utilization_comment_not_approved
+        assert comment == unapproved_comment
 
-        comment_id_two = str(uuid.uuid4())
+        approved_comment_id = str(uuid.uuid4())
         category_thank = UtilizationCommentCategory.THANK
-        content_two = 'test content2'
+        approved_content = 'approved content'
         register_utilization_comment(
-            comment_id_two,
-            registered_utilization.id,
+            approved_comment_id,
+            utilization.id,
             category_thank,
-            content_two,
+            approved_content,
             datetime(2001, 1, 2, 3, 4),
             True,
             approved,
             user['id'],
         )
-        utilization_comments = get_utilization_comments(None, None)
+        comments = get_utilization_comments(None, None)
 
-        assert len(utilization_comments) == 2
-        utilization_comment_approved = convert_utilization_comment_to_tuple(
-            utilization_comments[0]
-        )
-        utilization_comment_not_approved = convert_utilization_comment_to_tuple(
-            utilization_comments[1]
-        )
-        fake_utilization_comment_approved = (
-            comment_id_two,
-            registered_utilization.id,
+        assert len(comments) == 2
+        approved_result = convert_utilization_comment_to_tuple(comments[0])
+        unapproved_result = convert_utilization_comment_to_tuple(comments[1])
+        approved_comment = (
+            approved_comment_id,
+            utilization.id,
             category_thank,
-            content_two,
+            approved_content,
             datetime(2001, 1, 2, 3, 4),
             True,
             approved,
             user['id'],
         )
-        assert utilization_comment_not_approved == fake_utilization_comment_not_approved
-        assert utilization_comment_approved == fake_utilization_comment_approved
+        assert unapproved_result == unapproved_comment
+        assert approved_result == approved_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_approval_is_false(self):
+    def test_get_utilization_comments_approval_is_False(self):
         dataset = factories.Dataset()
         user = factories.User()
         resource = factories.Resource(package_id=dataset['id'])
@@ -256,18 +252,18 @@ class TestUtilizationDetailsService:
         title = 'test title'
         description = 'test description'
         register_utilization(utilization_id, resource['id'], title, description, False)
-        registered_utilization = get_registered_utilization(resource['id'])
+        utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
         approved = datetime.now()
-        comment_id_not_approved = str(uuid.uuid4())
-        comment_id_approved = str(uuid.uuid4())
+        unapproved_comment_id = str(uuid.uuid4())
+        approved_comment_id = str(uuid.uuid4())
         category = UtilizationCommentCategory.QUESTION
         content = 'test content'
 
         register_utilization_comment(
-            comment_id_not_approved,
-            registered_utilization.id,
+            unapproved_comment_id,
+            utilization.id,
             category,
             content,
             created,
@@ -276,8 +272,8 @@ class TestUtilizationDetailsService:
             None,
         )
         register_utilization_comment(
-            comment_id_approved,
-            registered_utilization.id,
+            approved_comment_id,
+            utilization.id,
             category,
             content,
             created,
@@ -285,17 +281,13 @@ class TestUtilizationDetailsService:
             approved,
             user['id'],
         )
-        utilization_comments = get_utilization_comments(
-            registered_utilization.id, False
-        )
+        comments = get_utilization_comments(utilization.id, False)
 
-        assert len(utilization_comments) == 1
-        utilization_comment_not_approved = convert_utilization_comment_to_tuple(
-            utilization_comments[0]
-        )
-        fake_utilization_comment_not_approved = (
-            comment_id_not_approved,
-            registered_utilization.id,
+        assert len(comments) == 1
+        unapproved_comment = convert_utilization_comment_to_tuple(comments[0])
+        unapproved_comment = (
+            unapproved_comment_id,
+            utilization.id,
             category,
             content,
             created,
@@ -303,10 +295,10 @@ class TestUtilizationDetailsService:
             None,
             None,
         )
-        assert utilization_comment_not_approved == fake_utilization_comment_not_approved
+        assert unapproved_comment == unapproved_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_approval_is_true(self):
+    def test_get_utilization_comments_approval_is_True(self):
         dataset = factories.Dataset()
         user = factories.User()
         resource = factories.Resource(package_id=dataset['id'])
@@ -315,18 +307,18 @@ class TestUtilizationDetailsService:
         title = 'test title'
         description = 'test description'
         register_utilization(utilization_id, resource['id'], title, description, False)
-        registered_utilization = get_registered_utilization(resource['id'])
+        utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
         approved = datetime.now()
-        comment_id_not_approved = str(uuid.uuid4())
-        comment_id_approved = str(uuid.uuid4())
+        unapproved_comment_id = str(uuid.uuid4())
+        approved_comment_id = str(uuid.uuid4())
         category = UtilizationCommentCategory.ADVERTISE
         content = 'test content'
 
         register_utilization_comment(
-            comment_id_not_approved,
-            registered_utilization.id,
+            unapproved_comment_id,
+            utilization.id,
             category,
             content,
             created,
@@ -335,8 +327,8 @@ class TestUtilizationDetailsService:
             None,
         )
         register_utilization_comment(
-            comment_id_approved,
-            registered_utilization.id,
+            approved_comment_id,
+            utilization.id,
             category,
             content,
             created,
@@ -344,15 +336,13 @@ class TestUtilizationDetailsService:
             approved,
             user['id'],
         )
-        utilization_comments = get_utilization_comments(registered_utilization.id, True)
+        comments = get_utilization_comments(utilization.id, True)
 
-        assert len(utilization_comments) == 1
-        utilization_comment_approved = convert_utilization_comment_to_tuple(
-            utilization_comments[0]
-        )
+        assert len(comments) == 1
+        approved_comment = convert_utilization_comment_to_tuple(comments[0])
         fake_utilization_comment_approved = (
-            comment_id_approved,
-            registered_utilization.id,
+            approved_comment_id,
+            utilization.id,
             category,
             content,
             created,
@@ -360,7 +350,7 @@ class TestUtilizationDetailsService:
             approved,
             user['id'],
         )
-        assert utilization_comment_approved == fake_utilization_comment_approved
+        assert approved_comment == fake_utilization_comment_approved
 
     def test_create_utilization_comment(self):
         dataset = factories.Dataset()
@@ -370,22 +360,20 @@ class TestUtilizationDetailsService:
         title = 'test title'
         description = 'test description'
         register_utilization(utilization_id, resource['id'], title, description, False)
-        registered_utilization = get_registered_utilization(resource['id'])
+        utilization = get_registered_utilization(resource['id'])
 
         category = UtilizationCommentCategory.REQUEST
         content = 'test content'
-        create_utilization_comment(registered_utilization.id, category, content)
+        create_utilization_comment(utilization.id, category, content)
 
-        registered_utilization_comment = get_registered_utilization_comment(
-            registered_utilization.id
-        )
-        utilization_comment = registered_utilization_comment[0]
-        assert utilization_comment.utilization_id == registered_utilization.id
-        assert utilization_comment.category == category
-        assert utilization_comment.content == content
-        assert utilization_comment.approval is False
-        assert utilization_comment.approved is None
-        assert utilization_comment.approval_user_id is None
+        comments = get_registered_utilization_comment(utilization.id)
+        comment = comments[0]
+        assert comment.utilization_id == utilization.id
+        assert comment.category == category
+        assert comment.content == content
+        assert comment.approval is False
+        assert comment.approved is None
+        assert comment.approval_user_id is None
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_approve_utilization_comment(self):
@@ -397,7 +385,7 @@ class TestUtilizationDetailsService:
         title = 'test title'
         description = 'test description'
         register_utilization(utilization_id, resource['id'], title, description, False)
-        registered_utilization = get_registered_utilization(resource['id'])
+        utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
         comment_id = str(uuid.uuid4())
@@ -405,7 +393,7 @@ class TestUtilizationDetailsService:
         content = 'test content'
         register_utilization_comment(
             comment_id,
-            registered_utilization.id,
+            utilization.id,
             category,
             content,
             created,
@@ -414,20 +402,14 @@ class TestUtilizationDetailsService:
             None,
         )
 
-        registered_utilization_comment = get_registered_utilization_comment(
-            registered_utilization.id
-        )
-        comment_id = registered_utilization_comment[0].id
         approve_utilization_comment(comment_id, user['id'])
-        updated_utilization_comment = get_registered_utilization_comment(
-            registered_utilization.id
-        )[0]
+        approved_comment = get_registered_utilization_comment(utilization.id)[0]
 
-        assert updated_utilization_comment.category == category
-        assert updated_utilization_comment.content == content
-        assert updated_utilization_comment.approval is True
-        assert updated_utilization_comment.approved == datetime.now()
-        assert updated_utilization_comment.approval_user_id == user['id']
+        assert approved_comment.category == category
+        assert approved_comment.content == content
+        assert approved_comment.approval is True
+        assert approved_comment.approved == datetime.now()
+        assert approved_comment.approval_user_id == user['id']
 
     def test_get_utilization_comment_categories(self):
         assert get_utilization_comment_categories() == UtilizationCommentCategory
@@ -437,32 +419,32 @@ class TestUtilizationDetailsService:
         resource = factories.Resource(package_id=dataset['id'])
         user = factories.User()
 
-        session.add(
-            Utilization(
-                resource_id=resource['id'],
-                title='test_utilization',
-                description='test_utilization_description',
-            )
+        utilization_id = str(uuid.uuid4())
+        title = 'test title'
+        utilization_description = 'test description'
+
+        register_utilization(
+            utilization_id, resource['id'], title, utilization_description, False
         )
 
-        registered_utilization = get_registered_utilization(resource['id'])
-        assert get_registered_issue_resolution(registered_utilization.id) is None
-        description = 'test_issue_resolution_description'
+        utilization = get_registered_utilization(resource['id'])
+        assert get_registered_issue_resolution(utilization.id) is None
+        issue_resolution_description = 'test issue resolution description'
         time = datetime.now()
 
         session.add(
             IssueResolution(
-                utilization_id=registered_utilization.id,
-                description=description,
+                utilization_id=utilization.id,
+                description=issue_resolution_description,
                 created=time,
                 creator_user_id=user['id'],
             )
         )
 
-        issue_resolution = get_issue_resolutions(registered_utilization.id)[0]
+        issue_resolution = get_issue_resolutions(utilization.id)[0]
 
-        assert issue_resolution.utilization_id == registered_utilization.id
-        assert issue_resolution.description == description
+        assert issue_resolution.utilization_id == utilization.id
+        assert issue_resolution.description == issue_resolution_description
         assert issue_resolution.created == time
         assert issue_resolution.creator_user_id == user['id']
 
@@ -471,24 +453,25 @@ class TestUtilizationDetailsService:
         resource = factories.Resource(package_id=dataset['id'])
         user = factories.Sysadmin()
 
-        session.add(
-            Utilization(
-                resource_id=resource['id'],
-                title='test_utilization',
-                description='test_utilization_description',
-            )
+        utilization_id = str(uuid.uuid4())
+        title = 'test title'
+        utilization_description = 'test description'
+
+        register_utilization(
+            utilization_id, resource['id'], title, utilization_description, False
         )
 
-        registered_utilization = get_registered_utilization(resource['id'])
-        description = 'test_issue_resolution_description'
-        create_issue_resolution(registered_utilization.id, description, user['id'])
-
-        issue_resolution = (registered_utilization.id, description, user['id'])
-
-        assert (
-            get_registered_issue_resolution(registered_utilization.id)
-            == issue_resolution
+        utilization = get_registered_utilization(resource['id'])
+        issue_resolution_description = 'test_issue_resolution_description'
+        create_issue_resolution(
+            utilization.id, issue_resolution_description, user['id']
         )
+
+        issue_resolution = (utilization.id, issue_resolution_description, user['id'])
+
+        result = get_registered_issue_resolution(utilization.id)
+
+        assert result == issue_resolution
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_refresh_utilization_comments(self):
@@ -508,6 +491,10 @@ class TestUtilizationDetailsService:
 
         register_utilization(utilization_id, resource['id'], title, description, True)
 
+        result = get_utilization(utilization_id)
+
+        assert result.comment == 0
+
         register_utilization_comment(
             comment_id,
             utilization_id,
@@ -521,6 +508,6 @@ class TestUtilizationDetailsService:
 
         refresh_utilization_comments(utilization_id)
 
-        result_utilization = get_utilization(utilization_id)
+        result = get_utilization(utilization_id)
 
-        assert result_utilization.comment == 1
+        assert result.comment == 1
