@@ -35,6 +35,7 @@ class TestDownloadServices:
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
+        session.commit()
 
     def test_increment_resource_downloads(self):
         resource = factories.Resource()
@@ -54,6 +55,7 @@ class TestDownloadServices:
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(download_summary)
+        session.commit()
         assert get_package_downloads(resource['package_id']) == 1
 
     def test_get_resource_download(self):
@@ -67,4 +69,5 @@ class TestDownloadServices:
             updated='2023-03-31 01:23:45.123456',
         )
         session.add(download_summary)
+        session.commit()
         assert get_resource_downloads(resource['id']) == 1
