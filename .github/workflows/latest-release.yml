@@ -49,8 +49,3 @@ jobs:
 
       - name: Check translation file
         run: ls ckanext/feedback/i18n/ja/LC_MESSAGES
-
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
