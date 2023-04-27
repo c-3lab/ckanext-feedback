@@ -26,6 +26,10 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+      - name: clone ckan
+        run: git submodule update --init --recursive
+        working-directory: ./development
+
       - name: Copy .env.template as .env
         run: cp external/ckan/contrib/docker/.env.template external/ckan/contrib/docker/.env
         working-directory: ./development
