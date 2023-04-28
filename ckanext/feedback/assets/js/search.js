@@ -7,7 +7,7 @@ function refreshTable() {
 
   // Loop through all table rows, and hide those who don't match the search query
   rows.forEach(row => {
-    const statusCell = row.getElementsByTagName('td')[5]
+    const statusCell = row.getElementsByTagName('td')[6]
     if (statusCell.dataset.waiting && isWaiting) {
       row.style.display = 'table-row';
       ++count
