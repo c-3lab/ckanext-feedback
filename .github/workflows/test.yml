@@ -46,7 +46,6 @@ jobs:
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
       run: |
         curl -sSL https://install.python-poetry.org | python3 -
-        pip wheel --use-pep517 "pyyaml (==5.4.1)"
         /github/home/.local/bin/poetry install --with dev
     - name: Setup extension
       # Extra initialization steps

@@ -62,7 +62,7 @@ alembic = "1.0.0"
 requests = "2.25.1"
 passlib = "1.6.5"
 python-magic = "0.4.15"
-pyyaml = "5.4.1"
+pyyaml = "6.0.1"
 webassets = "0.12.1"
 pyjwt = "1.7.1"
 
