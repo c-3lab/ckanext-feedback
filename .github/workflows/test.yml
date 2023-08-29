@@ -53,7 +53,7 @@ jobs:
         # Replace default path to CKAN core config file with the one on the container
         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' ckanext/feedback/tests/config/test.ini
 
-        ckan -c ckanext/feedback/tests/config/test.ini db init
+        ckan -c test.ini db init
 
         # permission denied from ckan container if install python3.8.16 .
 
