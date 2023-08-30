@@ -52,7 +52,7 @@ jobs:
       run: |
         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' ckanext/feedback/tests/config/test.ini
 
-        ckan -c ckanext/feedback/tests/config/test.ini db init
+        ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init
 
     - name: Run tests
       run: | 
