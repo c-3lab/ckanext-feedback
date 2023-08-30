@@ -29,27 +29,17 @@ jobs:
       CKAN_REDIS_URL: redis://redis:6379/1
 
     steps:
+    - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
       with:
         python-version: '3.8'
-#    - name: install python3.8.16
-#      run: |
-#        cd /opt
-#        wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz
-#        tar xzvf Python-3.8.16.tgz
-#        cd Python-3.8.16 \
-#        && ./configure CPPFLAGS='-I/opt/zlib/include' LDFLAGS='-L/opt/zlib/lib' \
-#        && make \
-#        && make install
-#        ln -fs /opt/Python-3.8.16/Python /usr/bin/python3.8
-#        cd /opt
-#        rm -r Python-3.8.16.tgz
     - uses: actions/checkout@v2
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
       run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        /github/home/.local/bin/poetry install --with dev
+        poetry install --with dev
         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' ckanext/feedback/tests/config/test.ini
     - name: Setup extension
       # Extra initialization steps
