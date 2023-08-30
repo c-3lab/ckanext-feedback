@@ -37,10 +37,14 @@ jobs:
       with:
         python-version: '3.8'
 
+    - name: Update pip
+      run: |
+        python -m pip install --upgrade pip
+
     - name: Install Poetry
       run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        /github/home/.local/bin/poetry install --with dev
+        pip install poetry
+        poetry install --no-interaction
 
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
