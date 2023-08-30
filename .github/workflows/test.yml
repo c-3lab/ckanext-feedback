@@ -39,8 +39,8 @@ jobs:
 
     - name: Install Poetry
       run: |
-        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3 -
-        echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+        curl -sSL https://install.python-poetry.org | python3 -
+        /github/home/.local/bin/poetry install --with dev
 
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
