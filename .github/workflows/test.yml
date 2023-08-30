@@ -15,6 +15,10 @@ jobs:
         run: |
           pip install poetry
           poetry install --no-interaction
+      - name: Install requirements
+          # Install any extra requirements your extension has here (dev requirements, other extensions etc)
+        run: |
+          poetry install --with dev
 
   test:
     needs: lint
