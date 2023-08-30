@@ -51,12 +51,10 @@ jobs:
       run: |
         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' ckanext/feedback/tests/config/test.ini
 
-#          ckan -c ckanext/feedback/tests/config/test.ini db init
-
-#        permission denied from ckan container if install python3.8.16 .
+        ckan -c ckanext/feedback/tests/config/test.ini db init
 
     - name: Run tests
       run: | 
-        # /github/home/.local/bin/poetry run pytest --ckan-ini=ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --disable-warnings ckanext/feedback
+        /github/home/.local/bin/poetry run pytest --ckan-ini=ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --disable-warnings ckanext/feedback
 
     # necessary to modify "Setup extension" and "Run tests" at the CI setting phaze
