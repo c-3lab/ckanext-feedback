@@ -30,15 +30,17 @@ jobs:
 
     steps:
     - name: Check out Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
-    - name: setup python
-      uses: actions/setup-python@v4
+    - name: set up python
+      uses: actions/setup-python@v2
       with:
         python-version: '3.8'
 
     - name: Install Poetry
-      uses: snok/install-poetry@v1
+      run: |
+        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+        echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
