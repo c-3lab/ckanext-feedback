@@ -1,7 +1,20 @@
 name: Tests
 on: [push, pull_request]
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install Poetry
+        run: |
+          pip install poetry
+          poetry install --no-interaction
+
   test:
+    needs: lint
     runs-on: ubuntu-latest
     container:
       # The CKAN version tag of the Solr and Postgres containers should match
@@ -29,19 +42,6 @@ jobs:
       CKAN_REDIS_URL: redis://redis:6379/1
 
     steps:
-    - name: Check out Repository
-      uses: actions/checkout@v3
-
-    - name: set up python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-
-    - name: Install Poetry
-      run: |
-        pip install poetry
-        poetry install --no-interaction
-
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
       run: |
