@@ -41,6 +41,7 @@ jobs:
         ln -fs /opt/Python-3.8.16/Python /usr/bin/python3.8
         cd /opt
         rm -r Python-3.8.16.tgz
+    - uses: actions/checkout@v2
     - name: Install requirements
       # Install any extra requirements your extension has here (dev requirements, other extensions etc)
       run: |
