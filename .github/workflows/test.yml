@@ -51,7 +51,11 @@ jobs:
     - name: Setup extension
       # Extra initialization steps
       run: |
-        sudo ckan -c ckanext/feedback/tests/config/test.ini db init
+        pip install -r /usr/lib/ckan/venv/src/ckan/dev-requirements.txt
+        pip install pytest-ckan
+        createdb ckan_test -O ckan -E utf-8 -h db -U ckan
+        ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init"
+#        ckan -c ckanext/feedback/tests/config/test.ini db init
 
       # permission denied from ckan container if install python3.8.16 .
 
