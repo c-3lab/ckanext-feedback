@@ -34,3 +34,11 @@ jobs:
         run: |
           docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
           docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && pip install /opt/ckanext-feedback"
+
+      - name: install requirement
+        run: |
+          docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate &&
+          pip install -r /usr/lib/ckan/venv/src/ckan/dev-requirements.txt &&
+          pip install pytest-ckan &&
+          createdb ckan_test -O ckan -E utf-8 -h db -U ckan &&
+          ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init"
