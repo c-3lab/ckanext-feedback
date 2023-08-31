@@ -51,4 +51,9 @@ jobs:
           docker cp ckan:./pytest.xml pytest.xml
           docker cp ckan:./pytest-coverage.txt pytest-coverage.txt
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./pytest.xml
+
       
