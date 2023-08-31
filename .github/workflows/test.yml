@@ -45,4 +45,8 @@ jobs:
           docker exec -i ckan bash -c "PGPASSWORD=ckan createdb ckan_test -O ckan -E utf-8 -h db -U ckan"
           docker exec -i ckan bash -c "ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init"
 
+      - name: run test
+        run: |
+          CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --ckan-ini=/usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests"
+
       
