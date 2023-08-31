@@ -27,14 +27,17 @@ jobs:
         working-directory: ./development
 
       - name: Build images
-        run: docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
-        working-directory: ./development
-
-      - name: install ckanext-feedback
         run: |
+          docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
           docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions
           docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && pip install /opt/ckanext-feedback"
         working-directory: ./development
+
+#      - name: install ckanext-feedback
+#        run: |
+#          docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions
+#          docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && pip install /opt/ckanext-feedback"
+#        working-directory: ./development
 
       - name: install requirement
         run: |
