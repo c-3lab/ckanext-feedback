@@ -2,7 +2,7 @@ name: Tests
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
 
       - name: Install Python 3.8.16
@@ -29,28 +29,5 @@ jobs:
       - name: Build images
         run: |
           docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
-          docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions
-          docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && pip install /opt/ckanext-feedback"
-        working-directory: ./development
-
-#      - name: install ckanext-feedback
-#        run: |
-#          docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions
-#          docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && pip install /opt/ckanext-feedback"
-#        working-directory: ./development
-
-      - name: install requirement
-        run: |
-          docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate &&
-          pip install -r /usr/lib/ckan/venv/src/ckan/dev-requirements.txt &&
-          pip install pytest-ckan &&
-          createdb ckan_test -O ckan -E utf-8 -h db -U ckan &&
-          ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init"
-        working-directory: ./development
-
-      - name: test
-        run: |
-          docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && 
-          pip install /opt/ckanext-feedback && 
-          CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --ckan-ini=/usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests"
+          docker exec ckan bash -c "pwd;find . | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/|  /g'"
         working-directory: ./development
