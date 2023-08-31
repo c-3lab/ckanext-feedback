@@ -29,5 +29,5 @@ jobs:
       - name: Build images
         run: |
           docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
-          docker exec ckan bash -c "ckan --version"
+          docker exec ckan bash -c "ckan"
         working-directory: ./development
