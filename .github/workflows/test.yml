@@ -42,3 +42,9 @@ jobs:
           pip install pytest-ckan &&
           createdb ckan_test -O ckan -E utf-8 -h db -U ckan &&
           ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init"
+
+      - name: test
+        run: |
+          docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && 
+          pip install /opt/ckanext-feedback && 
+          CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --ckan-ini=/usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests"
