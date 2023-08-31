@@ -32,7 +32,7 @@ jobs:
 
       - name: install ckanext-feedback
         run: |
-          docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
+          docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions
           docker exec -i ckan bash -c ". /usr/lib/ckan/venv/bin/activate && pip install /opt/ckanext-feedback"
         working-directory: ./development
 
