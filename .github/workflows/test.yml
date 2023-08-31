@@ -29,5 +29,5 @@ jobs:
       - name: Build images
         run: |
           docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
-          docker exec ckan bash -c "pwd;find . | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/|  /g'"
+          docker exec ckan bash -c "ckan --version"
         working-directory: ./development
