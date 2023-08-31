@@ -31,6 +31,18 @@ jobs:
           docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
         working-directory: ./development
 
-      - name: db settings
+      - name: install ckanext-feedback
         run: |
           docker exec -i ckan bash -c "pip install /opt/ckanext-feedback"
+
+      - name: prepare to test
+        run: |
+          docker exec -i ckan bash -c "pip install -r /usr/lib/ckan/venv/src/ckan/dev-requirements.txt"
+          docker exec -i ckan bash -c "pip install pytest-ckan"
+
+      - name: test db setting
+        run: |
+          docker exec -i ckan bash -c "createdb ckan_test -O ckan -E utf-8 -h db -U ckan"
+          docker exec -i ckan bash -c "ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init"
+
+      
