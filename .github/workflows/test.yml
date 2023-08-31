@@ -42,6 +42,7 @@ jobs:
 
       - name: test db setting
         run: |
+          @SET PGPASSWORD=ckan
           docker exec -i ckan bash -c "createdb ckan_test -O ckan -E utf-8 -h db -U ckan --no-password"
 #          docker exec -i ckan bash -c "ckan -c /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini db init"
 
