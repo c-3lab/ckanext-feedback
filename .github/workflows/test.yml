@@ -47,9 +47,9 @@ jobs:
 
       - name: run test
         run: |
-          docker exec -i ckan bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --junitxml=pytest.xml --ckan-ini=/usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests | tee pytest-coverage.txt"
+          docker exec -i ckan bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --junitxml=pytest.xml --ckan-ini=/usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests &&
+          pwd;find . | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/|  /g'"
           docker cp ckan:./pytest.xml pytest.xml
-          docker cp ckan:./pytest-coverage.txt pytest-coverage.txt
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.0
