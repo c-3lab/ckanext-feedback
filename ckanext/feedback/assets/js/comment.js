@@ -46,8 +46,12 @@ function selectRating(selectedStar) {
   });
 }
 
-function setReplyFormContent(resourceCommentId, approved, category, content) {
+function setReplyFormContent(resourceCommentId) {
   // Set values of modal screen elements
+  const category = document.getElementById('comment-category-' + resourceCommentId).textContent;
+  const approved = document.getElementById('comment-created-' + resourceCommentId).textContent;
+  const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
+
   document.getElementById('selected_comment_header').innerHTML = approved + ' ' + category;
   document.getElementById('selected_comment').innerHTML = content;
   document.getElementById('selected_resource_comment_id').value = resourceCommentId;
