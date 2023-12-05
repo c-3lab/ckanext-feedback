@@ -46,3 +46,8 @@
 .wrap-text {
   word-wrap: break-word;
 }
+
+.comment-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

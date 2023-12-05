@@ -79,7 +79,7 @@
             {% if c.userobj.sysadmin %}
               {% if comment.approval %}
                 {% if not reply %}
-                  <input type="button" class="btn btn-primary pull-right" data-toggle='modal' data-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}', '{{ created }}', '{{ comment.category.name }}','{{ comment.content }}')" value="{{ _('Reply') }}"/>
+                  <input type="button" class="btn btn-primary pull-right" data-toggle='modal' data-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
                 {% else %}
                   <input type="button" class="btn btn-primary pull-right" value="{{ _('Reply') }}" disabled/>
                 {% endif %}
@@ -90,8 +90,10 @@
               {% endif %}
             {% endif %}
             <h4>
-              {{ created }}
-              {{ _(comment.category.value) if comment.category }}
+              <span id="comment-created-{{ comment.id }}">{{ created }}</span>
+              {% if comment.category %}
+                <span id="comment-category-{{ comment.id }}">{{ _(comment.category.value) }}</span>
+              {% endif %}
               {% if comment.rating %}
                 <span class="group-stars">
                   {% for i in range(comment.rating) %}
@@ -108,8 +110,8 @@
             </h4>
             <div class="content-align wrap-text {{'unapproved' if not comment.approval }}">
               {% if comment.content %}
-                <div class="comment-content {{'unapproved' if not comment.approval }}">
-                  <p>{{ comment.content }}</p>
+                <div class="{{'unapproved' if not comment.approval }}">
+                  <span class="comment-content" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
                 </div>
               {% endif %}
               {% if reply %}
