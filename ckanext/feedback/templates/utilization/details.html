@@ -37,7 +37,7 @@
             <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
             <hr>
             <h4>{{ _('Utilization description') }}</h4>
-            <p>{{ row.description }}</p>
+            <p class="multiple-line">{{ row.description }}</p>
             <hr>
           </div>
           <h4>{{ _('Issue Resolutions') }}</h4>
@@ -92,7 +92,7 @@
               {% endfor %}
             </h4>
             <br>
-            <p class="wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
+            <p class="multiple-line wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
             <hr class="divider">
           {% endfor %}
         </div>
@@ -150,7 +150,7 @@
                   {% for issue_resolution in issue_resolutions %}
                     <tr>
                       <td>{{ issue_resolution.created.strftime('%Y/%m/%d %H:%M:%S') }}</td>
-                      <td>{{ issue_resolution.description }}</td>
+                      <td class="multiple-line">{{ issue_resolution.description }}</td>
                     </tr>
                   {% endfor %}
                 </tbody>

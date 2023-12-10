@@ -26,6 +26,11 @@
   word-wrap: break-word;
 }
 
+.multiple-line {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 #issue-resolution-table {
   height: 400px;
   overflow-y: scroll;
