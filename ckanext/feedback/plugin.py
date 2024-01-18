@@ -9,6 +9,7 @@ from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import download, management, resource, utilization
+import json
 
 
 class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
@@ -28,6 +29,32 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('assets', 'feedback')
+
+        # get path to the feedback_config.json file
+        # open the file and load the settings
+        try:
+            path_to_config = config.get('ckan.feedback.downloads.enable.organization', "/etc/ckan")
+            with open(path_to_config + '/feedback_config.json') as json_file:
+                data = json.load(json_file)
+                # the settings of utilizations
+                config['ckan.feedback.utilizations.enable'] = data['modules']['utilizations']['enable']
+                config['ckan.feedback.utilizations.enable_organizations'] = data['modules']['utilizations']['enable_organizations']
+                # the settings of resources
+                config['ckan.feedback.resources.enable'] = data['modules']['resources']['enable']
+                config['ckan.feedback.resources.enable_organizations'] = data['modules']['resources']['enable_organizations']
+                config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = data['modules']['resources']['comments']['repeated_post_limit']['enable']
+                # the settings of downloads
+                config['ckan.feedback.downloads.enable'] = data['modules']['downloads']['enable']
+                config['ckan.feedback.downloads.enable_organizations'] = data['modules']['downloads']['enable_organizations']
+        except FileNotFoundError:
+            print('fail to find feedback_config.json')
+            # the settings of default
+            config['ckan.feedback.downloads.enable'] = True
+            config['ckan.feedback.resources.enable'] = True
+            config['ckan.feedback.utilizations.enable'] = True
+            config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = False
+        except json.JSONDecodeError:
+            print('fail to decode feedback_config.json')
 
     # IClick
 
