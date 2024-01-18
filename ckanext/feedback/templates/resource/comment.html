@@ -1,4 +1,4 @@
-{% if h.is_enabled_resources() %}
+{% if h.is_enabled_resources() and h.is_enabled_resources_organization(pkg_dict.id) %}
 
   {% extends "package/base.html" %}
 
