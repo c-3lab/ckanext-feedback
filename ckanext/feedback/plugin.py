@@ -33,22 +33,22 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # get path to the feedback_config.json file
         # open the file and load the settings
         try:
-            path_to_config = config.get('ckan.feedback.downloads.enable.organization', "/etc/ckan")
+            path_to_config = config.get('ckan.feedback.config_file', "/etc/ckan")
             with open(path_to_config + '/feedback_config.json') as json_file:
                 data = json.load(json_file)
-                # the settings of downloads
+                # the settings related to downloads module
                 config['ckan.feedback.downloads.enable'] = data['modules']['downloads']['enable']
                 config['ckan.feedback.downloads.enable_organizations'] = data['modules']['downloads']['enable_organizations']
-                # the settings of resources
+                # the settings related to resources module
                 config['ckan.feedback.resources.enable'] = data['modules']['resources']['enable']
                 config['ckan.feedback.resources.enable_organizations'] = data['modules']['resources']['enable_organizations']
                 config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = data['modules']['resources']['comments']['repeated_post_limit']['enable']
-                # the settings of utilizations
+                # the settings related to utilizations module
                 config['ckan.feedback.utilizations.enable'] = data['modules']['utilizations']['enable']
                 config['ckan.feedback.utilizations.enable_organizations'] = data['modules']['utilizations']['enable_organizations']
         except FileNotFoundError:
             print('fail to find feedback_config.json')
-            # the settings of default
+            # the settings which feedback_config.json is not found
             config['ckan.feedback.downloads.enable'] = True
             config['ckan.feedback.resources.enable'] = True
             config['ckan.feedback.utilizations.enable'] = True
