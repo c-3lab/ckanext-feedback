@@ -36,16 +36,16 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             path_to_config = config.get('ckan.feedback.downloads.enable.organization', "/etc/ckan")
             with open(path_to_config + '/feedback_config.json') as json_file:
                 data = json.load(json_file)
-                # the settings of utilizations
-                config['ckan.feedback.utilizations.enable'] = data['modules']['utilizations']['enable']
-                config['ckan.feedback.utilizations.enable_organizations'] = data['modules']['utilizations']['enable_organizations']
+                # the settings of downloads
+                config['ckan.feedback.downloads.enable'] = data['modules']['downloads']['enable']
+                config['ckan.feedback.downloads.enable_organizations'] = data['modules']['downloads']['enable_organizations']
                 # the settings of resources
                 config['ckan.feedback.resources.enable'] = data['modules']['resources']['enable']
                 config['ckan.feedback.resources.enable_organizations'] = data['modules']['resources']['enable_organizations']
                 config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = data['modules']['resources']['comments']['repeated_post_limit']['enable']
-                # the settings of downloads
-                config['ckan.feedback.downloads.enable'] = data['modules']['downloads']['enable']
-                config['ckan.feedback.downloads.enable_organizations'] = data['modules']['downloads']['enable_organizations']
+                # the settings of utilizations
+                config['ckan.feedback.utilizations.enable'] = data['modules']['utilizations']['enable']
+                config['ckan.feedback.utilizations.enable_organizations'] = data['modules']['utilizations']['enable_organizations']
         except FileNotFoundError:
             print('fail to find feedback_config.json')
             # the settings of default
@@ -80,13 +80,22 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def is_enabled_downloads(self):
         return toolkit.asbool(config.get('ckan.feedback.downloads.enable', True))
 
+    def is_enabled_downloads_organization(self, organization_id):
+        return organization_id in config.get('ckan.feedback.downloads.enable_organizations', [])
+
     # Enable/disable the resources module
     def is_enabled_resources(self):
         return toolkit.asbool(config.get('ckan.feedback.resources.enable', True))
 
+    def is_enabled_resources_organization(self, organization_id):
+        return organization_id in config.get('ckan.feedback.resources.enable_organizations', [])
+
     # Enable/disable the utilizations module
     def is_enabled_utilizations(self):
         return toolkit.asbool(config.get('ckan.feedback.utilizations.enable', True))
+
+    def is_enabled_utilizations_organization(self, organization_id):
+        return organization_id in config.get('ckan.feedback.utilizations.enable_organizations', [])
 
     # Enable/disable repeated posting on a single resource
     def is_disabled_repeated_post_on_resource(self):
@@ -96,15 +105,24 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             )
         )
 
+    def is_disabled_repeated_post_on_resource_organization(self, organization_id):
+        return organization_id in config.get('ckan.feedback.resources.comment.repeated_post_limit.enable_organizations', [])
+
     # ITemplateHelpers
 
     def get_helpers(self):
         return {
             'is_enabled_downloads': self.is_enabled_downloads,
+            'is_enabled_downloads_organization': self.is_enabled_downloads_organization,
             'is_enabled_resources': self.is_enabled_resources,
+            'is_enabled_resources_organization': self.is_enabled_resources_organization,
             'is_enabled_utilizations': self.is_enabled_utilizations,
+            'is_enabled_utilizations_organization': self.is_enabled_utilizations_organization,
             'is_disabled_repeated_post_on_resource': (
                 self.is_disabled_repeated_post_on_resource
+            ),
+            'is_disabled_repeated_post_on_resource_organization': (
+                self.is_disabled_repeated_post_on_resource_organization
             ),
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,
