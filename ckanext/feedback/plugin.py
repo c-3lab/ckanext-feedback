@@ -65,11 +65,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 ]['utilizations']['enable_organizations']
         except FileNotFoundError:
             print('fail to find feedback_config.json')
-            # the settings which feedback_config.json is not found
-            config['ckan.feedback.downloads.enable'] = True
-            config['ckan.feedback.resources.enable'] = True
-            config['ckan.feedback.utilizations.enable'] = True
-            config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = False
         except json.JSONDecodeError:
             print('fail to decode feedback_config.json')
 
