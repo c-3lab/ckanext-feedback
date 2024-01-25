@@ -49,10 +49,10 @@ function refreshTable() {
 
 
 function isVisible(row){
-  const statusCell = row.getElementsByTagName('td')[7];
+  const statusCell = row.getElementsByTagName('td')[8];
   const isWaiting = document.getElementById('waiting').checked && statusCell.dataset.waiting;
   const isApproval = document.getElementById('approval').checked && statusCell.dataset.approval;
-  const categoryCell = row.getElementsByTagName('td')[5];
+  const categoryCell = row.getElementsByTagName('td')[6];
   const categories = Array.from(document.querySelectorAll('.category-checkbox'));
   const isMatchedCategory = categories.filter(element => element.checked)
                                       .some(element => element.getAttribute('name') === categoryCell.dataset.category);
