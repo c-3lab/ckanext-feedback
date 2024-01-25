@@ -67,6 +67,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             print('fail to find feedback_config.json')
         except json.JSONDecodeError:
             print('fail to decode feedback_config.json')
+        except KeyError as e:
+            print(f'fail to find the key {e} in feedback_config.json')
 
     # IClick
 
