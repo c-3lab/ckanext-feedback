@@ -36,31 +36,31 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         try:
             path_to_config = config.get('ckan.feedback.config_file', '/etc/ckan')
             with open(f'{path_to_config}/feedback_config.json') as json_file:
-                data = json.load(json_file)
+                feedback_config = json.load(json_file)
                 # the settings related to downloads module
-                config['ckan.feedback.downloads.enable'] = data['modules']['downloads'][
+                config['ckan.feedback.downloads.enable'] = feedback_config['modules']['downloads'][
                     'enable'
                 ]
-                config['ckan.feedback.downloads.enable_organizations'] = data[
+                config['ckan.feedback.downloads.enable_organizations'] = feedback_config[
                     'modules'
                 ]['downloads']['enable_organizations']
                 # the settings related to resources module
-                config['ckan.feedback.resources.enable'] = data['modules']['resources'][
+                config['ckan.feedback.resources.enable'] = feedback_config['modules']['resources'][
                     'enable'
                 ]
-                config['ckan.feedback.resources.enable_organizations'] = data[
+                config['ckan.feedback.resources.enable_organizations'] = feedback_config[
                     'modules'
                 ]['resources']['enable_organizations']
                 config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = (
-                    data['modules']['resources']['comments']['repeated_post_limit'][
+                    feedback_config['modules']['resources']['comments']['repeated_post_limit'][
                         'enable'
                     ]
                 )
                 # the settings related to utilizations module
-                config['ckan.feedback.utilizations.enable'] = data['modules'][
+                config['ckan.feedback.utilizations.enable'] = feedback_config['modules'][
                     'utilizations'
                 ]['enable']
-                config['ckan.feedback.utilizations.enable_organizations'] = data[
+                config['ckan.feedback.utilizations.enable_organizations'] = feedback_config[
                     'modules'
                 ]['utilizations']['enable_organizations']
         except FileNotFoundError:
