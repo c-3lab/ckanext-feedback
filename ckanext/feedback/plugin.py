@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 
 from ckan import plugins
 from ckan.common import config
@@ -36,33 +37,17 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         try:
             path_to_config = config.get('ckan.feedback.config_file', '/etc/ckan')
             with open(f'{path_to_config}/feedback_config.json') as json_file:
-                feedback_config = json.load(json_file)
+                feedback_config = SimpleNamespace(**json.load(json_file))
                 # the settings related to downloads module
-                config['ckan.feedback.downloads.enable'] = feedback_config['modules']['downloads'][
-                    'enable'
-                ]
-                config['ckan.feedback.downloads.enable_organizations'] = feedback_config[
-                    'modules'
-                ]['downloads']['enable_organizations']
+                config['ckan.feedback.downloads.enable'] = feedback_config.modules.downloads.enable
+                config['ckan.feedback.downloads.enable_organizations'] = feedback_config.modules.downloads.enable_organizations
                 # the settings related to resources module
-                config['ckan.feedback.resources.enable'] = feedback_config['modules']['resources'][
-                    'enable'
-                ]
-                config['ckan.feedback.resources.enable_organizations'] = feedback_config[
-                    'modules'
-                ]['resources']['enable_organizations']
-                config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = (
-                    feedback_config['modules']['resources']['comments']['repeated_post_limit'][
-                        'enable'
-                    ]
-                )
+                config['ckan.feedback.resources.enable'] = feedback_config.modules.resources.enable
+                config['ckan.feedback.resources.enable_organizations'] = feedback_config.modules.resources.enable_organizations
+                config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = feedback_config.modules.resources.comments.repeated_post_limit.enable
                 # the settings related to utilizations module
-                config['ckan.feedback.utilizations.enable'] = feedback_config['modules'][
-                    'utilizations'
-                ]['enable']
-                config['ckan.feedback.utilizations.enable_organizations'] = feedback_config[
-                    'modules'
-                ]['utilizations']['enable_organizations']
+                config['ckan.feedback.utilizations.enable'] = feedback_config.modules.utilizations.enable
+                config['ckan.feedback.utilizations.enable_organizations'] = feedback_config.modules.utilizations.enable_organizations
         except FileNotFoundError:
             print('fail to find feedback_config.json')
         except json.JSONDecodeError:
