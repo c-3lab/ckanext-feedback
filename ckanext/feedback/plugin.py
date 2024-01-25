@@ -35,7 +35,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # open the file and load the settings
         try:
             path_to_config = config.get('ckan.feedback.config_file', '/etc/ckan')
-            with open(path_to_config + '/feedback_config.json') as json_file:
+            with open(f'{path_to_config}/feedback_config.json') as json_file:
                 data = json.load(json_file)
                 # the settings related to downloads module
                 config['ckan.feedback.downloads.enable'] = data['modules']['downloads'][
