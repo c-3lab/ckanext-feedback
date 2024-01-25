@@ -49,11 +49,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 config['ckan.feedback.utilizations.enable'] = feedback_config.modules.utilizations.enable
                 config['ckan.feedback.utilizations.enable_organizations'] = feedback_config.modules.utilizations.enable_organizations
         except FileNotFoundError:
-            print('fail to find feedback_config.json')
+            toolkit.error_shout('The feedback config file not found')
         except json.JSONDecodeError:
-            print('fail to decode feedback_config.json')
+            toolkit.error_shout('The feedback config file not decoded correctly')
         except KeyError as e:
-            print(f'fail to find the key {e} in feedback_config.json')
+            toolkit.error_shout(f'The key {e} not found in feedback_config.json')
 
     # IClick
 
