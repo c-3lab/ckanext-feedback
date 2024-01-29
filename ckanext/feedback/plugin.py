@@ -9,6 +9,7 @@ from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.services.management import comments as management_comments_service
+from ckanext.feedback.services.common import check
 from ckanext.feedback.views import download, management, resource, utilization
 
 
@@ -80,6 +81,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_disabled_repeated_post_on_resource': (
                 self.is_disabled_repeated_post_on_resource
             ),
+            'is_organization_admin': check.is_organization_admin,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,
             'get_resource_utilizations': (

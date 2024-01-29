@@ -94,7 +94,7 @@
             {% if h.is_enabled_utilizations() %}
               {% do menu_items.append(('utilization.search', _('Utilization'))) %}
             {% endif %}
-            {% if c.userobj.sysadmin %}
+            {% if c.userobj.sysadmin or h.is_organization_admin %}
               {% do menu_items.append(('management.comments', _('Management Comments'))) %}
             {% endif %}
             {% do menu_items.append(('home.about', _('About'))) %}
