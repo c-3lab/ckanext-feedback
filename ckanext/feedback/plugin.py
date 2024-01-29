@@ -35,9 +35,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # get path to the feedback_config.json file
         # open the file and load the settings
         try:
-            path_to_config = config.get('ckan.feedback.config_file', '/etc/ckan')
-            with open(f'{path_to_config}/feedback_config.json') as json_file:
-                feedback_config = SimpleNamespace(**json.load(json_file))
+            feedback_config_path = config.get('ckan.feedback.config_file', '/etc/ckan')
+            with open(f'{feedback_config_path}/feedback_config.json') as json_file:
+                feedback_config_json = json.load(json_file)
+                feedback_config = SimpleNamespace(**feedback_config_json)
                 # the settings related to downloads module
                 config['ckan.feedback.downloads.enable'] = feedback_config.modules.downloads.enable
                 config['ckan.feedback.downloads.enable_organizations'] = feedback_config.modules.downloads.enable_organizations
