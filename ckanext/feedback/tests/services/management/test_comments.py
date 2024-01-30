@@ -319,6 +319,26 @@ class TestComments:
 
         assert mock_mappings.call_args[0] == (ResourceCommentSummary, expected_mapping)
 
+        comments.delete_resource_comments([resource_comment[0].id, another_resource_comment[0].id])
+        comments.refresh_resources_comments(resource_comment_summaries)
+        session.commit()
+        expected_mapping = [
+            {
+                'id': resource_comment_summary.id,
+                'comment': 0,
+                'rating': 0,
+                'updated': datetime.now(),
+            },
+            {
+                'id': another_resource_comment_summary.id,
+                'comment': 0,
+                'rating': 0,
+                'updated': datetime.now(),
+            },
+        ]
+
+        assert mock_mappings.call_args[0] == (ResourceCommentSummary, expected_mapping)
+
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch('ckanext.feedback.services.management.comments.session.bulk_update_mappings')
     def test_approve_utilization_comments(self, mock_mappings):
