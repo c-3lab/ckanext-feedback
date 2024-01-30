@@ -75,11 +75,15 @@ def refresh_resources_comments(resource_comment_summaries):
             )
             .first()
         )
+        if row.total_rating is None:
+            rating = 0
+        else:
+            rating = row.total_rating / row.total_comment
         mappings.append(
             {
                 'id': resource_comment_summary.id,
                 'comment': row.total_comment,
-                'rating': row.total_rating / row.total_comment,
+                'rating': rating,
                 'updated': datetime.now(),
             }
         )
