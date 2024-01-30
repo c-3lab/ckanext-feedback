@@ -31,9 +31,7 @@ def get_resource_comments(resource_id=None, approval=None, owner_orgs=None):
     if approval is not None:
         query = query.filter(ResourceComment.approval == approval)
     if owner_orgs is not None:
-        query = query.join(Resource, Resource.id == ResourceComment.resource_id)\
-            .join(Package, Package.id == Resource.package_id)\
-            .filter(Package.owner_org.in_(owner_orgs))
+        query = query.join(Resource).join(Package).filter(Package.owner_org.in_(owner_orgs))
 
     return query.all()
 

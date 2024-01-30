@@ -17,13 +17,15 @@ class ManagementController:
     def comments():
         tab = request.args.get('tab', 'utilization-comments')
         categories = utilization_detail_service.get_utilization_comment_categories()
-        utilization_comments = utilization_detail_service.get_utilization_comments()
-        # User is organization admin
+
+        # If user is organization admin
         if not c.userobj.sysadmin:
             ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
             resource_comments = resource_comment_service.get_resource_comments(owner_orgs=ids)
+            utilization_comments = utilization_detail_service.get_utilization_comments(owner_orgs=ids)
         else:
             resource_comments = resource_comment_service.get_resource_comments()
+            utilization_comments = utilization_detail_service.get_utilization_comments()
         return toolkit.render(
             'management/comments.html',
             {
