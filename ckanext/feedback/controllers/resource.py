@@ -17,9 +17,14 @@ class ResourceController:
     @staticmethod
     def comment(resource_id):
         approval = None
-        if c.userobj is None or c.userobj.sysadmin is None:
-            approval = True
         resource = comment_service.get_resource(resource_id)
+        if c.userobj is None or not c.userobj.sysadmin:
+            approval = True
+        if c.userobj is not None:
+            owner_org = resource.package.owner_org
+            ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
+            if owner_org in ids:
+                approval = None
         comments = comment_service.get_resource_comments(resource_id, approval)
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
