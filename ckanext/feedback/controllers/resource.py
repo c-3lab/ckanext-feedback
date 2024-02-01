@@ -8,7 +8,7 @@ from flask import make_response, redirect, url_for
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.resource.summary as summary_service
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.common.check import check_administrator
+from ckanext.feedback.services.common.check import check_administrator, has_organization_admin_role
 
 
 class ResourceController:
@@ -79,6 +79,7 @@ class ResourceController:
     @staticmethod
     @check_administrator
     def approve_comment(resource_id):
+        ResourceController._check_organization_admin_role(resource_id)
         resource_comment_id = request.form.get('resource_comment_id')
         if not resource_comment_id:
             toolkit.abort(400)
@@ -93,6 +94,7 @@ class ResourceController:
     @staticmethod
     @check_administrator
     def reply(resource_id):
+        ResourceController._check_organization_admin_role(resource_id)
         resource_comment_id = request.form.get('resource_comment_id', '')
         content = request.form.get('reply_content', '')
         if not (resource_comment_id and content):
@@ -102,3 +104,15 @@ class ResourceController:
         session.commit()
 
         return redirect(url_for('resource_comment.comment', resource_id=resource_id))
+
+    @staticmethod
+    def _check_organization_admin_role(resource_id):
+        resource = comment_service.get_resource(resource_id)
+        if not has_organization_admin_role(resource.package.owner_org):
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )

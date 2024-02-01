@@ -24,3 +24,11 @@ def is_organization_admin():
 
     ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
     return len(ids) != 0
+
+
+def has_organization_admin_role(owner_org):
+    if c.userobj is None:
+        return False
+
+    ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
+    return owner_org in ids
