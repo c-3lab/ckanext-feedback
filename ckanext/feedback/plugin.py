@@ -127,7 +127,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 in config.get('ckan.feedback.downloads.enable_organizations', [])
             )
         ) or not self.is_feedback_config_file
-        return download_enable
+        return toolkit.asbool(download_enable)
 
     # Enable/disable the resources module
     def is_enabled_resources(self, organization_id):
@@ -138,7 +138,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 in config.get('ckan.feedback.resources.enable_organizations', [])
             )
         ) or not self.is_feedback_config_file
-        return resources_enable
+        return toolkit.asbool(resources_enable)
 
     # Enable/disable the utilizations module
     def is_enabled_utilizations(self, organization_id):
@@ -149,7 +149,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 in config.get('ckan.feedback.utilizations.enable_organizations', [])
             )
         ) or not self.is_feedback_config_file
-        return utilizations_enable
+        return toolkit.asbool(utilizations_enable)
 
     # Enable/disable repeated posting on a single resource
     def is_disabled_repeated_post_on_resource(self, organization_id):
@@ -165,7 +165,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 )
             )
         ) or not self.is_feedback_config_file
-        return repeated_post_limit_enable
+        return toolkit.asbool(repeated_post_limit_enable)
 
     # ITemplateHelpers
 
