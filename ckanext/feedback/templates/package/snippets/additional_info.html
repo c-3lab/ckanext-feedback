@@ -1,19 +1,19 @@
 {% ckan_extends %}
 
 {% block package_additional_info %}
-  {% if h.is_enabled_downloads() and h.is_enabled_downloads_organization(pkg_dict.owner_org) %}
+  {% if h.is_enabled_downloads(pkg_dict.owner_org) %}
     <tr>
       <th scope="row" class="dataset-label">{{ _('Downloads') }}</th>
       <td class="dataset-details">{{ h.get_package_downloads(pkg_dict.id) }}</td>
     </tr>
   {% endif %}
-  {% if h.is_enabled_utilizations() and h.is_enabled_utilizations_organization(pkg_dict.owner_org) %}
+  {% if h.is_enabled_utilizations(pkg_dict.owner_org) %}
     <tr>
       <th scope="row" class="dataset-label">{{ _('Utilizations') }}</th>
       <td class="dataset-details"><a href="{{ h.url_for('utilization.search', id=pkg_dict.id, disable_keyword=true) }}">{{ h.get_package_utilizations(pkg_dict.id) }}</a></td>
     </tr>
   {% endif %}
-  {% if h.is_enabled_resources() and h.is_enabled_resources_organization(pkg_dict.owner_org) %}
+  {% if h.is_enabled_resources(pkg_dict.owner_org) %}
     <tr>
       <th scope="row" class="dataset-label">{{ _('Comments') }}</th>
       <td class="dataset-details">{{ h.get_package_comments(pkg_dict.id) }}</a></td>
@@ -23,7 +23,7 @@
       <td class="dataset-details">{{ h.get_package_rating(pkg_dict.id)|round(1) }}</a></td>
     </tr>
   {% endif %}
-  {% if h.is_enabled_utilizations() and h.is_enabled_utilizations_organization(pkg_dict.owner_org) %}
+  {% if h.is_enabled_utilizations(pkg_dict.owner_org) %}
     <tr>
       <th scope="row" class="dataset-label">{{ _('Issue Resolutions') }}</th>
       <td class="dataset-details">{{ h.get_package_issue_resolutions(pkg_dict.id) }}</td>
