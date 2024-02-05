@@ -37,41 +37,35 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         try:
             feedback_config_path = config.get('ckan.feedback.config_file', '/etc/ckan')
             with open(f'{feedback_config_path}/feedback_config.json') as json_file:
-                feedback_config = json.load(json_file)
+                feedback_config = json.load(json_file, object_hook=lambda d: SimpleNamespace(**d))
 
                 # the settings related to downloads module
-                downloads_config = SimpleNamespace(
-                    **feedback_config['modules']['downloads']
+                config['ckan.feedback.downloads.enable'] = (
+                    feedback_config.modules.downloads.enable
                 )
-                config['ckan.feedback.downloads.enable'] = downloads_config.enable
                 config['ckan.feedback.downloads.enable_organizations'] = (
-                    downloads_config.enable_organizations
+                    feedback_config.modules.downloads.enable_organizations
                 )
 
                 # the settings related to resources module
-                resources_config = SimpleNamespace(
-                    **feedback_config['modules']['resources']
+                config['ckan.feedback.resources.enable'] = (
+                    feedback_config.modules.resources.enable
                 )
-                config['ckan.feedback.resources.enable'] = resources_config.enable
                 config['ckan.feedback.resources.enable_organizations'] = (
-                    resources_config.enable_organizations
+                    feedback_config.modules.resources.enable_organizations
                 )
 
                 # the settings related to resources comments module
-                resources_comments_config = SimpleNamespace(
-                    **feedback_config['modules']['resources']['comments']
-                )
                 config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = (
-                    resources_comments_config.repeated_post_limit['enable']
+                    feedback_config.modules.resources.comments.repeated_post_limit.enable
                 )
 
                 # the settings related to utilizations module
-                utilizations_config = SimpleNamespace(
-                    **feedback_config['modules']['utilizations']
+                config['ckan.feedback.utilizations.enable'] = (
+                    feedback_config.modules.utilizations.enable
                 )
-                config['ckan.feedback.utilizations.enable'] = utilizations_config.enable
                 config['ckan.feedback.utilizations.enable_organizations'] = (
-                    utilizations_config.enable_organizations
+                    feedback_config.modules.utilizations.enable_organizations
                 )
 
         except FileNotFoundError:
