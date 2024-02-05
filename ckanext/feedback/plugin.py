@@ -120,14 +120,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Check production.ini settings
     # Enable/disable the download module
     def is_enabled_downloads(self, organization_id):
-        download_enable = (
+        downloads_enable = (
             config.get('ckan.feedback.downloads.enable', True)
             and (
                 organization_id
                 in config.get('ckan.feedback.downloads.enable_organizations', [])
             )
         ) or not self.is_feedback_config_file
-        return toolkit.asbool(download_enable)
+        return toolkit.asbool(downloads_enable)
 
     # Enable/disable the resources module
     def is_enabled_resources(self, organization_id):
