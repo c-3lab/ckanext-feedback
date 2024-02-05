@@ -108,11 +108,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
-        if self.is_enabled_downloads():
+        if config.get('ckan.feedback.downloads.enable', True):
             blueprints.append(download.get_download_blueprint())
-        if self.is_enabled_resources():
+        if config.get('ckan.feedback.resources.enable', True):
             blueprints.append(resource.get_resource_comment_blueprint())
-        if self.is_enabled_utilizations():
+        if config.get('ckan.feedback.utilizations.enable', True):
             blueprints.append(utilization.get_utilization_blueprint())
         blueprints.append(management.get_management_blueprint())
         return blueprints
