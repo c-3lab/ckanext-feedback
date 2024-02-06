@@ -7,7 +7,7 @@ import ckanext.feedback.services.management.comments as comments_service
 import ckanext.feedback.services.resource.comment as resource_comment_service
 import ckanext.feedback.services.utilization.details as utilization_detail_service
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.common.check import check_administrator
+from ckanext.feedback.services.common.check import check_administrator, has_organization_admin_role
 
 
 class ManagementController:
@@ -61,6 +61,7 @@ class ManagementController:
             resource_comment_summaries = (
                 comments_service.get_resource_comment_summaries(comments)
             )
+            ManagementController._check_organization_admin_role(resource_comment_summaries)
             comments_service.approve_resource_comments(comments, c.userobj.id)
             comments_service.refresh_resources_comments(resource_comment_summaries)
             session.commit()
@@ -96,6 +97,7 @@ class ManagementController:
             resource_comment_summaries = (
                 comments_service.get_resource_comment_summaries(comments)
             )
+            ManagementController._check_organization_admin_role(resource_comment_summaries)
             comments_service.delete_resource_comments(comments)
             comments_service.refresh_resources_comments(resource_comment_summaries)
             session.commit()
@@ -105,3 +107,15 @@ class ManagementController:
                 allow_html=True,
             )
         return redirect(url_for('management.comments', tab='resource-comments'))
+
+    @staticmethod
+    def _check_organization_admin_role(resource_comment_summaries):
+        for resource_comment_summary in resource_comment_summaries:
+            if not has_organization_admin_role(resource_comment_summary.resource.package.owner_org):
+                toolkit.abort(
+                    404,
+                    _(
+                        'The requested URL was not found on the server. If you entered the'
+                        ' URL manually please check your spelling and try again.'
+                    ),
+                )
