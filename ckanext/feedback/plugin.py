@@ -39,16 +39,16 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             with open(f'{feedback_config_path}/feedback_config.json') as json_file:
                 feedback_config = json.load(
                     json_file, object_hook=lambda d: SimpleNamespace(**d)
-                )
+                ).modules
                 self.is_feedback_config_file = True
 
                 # the settings related to downloads module
                 try:
                     config['ckan.feedback.downloads.enable'] = (
-                        feedback_config.modules.downloads.enable
+                        feedback_config.downloads.enable
                     )
                     config['ckan.feedback.downloads.enable_organizations'] = (
-                        feedback_config.modules.downloads.enable_organizations
+                        feedback_config.downloads.enable_organizations
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -56,10 +56,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 # the settings related to resources module
                 try:
                     config['ckan.feedback.resources.enable'] = (
-                        feedback_config.modules.resources.enable
+                        feedback_config.resources.enable
                     )
                     config['ckan.feedback.resources.enable_organizations'] = (
-                        feedback_config.modules.resources.enable_organizations
+                        feedback_config.resources.enable_organizations
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -69,12 +69,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     config[
                         'ckan.feedback.resources.comment.repeated_post_limit.enable'
                     ] = (
-                        feedback_config.modules.resources.comments.repeated_post_limit.enable
+                        feedback_config.resources.comments.repeated_post_limit.enable
                     )
                     config[
                         'ckan.feedback.resources.comment.repeated_post_limit.enable_organizations'
                     ] = (
-                        feedback_config.modules.resources.comments.repeated_post_limit.enable_organizations
+                        feedback_config.resources.comments.repeated_post_limit.enable_organizations
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -82,10 +82,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 # the settings related to utilizations module
                 try:
                     config['ckan.feedback.utilizations.enable'] = (
-                        feedback_config.modules.utilizations.enable
+                        feedback_config.utilizations.enable
                     )
                     config['ckan.feedback.utilizations.enable_organizations'] = (
-                        feedback_config.modules.utilizations.enable_organizations
+                        feedback_config.utilizations.enable_organizations
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
