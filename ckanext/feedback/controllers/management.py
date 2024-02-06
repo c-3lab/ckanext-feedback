@@ -43,6 +43,7 @@ class ManagementController:
         comments = request.form.getlist('utilization-comments-checkbox')
         if comments:
             utilizations = comments_service.get_utilizations(comments)
+            ManagementController._check_organization_admin_role_with_utilization(utilizations)
             comments_service.approve_utilization_comments(comments, c.userobj.id)
             comments_service.refresh_utilizations_comments(utilizations)
             session.commit()
@@ -78,6 +79,7 @@ class ManagementController:
         comments = request.form.getlist('utilization-comments-checkbox')
         if comments:
             utilizations = comments_service.get_utilizations(comments)
+            ManagementController._check_organization_admin_role_with_utilization(utilizations)
             comments_service.delete_utilization_comments(comments)
             comments_service.refresh_utilizations_comments(utilizations)
             session.commit()
@@ -109,7 +111,19 @@ class ManagementController:
         return redirect(url_for('management.comments', tab='resource-comments'))
 
     @staticmethod
-    def _check_organization_admin_role(resource_comment_summaries):
+    def _check_organization_admin_role_with_utilization(utilizations):
+        for utilization in utilizations:
+            if not has_organization_admin_role(utilization.resource.package.owner_org):
+                toolkit.abort(
+                    404,
+                    _(
+                        'The requested URL was not found on the server. If you entered the'
+                        ' URL manually please check your spelling and try again.'
+                    ),
+                )
+
+    @staticmethod
+    def _check_organization_admin_role_with_resource(resource_comment_summaries):
         for resource_comment_summary in resource_comment_summaries:
             if not has_organization_admin_role(resource_comment_summary.resource.package.owner_org):
                 toolkit.abort(
