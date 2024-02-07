@@ -179,9 +179,17 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     def get_helpers(self):
         return {
+            'is_enabled_downloads_organization': self.is_enabled_downloads_organization,
             'is_enabled_downloads': self.is_enabled_downloads,
+            'is_enabled_resources_organization': self.is_enabled_resources_organization,
             'is_enabled_resources': self.is_enabled_resources,
+            'is_enabled_utilizations_organization': (
+                self.is_enabled_utilizations_organization
+            ),
             'is_enabled_utilizations': self.is_enabled_utilizations,
+            'is_disabled_repeated_post_on_resource_organization': (
+                self.is_disabled_repeated_post_on_resource_organization
+            ),
             'is_disabled_repeated_post_on_resource': (
                 self.is_disabled_repeated_post_on_resource
             ),
