@@ -50,6 +50,7 @@
           <tr>
             <th class="big-column">{{ _('Title') }}</th>
             <th class="small-column">{{ _('Issue resolutions') }}</th>
+            <th class="medium-column">{{ _('Organization') }}</th>
             <th class="big-column">{{ _('Dataset') }}</th>
             <th class="medium-column">{{ _('Data resource') }}</th>
             <th class="small-column">{{ _('Comments') }}</th>
@@ -72,6 +73,9 @@
                   </div>
                   <div class="division-flex-inner-num">{{ row.issue_resolution }}</div>
                 </div>
+              </td>
+              <td>
+                {{ h.get_organization(row.owner_org).display_name|truncate(20) }}
               </td>
               <td>{{ row.package_name|truncate(30) }}</td>
               <td>{{ row.resource_name|truncate(20) }}</td>

@@ -140,6 +140,8 @@ msgid "Dataset"
 msgstr "データセット"
 
 #: ckanext/feedback/templates/header.html:92
+#: ckanext/feedback/templates/utilization/search.html:53
+#: ckanext/feedback/templates/management/comments.html:63
 msgid "Organization"
 msgstr "組織"
 
