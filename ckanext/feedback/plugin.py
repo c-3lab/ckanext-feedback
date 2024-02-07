@@ -67,13 +67,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 # the settings related to resources comments module
                 try:
                     config[
-                        'ckan.feedback.resources.comment.repeated_post_limit.enable'
-                    ] = feedback_config.resources.comments.repeated_post_limit.enable
+                        'ckan.feedback.resources.comment.repeat_post_limit.enable'
+                    ] = feedback_config.resources.comments.repeat_post_limit.enable
                     config[
-                        'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs'
-                    ] = (
-                        feedback_config.resources.comments.repeated_post_limit.enable_orgs
-                    )
+                        'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs'
+                    ] = feedback_config.resources.comments.repeat_post_limit.enable_orgs
                 except AttributeError as e:
                     toolkit.error_shout(e)
 
@@ -155,23 +153,23 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.utilizations.enable', True)
         return toolkit.asbool(enable or not self.is_feedback_config_file)
 
-    # Enable/disable repeated posting on a single resource
-    def is_disabled_repeated_post_on_resource_organization(self, organization_id):
+    # Enable/disable repeat posting on a single resource
+    def is_disabled_repeat_post_on_resource_organization(self, organization_id):
         enable = config.get(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable', False
+            'ckan.feedback.resources.comment.repeat_post_limit.enable', False
         )
         enable_organization = organization_id in config.get(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs',
             [],
         )
-        repeated_post_limit_enable = enable and enable_organization
+        repeat_post_limit_enable = enable and enable_organization
         return toolkit.asbool(
-            repeated_post_limit_enable or not self.is_feedback_config_file
+            repeat_post_limit_enable or not self.is_feedback_config_file
         )
 
-    def is_disabled_repeated_post_on_resource(self):
+    def is_disabled_repeat_post_on_resource(self):
         enable = config.get(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable', False
+            'ckan.feedback.resources.comment.repeat_post_limit.enable', False
         )
         return toolkit.asbool(enable or not self.is_feedback_config_file)
 
@@ -187,11 +185,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 self.is_enabled_utilizations_organization
             ),
             'is_enabled_utilizations': self.is_enabled_utilizations,
-            'is_disabled_repeated_post_on_resource_organization': (
-                self.is_disabled_repeated_post_on_resource_organization
+            'is_disabled_repeat_post_on_resource_organization': (
+                self.is_disabled_repeat_post_on_resource_organization
             ),
-            'is_disabled_repeated_post_on_resource': (
-                self.is_disabled_repeated_post_on_resource
+            'is_disabled_repeat_post_on_resource': (
+                self.is_disabled_repeat_post_on_resource
             ),
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,

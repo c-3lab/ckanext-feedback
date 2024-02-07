@@ -8,7 +8,7 @@
             "enable": true,
             "enable_orgs": ["organizaiton_id1", "organizaiton_id2"],
             "comments": {
-                "repeated_post_limit": {
+                "repeat_post_limit": {
                     "enable": false,
                     "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
                 }
