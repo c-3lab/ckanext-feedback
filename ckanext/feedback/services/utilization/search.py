@@ -19,6 +19,7 @@ def get_utilizations(id=None, keyword=None, approval=None):
             Resource.name.label('resource_name'),
             Resource.id.label('resource_id'),
             Package.name.label('package_name'),
+            Package.owner_org,
             func.coalesce(IssueResolutionSummary.issue_resolution, 0).label(
                 'issue_resolution'
             ),

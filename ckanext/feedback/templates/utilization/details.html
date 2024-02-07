@@ -17,7 +17,7 @@
       <div class="module-content">
         {% set row = utilization %}
         <div class="centered-content">
-          {% if c.userobj.sysadmin %}
+          {% if sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             <form name="admin_form" action="{{ url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
               <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">{{ _('Edit') }}</a>
               {% if row.approval == false %}
@@ -47,7 +47,7 @@
             {% endif %}
             {{ issue_resolutions|length }}
           </a>
-          {% if c.userobj.sysadmin %}
+          {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
           {% endif %}
           <br>
@@ -78,7 +78,7 @@
             <hr class="divider">
           {% endif %}
           {% for comment in comments %}
-            {% if c.userobj.sysadmin and comment.approval == false %}
+            {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
               <form name="approval_form" action="{{ url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
                 <button class="btn btn-primary right-aligned">{{ _('Approve') }}</button>
               </form>

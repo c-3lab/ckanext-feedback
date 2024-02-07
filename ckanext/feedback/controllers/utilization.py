@@ -11,7 +11,7 @@ import ckanext.feedback.services.utilization.registration as registration_servic
 import ckanext.feedback.services.utilization.search as search_service
 import ckanext.feedback.services.utilization.summary as summary_service
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.common.check import check_administrator
+from ckanext.feedback.services.common.check import check_administrator, has_organization_admin_role
 
 
 class UtilizationController:
@@ -110,6 +110,7 @@ class UtilizationController:
     @staticmethod
     @check_administrator
     def approve(utilization_id):
+        UtilizationController._check_organization_admin_role(utilization_id)
         resource_id = detail_service.get_utilization(utilization_id).resource_id
         detail_service.approve_utilization(utilization_id, c.userobj.id)
         summary_service.refresh_utilization_summary(resource_id)
@@ -142,6 +143,7 @@ class UtilizationController:
     @staticmethod
     @check_administrator
     def approve_comment(utilization_id, comment_id):
+        UtilizationController._check_organization_admin_role(utilization_id)
         detail_service.approve_utilization_comment(comment_id, c.userobj.id)
         detail_service.refresh_utilization_comments(utilization_id)
         session.commit()
@@ -152,6 +154,7 @@ class UtilizationController:
     @staticmethod
     @check_administrator
     def edit(utilization_id):
+        UtilizationController._check_organization_admin_role(utilization_id)
         utilization_details = edit_service.get_utilization_details(utilization_id)
         resource_details = edit_service.get_resource_details(
             utilization_details.resource_id
@@ -169,6 +172,7 @@ class UtilizationController:
     @staticmethod
     @check_administrator
     def update(utilization_id):
+        UtilizationController._check_organization_admin_role(utilization_id)
         title = request.form.get('title', '')
         description = request.form.get('description', '')
         if not (title and description):
@@ -188,6 +192,7 @@ class UtilizationController:
     @staticmethod
     @check_administrator
     def delete(utilization_id):
+        UtilizationController._check_organization_admin_role(utilization_id)
         resource_id = detail_service.get_utilization(utilization_id).resource_id
         edit_service.delete_utilization(utilization_id)
         summary_service.refresh_utilization_summary(resource_id)
@@ -216,6 +221,7 @@ class UtilizationController:
     @staticmethod
     @check_administrator
     def create_issue_resolution(utilization_id):
+        UtilizationController._check_organization_admin_role(utilization_id)
         description = request.form.get('description')
         if not description:
             toolkit.abort(400)
@@ -227,3 +233,15 @@ class UtilizationController:
         session.commit()
 
         return redirect(url_for('utilization.details', utilization_id=utilization_id))
+
+    @staticmethod
+    def _check_organization_admin_role(utilization_id):
+        utilization = detail_service.get_utilization(utilization_id)
+        if not has_organization_admin_role(utilization.owner_org):
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
