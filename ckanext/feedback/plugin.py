@@ -164,14 +164,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         )
         repeat_post_limit_enable = enable and enable_organization
         return toolkit.asbool(
-            repeat_post_limit_enable or not self.is_feedback_config_file
+            repeat_post_limit_enable
         )
 
     def is_disabled_repeat_post_on_resource(self):
         enable = config.get(
             'ckan.feedback.resources.comment.repeat_post_limit.enable', False
         )
-        return toolkit.asbool(enable or not self.is_feedback_config_file)
+        return toolkit.asbool(enable)
 
     # ITemplateHelpers
 
