@@ -47,8 +47,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     config['ckan.feedback.downloads.enable'] = (
                         feedback_config.downloads.enable
                     )
-                    config['ckan.feedback.downloads.enable_organizations'] = (
-                        feedback_config.downloads.enable_organizations
+                    config['ckan.feedback.downloads.enable_orgs'] = (
+                        feedback_config.downloads.enable_orgs
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -58,8 +58,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     config['ckan.feedback.resources.enable'] = (
                         feedback_config.resources.enable
                     )
-                    config['ckan.feedback.resources.enable_organizations'] = (
-                        feedback_config.resources.enable_organizations
+                    config['ckan.feedback.resources.enable_orgs'] = (
+                        feedback_config.resources.enable_orgs
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -70,9 +70,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                         'ckan.feedback.resources.comment.repeated_post_limit.enable'
                     ] = feedback_config.resources.comments.repeated_post_limit.enable
                     config[
-                        'ckan.feedback.resources.comment.repeated_post_limit.enable_organizations'
+                        'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs'
                     ] = (
-                        feedback_config.resources.comments.repeated_post_limit.enable_organizations
+                        feedback_config.resources.comments.repeated_post_limit.enable_orgs
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -82,8 +82,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     config['ckan.feedback.utilizations.enable'] = (
                         feedback_config.utilizations.enable
                     )
-                    config['ckan.feedback.utilizations.enable_organizations'] = (
-                        feedback_config.utilizations.enable_organizations
+                    config['ckan.feedback.utilizations.enable_orgs'] = (
+                        feedback_config.utilizations.enable_orgs
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -120,7 +120,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def is_enabled_downloads(self, organization_id):
         enable = config.get('ckan.feedback.downloads.enable', True)
         enable_organization = organization_id in config.get(
-            'ckan.feedback.downloads.enable_organizations', []
+            'ckan.feedback.downloads.enable_orgs', []
         )
         downloads_enable = enable and enable_organization
         return toolkit.asbool(downloads_enable or not self.is_feedback_config_file)
@@ -129,7 +129,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def is_enabled_resources(self, organization_id):
         enable = config.get('ckan.feedback.resources.enable', True)
         enable_organization = organization_id in config.get(
-            'ckan.feedback.resources.enable_organizations', []
+            'ckan.feedback.resources.enable_orgs', []
         )
         resources_enable = enable and enable_organization
         return toolkit.asbool(resources_enable or not self.is_feedback_config_file)
@@ -138,10 +138,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def is_enabled_utilizations(self, organization_id):
         enable = config.get('ckan.feedback.utilizations.enable', True)
         enable_organization = organization_id in config.get(
-            'ckan.feedback.utilizations.enable_organizations', []
+            'ckan.feedback.utilizations.enable_orgs', []
         )
         utilizations_enable = enable and enable_organization
         return toolkit.asbool(utilizations_enable or not self.is_feedback_config_file)
+
+    def is_enabled_utilization(self):
+        return toolkit.asbool(config.get('ckan.feedback.utilizations.enable', True))
 
     # Enable/disable repeated posting on a single resource
     def is_disabled_repeated_post_on_resource(self, organization_id):
@@ -149,7 +152,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'ckan.feedback.resources.comment.repeated_post_limit.enable', False
         )
         enable_organization = organization_id in config.get(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable_organizations',
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
             [],
         )
         repeated_post_limit_enable = enable and enable_organization
