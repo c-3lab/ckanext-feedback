@@ -118,28 +118,29 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Check production.ini settings
     # Enable/disable the download module
     def is_enabled_downloads(self, organization_id):
-        downloads_enable = config.get('ckan.feedback.downloads.enable', True) and (
-            organization_id
-            in config.get('ckan.feedback.downloads.enable_organizations', [])
+        enable = config.get('ckan.feedback.downloads.enable', True)
+        enable_organization = organization_id in config.get(
+            'ckan.feedback.downloads.enable_organizations', []
         )
+        downloads_enable = enable and enable_organization
         return toolkit.asbool(downloads_enable or not self.is_feedback_config_file)
 
     # Enable/disable the resources module
     def is_enabled_resources(self, organization_id):
-        resources_enable = config.get('ckan.feedback.resources.enable', True) and (
-            organization_id
-            in config.get('ckan.feedback.resources.enable_organizations', [])
+        enable = config.get('ckan.feedback.resources.enable', True)
+        enable_organization = organization_id in config.get(
+            'ckan.feedback.resources.enable_organizations', []
         )
+        resources_enable = enable and enable_organization
         return toolkit.asbool(resources_enable or not self.is_feedback_config_file)
 
     # Enable/disable the utilizations module
     def is_enabled_utilizations(self, organization_id):
-        utilizations_enable = config.get(
-            'ckan.feedback.utilizations.enable', True
-        ) and (
-            organization_id
-            in config.get('ckan.feedback.utilizations.enable_organizations', [])
+        enable = config.get('ckan.feedback.utilizations.enable', True)
+        enable_organization = organization_id in config.get(
+            'ckan.feedback.utilizations.enable_organizations', []
         )
+        utilizations_enable = enable and enable_organization
         return toolkit.asbool(utilizations_enable or not self.is_feedback_config_file)
 
     # Enable/disable repeated posting on a single resource
