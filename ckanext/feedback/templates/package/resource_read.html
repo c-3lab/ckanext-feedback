@@ -40,7 +40,7 @@
       </div>
     </li>
   {% endif %}
-  {% if h.is_enabled_utilizations(pkg.owner_org) %}
+  {% if h.is_enabled_utilizations_organization(pkg.owner_org) %}
     <li>
       <div class="btn-group">
         <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ h.url_for('utilization.new', package_name=pkg.name, resource_id=res.id, return_to_resource=true) }}">
@@ -49,7 +49,7 @@
       </div>
     </li>
   {% endif %}
-  {% if h.is_enabled_resources(pkg.owner_org) %}
+  {% if h.is_enabled_resources_organization(pkg.owner_org) %}
     <li>
       <div class="btn-group">
         <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}">
@@ -79,19 +79,19 @@
         </tr>
       </thead>
       <tbody>
-        {% if h.is_enabled_downloads(pkg.owner_org) %}
+        {% if h.is_enabled_downloads_organization(pkg.owner_org) %}
           <tr>
             <th scope="row">{{ _('Downloads') }}</th>
             <td>{{ h.get_resource_downloads(res.id) }}</td>
           </tr>
         {% endif %}
-        {% if h.is_enabled_utilizations(pkg.owner_org) %}
+        {% if h.is_enabled_utilizations_organization(pkg.owner_org) %}
           <tr>
             <th scope="row">{{ _('Utilizations') }}</th>
             <td><a href="{{ h.url_for('utilization.search', id=resource.id, disable_keyword=true) }}">{{ h.get_resource_utilizations(resource.id) }}</a></td>
           </tr>
         {% endif %}
-        {% if h.is_enabled_resources(pkg.owner_org) %}
+        {% if h.is_enabled_resources_organization(pkg.owner_org) %}
         <tr>
           <th scope="row">{{ _('Comments') }}</th>
           <td><a href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}">{{ h.get_resource_comments(resource.id) }}</a></td>
@@ -101,7 +101,7 @@
           <td>{{ h.get_resource_rating(resource.id)|round(1) }}</td>
         </tr>
         {% endif %}
-        {% if h.is_enabled_utilizations(pkg.owner_org) %}
+        {% if h.is_enabled_utilizations_organization(pkg.owner_org) %}
           <tr>
             <th scope="row">{{ _('Issue Resolutions') }}</th>
             <td>{{ h.get_resource_issue_resolutions(res.id) }}</td>
