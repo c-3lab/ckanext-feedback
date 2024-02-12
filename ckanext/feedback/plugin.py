@@ -117,6 +117,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Enable/disable the download module
     def is_enabled_downloads_organization(self, organization_id):
         enable = config.get('ckan.feedback.downloads.enable', True)
+        if not self.is_feedback_config_file:
+            return toolkit.asbool(enable)
         enable_organization = organization_id in config.get(
             'ckan.feedback.downloads.enable_orgs', []
         )
@@ -130,6 +132,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Enable/disable the resources module
     def is_enabled_resources_organization(self, organization_id):
         enable = config.get('ckan.feedback.resources.enable', True)
+        if not self.is_feedback_config_file:
+            return toolkit.asbool(enable)
         enable_organization = organization_id in config.get(
             'ckan.feedback.resources.enable_orgs', []
         )
@@ -143,6 +147,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Enable/disable the utilizations module
     def is_enabled_utilizations_organization(self, organization_id):
         enable = config.get('ckan.feedback.utilizations.enable', True)
+        if not self.is_feedback_config_file:
+            return toolkit.asbool(enable)
         enable_organization = organization_id in config.get(
             'ckan.feedback.utilizations.enable_orgs', []
         )
@@ -158,6 +164,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get(
             'ckan.feedback.resources.comment.repeat_post_limit.enable', False
         )
+        if not self.is_feedback_config_file:
+            return toolkit.asbool(enable)
         enable_organization = organization_id in config.get(
             'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs',
             [],
