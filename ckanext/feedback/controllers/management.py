@@ -62,7 +62,7 @@ class ManagementController:
             resource_comment_summaries = (
                 comments_service.get_resource_comment_summaries(comments)
             )
-            ManagementController._check_organization_admin_role(resource_comment_summaries)
+            ManagementController._check_organization_admin_role_with_resource(resource_comment_summaries)
             comments_service.approve_resource_comments(comments, c.userobj.id)
             comments_service.refresh_resources_comments(resource_comment_summaries)
             session.commit()
@@ -99,7 +99,7 @@ class ManagementController:
             resource_comment_summaries = (
                 comments_service.get_resource_comment_summaries(comments)
             )
-            ManagementController._check_organization_admin_role(resource_comment_summaries)
+            ManagementController._check_organization_admin_role_with_resource(resource_comment_summaries)
             comments_service.delete_resource_comments(comments)
             comments_service.refresh_resources_comments(resource_comment_summaries)
             session.commit()
