@@ -29,12 +29,13 @@ class UtilizationController:
         if c.userobj is None:
             # If the user is not login, display only approved utilizations
             approval = True
-        elif is_organization_admin():
-            # If the user is an organization admin, display all organization's utilizations
-            owner_orgs = c.userobj.get_group_ids(group_type='organization', capacity='admin')
         elif c.userobj.sysadmin:
             # If the user is an admin, display all utilizations
             approval = None
+        elif is_organization_admin():
+            # If the user is an organization admin, display all organization's utilizations
+            approval = None
+            owner_orgs = c.userobj.get_group_ids(group_type='organization', capacity='admin')
 
         disable_keyword = request.args.get('disable_keyword', '')
         utilizations = search_service.get_utilizations(id, keyword, approval, owner_orgs)
