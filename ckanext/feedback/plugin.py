@@ -1,3 +1,6 @@
+import json
+from types import SimpleNamespace
+
 from ckan import plugins
 from ckan.common import config
 from ckan.lib.plugins import DefaultTranslation
@@ -28,6 +31,35 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('assets', 'feedback')
+
+        # get path to the feedback_config.json file
+        # open the file and load the settings
+        try:
+            feedback_config_path = config.get('ckan.feedback.config_file', '/etc/ckan')
+            with open(f'{feedback_config_path}/feedback_config.json') as json_file:
+                feedback_config = json.load(
+                    json_file, object_hook=lambda d: SimpleNamespace(**d)
+                ).modules
+                self.is_feedback_config_file = True
+
+                # the settings related to downloads module
+                try:
+                    config['ckan.feedback.resources.comment.rating.enable'] = (
+                        feedback_config.resources.comments.rating.enable
+                    )
+                    config['ckan.feedback.resources.comment.rating.enable_orgs'] = (
+                        feedback_config.resources.comments.rating.enable_orgs
+                    )
+                except AttributeError as e:
+                    toolkit.error_shout(e)
+
+        except FileNotFoundError:
+            toolkit.error_shout('The feedback config file not found')
+            self.is_feedback_config_file = False
+        except json.JSONDecodeError:
+            toolkit.error_shout('The feedback config file not decoded correctly')
+        except KeyError as e:
+            toolkit.error_shout(f'The key {e} not found in feedback_config.json')
 
     # IClick
 
@@ -69,6 +101,21 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             )
         )
 
+    # Enable/disable the rating function
+    def is_enabled_rating_organization(self, organization_id):
+        enable = config.get('ckan.feedback.resources.comment.rating.enable', False)
+        if not self.is_feedback_config_file:
+            return toolkit.asbool(enable)
+        enable_organization = organization_id in config.get(
+            'ckan.feedback.resources.comment.rating.enable_orgs', []
+        )
+        rating_enable = enable and enable_organization
+        return toolkit.asbool(rating_enable)
+
+    def is_enabled_rating(self):
+        enable = config.get('ckan.feedback.resources.comment.rating.enable', False)
+        return toolkit.asbool(enable)
+
     # ITemplateHelpers
 
     def get_helpers(self):
@@ -79,6 +126,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_disabled_repeated_post_on_resource': (
                 self.is_disabled_repeated_post_on_resource
             ),
+            'is_enabled_rating': self.is_enabled_rating,
+            'is_enabled_rating_organization': self.is_enabled_rating_organization,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,
             'get_resource_utilizations': (
