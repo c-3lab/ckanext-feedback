@@ -18,8 +18,11 @@ class ResourceController:
     def comment(resource_id):
         approval = None
         resource = comment_service.get_resource(resource_id)
+        # If the user is not login or is not a sysadmin, display only approved comments
         if c.userobj is None or not c.userobj.sysadmin:
             approval = True
+
+        # If the user is an organization admin, display all comments
         if c.userobj is not None:
             owner_org = resource.package.owner_org
             ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
