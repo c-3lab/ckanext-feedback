@@ -17,7 +17,7 @@
       <div class="module-content">
         {% set row = utilization %}
         <div class="centered-content">
-          {% if sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
+          {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             <form name="admin_form" action="{{ url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
               <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">{{ _('Edit') }}</a>
               {% if row.approval == false %}
