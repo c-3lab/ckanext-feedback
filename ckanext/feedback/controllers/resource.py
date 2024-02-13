@@ -16,18 +16,15 @@ class ResourceController:
     # resource_comment/<resource_id>
     @staticmethod
     def comment(resource_id):
-        approval = None
+        approval = True
         resource = comment_service.get_resource(resource_id)
-        # If the user is not login or is not a sysadmin, display only approved comments
-        if c.userobj is None or not c.userobj.sysadmin:
+        if c.userobj is None:
+            # if the user is not logged in, display only approved comments
             approval = True
+        elif has_organization_admin_role(resource.package.owner_org) or c.userobj.sysadmin:
+            # if the user is an organization admin or a sysadmin, display all comments
+            approval = None
 
-        # If the user is an organization admin, display all comments
-        if c.userobj is not None:
-            owner_org = resource.package.owner_org
-            ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
-            if owner_org in ids:
-                approval = None
         comments = comment_service.get_resource_comments(resource_id, approval)
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
