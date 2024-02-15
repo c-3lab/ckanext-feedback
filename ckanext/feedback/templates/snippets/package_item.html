@@ -35,11 +35,13 @@
   </li>
   <li>
     {% if h.is_enabled_resources() %}
-      <div class="utilization-data bubble">
-        <i class="fa fa-star"></i>
-        {{ h.get_package_rating(package.id)|round(1) }}
-        <div class="description">{{ _('Rating') }}</div>
-      </div>
+      {% if h.is_enabled_rating_org(package.owner_org) %}
+        <div class="utilization-data bubble">
+          <i class="fa fa-star"></i>
+          {{ h.get_package_rating(package.id)|round(1) }}
+          <div class="description">{{ _('Rating') }}</div>
+        </div>
+      {% endif %}
     {% endif %}
   </li>
   <li>
