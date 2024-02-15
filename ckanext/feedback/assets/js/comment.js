@@ -1,4 +1,4 @@
-function checkRatingAndCommentExists() {
+function checkCommentExists() {
   const comment = document.getElementById('comment_content').value;
   const rating = document.getElementById('rating').value;
   const commentErrorElement = document.getElementById('comment-error');
