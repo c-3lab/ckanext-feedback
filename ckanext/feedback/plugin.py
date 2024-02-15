@@ -4,12 +4,12 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
+from ckanext.feedback.services.common import check
 from ckanext.feedback.services.download import summary as download_summary_service
+from ckanext.feedback.services.management import comments as management_comments_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
-from ckanext.feedback.services.management import comments as management_comments_service
-from ckanext.feedback.services.common import check
 from ckanext.feedback.views import download, management, resource, utilization
 
 

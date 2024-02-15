@@ -8,7 +8,10 @@ from flask import make_response, redirect, url_for
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.resource.summary as summary_service
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.common.check import check_administrator, has_organization_admin_role
+from ckanext.feedback.services.common.check import (
+    check_administrator,
+    has_organization_admin_role,
+)
 
 
 class ResourceController:
@@ -21,7 +24,10 @@ class ResourceController:
         if c.userobj is None:
             # if the user is not logged in, display only approved comments
             approval = True
-        elif has_organization_admin_role(resource.package.owner_org) or c.userobj.sysadmin:
+        elif (
+            has_organization_admin_role(resource.package.owner_org)
+            or c.userobj.sysadmin
+        ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
 

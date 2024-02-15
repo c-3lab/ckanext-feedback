@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from ckan.model.resource import Resource
 from ckan.model.group import Group
+from ckan.model.resource import Resource
 from sqlalchemy import func
 
 from ckanext.feedback.models.resource_comment import (

@@ -50,8 +50,11 @@ def get_utilization_comments(utilization_id=None, approval=None, owner_orgs=None
     if approval is not None:
         query = query.filter(UtilizationComment.approval == approval)
     if owner_orgs is not None:
-        query = query.join(Utilization).join(Resource).join(Package).filter(
-            Package.owner_org.in_(owner_orgs)
+        query = (
+            query.join(Utilization)
+            .join(Resource)
+            .join(Package)
+            .filter(Package.owner_org.in_(owner_orgs))
         )
     return query.all()
 

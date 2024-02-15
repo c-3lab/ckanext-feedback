@@ -11,8 +11,11 @@ import ckanext.feedback.services.utilization.registration as registration_servic
 import ckanext.feedback.services.utilization.search as search_service
 import ckanext.feedback.services.utilization.summary as summary_service
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.common.check import check_administrator, has_organization_admin_role
-from ckanext.feedback.services.common.check import is_organization_admin
+from ckanext.feedback.services.common.check import (
+    check_administrator,
+    has_organization_admin_role,
+    is_organization_admin,
+)
 
 
 class UtilizationController:
@@ -35,10 +38,14 @@ class UtilizationController:
         elif is_organization_admin():
             # If the user is an organization admin, display all organization's utilizations
             approval = None
-            owner_orgs = c.userobj.get_group_ids(group_type='organization', capacity='admin')
+            owner_orgs = c.userobj.get_group_ids(
+                group_type='organization', capacity='admin'
+            )
 
         disable_keyword = request.args.get('disable_keyword', '')
-        utilizations = search_service.get_utilizations(id, keyword, approval, owner_orgs)
+        utilizations = search_service.get_utilizations(
+            id, keyword, approval, owner_orgs
+        )
 
         return toolkit.render(
             'utilization/search.html',

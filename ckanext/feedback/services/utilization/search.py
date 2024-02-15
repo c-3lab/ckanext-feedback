@@ -42,6 +42,8 @@ def get_utilizations(id=None, keyword=None, approval=None, owner_orgs=None):
     if approval is not None:
         query = query.filter(Utilization.approval == approval)
     if owner_orgs is not None:
-        query = query.filter(or_(Utilization.approval, Package.owner_org.in_(owner_orgs)))
+        query = query.filter(
+            or_(Utilization.approval, Package.owner_org.in_(owner_orgs))
+        )
 
     return query.all()
