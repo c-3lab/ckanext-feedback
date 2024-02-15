@@ -102,14 +102,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         )
 
     # Enable/disable the rating function
-    def is_enabled_rating_organization(self, organization_id):
+    def is_enabled_rating_org(self, org_id):
         enable = config.get('ckan.feedback.resources.comment.rating.enable', False)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_organization = organization_id in config.get(
+        enable_org = org_id in config.get(
             'ckan.feedback.resources.comment.rating.enable_orgs', []
         )
-        rating_enable = enable and enable_organization
+        rating_enable = enable and enable_org
         return toolkit.asbool(rating_enable)
 
     def is_enabled_rating(self):
@@ -127,7 +127,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 self.is_disabled_repeated_post_on_resource
             ),
             'is_enabled_rating': self.is_enabled_rating,
-            'is_enabled_rating_organization': self.is_enabled_rating_organization,
+            'is_enabled_rating_org': self.is_enabled_rating_org,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,
             'get_resource_utilizations': (
