@@ -115,14 +115,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # Check production.ini settings
     # Enable/disable the download module
-    def is_enabled_downloads_organization(self, organization_id):
+    def is_enabled_downloads_org(self, org_id):
         enable = config.get('ckan.feedback.downloads.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_organization = organization_id in config.get(
+        enable_org = org_id in config.get(
             'ckan.feedback.downloads.enable_orgs', []
         )
-        downloads_enable = enable and enable_organization
+        downloads_enable = enable and enable_org
         return toolkit.asbool(downloads_enable or not self.is_feedback_config_file)
 
     def is_enabled_downloads(self):
@@ -130,14 +130,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return toolkit.asbool(enable or not self.is_feedback_config_file)
 
     # Enable/disable the resources module
-    def is_enabled_resources_organization(self, organization_id):
+    def is_enabled_resources_org(self, org_id):
         enable = config.get('ckan.feedback.resources.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_organization = organization_id in config.get(
+        enable_org = org_id in config.get(
             'ckan.feedback.resources.enable_orgs', []
         )
-        resources_enable = enable and enable_organization
+        resources_enable = enable and enable_org
         return toolkit.asbool(resources_enable or not self.is_feedback_config_file)
 
     def is_enabled_resources(self):
@@ -145,14 +145,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return toolkit.asbool(enable or not self.is_feedback_config_file)
 
     # Enable/disable the utilizations module
-    def is_enabled_utilizations_organization(self, organization_id):
+    def is_enabled_utilizations_org(self, org_id):
         enable = config.get('ckan.feedback.utilizations.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_organization = organization_id in config.get(
+        enable_org = org_id in config.get(
             'ckan.feedback.utilizations.enable_orgs', []
         )
-        utilizations_enable = enable and enable_organization
+        utilizations_enable = enable and enable_org
         return toolkit.asbool(utilizations_enable or not self.is_feedback_config_file)
 
     def is_enabled_utilizations(self):
@@ -160,17 +160,17 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return toolkit.asbool(enable or not self.is_feedback_config_file)
 
     # Enable/disable repeat posting on a single resource
-    def is_disabled_repeat_post_on_resource_organization(self, organization_id):
+    def is_disabled_repeat_post_on_resource_org(self, org_id):
         enable = config.get(
             'ckan.feedback.resources.comment.repeat_post_limit.enable', False
         )
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_organization = organization_id in config.get(
+        enable_org = org_id in config.get(
             'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs',
             [],
         )
-        repeat_post_limit_enable = enable and enable_organization
+        repeat_post_limit_enable = enable and enable_org
         return toolkit.asbool(
             repeat_post_limit_enable
         )
@@ -185,16 +185,16 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     def get_helpers(self):
         return {
-            'is_enabled_downloads_organization': self.is_enabled_downloads_organization,
+            'is_enabled_downloads_org': self.is_enabled_downloads_org,
             'is_enabled_downloads': self.is_enabled_downloads,
-            'is_enabled_resources_organization': self.is_enabled_resources_organization,
+            'is_enabled_resources_org': self.is_enabled_resources_org,
             'is_enabled_resources': self.is_enabled_resources,
-            'is_enabled_utilizations_organization': (
-                self.is_enabled_utilizations_organization
+            'is_enabled_utilizations_org': (
+                self.is_enabled_utilizations_org
             ),
             'is_enabled_utilizations': self.is_enabled_utilizations,
-            'is_disabled_repeat_post_on_resource_organization': (
-                self.is_disabled_repeat_post_on_resource_organization
+            'is_disabled_repeat_post_on_resource_org': (
+                self.is_disabled_repeat_post_on_resource_org
             ),
             'is_disabled_repeat_post_on_resource': (
                 self.is_disabled_repeat_post_on_resource
