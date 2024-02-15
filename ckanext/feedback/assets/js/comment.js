@@ -5,11 +5,9 @@ function checkRatingAndCommentExists() {
   const ratingErrorElement = document.getElementById('rating-error');
 
   // Reset display settings
-  ratingErrorElement.style.display = 'none';
   commentErrorElement.style.display = 'none';
 
-  if (!rating && !comment) {
-    ratingErrorElement.style.display = '';
+  if (!comment) {
     commentErrorElement.style.display = '';
     return false;
   } else {
