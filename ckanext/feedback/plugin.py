@@ -119,9 +119,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.downloads.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get(
-            'ckan.feedback.downloads.enable_orgs', []
-        )
+        enable_org = org_id in config.get('ckan.feedback.downloads.enable_orgs', [])
         downloads_enable = enable and enable_org
         return toolkit.asbool(downloads_enable or not self.is_feedback_config_file)
 
@@ -134,9 +132,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.resources.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get(
-            'ckan.feedback.resources.enable_orgs', []
-        )
+        enable_org = org_id in config.get('ckan.feedback.resources.enable_orgs', [])
         resources_enable = enable and enable_org
         return toolkit.asbool(resources_enable or not self.is_feedback_config_file)
 
@@ -149,9 +145,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.utilizations.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get(
-            'ckan.feedback.utilizations.enable_orgs', []
-        )
+        enable_org = org_id in config.get('ckan.feedback.utilizations.enable_orgs', [])
         utilizations_enable = enable and enable_org
         return toolkit.asbool(utilizations_enable or not self.is_feedback_config_file)
 
@@ -171,9 +165,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             [],
         )
         repeat_post_limit_enable = enable and enable_org
-        return toolkit.asbool(
-            repeat_post_limit_enable
-        )
+        return toolkit.asbool(repeat_post_limit_enable)
 
     def is_disabled_repeat_post_on_resource(self):
         enable = config.get(
@@ -189,9 +181,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_enabled_downloads': self.is_enabled_downloads,
             'is_enabled_resources_org': self.is_enabled_resources_org,
             'is_enabled_resources': self.is_enabled_resources,
-            'is_enabled_utilizations_org': (
-                self.is_enabled_utilizations_org
-            ),
+            'is_enabled_utilizations_org': self.is_enabled_utilizations_org,
             'is_enabled_utilizations': self.is_enabled_utilizations,
             'is_disabled_repeat_post_on_resource_org': (
                 self.is_disabled_repeat_post_on_resource_org
