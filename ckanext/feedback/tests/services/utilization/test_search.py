@@ -41,12 +41,14 @@ class TestUtilizationDetailsService:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilizations(self):
-        unapproved_dataset = factories.Dataset()
+        unapproved_org = factories.Organization(is_organization=True, name='unapproved_owner', type='organization')
+        unapproved_dataset = factories.Dataset(owner_org=unapproved_org['id'])
         unapproved_resource = factories.Resource(package_id=unapproved_dataset['id'])
         unapproved_id = str(uuid.uuid4())
         unapproved_title = 'unapproved title'
 
-        approved_dataset = factories.Dataset()
+        approved_org = factories.Organization(is_organization=True, name='approved_owner', type='organization')
+        approved_dataset = factories.Dataset(owner_org=approved_org['id'])
         approved_resource = factories.Resource(package_id=approved_dataset['id'])
         approved_id = str(uuid.uuid4())
         approved_title = 'approved title'
@@ -78,6 +80,7 @@ class TestUtilizationDetailsService:
             unapproved_resource['name'],
             unapproved_resource['id'],
             unapproved_dataset['name'],
+            unapproved_org['id'],
             0,
         )
 
@@ -90,6 +93,7 @@ class TestUtilizationDetailsService:
             approved_resource['name'],
             approved_resource['id'],
             approved_dataset['name'],
+            approved_org['id'],
             0,
         )
 

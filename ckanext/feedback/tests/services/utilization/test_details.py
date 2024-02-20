@@ -125,7 +125,8 @@ class TestUtilizationDetailsService:
         create_download_tables(engine)
 
     def test_get_utilization(self):
-        dataset = factories.Dataset()
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=dataset['id'])
 
         assert get_registered_utilization(resource['id']) is None
@@ -144,6 +145,7 @@ class TestUtilizationDetailsService:
             resource['name'],
             resource['id'],
             dataset['name'],
+            organization['id'],
         )
         assert result == expected_utilization
 

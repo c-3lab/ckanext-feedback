@@ -70,7 +70,9 @@ msgstr "宣伝"
 msgid "Thank"
 msgstr "感謝"
 
-#: ckanext/feedback/services/common/check.py:10
+#: ckanext/feedbakc/controllers/utilization.py:267
+#: ckanext/feedbakc/controllers/resource.py:120
+#: ckanext/feedback/services/common/check.py:12
 msgid ""
 "The requested URL was not found on the server. If you entered the URL "
 "manually please check your spelling and try again."
