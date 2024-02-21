@@ -1,12 +1,10 @@
-from unittest.mock import patch, mock_open
-from types import SimpleNamespace
 import json
 import os
-
-from ckan.common import config
+from unittest.mock import patch
 
 import pytest
 from ckan import model
+from ckan.common import config
 
 from ckanext.feedback.command import feedback
 from ckanext.feedback.command.feedback import (
@@ -41,24 +39,18 @@ class TestPlugin:
         # without .ini file
         feedback_config = {
             'modules': {
-                'utilizations': {
-                    'enable': True,
-                    'enable_orgs': []
-                },
+                'utilizations': {'enable': True, 'enable_orgs': []},
                 'resources': {
                     'enable': True,
                     'enable_orgs': [],
                     'comments': {
-                        'repeat_post_limit': {
-                            'enable': False,
-                            'enable_orgs': []
-                        }
-                    }
+                        'repeat_post_limit': {'enable': False, 'enable_orgs': []}
+                    },
                 },
                 'downloads': {
                     'enable': True,
                     'enable_orgs': [],
-                }
+                },
             }
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
@@ -70,8 +62,14 @@ class TestPlugin:
         assert config.get('ckan.feedback.utilizations.enable_orgs') == []
         assert config.get('ckan.feedback.resources.enable') is True
         assert config.get('ckan.feedback.resources.enable_orgs') == []
-        assert config.get('ckan.feedback.resources.comment.repeat_post_limit.enable') is False
-        assert config.get('ckan.feedback.resources.comment.repeat_post_limit.enable_orgs') == []
+        assert (
+            config.get('ckan.feedback.resources.comment.repeat_post_limit.enable')
+            is False
+        )
+        assert (
+            config.get('ckan.feedback.resources.comment.repeat_post_limit.enable_orgs')
+            == []
+        )
         assert config.get('ckan.feedback.downloads.enable') is True
         assert config.get('ckan.feedback.downloads.enable_orgs') == []
 
@@ -84,15 +82,16 @@ class TestPlugin:
         assert instance.is_feedback_config_file is True
         assert config.get('ckan.feedback.utilizations.enable') is True
         assert config.get('ckan.feedback.resources.enable') is True
-        assert config.get('ckan.feedback.resources.comment.repeat_post_limit.enable') is False
+        assert (
+            config.get('ckan.feedback.resources.comment.repeat_post_limit.enable')
+            is False
+        )
         assert config.get('ckan.feedback.downloads.enable') is True
 
     @patch('ckanext.feedback.plugin.toolkit')
     def test_update_config_attribute_error(self, mock_toolkit):
         instance = FeedbackPlugin()
-        feedback_config = {
-            'modules': {}
-        }
+        feedback_config = {'modules': {}}
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
@@ -106,7 +105,9 @@ class TestPlugin:
             f.write('{"modules":')
 
         instance.update_config(config)
-        mock_toolkit.error_shout.assert_called_once_with('The feedback config file not decoded correctly')
+        mock_toolkit.error_shout.assert_called_once_with(
+            'The feedback config file not decoded correctly'
+        )
 
     def test_get_commands(self):
         result = FeedbackPlugin.get_commands(self)
@@ -172,12 +173,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False and org_id is not in enable_orgs
         feedback_config = {
-            'modules': {
-                'downloads': {
-                    'enable': False,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'downloads': {'enable': False, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -187,12 +183,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False and org_id is in enable_orgs
         feedback_config = {
-            'modules': {
-                'downloads': {
-                    'enable': False,
-                    'enable_orgs': [org_id]
-                }
-            }
+            'modules': {'downloads': {'enable': False, 'enable_orgs': [org_id]}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -202,12 +193,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True and org_id is not in enable_orgs
         feedback_config = {
-            'modules': {
-                'downloads': {
-                    'enable': True,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'downloads': {'enable': True, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -217,12 +203,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True and org_id is in enable_orgs
         feedback_config = {
-            'modules': {
-                'downloads': {
-                    'enable': True,
-                    'enable_orgs': [org_id]
-                }
-            }
+            'modules': {'downloads': {'enable': True, 'enable_orgs': [org_id]}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -249,12 +230,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False
         feedback_config = {
-            'modules': {
-                'downloads': {
-                    'enable': False,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'downloads': {'enable': False, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -264,12 +240,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True
         feedback_config = {
-            'modules': {
-                'downloads': {
-                    'enable': True,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'downloads': {'enable': True, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -296,12 +267,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False and org_id is not in enable_orgs
         feedback_config = {
-            'modules': {
-                'resources': {
-                    'enable': False,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'resources': {'enable': False, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -311,12 +277,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False and org_id is in enable_orgs
         feedback_config = {
-            'modules': {
-                'resources': {
-                    'enable': False,
-                    'enable_orgs': [org_id]
-                }
-            }
+            'modules': {'resources': {'enable': False, 'enable_orgs': [org_id]}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -326,12 +287,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True and org_id is not in enable_orgs
         feedback_config = {
-            'modules': {
-                'resources': {
-                    'enable': True,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'resources': {'enable': True, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -341,12 +297,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True and org
         feedback_config = {
-            'modules': {
-                'resources': {
-                    'enable': True,
-                    'enable_orgs': [org_id]
-                }
-            }
+            'modules': {'resources': {'enable': True, 'enable_orgs': [org_id]}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -372,12 +323,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False
         feedback_config = {
-            'modules': {
-                'resources': {
-                    'enable': False,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'resources': {'enable': False, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -387,12 +333,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True
         feedback_config = {
-            'modules': {
-                'resources': {
-                    'enable': True,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'resources': {'enable': True, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -419,12 +360,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False and org_id is not in enable_orgs
         feedback_config = {
-            'modules': {
-                'utilizations': {
-                    'enable': False,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'utilizations': {'enable': False, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -434,12 +370,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False and org_id is in enable_orgs
         feedback_config = {
-            'modules': {
-                'utilizations': {
-                    'enable': False,
-                    'enable_orgs': [org_id]
-                }
-            }
+            'modules': {'utilizations': {'enable': False, 'enable_orgs': [org_id]}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -449,12 +380,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True and org_id is not in enable_orgs
         feedback_config = {
-            'modules': {
-                'utilizations': {
-                    'enable': True,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'utilizations': {'enable': True, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -464,12 +390,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True and org_id is in enable_orgs
         feedback_config = {
-            'modules': {
-                'utilizations': {
-                    'enable': True,
-                    'enable_orgs': [org_id]
-                }
-            }
+            'modules': {'utilizations': {'enable': True, 'enable_orgs': [org_id]}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -495,12 +416,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is False
         feedback_config = {
-            'modules': {
-                'utilizations': {
-                    'enable': False,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'utilizations': {'enable': False, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -510,12 +426,7 @@ class TestPlugin:
 
         # with feedback_config_file enable is True
         feedback_config = {
-            'modules': {
-                'utilizations': {
-                    'enable': True,
-                    'enable_orgs': []
-                }
-            }
+            'modules': {'utilizations': {'enable': True, 'enable_orgs': []}}
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
@@ -545,10 +456,7 @@ class TestPlugin:
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {
-                            'enable': False,
-                            'enable_orgs': []
-                        }
+                        'repeat_post_limit': {'enable': False, 'enable_orgs': []}
                     }
                 }
             }
@@ -564,10 +472,7 @@ class TestPlugin:
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {
-                            'enable': False,
-                            'enable_orgs': [org_id]
-                        }
+                        'repeat_post_limit': {'enable': False, 'enable_orgs': [org_id]}
                     }
                 }
             }
@@ -583,10 +488,7 @@ class TestPlugin:
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {
-                            'enable': True,
-                            'enable_orgs': []
-                        }
+                        'repeat_post_limit': {'enable': True, 'enable_orgs': []}
                     }
                 }
             }
@@ -602,10 +504,7 @@ class TestPlugin:
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {
-                            'enable': True,
-                            'enable_orgs': [org_id]
-                        }
+                        'repeat_post_limit': {'enable': True, 'enable_orgs': [org_id]}
                     }
                 }
             }
@@ -637,10 +536,7 @@ class TestPlugin:
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {
-                            'enable': False,
-                            'enable_orgs': []
-                        }
+                        'repeat_post_limit': {'enable': False, 'enable_orgs': []}
                     }
                 }
             }
@@ -656,10 +552,7 @@ class TestPlugin:
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {
-                            'enable': True,
-                            'enable_orgs': []
-                        }
+                        'repeat_post_limit': {'enable': True, 'enable_orgs': []}
                     }
                 }
             }
