@@ -7,6 +7,7 @@ from ckan.logic import get_action
 from ckan.model import Resource, Session, User
 from ckan.tests import factories
 from flask import Flask, g
+from flask_babel import Babel
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -29,6 +30,7 @@ class TestUtilizationController:
 
     def setup_method(self, method):
         self.app = Flask(__name__)
+        Babel(self.app)
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')

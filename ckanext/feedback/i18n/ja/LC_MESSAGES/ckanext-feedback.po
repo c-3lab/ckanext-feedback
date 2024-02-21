@@ -6,7 +6,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ckanext-feedback 1.0.0\n"
+"Project-Id-Version: ckanext-feedback 1.1.0\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
 "POT-Creation-Date: 2023-03-31 15:54+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
