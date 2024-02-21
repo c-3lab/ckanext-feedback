@@ -91,8 +91,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             self.is_feedback_config_file = False
         except json.JSONDecodeError:
             toolkit.error_shout('The feedback config file not decoded correctly')
-        except KeyError as e:
-            toolkit.error_shout(f'The key {e} not found in feedback_config.json')
 
     # IClick
 
