@@ -37,6 +37,7 @@ class TestPlugin:
         assert instance.is_feedback_config_file is False
 
     def test_update_config_with_feedback_config_file(self):
+        # without .ini file
         instance = FeedbackPlugin()
         feedback_config = {
             'modules': {
@@ -73,6 +74,18 @@ class TestPlugin:
         assert config.get('ckan.feedback.resources.comment.repeat_post_limit.enable_orgs') == []
         assert config.get('ckan.feedback.downloads.enable') is True
         assert config.get('ckan.feedback.downloads.enable_orgs') == []
+
+        # with .ini file enable is opposite from feedback_config.json
+        config['ckan.feedback.utilizations.enable'] = False
+        config['ckan.feedback.resources.enable'] = False
+        config['ckan.feedback.downloads.enable'] = False
+        config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
+        instance.update_config(config)
+        assert instance.is_feedback_config_file is True
+        assert config.get('ckan.feedback.utilizations.enable') is True
+        assert config.get('ckan.feedback.resources.enable') is True
+        assert config.get('ckan.feedback.resources.comment.repeat_post_limit.enable') is False
+        assert config.get('ckan.feedback.downloads.enable') is True
 
     @patch('ckanext.feedback.plugin.toolkit')
     def test_update_config_attribute_error(self, mock_toolkit):
