@@ -149,7 +149,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     def is_enabled_utilizations(self):
         enable = config.get('ckan.feedback.utilizations.enable', True)
-        return toolkit.asbool(enable or not self.is_feedback_config_file)
+        return toolkit.asbool(enable)
 
     # Enable/disable repeat posting on a single resource
     def is_disabled_repeat_post_on_resource_org(self, org_id):
