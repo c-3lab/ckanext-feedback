@@ -475,3 +475,49 @@ class TestPlugin:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
         assert instance.is_enabled_utilizations_org(org_id) is True
+
+    def test_is_enabled_utilizations(self):
+        instance = FeedbackPlugin()
+
+        # without feedback_config_file and .ini file
+        instance.update_config(config)
+        assert instance.is_enabled_utilizations() is True
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.utilizations.enable'] = True
+        instance.update_config(config)
+        assert instance.is_enabled_utilizations() is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.utilizations.enable'] = False
+        instance.update_config(config)
+        assert instance.is_enabled_utilizations() is False
+
+        # with feedback_config_file enable is False
+        feedback_config = {
+            'modules': {
+                'utilizations': {
+                    'enable': False,
+                    'enable_orgs': []
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_utilizations() is False
+        os.remove('/etc/ckan/feedback_config.json')
+
+        # with feedback_config_file enable is True
+        feedback_config = {
+            'modules': {
+                'utilizations': {
+                    'enable': True,
+                    'enable_orgs': []
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_utilizations() is True
