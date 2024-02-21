@@ -136,7 +136,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     def is_enabled_resources(self):
         enable = config.get('ckan.feedback.resources.enable', True)
-        return toolkit.asbool(enable or not self.is_feedback_config_file)
+        return toolkit.asbool(enable)
 
     # Enable/disable the utilizations module
     def is_enabled_utilizations_org(self, org_id):
