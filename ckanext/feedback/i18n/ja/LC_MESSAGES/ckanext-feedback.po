@@ -70,12 +70,12 @@ msgstr "宣伝"
 msgid "Thank"
 msgstr "感謝"
 
-#: ckanext/feedbakc/controllers/utilization.py:267
-#: ckanext/feedbakc/controllers/resource.py:120
+#: ckanext/feedback/controllers/utilization.py:267
+#: ckanext/feedback/controllers/resource.py:120
 #: ckanext/feedback/services/common/check.py:12
 msgid ""
-"The requested URL was not found on the server. If you entered the URL "
-"manually please check your spelling and try again."
+"The requested URL was not found on the server. If you entered the"
+" URL manually please check your spelling and try again."
 msgstr "要求された URL がサーバー上に見つかりませんでした。URL を手動で入力した場合は、綴りを確認してからもう一度お試しください。"
 
 #: ckanext/feedback/templates/header.html:9
