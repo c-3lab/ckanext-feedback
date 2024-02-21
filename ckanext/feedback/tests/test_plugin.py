@@ -31,14 +31,14 @@ class TestPlugin:
         if os.path.isfile('/etc/ckan/feedback_config.json'):
             os.remove('/etc/ckan/feedback_config.json')
 
-    def test_update_config_without_feedback_config_file(self):
+    def test_update_config_with_feedback_config_file(self):
         instance = FeedbackPlugin()
+
+        # without feedback_config_file and .ini file
         instance.update_config(config)
         assert instance.is_feedback_config_file is False
 
-    def test_update_config_with_feedback_config_file(self):
         # without .ini file
-        instance = FeedbackPlugin()
         feedback_config = {
             'modules': {
                 'utilizations': {
