@@ -27,7 +27,7 @@ class TestPlugin:
         create_resource_tables(engine)
         create_download_tables(engine)
 
-    def setup_method(self, method):
+    def teardown_method(self, method):
         if os.path.isfile('/etc/ckan/feedback_config.json'):
             os.remove('/etc/ckan/feedback_config.json')
 
