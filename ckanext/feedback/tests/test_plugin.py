@@ -99,7 +99,6 @@ class TestPlugin:
         result = FeedbackPlugin.get_commands(self)
         assert result == [feedback.feedback]
 
-    @patch('ckanext.feedback.plugin.toolkit')
     @patch('ckanext.feedback.plugin.download')
     @patch('ckanext.feedback.plugin.resource')
     @patch('ckanext.feedback.plugin.utilization')
@@ -110,7 +109,6 @@ class TestPlugin:
         mock_utilization,
         mock_resource,
         mock_download,
-        mock_toolkit,
     ):
         instance = FeedbackPlugin()
 
