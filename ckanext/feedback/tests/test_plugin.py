@@ -99,61 +99,44 @@ class TestPlugin:
         result = FeedbackPlugin.get_commands(self)
         assert result == [feedback.feedback]
 
+    @patch('ckanext.feedback.plugin.toolkit')
+    @patch('ckanext.feedback.plugin.download')
+    @patch('ckanext.feedback.plugin.resource')
+    @patch('ckanext.feedback.plugin.utilization')
+    @patch('ckanext.feedback.plugin.management')
+    def test_get_blueprint(
+        self,
+        mock_management,
+        mock_utilization,
+        mock_resource,
+        mock_download,
+        mock_toolkit,
+    ):
+        instance = FeedbackPlugin()
 
-#    @patch('builtins.open', new_callable=mock_open)
-#    @patch('ckanext.feedback.plugin.config')
-#    @patch('ckanext.feedback.plugin.json')
-#    def test_update_config(self, mock_json, mock_config, open_mock):
-#        feedback_config = {
-#            'modules': {
-#                'downloads': {
-#                    'enable': True,
-#                    'enable_orgs': []
-#                }
-#            }
-#        }
-#        instance = FeedbackPlugin()
-#        mock_config.get.return_value = '/etc/ckan'
-#        mock_json.load.return_value = feedback_config.get('modules', {})
-#        instance.update_config(mock_config)
-#
-#        mock_json.load.assert_called_once_with(feedback_config, object_hook=lambda d: SimpleNamespace(**d))
+        config['ckan.feedback.utilizations.enable'] = True
+        config['ckan.feedback.resources.enable'] = True
+        config['ckan.feedback.downloads.enable'] = True
+        mock_management.get_management_blueprint.return_value = 'management_bp'
+        mock_download.get_download_blueprint.return_value = 'download_bp'
+        mock_resource.get_resource_comment_blueprint.return_value = 'resource_bp'
+        mock_utilization.get_utilization_blueprint.return_value = 'utilization_bp'
 
-#    @patch('ckanext.feedback.plugin.toolkit')
-#    @patch('ckanext.feedback.plugin.download')
-#    @patch('ckanext.feedback.plugin.resource')
-#    @patch('ckanext.feedback.plugin.utilization')
-#    @patch('ckanext.feedback.plugin.management')
-#    def test_get_blueprint(
-#        self,
-#        mock_management,
-#        mock_utilization,
-#        mock_resource,
-#        mock_download,
-#        mock_toolkit,
-#    ):
-#        instance = FeedbackPlugin()
-#        mock_management.get_management_blueprint.return_value = 'management_bp'
-#        mock_download.get_download_blueprint.return_value = 'download_bp'
-#        mock_resource.get_resource_comment_blueprint.return_value = 'resource_bp'
-#        mock_utilization.get_utilization_blueprint.return_value = 'utilization_bp'
-#
-#        expected_blueprints = [
-#            'download_bp',
-#            'resource_bp',
-#            'utilization_bp',
-#            'management_bp',
-#        ]
-#
-#        actual_blueprints = instance.get_blueprint()
-#
-#        assert actual_blueprints == expected_blueprints
-#
-#        mock_toolkit.asbool.side_effect = [False, False, False]
-#        expected_blueprints = ['management_bp']
-#        actual_blueprints = instance.get_blueprint()
-#
-#        assert actual_blueprints == expected_blueprints
-#
-#    def test_is_disabled_repeated_post_on_resource(self):
-#        assert FeedbackPlugin.is_disabled_repeated_post_on_resource(self) is False
+        expected_blueprints = [
+            'download_bp',
+            'resource_bp',
+            'utilization_bp',
+            'management_bp',
+        ]
+
+        actual_blueprints = instance.get_blueprint()
+
+        assert actual_blueprints == expected_blueprints
+
+        config['ckan.feedback.utilizations.enable'] = False
+        config['ckan.feedback.resources.enable'] = False
+        config['ckan.feedback.downloads.enable'] = False
+        expected_blueprints = ['management_bp']
+        actual_blueprints = instance.get_blueprint()
+
+        assert actual_blueprints == expected_blueprints
