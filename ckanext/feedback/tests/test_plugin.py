@@ -31,10 +31,6 @@ class TestPlugin:
         if os.path.isfile('/etc/ckan/feedback_config.json'):
             os.remove('/etc/ckan/feedback_config.json')
 
-    def test_get_commands(self):
-        result = FeedbackPlugin.get_commands(self)
-        assert result == [feedback.feedback]
-
     def test_update_config_without_feedback_config_file(self):
         instance = FeedbackPlugin()
         instance.update_config(config)
@@ -98,6 +94,10 @@ class TestPlugin:
 
         instance.update_config(config)
         mock_toolkit.error_shout.assert_called_once_with('The feedback config file not decoded correctly')
+
+    def test_get_commands(self):
+        result = FeedbackPlugin.get_commands(self)
+        assert result == [feedback.feedback]
 
 
 #    @patch('builtins.open', new_callable=mock_open)
