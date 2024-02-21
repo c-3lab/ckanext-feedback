@@ -614,3 +614,57 @@ class TestPlugin:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
         assert instance.is_disabled_repeat_post_on_resource_org(org_id) is True
+
+    def test_is_disabled_repeat_post_on_resource(self):
+        instance = FeedbackPlugin()
+
+        # without feedback_config_file and .ini file
+        instance.update_config(config)
+        assert instance.is_disabled_repeat_post_on_resource() is False
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
+        instance.update_config(config)
+        assert instance.is_disabled_repeat_post_on_resource() is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = False
+        instance.update_config(config)
+        assert instance.is_disabled_repeat_post_on_resource() is False
+
+        # with feedback_config_file enable is False
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {
+                        'repeat_post_limit': {
+                            'enable': False,
+                            'enable_orgs': []
+                        }
+                    }
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_disabled_repeat_post_on_resource() is False
+        os.remove('/etc/ckan/feedback_config.json')
+
+        # with feedback_config_file enable is True
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {
+                        'repeat_post_limit': {
+                            'enable': True,
+                            'enable_orgs': []
+                        }
+                    }
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_disabled_repeat_post_on_resource() is True
