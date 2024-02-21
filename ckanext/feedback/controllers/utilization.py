@@ -261,7 +261,7 @@ class UtilizationController:
     @staticmethod
     def _check_organization_admin_role(utilization_id):
         utilization = detail_service.get_utilization(utilization_id)
-        if not has_organization_admin_role(utilization.owner_org):
+        if not has_organization_admin_role(utilization.owner_org) and not c.userobj.sysadmin:
             toolkit.abort(
                 404,
                 _(
