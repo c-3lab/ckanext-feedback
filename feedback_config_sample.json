@@ -1,0 +1,22 @@
+{
+    "modules":{
+        "utilizations": {
+            "enable": true,
+            "enable_orgs": ["organizaiton_id1", "organization_id2"]
+        },
+        "resources": {
+            "enable": true,
+            "enable_orgs": ["organizaiton_id1", "organizaiton_id2"],
+            "comments": {
+                "repeat_post_limit": {
+                    "enable": false,
+                    "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
+                }
+            }
+        },
+        "downloads": {
+            "enable": true,
+            "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
+        }
+    }
+}

@@ -7,7 +7,7 @@
     {% for resource in h.dict_list_reduce(package.resources, 'format') %}
       <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
     {% endfor %}
-    {% if h.is_enabled_downloads() %}
+    {% if h.is_enabled_downloads_org(package.owner_org) %}
       <div class = "bubble">
         <i class="fa fa-arrow-circle-o-down"></i>
         {{ h.get_package_downloads(package.id) }}
@@ -16,7 +16,7 @@
     {% endif %}
   </li>
   <li>
-    {% if h.is_enabled_utilizations() %}
+    {% if h.is_enabled_utilizations_org(package.owner_org) %}
       <div class="utilization-data bubble">
         <i class="fa fa-pencil-square-o"></i>
         <a href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">{{ h.get_package_utilizations(package.id) }}</a>
@@ -25,7 +25,7 @@
     {% endif %}
   </li>
   <li>
-    {% if h.is_enabled_resources() %}
+    {% if h.is_enabled_resources_org(package.owner_org) %}
       <div class="utilization-data bubble">
         <i class="fa fa-commenting-o"></i>
         {{ h.get_package_comments(package.id) }}
@@ -34,7 +34,7 @@
     {% endif %}
   </li>
   <li>
-    {% if h.is_enabled_resources() %}
+    {% if h.is_enabled_resources_org(package.owner_org) %}
       <div class="utilization-data bubble">
         <i class="fa fa-star"></i>
         {{ h.get_package_rating(package.id)|round(1) }}
@@ -43,7 +43,7 @@
     {% endif %}
   </li>
   <li>
-    {% if h.is_enabled_utilizations() %}
+    {% if h.is_enabled_utilizations_org(package.owner_org) %}
       <div class="bubble">
         <img id="issue-resolution" src="/images/issue_resolution_badge.png">
         {{ h.get_package_issue_resolutions(package.id) }}
