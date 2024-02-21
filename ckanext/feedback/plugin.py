@@ -123,7 +123,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     def is_enabled_downloads(self):
         enable = config.get('ckan.feedback.downloads.enable', True)
-        return toolkit.asbool(enable or not self.is_feedback_config_file)
+        return toolkit.asbool(enable)
 
     # Enable/disable the resources module
     def is_enabled_resources_org(self, org_id):
