@@ -156,16 +156,16 @@ class TestPlugin:
         instance = FeedbackPlugin()
         org_id = 'example_org_id'
 
-        # without feedback_config_file
+        # without feedback_config_file and .ini file
         instance.update_config(config)
         assert instance.is_enabled_downloads_org(org_id) is True
 
-        # without feedback_config_file and enable is True
+        # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.downloads.enable'] = True
         instance.update_config(config)
         assert instance.is_enabled_downloads_org(org_id) is True
 
-        # without feedback_config_file and enable is False
+        # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.downloads.enable'] = False
         instance.update_config(config)
         assert instance.is_enabled_downloads_org(org_id) is False
@@ -229,3 +229,49 @@ class TestPlugin:
         instance.update_config(config)
         assert instance.is_enabled_downloads_org(org_id) is True
         os.remove('/etc/ckan/feedback_config.json')
+
+    def test_is_enabled_downloads(self):
+        instance = FeedbackPlugin()
+
+        # without feedback_config_file and .ini file
+        instance.update_config(config)
+        assert instance.is_enabled_downloads() is True
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.downloads.enable'] = True
+        instance.update_config(config)
+        assert instance.is_enabled_downloads() is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.downloads.enable'] = False
+        instance.update_config(config)
+        assert instance.is_enabled_downloads() is False
+
+        # with feedback_config_file enable is False
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': False,
+                    'enable_orgs': []
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_downloads() is False
+        os.remove('/etc/ckan/feedback_config.json')
+
+        # with feedback_config_file enable is True
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': []
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_downloads() is True
