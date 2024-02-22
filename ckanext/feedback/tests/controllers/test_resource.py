@@ -5,6 +5,7 @@ from ckan import model
 from ckan.logic import get_action
 from ckan.model import User
 from ckan.tests import factories
+from ckan.common import _
 from flask import Flask, g
 
 import ckanext.feedback.services.resource.comment as comment_service
@@ -211,7 +212,7 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
-    def test_approve_comment(
+    def test_approve_comment_with_sysadmin(
         self,
         mock_redirect,
         mock_url_for,
@@ -246,6 +247,23 @@ class TestResourceController:
         mock_redirect.assert_called_once_with('resource comment url')
 
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_approve_comment_with_user(self, mock_toolkit_abort):
+        resource_id = 'resource id'
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        ResourceController.approve_comment(resource_id)
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.request')
@@ -273,7 +291,7 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
-    def test_reply(
+    def test_reply_with_sysadmin(
         self,
         mock_redirect,
         mock_url_for,
@@ -307,6 +325,23 @@ class TestResourceController:
         )
 
         mock_redirect.assert_called_once_with('resource comment url')
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_reply_with_user(self, mock_toolkit_abort):
+        resource_id = 'resource id'
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        ResourceController.reply(resource_id)
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
 
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
