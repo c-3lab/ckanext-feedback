@@ -48,7 +48,7 @@ class ResourceController:
         rating = None
         if request.form.get('rating'):
             rating = int(request.form.get('rating'))
-        if not ((category and content) or rating):
+        if not (category and content):
             toolkit.abort(400)
 
         comment_service.create_resource_comment(resource_id, category, content, rating)
