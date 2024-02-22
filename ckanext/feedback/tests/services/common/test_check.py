@@ -13,7 +13,11 @@ from ckanext.feedback.command.feedback import (
     create_resource_tables,
     create_utilization_tables,
 )
-from ckanext.feedback.services.common.check import check_administrator
+from ckanext.feedback.services.common.check import (
+    check_administrator,
+    is_organization_admin,
+    has_organization_admin_role,
+)
 
 engine = model.repo.session.get_bind()
 
@@ -49,10 +53,6 @@ class TestCheck:
 
     @patch('ckanext.feedback.services.common.check.toolkit')
     def test_check_administrator_without_user(self, mock_toolkit):
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        user.sysadmin = False
-
         @check_administrator
         def dummy_function():
             return 'function is called'
@@ -67,3 +67,65 @@ class TestCheck:
                 ' URL manually please check your spelling and try again.'
             ),
         )
+
+    def test_is_organization_admin_with_user(self):
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        user.sysadmin = False
+        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+        member = model.Member(
+            group=organization,
+            group_id=organization.id,
+            table_id=user.id,
+            capacity='admin',
+            table_name='user',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            result = is_organization_admin()
+
+        assert result is True
+
+    def test_is_organization_admin_without_user(self):
+        g.userobj = None
+        result = is_organization_admin()
+
+        assert result is False
+
+    def test_has_organization_admin_role_with_user(self):
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        user.sysadmin = False
+        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+
+        organization_dict1 = factories.Organization()
+        organization_dict2 = factories.Organization()
+        organization1 = model.Group.get(organization_dict1['id'])
+        organization2 = model.Group.get(organization_dict2['id'])
+        member = model.Member(
+            group=organization1,
+            group_id=organization1.id,
+            table_id=user.id,
+            capacity='admin',
+            table_name='user',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            assert has_organization_admin_role(organization1.id) is True
+            assert has_organization_admin_role(organization2.id) is False
+
+    def test_has_organization_admin_role_without_user(self):
+        organization_dict1 = factories.Organization()
+        organization1 = model.Group.get(organization_dict1['id'])
+
+        g.userobj = None
+        result = has_organization_admin_role(organization1.id)
+
+        assert result is False
