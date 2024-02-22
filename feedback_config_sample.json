@@ -11,6 +11,10 @@
                 "repeat_post_limit": {
                     "enable": false,
                     "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
+                },
+                "rating": {
+                    "enable": false,
+                    "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
                 }
             }
         },
