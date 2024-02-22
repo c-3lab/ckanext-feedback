@@ -32,15 +32,17 @@
           <hr>
           <h4>{{ _('Comment') }}</h4>
           {% if not cookie or not (h.is_disabled_repeat_post_on_resource_org(pkg_dict.owner_org)) %}
-            {{ _('Rating') }}
-            <span class="group-stars" id="rateable" name="rateable">
-              {% for i in range(5) %}
-                <img class="rating-star" src="/images/empty_rating_star.png" alt="rating star" data-rating="{{ i + 1 }}" onclick="selectRating(this);"/>
-              {% endfor %}
-            </span>
-            <div>
-              <p id="rating-error" class="alert alert-error" style="display: none;">{{ _('Please select your rating') }}</p>
-            </div>
+            {% if h.is_enabled_rating_org(pkg_dict.owner_org) %}
+              {{ _('Rating') }}
+              <span class="group-stars" id="rateable" name="rateable">
+                {% for i in range(5) %}
+                  <img class="rating-star" src="/images/empty_rating_star.png" alt="rating star" data-rating="{{ i + 1 }}" onclick="selectRating(this);"/>
+                {% endfor %}
+              </span>
+              <div>
+                <p id="rating-error" class="alert alert-error" style="display: none;">{{ _('Please select your rating') }}</p>
+              </div>
+            {% endif %}
             <br>
             <form name="comment_form" action="{{ url_for('resource_comment.create_comment', resource_id=resource.id ) }}" method="post">
               <input type="hidden" id="rating" name="rating" value=""/>
@@ -60,7 +62,7 @@
               {% endif %}
               <br>
               <div class="form-actions">
-                <button class="btn btn-primary" onclick="return checkRatingAndCommentExists();">{{ _('Send') }}</button>
+                <button class="btn btn-primary" onclick="return checkCommentExists();">{{ _('Send') }}</button>
               </div>
               <br>
               <br>
@@ -94,15 +96,17 @@
               {% if comment.category %}
                 <span id="comment-category-{{ comment.id }}">{{ _(comment.category.value) }}</span>
               {% endif %}
-              {% if comment.rating %}
-                <span class="group-stars">
-                  {% for i in range(comment.rating) %}
-                    <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
-                  {% endfor %}
-                  {% for i in range(5 - comment.rating) %}
-                    <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
-                  {% endfor %}
-                </span>
+              {% if h.is_enabled_rating_org(pkg_dict.owner_org) %}
+                {% if comment.rating %}
+                  <span class="group-stars">
+                    {% for i in range(comment.rating) %}
+                      <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
+                    {% endfor %}
+                    {% for i in range(5 - comment.rating) %}
+                      <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
+                    {% endfor %}
+                  </span>
+                {% endif %}
               {% endif %}
               {% if not comment.approval %}
                 {{ _('Unapproved') }}

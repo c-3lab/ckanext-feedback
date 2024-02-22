@@ -18,10 +18,12 @@
       <th scope="row" class="dataset-label">{{ _('Comments') }}</th>
       <td class="dataset-details">{{ h.get_package_comments(pkg_dict.id) }}</a></td>
     </tr>
-    <tr>
-      <th scope="row" class="dataset-label">{{ _('Rating') }}</th>
-      <td class="dataset-details">{{ h.get_package_rating(pkg_dict.id)|round(1) }}</a></td>
-    </tr>
+    {% if h.is_enabled_rating_org(pkg_dict.owner_org) %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _('Rating') }}</th>
+        <td class="dataset-details">{{ h.get_package_rating(pkg_dict.id)|round(1) }}</a></td>
+      </tr>
+    {% endif %}
   {% endif %}
   {% if h.is_enabled_utilizations_org(pkg_dict.owner_org) %}
     <tr>
