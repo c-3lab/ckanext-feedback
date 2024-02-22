@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 import six
@@ -6,6 +6,7 @@ from ckan import model
 from ckan.model import User
 from ckan.tests import factories
 from flask import Flask, g
+from flask_babel import Babel
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -43,7 +44,7 @@ class TestManagementController:
         categories = ['category']
         utilization_comments = ['utilization_comment']
         resource_comments = ['resource_comment']
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -91,14 +92,16 @@ class TestManagementController:
         _,
     ):
         comments = ['comment']
-        utilizations = ['utilization']
+        utilization = MagicMock()
+        utilization.resource.package.owner_org = 'owner_org'
+        utilizations = [utilization]
 
         mock_request.form.getlist.return_value = comments
         mock_comments_service.get_utilizations.return_value = utilizations
         mock_c.userobj.id = 'user_id'
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -140,7 +143,7 @@ class TestManagementController:
         mock_request.form.getlist.return_value = None
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -172,7 +175,9 @@ class TestManagementController:
         _,
     ):
         comments = ['comment']
-        resource_comment_summaries = ['resource_comment_summary']
+        resource_comment_summary = MagicMock()
+        resource_comment_summary.resource.package.owner_org = 'owner_org'
+        resource_comment_summaries = [resource_comment_summary]
 
         mock_request.form.getlist.return_value = comments
         mock_comments_service.get_resource_comment_summaries.return_value = (
@@ -181,7 +186,7 @@ class TestManagementController:
         mock_c.userobj.id = 'user_id'
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -223,7 +228,7 @@ class TestManagementController:
         mock_request.form.getlist.return_value = None
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -256,13 +261,15 @@ class TestManagementController:
         _,
     ):
         comments = ['comment']
-        utilizations = ['utilization']
+        utilization = MagicMock()
+        utilization.resource.package.owner_org = 'owner_org'
+        utilizations = [utilization]
 
         mock_request.form.getlist.return_value = comments
         mock_comments_service.get_utilizations.return_value = utilizations
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -304,7 +311,7 @@ class TestManagementController:
         mock_request.form.getlist.return_value = None
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -337,9 +344,13 @@ class TestManagementController:
         _,
     ):
         comments = ['comment1', 'comment2']
+        resource_comment_summary1 = MagicMock()
+        resource_comment_summary2 = MagicMock()
+        resource_comment_summary1.resource.package.owner_org = 'owner_org1'
+        resource_comment_summary2.resource.package.owner_org = 'owner_org2'
         resource_comment_summaries = [
-            'resource_comment_summary1',
-            'resource_comment_summary2',
+            resource_comment_summary1,
+            resource_comment_summary2,
         ]
 
         mock_request.form.getlist.return_value = comments
@@ -348,7 +359,7 @@ class TestManagementController:
         )
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 
@@ -388,7 +399,7 @@ class TestManagementController:
         mock_request.form.getlist.return_value = None
         mock_url_for.return_value = 'url'
         mock_redirect.return_value = 'redirect_response'
-        user_dict = factories.User()
+        user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
 

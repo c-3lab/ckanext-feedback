@@ -114,7 +114,10 @@ class ResourceController:
     @staticmethod
     def _check_organization_admin_role(resource_id):
         resource = comment_service.get_resource(resource_id)
-        if not has_organization_admin_role(resource.package.owner_org) and not c.userobj.sysadmin:
+        if (
+            not has_organization_admin_role(resource.package.owner_org)
+            and not c.userobj.sysadmin
+        ):
             toolkit.abort(
                 404,
                 _(

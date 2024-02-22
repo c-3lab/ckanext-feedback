@@ -128,7 +128,10 @@ class ManagementController:
     @staticmethod
     def _check_organization_admin_role_with_utilization(utilizations):
         for utilization in utilizations:
-            if not has_organization_admin_role(utilization.resource.package.owner_org):
+            if (
+                not has_organization_admin_role(utilization.resource.package.owner_org)
+                and not c.userobj.sysadmin
+            ):
                 toolkit.abort(
                     404,
                     _(
@@ -140,8 +143,11 @@ class ManagementController:
     @staticmethod
     def _check_organization_admin_role_with_resource(resource_comment_summaries):
         for resource_comment_summary in resource_comment_summaries:
-            if not has_organization_admin_role(
-                resource_comment_summary.resource.package.owner_org
+            if (
+                not has_organization_admin_role(
+                    resource_comment_summary.resource.package.owner_org
+                )
+                and not c.userobj.sysadmin
             ):
                 toolkit.abort(
                     404,

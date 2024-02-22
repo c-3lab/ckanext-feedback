@@ -55,7 +55,9 @@ class TestUtilizationController:
             g.userobj = user
             UtilizationController.search()
 
-        mock_get_utilizations.assert_called_once_with(resource['id'], keyword, None)
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, None, None
+        )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
@@ -87,7 +89,9 @@ class TestUtilizationController:
             g.userobj = None
             UtilizationController.search()
 
-        mock_get_utilizations.assert_called_once_with(resource['id'], keyword, True)
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, True, None
+        )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
@@ -299,7 +303,9 @@ class TestUtilizationController:
         user = User.get(user_dict['id'])
         g.userobj = user
 
-        mock_detail_service.get_utilization.return_value = 'utilization'
+        utilization = MagicMock()
+        utilization.owner_org = 'organization id'
+        mock_detail_service.get_utilization.return_value = utilization
         mock_detail_service.get_utilization_comments.return_value = 'comments'
         mock_detail_service.get_utilization_comment_categories.return_value = (
             'categories'
@@ -320,7 +326,7 @@ class TestUtilizationController:
             'utilization/details.html',
             {
                 'utilization_id': utilization_id,
-                'utilization': 'utilization',
+                'utilization': utilization,
                 'comments': 'comments',
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
@@ -353,7 +359,7 @@ class TestUtilizationController:
 
         UtilizationController.approve(utilization_id)
 
-        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization.assert_any_call(utilization_id)
         mock_detail_service.approve_utilization.assert_called_once_with(
             utilization_id, user.id
         )
@@ -459,8 +465,10 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_edit(
         self,
+        mock_detail_service,
         mock_edit_service,
         mock_render,
     ):
@@ -472,6 +480,11 @@ class TestUtilizationController:
 
         mock_edit_service.get_utilization_details.return_value = utilization_details
         mock_edit_service.get_resource_details.return_value = resource_details
+
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
 
         g.userobj = user
         UtilizationController.edit(utilization_id)
@@ -496,8 +509,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.url_for')
     @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_update(
         self,
+        mock_detail_service,
         mock_redirect,
         mock_url_for,
         mock_flash_success,
@@ -512,6 +527,10 @@ class TestUtilizationController:
         mock_request.form.get.side_effect = [title, description]
         mock_url_for.return_value = 'utilization details url'
 
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
@@ -532,8 +551,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.url_for')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_update_without_title_description(
         self,
+        mock_detail_service,
         mock_url_for,
         mock_flash_success,
         mock_edit_service,
@@ -547,6 +568,10 @@ class TestUtilizationController:
         mock_request.form.get.side_effect = [title, description]
         mock_url_for.return_value = 'utilization_details_url'
 
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
@@ -591,8 +616,8 @@ class TestUtilizationController:
         g.userobj = user
         UtilizationController.delete(utilization_id)
 
-        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
-        mock_edit_service.delete_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization.assert_any_call(utilization_id)
+        mock_edit_service.delete_utilization.asset_called_once_with(utilization_id)
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
             resource_id
         )
