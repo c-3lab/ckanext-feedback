@@ -264,6 +264,43 @@ class TestResourceController:
         )
 
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.url_for')
+    @patch('ckanext.feedback.controllers.resource.redirect')
+    def test_approve_comment_with_other_organization_admin_user(
+        self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort
+    ):
+        organization_dict = factories.Organization()
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
+
+        dummy_organization_dict = factories.Organization()
+        dummy_organization = model.Group.get(dummy_organization_dict['id'])
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        member = model.Member(
+            group=dummy_organization,
+            group_id=dummy_organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        ResourceController.approve_comment(resource['id'])
+        mock_toolkit_abort.assert_any_call(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.request')
@@ -336,6 +373,41 @@ class TestResourceController:
 
         ResourceController.reply(resource_id)
         mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.url_for')
+    @patch('ckanext.feedback.controllers.resource.redirect')
+    def test_reply_with_other_organization_admin_user(self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort):
+        organization_dict = factories.Organization()
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
+
+        dummy_organization_dict = factories.Organization()
+        dummy_organization = model.Group.get(dummy_organization_dict['id'])
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        member = model.Member(
+            group=dummy_organization,
+            group_id=dummy_organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        ResourceController.reply(resource['id'])
+        mock_toolkit_abort.assert_any_call(
             404,
             _(
                 'The requested URL was not found on the server. If you entered the URL'
