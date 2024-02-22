@@ -33,9 +33,42 @@ class TestResourceController:
 
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
-    def test_comment(self, mock_request, mock_render):
+    def test_comment_with_sysadmin(self, mock_request, mock_render):
         dataset = factories.Dataset()
         user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        resource_id = resource['id']
+        user_env = {'REMOTE_USER': user.name}
+
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            ResourceController.comment(resource_id)
+
+        approval = True
+        resource = comment_service.get_resource(resource_id)
+        comments = comment_service.get_resource_comments(resource_id, approval)
+        categories = comment_service.get_resource_comment_categories()
+        cookie = comment_service.get_cookie(resource_id)
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(context, {'id': resource.package_id})
+
+        mock_render.assert_called_once_with(
+            'resource/comment.html',
+            {
+                'resource': resource,
+                'pkg_dict': package,
+                'comments': comments,
+                'categories': categories,
+                'cookie': cookie,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.request')
+    def test_comment_with_user(self, mock_request, mock_render):
+        dataset = factories.Dataset()
+        user_dict = factories.User()
         user = User.get(user_dict['id'])
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
