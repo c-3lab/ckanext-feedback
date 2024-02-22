@@ -1,15 +1,13 @@
-function checkRatingAndCommentExists() {
+function checkCommentExists() {
   const comment = document.getElementById('comment_content').value;
   const rating = document.getElementById('rating').value;
   const commentErrorElement = document.getElementById('comment-error');
   const ratingErrorElement = document.getElementById('rating-error');
 
   // Reset display settings
-  ratingErrorElement.style.display = 'none';
   commentErrorElement.style.display = 'none';
 
-  if (!rating && !comment) {
-    ratingErrorElement.style.display = '';
+  if (!comment) {
     commentErrorElement.style.display = '';
     return false;
   } else {
