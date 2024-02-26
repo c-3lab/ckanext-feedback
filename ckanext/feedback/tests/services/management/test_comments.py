@@ -176,6 +176,10 @@ class TestComments:
             == another_utilization_id
         )
 
+    def test_get_organization(self):
+        organization_dict = factories.Organization()
+        assert comments.get_organization(organization_dict['id']).id == organization_dict['id']
+
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch('ckanext.feedback.services.management.comments.get_utilization_comments')
     @patch('ckanext.feedback.services.management.comments.session.bulk_update_mappings')
