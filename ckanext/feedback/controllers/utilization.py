@@ -109,7 +109,9 @@ class UtilizationController:
     def details(utilization_id):
         approval = True
         utilization = detail_service.get_utilization(utilization_id)
-        if has_organization_admin_role(utilization.owner_org) or c.userobj.sysadmin:
+        if c.userobj is None:
+            approval = True
+        elif has_organization_admin_role(utilization.owner_org) or c.userobj.sysadmin:
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
         comments = detail_service.get_utilization_comments(utilization_id, approval)

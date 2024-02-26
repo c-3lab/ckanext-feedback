@@ -404,7 +404,7 @@ class TestUtilizationController:
             utilization_id
         )
         mock_detail_service.get_utilization_comments.assert_called_once_with(
-            utilization_id, None
+            utilization_id, True
         )
         mock_render.assert_called_once_with(
             'utilization/details.html',
