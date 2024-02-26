@@ -536,7 +536,7 @@ class TestManagementController:
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
-        ManagementController._check_organization_admin_role_with_utilization([mocked_resource_comment_summary])
+        ManagementController._check_organization_admin_role_with_resource([mocked_resource_comment_summary])
         mock_toolkit_abort.assert_not_called()
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
@@ -562,7 +562,7 @@ class TestManagementController:
         model.Session.add(member)
         model.Session.commit()
 
-        ManagementController._check_organization_admin_role_with_utilization([mocked_resource_comment_summary])
+        ManagementController._check_organization_admin_role_with_resource([mocked_resource_comment_summary])
         mock_toolkit_abort.assert_not_called()
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
@@ -577,7 +577,7 @@ class TestManagementController:
 
         mocked_resource_comment_summary.resource.package.owner_org = organization_dict['id']
 
-        ManagementController._check_organization_admin_role_with_utilization([mocked_resource_comment_summary])
+        ManagementController._check_organization_admin_role_with_resource([mocked_resource_comment_summary])
         mock_toolkit_abort.assert_called_once_with(
             404,
             _(
