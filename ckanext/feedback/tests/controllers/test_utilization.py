@@ -6,6 +6,7 @@ from ckan import model
 from ckan.logic import get_action
 from ckan.model import Resource, Session, User
 from ckan.tests import factories
+from ckan.common import _
 from flask import Flask, g
 from flask_babel import Babel
 
@@ -57,6 +58,89 @@ class TestUtilizationController:
 
         mock_get_utilizations.assert_called_once_with(
             resource['id'], keyword, None, None
+        )
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': keyword,
+                'disable_keyword': disable_keyword,
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request')
+    def test_search_with_org_admin(self, mock_request, mock_get_utilizations, mock_render):
+        dataset = factories.Dataset()
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        user_env = {'REMOTE_USER': user.name}
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+
+        mock_request.args.get.side_effect = lambda x, default: {
+            'id': resource['id'],
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+        }.get(x, default)
+
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, None, [organization_dict['id']]
+        )
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': keyword,
+                'disable_keyword': disable_keyword,
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request')
+    def test_search_with_user(self, mock_request, mock_get_utilizations, mock_render):
+        dataset = factories.Dataset()
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        user_env = {'REMOTE_USER': user.name}
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+
+        mock_request.args.get.side_effect = lambda x, default: {
+            'id': resource['id'],
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+        }.get(x, default)
+
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, True, None
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
@@ -706,3 +790,62 @@ class TestUtilizationController:
             UtilizationController.create_issue_resolution(utilization_id)
 
         mock_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_check_organization_adimn_role_with_sysadmin(self, mocked_detail_service, mock_toolkit_abort):
+        mocked_utilization = MagicMock()
+        mocked_utilization.owner_org = 'organization id'
+        mocked_detail_service.get_utilization.return_value = mocked_utilization
+
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        UtilizationController._check_organization_admin_role('utilization_id')
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_check_organization_adimn_role_with_org_admin(self, mocked_detail_service, mock_toolkit_abort):
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        mocked_utilization = MagicMock()
+        mocked_detail_service.get_utilization.return_value = mocked_utilization
+        mocked_utilization.owner_org = organization_dict['id']
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+        UtilizationController._check_organization_admin_role('utilization_id')
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_check_organization_adimn_role_with_user(self, mocked_detail_service, mock_toolkit_abort):
+        organization_dict = factories.Organization()
+
+        mocked_utilization = MagicMock()
+        mocked_detail_service.get_utilization.return_value = mocked_utilization
+        mocked_utilization.owner_org = organization_dict['id']
+        user_dict = factories.User()
+
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        UtilizationController._check_organization_admin_role('utilization_id')
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
