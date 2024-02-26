@@ -5,6 +5,7 @@ import six
 from ckan import model
 from ckan.model import User
 from ckan.tests import factories
+from ckan.common import _
 from flask import Flask, g
 from flask_babel import Babel
 
@@ -34,7 +35,7 @@ class TestManagementController:
     @patch('ckanext.feedback.controllers.management.request')
     @patch('ckanext.feedback.controllers.management.utilization_detail_service')
     @patch('ckanext.feedback.controllers.management.resource_comment_service')
-    def test_comments(
+    def test_comments_with_sysadmin(
         self,
         mock_comment_service,
         mock_detail_service,
@@ -47,6 +48,61 @@ class TestManagementController:
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+
+        mock_comment_service.get_resource_comments.return_value = resource_comments
+        mock_detail_service.get_utilization_comment_categories.return_value = categories
+        mock_detail_service.get_utilization_comments.return_value = utilization_comments
+        mock_request.args.get.return_value = 'utilization-comments'
+
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            ManagementController.comments()
+
+        mock_detail_service.get_utilization_comment_categories.assert_called_once()
+        mock_detail_service.get_utilization_comments.assert_called_once()
+        mock_comment_service.get_resource_comments.assert_called_once()
+        mock_request.args.get.assert_called_once_with('tab', 'utilization-comments')
+
+        mock_render.assert_called_once_with(
+            'management/comments.html',
+            {
+                'categories': categories,
+                'utilization_comments': utilization_comments,
+                'resource_comments': resource_comments,
+                'tab': 'utilization-comments',
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.management.toolkit.render')
+    @patch('ckanext.feedback.controllers.management.request')
+    @patch('ckanext.feedback.controllers.management.utilization_detail_service')
+    @patch('ckanext.feedback.controllers.management.resource_comment_service')
+    def test_comments_with_org_admin(
+        self,
+        mock_comment_service,
+        mock_detail_service,
+        mock_request,
+        mock_render,
+    ):
+        categories = ['category']
+        utilization_comments = ['utilization_comment']
+        resource_comments = ['resource_comment']
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
 
         mock_comment_service.get_resource_comments.return_value = resource_comments
         mock_detail_service.get_utilization_comment_categories.return_value = categories
@@ -413,3 +469,61 @@ class TestManagementController:
         mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
+
+    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    def test_check_organization_adimn_role_with_utilization_using_sysadmin(self, mock_toolkit_abort):
+        mocked_utilization = MagicMock()
+        mocked_utilization.resource.package.owner_org = 'owner_org'
+
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        ManagementController._check_organization_admin_role_with_utilization([mocked_utilization])
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    def test_check_organization_adimn_role_with_utilization_using_org_admin(self, mock_toolkit_abort):
+        mocked_utilization = MagicMock()
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        mocked_utilization.resource.package.owner_org = organization_dict['id']
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        ManagementController._check_organization_admin_role_with_utilization([mocked_utilization])
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    def test_check_organization_adimn_role_with_utilization_using_user(self, mock_toolkit_abort):
+        mocked_utilization = MagicMock()
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        organization_dict = factories.Organization()
+
+        mocked_utilization.resource.package.owner_org = organization_dict['id']
+
+        ManagementController._check_organization_admin_role_with_utilization([mocked_utilization])
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
