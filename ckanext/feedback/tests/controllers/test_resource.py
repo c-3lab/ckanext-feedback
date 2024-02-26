@@ -384,7 +384,9 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
-    def test_reply_with_other_organization_admin_user(self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort):
+    def test_reply_with_other_organization_admin_user(
+        self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort
+    ):
         organization_dict = factories.Organization()
         package = factories.Dataset(owner_org=organization_dict['id'])
         resource = factories.Resource(package_id=package['id'])

@@ -71,7 +71,9 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request')
-    def test_search_with_org_admin(self, mock_request, mock_get_utilizations, mock_render):
+    def test_search_with_org_admin(
+        self, mock_request, mock_get_utilizations, mock_render
+    ):
         dataset = factories.Dataset()
         user_dict = factories.User()
         user = User.get(user_dict['id'])
@@ -884,7 +886,9 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    def test_check_organization_adimn_role_with_sysadmin(self, mocked_detail_service, mock_toolkit_abort):
+    def test_check_organization_adimn_role_with_sysadmin(
+        self, mocked_detail_service, mock_toolkit_abort
+    ):
         mocked_utilization = MagicMock()
         mocked_utilization.owner_org = 'organization id'
         mocked_detail_service.get_utilization.return_value = mocked_utilization
@@ -897,7 +901,9 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    def test_check_organization_adimn_role_with_org_admin(self, mocked_detail_service, mock_toolkit_abort):
+    def test_check_organization_adimn_role_with_org_admin(
+        self, mocked_detail_service, mock_toolkit_abort
+    ):
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
 
@@ -922,7 +928,9 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    def test_check_organization_adimn_role_with_user(self, mocked_detail_service, mock_toolkit_abort):
+    def test_check_organization_adimn_role_with_user(
+        self, mocked_detail_service, mock_toolkit_abort
+    ):
         organization_dict = factories.Organization()
 
         mocked_utilization = MagicMock()
