@@ -527,3 +527,61 @@ class TestManagementController:
                 ' manually please check your spelling and try again.'
             ),
         )
+
+    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    def test_check_organization_adimn_role_with_resource_using_sysadmin(self, mock_toolkit_abort):
+        mocked_resource_comment_summary = MagicMock()
+        mocked_resource_comment_summary.resource.package.owner_org = 'owner_org'
+
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        ManagementController._check_organization_admin_role_with_utilization([mocked_resource_comment_summary])
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    def test_check_organization_adimn_role_with_resource_using_org_admin(self, mock_toolkit_abort):
+        mocked_resource_comment_summary = MagicMock()
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        mocked_resource_comment_summary.resource.package.owner_org = organization_dict['id']
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        ManagementController._check_organization_admin_role_with_utilization([mocked_resource_comment_summary])
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    def test_check_organization_adimn_role_with_resource_using_user(self, mock_toolkit_abort):
+        mocked_resource_comment_summary = MagicMock()
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        organization_dict = factories.Organization()
+
+        mocked_resource_comment_summary.resource.package.owner_org = organization_dict['id']
+
+        ManagementController._check_organization_admin_role_with_utilization([mocked_resource_comment_summary])
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
