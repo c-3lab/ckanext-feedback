@@ -58,6 +58,7 @@ class TestUtilizationDetailsService:
         approved_title = 'approved title'
 
         description = 'test description'
+
         register_utilization(
             unapproved_id,
             unapproved_resource['id'],
@@ -115,3 +116,13 @@ class TestUtilizationDetailsService:
 
         # with approval
         assert get_utilizations(approval=True) == [approved_utilization]
+
+        # with organization_id
+        assert get_utilizations(owner_orgs=[unapproved_org['id']]) == [
+            approved_utilization, unapproved_utilization
+        ]
+
+        # with organization_id
+        assert get_utilizations(owner_orgs=[approved_org['id']]) == [
+            approved_utilization
+        ]
