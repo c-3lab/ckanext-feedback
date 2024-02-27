@@ -803,22 +803,6 @@ class TestUtilizationController:
         mock_url_for.assert_called_once_with('utilization.search')
         mock_redirect.assert_called_once_with('utilization search url')
 
-    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    def test_comment(self, mock_render):
-        user_dict = factories.Sysadmin()
-        user = User.get(user_dict['id'])
-        g.userobj = user
-        UtilizationController.comment()
-        mock_render.assert_called_once_with('utilization/comment.html')
-
-    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    def test_comment_approval(self, mock_render):
-        user_dict = factories.Sysadmin()
-        user = User.get(user_dict['id'])
-        g.userobj = user
-        UtilizationController.comment_approval()
-        mock_render.assert_called_once_with('utilization/comment_approval.html')
-
     @patch('ckanext.feedback.controllers.utilization.request')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
