@@ -319,7 +319,9 @@ class TestComments:
 
         assert mock_mappings.call_args[0] == (ResourceCommentSummary, expected_mapping)
 
-        comments.delete_resource_comments([resource_comment[0].id, another_resource_comment[0].id])
+        comments.delete_resource_comments(
+            [resource_comment[0].id, another_resource_comment[0].id]
+        )
         comments.refresh_resources_comments(resource_comment_summaries)
         session.commit()
         expected_mapping = [

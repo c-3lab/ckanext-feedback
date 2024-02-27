@@ -588,7 +588,9 @@ class TestPlugin:
         # with feedback_config_file enable is False and org_id is not in enable_orgs
         feedback_config = {
             'modules': {
-                'resources': {'comments': {'rating': {'enable': False, 'enable_orgs': []}}}
+                'resources': {
+                    'comments': {'rating': {'enable': False, 'enable_orgs': []}}
+                }
             }
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
@@ -600,7 +602,9 @@ class TestPlugin:
         # with feedback_config_file enable is False and org_id is in enable_orgs
         feedback_config = {
             'modules': {
-                'resources': {'comments': {'rating': {'enable': False, 'enable_orgs': [org_id]}}}
+                'resources': {
+                    'comments': {'rating': {'enable': False, 'enable_orgs': [org_id]}}
+                }
             }
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
@@ -612,7 +616,9 @@ class TestPlugin:
         # with feedback_config_file enable is True and org_id is not in enable_orgs
         feedback_config = {
             'modules': {
-                'resources': {'comments': {'rating': {'enable': True, 'enable_orgs': []}}}
+                'resources': {
+                    'comments': {'rating': {'enable': True, 'enable_orgs': []}}
+                }
             }
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
@@ -624,7 +630,9 @@ class TestPlugin:
         # with feedback_config_file enable is True and org_id is in enable_orgs
         feedback_config = {
             'modules': {
-                'resources': {'comments': {'rating': {'enable': True, 'enable_orgs': [org_id]}}}
+                'resources': {
+                    'comments': {'rating': {'enable': True, 'enable_orgs': [org_id]}}
+                }
             }
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
@@ -652,7 +660,9 @@ class TestPlugin:
         # with feedback_config_file enable is False
         feedback_config = {
             'modules': {
-                'resources': {'comments': {'rating': {'enable': False, 'enable_orgs': []}}}
+                'resources': {
+                    'comments': {'rating': {'enable': False, 'enable_orgs': []}}
+                }
             }
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
@@ -664,7 +674,9 @@ class TestPlugin:
         # with feedback_config_file enable is True
         feedback_config = {
             'modules': {
-                'resources': {'comments': {'rating': {'enable': True, 'enable_orgs': []}}}
+                'resources': {
+                    'comments': {'rating': {'enable': True, 'enable_orgs': []}}
+                }
             }
         }
         with open('/etc/ckan/feedback_config.json', 'w') as f:
