@@ -125,7 +125,8 @@ class TestUtilizationDetailsService:
         create_download_tables(engine)
 
     def test_get_utilization(self):
-        dataset = factories.Dataset()
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=dataset['id'])
 
         assert get_registered_utilization(resource['id']) is None
@@ -144,6 +145,7 @@ class TestUtilizationDetailsService:
             resource['name'],
             resource['id'],
             dataset['name'],
+            organization['id'],
         )
         assert result == expected_utilization
 
@@ -286,7 +288,7 @@ class TestUtilizationDetailsService:
 
         assert len(comments) == 1
         unapproved_comment = convert_utilization_comment_to_tuple(comments[0])
-        unapproved_comment = (
+        expect_unapproved_comment = (
             unapproved_comment_id,
             utilization.id,
             category,
@@ -296,7 +298,7 @@ class TestUtilizationDetailsService:
             None,
             None,
         )
-        assert unapproved_comment == unapproved_comment
+        assert unapproved_comment == expect_unapproved_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilization_comments_approval_is_True(self):
@@ -338,6 +340,62 @@ class TestUtilizationDetailsService:
             user['id'],
         )
         comments = get_utilization_comments(utilization.id, True)
+
+        assert len(comments) == 1
+        approved_comment = convert_utilization_comment_to_tuple(comments[0])
+        fake_utilization_comment_approved = (
+            approved_comment_id,
+            utilization.id,
+            category,
+            content,
+            created,
+            True,
+            approved,
+            user['id'],
+        )
+        assert approved_comment == fake_utilization_comment_approved
+
+    @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
+    def test_get_utilization_comments_owner_org(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        user = factories.User()
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        title = 'test title'
+        description = 'test description'
+        register_utilization(utilization_id, resource['id'], title, description, False)
+        utilization = get_registered_utilization(resource['id'])
+
+        created = datetime.now()
+        approved = datetime.now()
+        unapproved_comment_id = str(uuid.uuid4())
+        approved_comment_id = str(uuid.uuid4())
+        category = UtilizationCommentCategory.ADVERTISE
+        content = 'test content'
+
+        register_utilization_comment(
+            unapproved_comment_id,
+            utilization.id,
+            category,
+            content,
+            created,
+            False,
+            None,
+            None,
+        )
+        register_utilization_comment(
+            approved_comment_id,
+            utilization.id,
+            category,
+            content,
+            created,
+            True,
+            approved,
+            user['id'],
+        )
+        comments = get_utilization_comments(utilization.id, True, [organization['id']])
 
         assert len(comments) == 1
         approved_comment = convert_utilization_comment_to_tuple(comments[0])

@@ -176,6 +176,13 @@ class TestComments:
             == another_utilization_id
         )
 
+    def test_get_organization(self):
+        organization_dict = factories.Organization()
+        assert (
+            comments.get_organization(organization_dict['id']).id
+            == organization_dict['id']
+        )
+
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch('ckanext.feedback.services.management.comments.get_utilization_comments')
     @patch('ckanext.feedback.services.management.comments.session.bulk_update_mappings')
@@ -319,7 +326,9 @@ class TestComments:
 
         assert mock_mappings.call_args[0] == (ResourceCommentSummary, expected_mapping)
 
-        comments.delete_resource_comments([resource_comment[0].id, another_resource_comment[0].id])
+        comments.delete_resource_comments(
+            [resource_comment[0].id, another_resource_comment[0].id]
+        )
         comments.refresh_resources_comments(resource_comment_summaries)
         session.commit()
         expected_mapping = [

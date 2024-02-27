@@ -7,7 +7,9 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
+from ckanext.feedback.services.common import check
 from ckanext.feedback.services.download import summary as download_summary_service
+from ckanext.feedback.services.management import comments as management_comments_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
@@ -187,6 +189,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_disabled_repeat_post_on_resource': (
                 self.is_disabled_repeat_post_on_resource
             ),
+            'is_organization_admin': check.is_organization_admin,
+            'has_organization_admin_role': check.has_organization_admin_role,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,
             'get_resource_utilizations': (
@@ -206,4 +210,5 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_comments': resource_summary_service.get_package_comments,
             'get_resource_rating': resource_summary_service.get_resource_rating,
             'get_package_rating': resource_summary_service.get_package_rating,
+            'get_organization': management_comments_service.get_organization,
         }

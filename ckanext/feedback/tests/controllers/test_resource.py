@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from ckan import model
+from ckan.common import _
 from ckan.logic import get_action
 from ckan.model import User
 from ckan.tests import factories
@@ -33,9 +34,42 @@ class TestResourceController:
 
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
-    def test_comment(self, mock_request, mock_render):
+    def test_comment_with_sysadmin(self, mock_request, mock_render):
         dataset = factories.Dataset()
         user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        resource_id = resource['id']
+        user_env = {'REMOTE_USER': user.name}
+
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            ResourceController.comment(resource_id)
+
+        approval = True
+        resource = comment_service.get_resource(resource_id)
+        comments = comment_service.get_resource_comments(resource_id, approval)
+        categories = comment_service.get_resource_comment_categories()
+        cookie = comment_service.get_cookie(resource_id)
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(context, {'id': resource.package_id})
+
+        mock_render.assert_called_once_with(
+            'resource/comment.html',
+            {
+                'resource': resource,
+                'pkg_dict': package,
+                'comments': comments,
+                'categories': categories,
+                'cookie': cookie,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.request')
+    def test_comment_with_user(self, mock_request, mock_render):
+        dataset = factories.Dataset()
+        user_dict = factories.User()
         user = User.get(user_dict['id'])
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
@@ -178,7 +212,7 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
-    def test_approve_comment(
+    def test_approve_comment_with_sysadmin(
         self,
         mock_redirect,
         mock_url_for,
@@ -213,6 +247,60 @@ class TestResourceController:
         mock_redirect.assert_called_once_with('resource comment url')
 
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_approve_comment_with_user(self, mock_toolkit_abort):
+        resource_id = 'resource id'
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        ResourceController.approve_comment(resource_id)
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.url_for')
+    @patch('ckanext.feedback.controllers.resource.redirect')
+    def test_approve_comment_with_other_organization_admin_user(
+        self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort
+    ):
+        organization_dict = factories.Organization()
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
+
+        dummy_organization_dict = factories.Organization()
+        dummy_organization = model.Group.get(dummy_organization_dict['id'])
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        member = model.Member(
+            group=dummy_organization,
+            group_id=dummy_organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        ResourceController.approve_comment(resource['id'])
+        mock_toolkit_abort.assert_any_call(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.request')
@@ -240,7 +328,7 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
-    def test_reply(
+    def test_reply_with_sysadmin(
         self,
         mock_redirect,
         mock_url_for,
@@ -274,6 +362,60 @@ class TestResourceController:
         )
 
         mock_redirect.assert_called_once_with('resource comment url')
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_reply_with_user(self, mock_toolkit_abort):
+        resource_id = 'resource id'
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        ResourceController.reply(resource_id)
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.url_for')
+    @patch('ckanext.feedback.controllers.resource.redirect')
+    def test_reply_with_other_organization_admin_user(
+        self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort
+    ):
+        organization_dict = factories.Organization()
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
+
+        dummy_organization_dict = factories.Organization()
+        dummy_organization = model.Group.get(dummy_organization_dict['id'])
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        member = model.Member(
+            group=dummy_organization,
+            group_id=dummy_organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        ResourceController.reply(resource['id'])
+        mock_toolkit_abort.assert_any_call(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
 
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')

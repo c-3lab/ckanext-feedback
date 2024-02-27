@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from ckan.model.group import Group
 from ckan.model.resource import Resource
 from sqlalchemy import func
 
@@ -32,6 +33,12 @@ def get_utilizations(comment_id_list):
         .filter(UtilizationComment.id.in_(comment_id_list))
     ).all()
     return utilizations
+
+
+# Get organization using owner_org
+def get_organization(owner_org):
+    organization = session.query(Group).filter(Group.id == owner_org).first()
+    return organization
 
 
 # Recalculate total approved bulk utilizations comments

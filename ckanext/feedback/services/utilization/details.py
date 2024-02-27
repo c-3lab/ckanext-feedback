@@ -23,6 +23,7 @@ def get_utilization(utilization_id):
             Resource.name.label('resource_name'),
             Resource.id.label('resource_id'),
             Package.name.label('package_name'),
+            Package.owner_org,
         )
         .join(Resource, Utilization.resource)
         .join(Package)
@@ -40,7 +41,7 @@ def approve_utilization(utilization_id, approval_user_id):
 
 
 # Get comments related to the Utilization record
-def get_utilization_comments(utilization_id=None, approval=None):
+def get_utilization_comments(utilization_id=None, approval=None, owner_orgs=None):
     query = session.query(UtilizationComment).order_by(
         UtilizationComment.created.desc()
     )
@@ -48,7 +49,13 @@ def get_utilization_comments(utilization_id=None, approval=None):
         query = query.filter(UtilizationComment.utilization_id == utilization_id)
     if approval is not None:
         query = query.filter(UtilizationComment.approval == approval)
-
+    if owner_orgs is not None:
+        query = (
+            query.join(Utilization)
+            .join(Resource)
+            .join(Package)
+            .filter(Package.owner_org.in_(owner_orgs))
+        )
     return query.all()
 
 

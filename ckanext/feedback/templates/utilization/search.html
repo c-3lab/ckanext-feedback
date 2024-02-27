@@ -26,7 +26,7 @@
           </div>
         {% endif %}
       {% endblock %}
-      {% if c.userobj.sysadmin %}
+      {% if c.userobj.sysadmin or h.is_organization_admin() %}
         {% block select_status %}
           <span><h4>{{ _('Status') }}</h4>
           <input type="checkbox" id="waiting" name="waiting" onclick="refreshTable()" checked>
@@ -37,7 +37,7 @@
         {% endblock %}
       {% endif %}
     </form>
-    {% if not disable_keyword or c.userobj.sysadmin %}
+    {% if not disable_keyword or c.userobj.sysadmin or h.is_organization_admin() %}
       <hr>
     {% endif %}
     {% block result_table %}
@@ -50,11 +50,12 @@
           <tr>
             <th class="big-column">{{ _('Title') }}</th>
             <th class="small-column">{{ _('Issue resolutions') }}</th>
+            <th class="medium-column">{{ _('Organization') }}</th>
             <th class="big-column">{{ _('Dataset') }}</th>
             <th class="medium-column">{{ _('Data resource') }}</th>
             <th class="small-column">{{ _('Comments') }}</th>
             <th class="small-column">{{ _('Registered') }}</th>
-            {% if c.userobj.sysadmin %}
+            {% if c.userobj.sysadmin or h.is_organization_admin() %}
               <th class="small-column">{{ _('Status') }}</th>
             {% endif %}
           </tr>
@@ -73,6 +74,9 @@
                   <div class="division-flex-inner-num">{{ row.issue_resolution }}</div>
                 </div>
               </td>
+              <td>
+                {{ h.get_organization(row.owner_org).display_name|truncate(20) }}
+              </td>
               <td>{{ row.package_name|truncate(30) }}</td>
               <td>{{ row.resource_name|truncate(20) }}</td>
               <td>{{ row.comment }}</td>
@@ -82,6 +86,16 @@
                   <td data-approval="true">{{ _('Approved') }}</td>
                 {% else %}
                   <td data-waiting="true">{{ _('Unapproved') }}</td>
+                {% endif %}
+              {% elif h.is_organization_admin() %}
+                {% if h.has_organization_admin_role(row.owner_org) %}
+                  {% if row.approval == True %}
+                    <td data-approval="true">{{ _('Approved') }}</td>
+                  {% else %}
+                    <td data-waiting="true">{{ _('Unapproved') }}</td>
+                  {% endif %}
+                {% else %}
+                  <td></td>
                 {% endif %}
               {% endif %}
             </tr>
