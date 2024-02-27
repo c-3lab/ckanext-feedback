@@ -2,10 +2,10 @@ from unittest.mock import patch
 
 import pytest
 from ckan import model
+from ckan.common import _
 from ckan.logic import get_action
 from ckan.model import User
 from ckan.tests import factories
-from ckan.common import _
 from flask import Flask, g
 
 import ckanext.feedback.services.resource.comment as comment_service

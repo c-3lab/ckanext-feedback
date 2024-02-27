@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 import six
 from ckan import model
+from ckan.common import _
 from ckan.logic import get_action
 from ckan.model import Resource, Session, User
 from ckan.tests import factories
-from ckan.common import _
 from flask import Flask, g
 from flask_babel import Babel
 

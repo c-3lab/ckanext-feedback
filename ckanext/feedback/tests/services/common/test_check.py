@@ -15,8 +15,8 @@ from ckanext.feedback.command.feedback import (
 )
 from ckanext.feedback.services.common.check import (
     check_administrator,
-    is_organization_admin,
     has_organization_admin_role,
+    is_organization_admin,
 )
 
 engine = model.repo.session.get_bind()

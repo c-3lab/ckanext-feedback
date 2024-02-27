@@ -1,11 +1,11 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import six
 from ckan import model
+from ckan.common import _
 from ckan.model import User
 from ckan.tests import factories
-from ckan.common import _
 from flask import Flask, g
 from flask_babel import Babel
 
