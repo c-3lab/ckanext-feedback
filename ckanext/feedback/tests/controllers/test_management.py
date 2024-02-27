@@ -471,7 +471,7 @@ class TestManagementController:
         assert response == 'redirect_response'
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
-    def test_check_organization_adimn_role_with_utilization_using_sysadmin(
+    def test_check_organization_admin_role_with_utilization_using_sysadmin(
         self, mock_toolkit_abort
     ):
         mocked_utilization = MagicMock()
@@ -486,7 +486,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
-    def test_check_organization_adimn_role_with_utilization_using_org_admin(
+    def test_check_organization_admin_role_with_utilization_using_org_admin(
         self, mock_toolkit_abort
     ):
         mocked_utilization = MagicMock()
@@ -516,7 +516,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
-    def test_check_organization_adimn_role_with_utilization_using_user(
+    def test_check_organization_admin_role_with_utilization_using_user(
         self, mock_toolkit_abort
     ):
         mocked_utilization = MagicMock()
@@ -541,7 +541,7 @@ class TestManagementController:
         )
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
-    def test_check_organization_adimn_role_with_resource_using_sysadmin(
+    def test_check_organization_admin_role_with_resource_using_sysadmin(
         self, mock_toolkit_abort
     ):
         mocked_resource_comment_summary = MagicMock()
@@ -556,7 +556,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
-    def test_check_organization_adimn_role_with_resource_using_org_admin(
+    def test_check_organization_admin_role_with_resource_using_org_admin(
         self, mock_toolkit_abort
     ):
         mocked_resource_comment_summary = MagicMock()
@@ -588,7 +588,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('ckanext.feedback.controllers.management.toolkit.abort')
-    def test_check_organization_adimn_role_with_resource_using_user(
+    def test_check_organization_admin_role_with_resource_using_user(
         self, mock_toolkit_abort
     ):
         mocked_resource_comment_summary = MagicMock()
