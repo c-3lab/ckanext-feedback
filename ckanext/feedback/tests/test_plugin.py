@@ -44,7 +44,8 @@ class TestPlugin:
                     'enable': True,
                     'enable_orgs': [],
                     'comments': {
-                        'repeat_post_limit': {'enable': False, 'enable_orgs': []}
+                        'repeat_post_limit': {'enable': False, 'enable_orgs': []},
+                        'rating': {'enable': False, 'enable_orgs': []},
                     },
                 },
                 'downloads': {
@@ -70,6 +71,8 @@ class TestPlugin:
             config.get('ckan.feedback.resources.comment.repeat_post_limit.enable_orgs')
             == []
         )
+        assert config.get('ckan.feedback.resources.comment.rating.enable') is False
+        assert config.get('ckan.feedback.resources.comment.rating.enable_orgs') == []
         assert config.get('ckan.feedback.downloads.enable') is True
         assert config.get('ckan.feedback.downloads.enable_orgs') == []
 
@@ -78,6 +81,7 @@ class TestPlugin:
         config['ckan.feedback.resources.enable'] = False
         config['ckan.feedback.downloads.enable'] = False
         config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
+        config['ckan.feedback.resources.comment.rating.enable'] = True
         instance.update_config(config)
         assert instance.is_feedback_config_file is True
         assert config.get('ckan.feedback.utilizations.enable') is True
@@ -86,6 +90,7 @@ class TestPlugin:
             config.get('ckan.feedback.resources.comment.repeat_post_limit.enable')
             is False
         )
+        assert config.get('ckan.feedback.resources.comment.rating.enable') is False
         assert config.get('ckan.feedback.downloads.enable') is True
 
     @patch('ckanext.feedback.plugin.toolkit')
@@ -561,3 +566,120 @@ class TestPlugin:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
         assert instance.is_disabled_repeat_post_on_resource() is True
+
+    def test_is_enabled_rating_org(self):
+        instance = FeedbackPlugin()
+        org_id = 'example_org_id'
+
+        # without feedback_config_file and .ini file
+        instance.update_config(config)
+        assert instance.is_enabled_rating_org(org_id) is False
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.resources.comment.rating.enable'] = True
+        instance.update_config(config)
+        assert instance.is_enabled_rating_org(org_id) is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.resources.comment.rating.enable'] = False
+        instance.update_config(config)
+        assert instance.is_enabled_rating_org(org_id) is False
+
+        # with feedback_config_file enable is False and org_id is not in enable_orgs
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {'rating': {'enable': False, 'enable_orgs': []}}
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_rating_org(org_id) is False
+        os.remove('/etc/ckan/feedback_config.json')
+
+        # with feedback_config_file enable is False and org_id is in enable_orgs
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {'rating': {'enable': False, 'enable_orgs': [org_id]}}
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_rating_org(org_id) is False
+        os.remove('/etc/ckan/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_id is not in enable_orgs
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {'rating': {'enable': True, 'enable_orgs': []}}
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_rating_org(org_id) is False
+        os.remove('/etc/ckan/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_id is in enable_orgs
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {'rating': {'enable': True, 'enable_orgs': [org_id]}}
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_rating_org(org_id) is True
+
+    def test_is_enabled_rating(self):
+        instance = FeedbackPlugin()
+
+        # without feedback_config_file and .ini file
+        instance.update_config(config)
+        assert instance.is_enabled_rating() is False
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.resources.comment.rating.enable'] = True
+        instance.update_config(config)
+        assert instance.is_enabled_rating() is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.resources.comment.rating.enable'] = False
+        instance.update_config(config)
+        assert instance.is_enabled_rating() is False
+
+        # with feedback_config_file enable is False
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {'rating': {'enable': False, 'enable_orgs': []}}
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_rating() is False
+        os.remove('/etc/ckan/feedback_config.json')
+
+        # with feedback_config_file enable is True
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {'rating': {'enable': True, 'enable_orgs': []}}
+                }
+            }
+        }
+        with open('/etc/ckan/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.update_config(config)
+        assert instance.is_enabled_rating() is True

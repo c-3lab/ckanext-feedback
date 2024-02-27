@@ -27,11 +27,13 @@
       <a href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}">{{ h.get_resource_comments(res.id) }}</a>
       <div class="description">{{ _('Comments') }}</div>
     </div>
-    <div class="utilization-data bubble">
-      <i class="fa fa-star"></i>
-      {{ h.get_resource_rating(res.id)|round(1) }}
-      <div class="description">{{ _('Rating') }}</div>
-    </div>
+    {% if h.is_enabled_rating_org(pkg.owner_org) %}
+      <div class="utilization-data bubble">
+        <i class="fa fa-star"></i>
+        {{ h.get_resource_rating(res.id)|round(1) }}
+        <div class="description">{{ _('Rating') }}</div>
+      </div>
+    {% endif %}
   {% endif %}
   {% if h.is_enabled_utilizations_org(pkg.owner_org) %}
     <div class="bubble">
