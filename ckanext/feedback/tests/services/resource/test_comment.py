@@ -42,12 +42,16 @@ class TestComments:
 
     def test_get_resource_comments(self):
         assert not get_resource_comments()
-        resource = factories.Resource()
+        organization = factories.Organization()
+        package = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=package['id'])
+
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
         assert get_resource_comments()
         assert get_resource_comments(resource['id'])
+        assert get_resource_comments(resource['id'], None, [organization['id']])
         assert not get_resource_comments('test')
         assert not get_resource_comments(resource['id'], True)
 

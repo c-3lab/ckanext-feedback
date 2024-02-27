@@ -8,7 +8,7 @@ from ckanext.feedback.models.utilization import Utilization
 
 
 # Get records from the Utilization table
-def get_utilizations(id=None, keyword=None, approval=None):
+def get_utilizations(id=None, keyword=None, approval=None, owner_orgs=None):
     query = (
         session.query(
             Utilization.id,
@@ -19,6 +19,7 @@ def get_utilizations(id=None, keyword=None, approval=None):
             Resource.name.label('resource_name'),
             Resource.id.label('resource_id'),
             Package.name.label('package_name'),
+            Package.owner_org,
             func.coalesce(IssueResolutionSummary.issue_resolution, 0).label(
                 'issue_resolution'
             ),
@@ -40,5 +41,9 @@ def get_utilizations(id=None, keyword=None, approval=None):
         )
     if approval is not None:
         query = query.filter(Utilization.approval == approval)
+    if owner_orgs is not None:
+        query = query.filter(
+            or_(Utilization.approval, Package.owner_org.in_(owner_orgs))
+        )
 
     return query.all()

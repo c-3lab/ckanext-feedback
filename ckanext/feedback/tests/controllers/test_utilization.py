@@ -3,10 +3,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 import six
 from ckan import model
+from ckan.common import _
 from ckan.logic import get_action
 from ckan.model import Resource, Session, User
 from ckan.tests import factories
 from flask import Flask, g
+from flask_babel import Babel
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -29,6 +31,7 @@ class TestUtilizationController:
 
     def setup_method(self, method):
         self.app = Flask(__name__)
+        Babel(self.app)
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
@@ -53,7 +56,94 @@ class TestUtilizationController:
             g.userobj = user
             UtilizationController.search()
 
-        mock_get_utilizations.assert_called_once_with(resource['id'], keyword, None)
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, None, None
+        )
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': keyword,
+                'disable_keyword': disable_keyword,
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request')
+    def test_search_with_org_admin(
+        self, mock_request, mock_get_utilizations, mock_render
+    ):
+        dataset = factories.Dataset()
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        user_env = {'REMOTE_USER': user.name}
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+
+        mock_request.args.get.side_effect = lambda x, default: {
+            'id': resource['id'],
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+        }.get(x, default)
+
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, None, [organization_dict['id']]
+        )
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': keyword,
+                'disable_keyword': disable_keyword,
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request')
+    def test_search_with_user(self, mock_request, mock_get_utilizations, mock_render):
+        dataset = factories.Dataset()
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        user_env = {'REMOTE_USER': user.name}
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+
+        mock_request.args.get.side_effect = lambda x, default: {
+            'id': resource['id'],
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+        }.get(x, default)
+
+        with self.app.test_request_context(path='/', environ_base=user_env):
+            g.userobj = user
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, True, None
+        )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
@@ -85,7 +175,9 @@ class TestUtilizationController:
             g.userobj = None
             UtilizationController.search()
 
-        mock_get_utilizations.assert_called_once_with(resource['id'], keyword, True)
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, True, None
+        )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
@@ -253,7 +345,98 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    def test_details_approval_true(self, mock_render, mock_detail_service):
+    def test_details_approval_with_sysadmin(self, mock_render, mock_detail_service):
+        utilization_id = 'utilization id'
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        organization_dict = factories.Organization()
+
+        mock_utilization = MagicMock()
+        mock_utilization.owner_org = organization_dict['id']
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        mock_detail_service.get_utilization_comments.return_value = 'comments'
+        mock_detail_service.get_utilization_comment_categories.return_value = (
+            'categories'
+        )
+        mock_detail_service.get_issue_resolutions.return_value = 'issue resolutions'
+
+        UtilizationController.details(utilization_id)
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comments.assert_called_once_with(
+            utilization_id, None
+        )
+        mock_detail_service.get_utilization_comment_categories.assert_called_once()
+        mock_detail_service.get_issue_resolutions.assert_called_once_with(
+            utilization_id
+        )
+        mock_render.assert_called_once_with(
+            'utilization/details.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'comments': 'comments',
+                'categories': 'categories',
+                'issue_resolutions': 'issue resolutions',
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    def test_details_approval_with_org_admin(self, mock_render, mock_detail_service):
+        utilization_id = 'utilization id'
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        mock_utilization = MagicMock()
+        mock_utilization.owner_org = organization_dict['id']
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        mock_detail_service.get_utilization_comments.return_value = 'comments'
+        mock_detail_service.get_utilization_comment_categories.return_value = (
+            'categories'
+        )
+        mock_detail_service.get_issue_resolutions.return_value = 'issue resolutions'
+
+        UtilizationController.details(utilization_id)
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comments.assert_called_once_with(
+            utilization_id, None
+        )
+        mock_detail_service.get_utilization_comment_categories.assert_called_once()
+        mock_detail_service.get_issue_resolutions.assert_called_once_with(
+            utilization_id
+        )
+        mock_render.assert_called_once_with(
+            'utilization/details.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'comments': 'comments',
+                'categories': 'categories',
+                'issue_resolutions': 'issue resolutions',
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    def test_details_approval_without_user(self, mock_render, mock_detail_service):
         utilization_id = 'utilization id'
         g.userobj = None
 
@@ -287,7 +470,7 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    def test_details_approval_false(
+    def test_details_with_user(
         self,
         mock_render,
         mock_detail_service,
@@ -297,7 +480,9 @@ class TestUtilizationController:
         user = User.get(user_dict['id'])
         g.userobj = user
 
-        mock_detail_service.get_utilization.return_value = 'utilization'
+        utilization = MagicMock()
+        utilization.owner_org = 'organization id'
+        mock_detail_service.get_utilization.return_value = utilization
         mock_detail_service.get_utilization_comments.return_value = 'comments'
         mock_detail_service.get_utilization_comment_categories.return_value = (
             'categories'
@@ -312,13 +497,13 @@ class TestUtilizationController:
             utilization_id
         )
         mock_detail_service.get_utilization_comments.assert_called_once_with(
-            utilization_id, None
+            utilization_id, True
         )
         mock_render.assert_called_once_with(
             'utilization/details.html',
             {
                 'utilization_id': utilization_id,
-                'utilization': 'utilization',
+                'utilization': utilization,
                 'comments': 'comments',
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
@@ -351,7 +536,7 @@ class TestUtilizationController:
 
         UtilizationController.approve(utilization_id)
 
-        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization.assert_any_call(utilization_id)
         mock_detail_service.approve_utilization.assert_called_once_with(
             utilization_id, user.id
         )
@@ -457,8 +642,10 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_edit(
         self,
+        mock_detail_service,
         mock_edit_service,
         mock_render,
     ):
@@ -470,6 +657,11 @@ class TestUtilizationController:
 
         mock_edit_service.get_utilization_details.return_value = utilization_details
         mock_edit_service.get_resource_details.return_value = resource_details
+
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
 
         g.userobj = user
         UtilizationController.edit(utilization_id)
@@ -494,8 +686,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.url_for')
     @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_update(
         self,
+        mock_detail_service,
         mock_redirect,
         mock_url_for,
         mock_flash_success,
@@ -510,6 +704,10 @@ class TestUtilizationController:
         mock_request.form.get.side_effect = [title, description]
         mock_url_for.return_value = 'utilization details url'
 
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
@@ -530,8 +728,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.url_for')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_update_without_title_description(
         self,
+        mock_detail_service,
         mock_url_for,
         mock_flash_success,
         mock_edit_service,
@@ -545,6 +745,10 @@ class TestUtilizationController:
         mock_request.form.get.side_effect = [title, description]
         mock_url_for.return_value = 'utilization_details_url'
 
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
         user_dict = factories.Sysadmin()
         user = User.get(user_dict['id'])
         g.userobj = user
@@ -589,8 +793,8 @@ class TestUtilizationController:
         g.userobj = user
         UtilizationController.delete(utilization_id)
 
-        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
-        mock_edit_service.delete_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization.assert_any_call(utilization_id)
+        mock_edit_service.delete_utilization.asset_called_once_with(utilization_id)
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
             resource_id
         )
@@ -679,3 +883,68 @@ class TestUtilizationController:
             UtilizationController.create_issue_resolution(utilization_id)
 
         mock_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_check_organization_adimn_role_with_sysadmin(
+        self, mocked_detail_service, mock_toolkit_abort
+    ):
+        mocked_utilization = MagicMock()
+        mocked_utilization.owner_org = 'organization id'
+        mocked_detail_service.get_utilization.return_value = mocked_utilization
+
+        user_dict = factories.Sysadmin()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        UtilizationController._check_organization_admin_role('utilization_id')
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_check_organization_adimn_role_with_org_admin(
+        self, mocked_detail_service, mock_toolkit_abort
+    ):
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        mocked_utilization = MagicMock()
+        mocked_detail_service.get_utilization.return_value = mocked_utilization
+        mocked_utilization.owner_org = organization_dict['id']
+
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+        UtilizationController._check_organization_admin_role('utilization_id')
+        mock_toolkit_abort.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_check_organization_adimn_role_with_user(
+        self, mocked_detail_service, mock_toolkit_abort
+    ):
+        organization_dict = factories.Organization()
+
+        mocked_utilization = MagicMock()
+        mocked_detail_service.get_utilization.return_value = mocked_utilization
+        mocked_utilization.owner_org = organization_dict['id']
+        user_dict = factories.User()
+
+        user = User.get(user_dict['id'])
+        g.userobj = user
+        UtilizationController._check_organization_admin_role('utilization_id')
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
