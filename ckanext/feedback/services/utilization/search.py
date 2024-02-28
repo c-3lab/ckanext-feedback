@@ -1,6 +1,6 @@
+from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
-from ckan.model.group import Group
 from sqlalchemy import func, or_
 
 from ckanext.feedback.models.issue import IssueResolutionSummary
