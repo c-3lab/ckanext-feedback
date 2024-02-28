@@ -95,7 +95,11 @@
                     <td data-waiting="true">{{ _('Unapproved') }}</td>
                   {% endif %}
                 {% else %}
-                  <td></td>
+                  {% if row.approval == True %}
+                    <td data-approval="true"></td>
+                  {% else %}
+                    <td data-waiting="true"></td>
+                  {% endif %}
                 {% endif %}
               {% endif %}
             </tr>
