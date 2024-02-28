@@ -28,7 +28,7 @@ def get_utilizations(id=None, keyword=None, approval=None, owner_orgs=None):
         )
         .join(Resource, Utilization.resource)
         .join(Package)
-        .outerjoin(Group, Package.owner_org == Group.id)
+        .join(Group, Package.owner_org == Group.id)
         .outerjoin(IssueResolutionSummary)
         .order_by(Utilization.created.desc())
     )
