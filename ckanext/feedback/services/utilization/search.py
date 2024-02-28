@@ -10,7 +10,7 @@ from ckanext.feedback.models.utilization import Utilization
 
 # Get records from the Utilization table
 def get_utilizations(
-    id=None, keyword=None, approval=None, owner_orgs=None, owner_org=None
+    id=None, keyword=None, approval=None, owner_orgs=None, org_id=None
 ):
     query = (
         session.query(
@@ -52,7 +52,7 @@ def get_utilizations(
         query = query.filter(
             or_(Utilization.approval, Package.owner_org.in_(owner_orgs))
         )
-    if owner_org:
-        query = query.filter(Package.owner_org == owner_org)
+    if org_id:
+        query = query.filter(Package.owner_org == org_id)
 
     return query.all()
