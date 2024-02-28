@@ -50,7 +50,7 @@ def get_utilizations(id=None, keyword=None, approval=None, owner_orgs=None, org_
         query = query.filter(
             or_(Utilization.approval, Package.owner_org.in_(owner_orgs))
         )
-    if org_id:
+    if org_id is not None:
         query = query.filter(Package.owner_org == org_id)
 
     return query.all()
