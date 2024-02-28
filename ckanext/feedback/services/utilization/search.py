@@ -1,5 +1,6 @@
 from ckan.model.package import Package
 from ckan.model.resource import Resource
+from ckan.model.group import Group
 from sqlalchemy import func, or_
 
 from ckanext.feedback.models.issue import IssueResolutionSummary
@@ -20,12 +21,14 @@ def get_utilizations(id=None, keyword=None, approval=None, owner_orgs=None):
             Resource.id.label('resource_id'),
             Package.name.label('package_name'),
             Package.owner_org,
+            Group.title.label('organization_name'),
             func.coalesce(IssueResolutionSummary.issue_resolution, 0).label(
                 'issue_resolution'
             ),
         )
         .join(Resource, Utilization.resource)
         .join(Package)
+        .outerjoin(Group, Package.owner_org == Group.id)
         .outerjoin(IssueResolutionSummary)
         .order_by(Utilization.created.desc())
     )
@@ -37,6 +40,8 @@ def get_utilizations(id=None, keyword=None, approval=None, owner_orgs=None):
                 Utilization.title.like(f'%{keyword}%'),
                 Resource.name.like(f'%{keyword}%'),
                 Package.name.like(f'%{keyword}%'),
+                Package.owner_org.like(f'%{keyword}%'),
+                Group.title.like(f'%{keyword}%'),
             )
         )
     if approval is not None:
