@@ -25,6 +25,7 @@ class UtilizationController:
     def search():
         id = request.args.get('id', '')
         keyword = request.args.get('keyword', '')
+        org_id = request.args.get('org_id', '')
 
         # If the login user is not an admin, display only approved utilizations
         approval = True
@@ -44,7 +45,7 @@ class UtilizationController:
 
         disable_keyword = request.args.get('disable_keyword', '')
         utilizations = search_service.get_utilizations(
-            id, keyword, approval, owner_orgs
+            id, keyword, approval, owner_orgs, org_id
         )
 
         return toolkit.render(
