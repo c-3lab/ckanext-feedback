@@ -228,18 +228,6 @@ class UtilizationController:
 
         return redirect(url_for('utilization.search'))
 
-    # utilization/comment.html
-    @staticmethod
-    @check_administrator
-    def comment():
-        return toolkit.render('utilization/comment.html')
-
-    # utilization/comment_approval.html
-    @staticmethod
-    @check_administrator
-    def comment_approval():
-        return toolkit.render('utilization/comment_approval.html')
-
     # utilization/<utilization_id>/issue_resolution/new
     @staticmethod
     @check_administrator
