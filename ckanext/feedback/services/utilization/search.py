@@ -9,7 +9,9 @@ from ckanext.feedback.models.utilization import Utilization
 
 
 # Get records from the Utilization table
-def get_utilizations(id=None, keyword=None, approval=None, owner_orgs=None, owner_org=None):
+def get_utilizations(
+    id=None, keyword=None, approval=None, owner_orgs=None, owner_org=None
+):
     query = (
         session.query(
             Utilization.id,
