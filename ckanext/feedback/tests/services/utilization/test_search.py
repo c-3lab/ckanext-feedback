@@ -136,5 +136,5 @@ class TestUtilizationDetailsService:
             approved_utilization
         ]
 
-        # with org_id
-        assert get_utilizations(org_id=unapproved_org['id']) == [unapproved_utilization]
+        # with owner_org
+        assert get_utilizations(owner_org=unapproved_org['id']) == [unapproved_utilization]
