@@ -28,27 +28,26 @@ class UtilizationController:
         owner_org = request.args.get('owner_org', '')
 
         # If the login user is not an admin, display only approved utilizations
+        approval = True
         owner_orgs = None
         if c.userobj is None:
             # If the user is not login, display only approved utilizations
-            utilizations = search_service.get_utilizations(id, keyword, True, owner_org)
+            approval = True
         elif c.userobj.sysadmin:
             # If the user is an admin, display all utilizations
-            utilizations = search_service.get_utilizations(id, keyword, None, owner_org)
+            approval = None
         elif is_organization_admin():
             # If the user is an organization admin, display all organization's utilizations
+            approval = None
             owner_orgs = c.userobj.get_group_ids(
                 group_type='organization', capacity='admin'
             )
-            a_utilizations = search_service.get_utilizations_org_admin(
-                id, keyword, owner_orgs
-            )
-            if owner_org:
-                utilizations = UtilizationController.narrow_down(a_utilizations, owner_org)
-        else:
-            utilizations = search_service.get_utilizations(id, keyword, True, owner_org)
 
         disable_keyword = request.args.get('disable_keyword', '')
+        utilizations = search_service.get_utilizations(
+            id, keyword, approval, owner_orgs, owner_org
+        )
+
         return toolkit.render(
             'utilization/search.html',
             {
@@ -57,13 +56,6 @@ class UtilizationController:
                 'utilizations': utilizations,
             },
         )
-
-    def narrow_down(utilizations, owner_org):
-        new_utilizations = []
-        for utilization in utilizations:
-            if utilization.owner_org == owner_org:
-                new_utilizations.append(utilization)
-        return new_utilizations
 
     # utilization/new
     @staticmethod
