@@ -56,7 +56,9 @@ class TestUtilizationController:
             g.userobj = user
             UtilizationController.search()
 
-        mock_get_utilizations.assert_called_once_with(resource['id'], keyword, None, '')
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, None, None, ''
+        )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
@@ -67,10 +69,10 @@ class TestUtilizationController:
         )
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.search_service')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request')
     def test_search_with_org_admin(
-        self, mock_request, mock_search_service, mock_render
+        self, mock_request, mock_get_utilizations, mock_render
     ):
         dataset = factories.Dataset()
         user_dict = factories.User()
@@ -80,8 +82,6 @@ class TestUtilizationController:
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
-
-        dummy_utilizations = mock_search_service.get_utilizations_org_admin.return_value
 
         member = model.Member(
             group=organization,
@@ -106,15 +106,15 @@ class TestUtilizationController:
             g.userobj = user
             UtilizationController.search()
 
-        mock_search_service.get_utilizations_org_admin.assert_called_once_with(
-            resource['id'], keyword, [organization_dict['id']]
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, None, [organization_dict['id']], ''
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': dummy_utilizations,
+                'utilizations': mock_get_utilizations.return_value,
             },
         )
 
@@ -141,7 +141,9 @@ class TestUtilizationController:
             g.userobj = user
             UtilizationController.search()
 
-        mock_get_utilizations.assert_called_once_with(resource['id'], keyword, True, '')
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, True, None, ''
+        )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
@@ -173,7 +175,9 @@ class TestUtilizationController:
             g.userobj = None
             UtilizationController.search()
 
-        mock_get_utilizations.assert_called_once_with(resource['id'], keyword, True, '')
+        mock_get_utilizations.assert_called_once_with(
+            resource['id'], keyword, True, None, ''
+        )
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
