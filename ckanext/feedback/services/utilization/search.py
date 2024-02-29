@@ -52,7 +52,7 @@ def get_utilizations(id=None, keyword=None, approval=None, owner_org=None):
     return query.all()
 
 
-def get_utilizations_for_organization_admin(id, keyword, owner_orgs):
+def get_utilizations_for_organization_admin(id=None, keyword=None, owner_orgs=None):
     query = (
         session.query(
             Utilization.id,
