@@ -29,7 +29,7 @@ class UtilizationController:
 
         # If the login user is not an admin, display only approved utilizations
         approval = True
-        owner_orgs = None
+        admin_owner_orgs = None
         if c.userobj is None:
             # If the user is not login, display only approved utilizations
             approval = True
@@ -39,13 +39,13 @@ class UtilizationController:
         elif is_organization_admin():
             # If the user is an organization admin, display all organization's utilizations
             approval = None
-            owner_orgs = c.userobj.get_group_ids(
+            admin_owner_orgs = c.userobj.get_group_ids(
                 group_type='organization', capacity='admin'
             )
 
         disable_keyword = request.args.get('disable_keyword', '')
         utilizations = search_service.get_utilizations(
-            id, keyword, approval, owner_orgs, owner_org
+            id, keyword, approval, admin_owner_orgs, owner_org
         )
 
         return toolkit.render(
