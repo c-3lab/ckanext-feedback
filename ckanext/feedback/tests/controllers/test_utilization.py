@@ -68,11 +68,11 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch(
-        'ckanext.feedback.controllers.utilization.search_service.get_utilizations_for_organization_admin'
+        'ckanext.feedback.controllers.utilization.search_service.get_utilizations_org_admin'
     )
     @patch('ckanext.feedback.controllers.utilization.request')
     def test_search_with_org_admin(
-        self, mock_request, mock_get_utilizations_for_organization_admin, mock_render
+        self, mock_request, mock_get_utilizations_org_admin, mock_render
     ):
         dataset = factories.Dataset()
         user_dict = factories.User()
@@ -106,7 +106,7 @@ class TestUtilizationController:
             g.userobj = user
             UtilizationController.search()
 
-        mock_get_utilizations_for_organization_admin.assert_called_once_with(
+        mock_get_utilizations_org_admin.assert_called_once_with(
             resource['id'], keyword, [organization_dict['id']]
         )
         mock_render.assert_called_once_with(
@@ -114,9 +114,7 @@ class TestUtilizationController:
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': (
-                    mock_get_utilizations_for_organization_admin.return_value
-                ),
+                'utilizations': mock_get_utilizations_org_admin.return_value,
             },
         )
 

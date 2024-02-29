@@ -41,7 +41,7 @@ class UtilizationController:
             owner_orgs = c.userobj.get_group_ids(
                 group_type='organization', capacity='admin'
             )
-            utilizations = search_service.get_utilizations_for_organization_admin(
+            utilizations = search_service.get_utilizations_org_admin(
                 id, keyword, owner_orgs
             )
             disable_keyword = request.args.get('disable_keyword', '')

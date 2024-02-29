@@ -14,7 +14,7 @@ from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization
 from ckanext.feedback.services.utilization.search import (
     get_utilizations,
-    get_utilizations_for_organization_admin,
+    get_utilizations_org_admin,
 )
 
 
@@ -134,7 +134,7 @@ class TestUtilizationDetailsService:
         ]
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilizations_for_organization_admin(self):
+    def test_get_utilizations_org_admin(self):
         unapproved_org = factories.Organization(
             is_organization=True,
             name='unapproved_owner',
@@ -205,32 +205,33 @@ class TestUtilizationDetailsService:
         )
 
         # with no argument
-        assert get_utilizations_for_organization_admin() == [
+        assert get_utilizations_org_admin() == [
             approved_utilization,
             unapproved_utilization,
         ]
 
         # with package_id
-        assert get_utilizations_for_organization_admin(id=unapproved_dataset['id']) == [
+        assert get_utilizations_org_admin(id=unapproved_dataset['id']) == [
             unapproved_utilization
         ]
 
         # with resource_id
-        assert get_utilizations_for_organization_admin(id=approved_resource['id']) == [
+        assert get_utilizations_org_admin(id=approved_resource['id']) == [
             approved_utilization
         ]
 
         # with keyword
-        assert get_utilizations_for_organization_admin(keyword='unapproved') == [
+        assert get_utilizations_org_admin(keyword='unapproved') == [
             unapproved_utilization
         ]
 
         # with organization_id
-        assert get_utilizations_for_organization_admin(
-            owner_orgs=[approved_org['id']]
-        ) == [approved_utilization]
+        assert get_utilizations_org_admin(owner_orgs=[approved_org['id']]) == [
+            approved_utilization
+        ]
 
         # with organization_id
-        assert get_utilizations_for_organization_admin(
-            owner_orgs=[unapproved_org['id']]
-        ) == [approved_utilization, unapproved_utilization]
+        assert get_utilizations_org_admin(owner_orgs=[unapproved_org['id']]) == [
+            approved_utilization,
+            unapproved_utilization,
+        ]
