@@ -28,14 +28,13 @@ class UtilizationController:
         owner_org = request.args.get('owner_org', '')
 
         # If the login user is not an admin, display only approved utilizations
-        approval = True
         owner_orgs = None
         if c.userobj is None:
             # If the user is not login, display only approved utilizations
-            approval = True
+            utilizations = search_service.get_utilizations(id, keyword, True, owner_org)
         elif c.userobj.sysadmin:
             # If the user is an admin, display all utilizations
-            approval = None
+            utilizations = search_service.get_utilizations(id, keyword, None, owner_org)
         elif is_organization_admin():
             # If the user is an organization admin, display all organization's utilizations
             owner_orgs = c.userobj.get_group_ids(
@@ -44,18 +43,10 @@ class UtilizationController:
             utilizations = search_service.get_utilizations_org_admin(
                 id, keyword, owner_orgs
             )
-            disable_keyword = request.args.get('disable_keyword', '')
-            return toolkit.render(
-                'utilization/search.html',
-                {
-                    'keyword': keyword,
-                    'disable_keyword': disable_keyword,
-                    'utilizations': utilizations,
-                },
-            )
+        else:
+            utilizations = search_service.get_utilizations(id, keyword, True, owner_org)
 
         disable_keyword = request.args.get('disable_keyword', '')
-        utilizations = search_service.get_utilizations(id, keyword, approval, owner_org)
         return toolkit.render(
             'utilization/search.html',
             {
