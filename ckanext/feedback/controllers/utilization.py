@@ -40,9 +40,11 @@ class UtilizationController:
             owner_orgs = c.userobj.get_group_ids(
                 group_type='organization', capacity='admin'
             )
-            utilizations = search_service.get_utilizations_org_admin(
+            a_utilizations = search_service.get_utilizations_org_admin(
                 id, keyword, owner_orgs
             )
+            if owner_org:
+                utilizations = UtilizationController.narrow_down(a_utilizations, owner_org)
         else:
             utilizations = search_service.get_utilizations(id, keyword, True, owner_org)
 
@@ -55,6 +57,13 @@ class UtilizationController:
                 'utilizations': utilizations,
             },
         )
+
+    def narrow_down(utilizations, owner_org):
+        new_utilizations = []
+        for utilization in utilizations:
+            if utilization.owner_org == owner_org:
+                new_utilizations.append(utilization)
+        return new_utilizations
 
     # utilization/new
     @staticmethod
