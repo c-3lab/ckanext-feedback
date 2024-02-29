@@ -125,13 +125,18 @@ class TestUtilizationDetailsService:
         # with approval
         assert get_utilizations(approval=True) == [approved_utilization]
 
-        # with organization_id
-        assert get_utilizations(owner_orgs=[unapproved_org['id']]) == [
-            approved_utilization,
-            unapproved_utilization,
+        # with owner_org
+        assert get_utilizations(owner_org=unapproved_org['id']) == [
+            unapproved_utilization
         ]
 
         # with organization_id
-        assert get_utilizations(owner_orgs=[approved_org['id']]) == [
+        assert get_utilizations(admin_owner_orgs=[approved_org['id']]) == [
             approved_utilization
+        ]
+
+        # with organization_id
+        assert get_utilizations(admin_owner_orgs=[unapproved_org['id']]) == [
+            approved_utilization,
+            unapproved_utilization,
         ]

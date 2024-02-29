@@ -57,7 +57,7 @@ class TestUtilizationController:
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, None, None
+            resource['id'], keyword, None, None, ''
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
@@ -107,7 +107,7 @@ class TestUtilizationController:
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, None, [organization_dict['id']]
+            resource['id'], keyword, None, [organization_dict['id']], ''
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
@@ -142,7 +142,7 @@ class TestUtilizationController:
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, True, None
+            resource['id'], keyword, True, None, ''
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
@@ -176,7 +176,7 @@ class TestUtilizationController:
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, True, None
+            resource['id'], keyword, True, None, ''
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
