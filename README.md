@@ -4,17 +4,22 @@
 
 このCKAN Extensionはデータ利用者からのフィードバックを得るための機能を提供します。
 本Extensionの利用者からの意見・要望や活用事例の報告を受け付ける仕組み等によって、データ利用者はデータの理解が進みデータ利活用が促進され、データ提供者はデータのニーズ理解やデータ改善プロセスの効率化が行えます。
+This CKAN Extension provides functionality to obtain feedback from data users. The mechanism for receiving opinions/requests and reports on usage examples from users of this extension will help data users understand data and promote data utilization, while data providers will be able to understand data needs and improve the data improvement process. You can improve efficiency.
 
 フィードバックにより利用者と提供者間でデータを改善し続けるエコシステムを実現することができます。
+Feedback enables an ecosystem between users and providers that continually improves the data.
 
 ## 主な機能
+## Main features
 
-* 👀 集計情報の可視化機能(ダウンロード数、利活用数、課題解決数)
-* 💬 データおよび利活用方法に対するコメント・評価機能
-* 🖼 データを利活用したアプリやシステムの紹介機能
-* 🏆 データを利活用したアプリやシステムの課題解決認定機能
+* 👀 集計情報の可視化機能(ダウンロード数、利活用数、課題解決数) -  👀 Visualization function for aggregate information (number of downloads, number of uses, number of problems solved)
+* 💬 データおよび利活用方法に対するコメント・評価機能 - 💬 Comment and evaluation function for data and usage methods
+* 🖼 データを利活用したアプリやシステムの紹介機能 - 🖼 Feature to introduce apps and systems that utilize data
+* 🏆 データを利活用したアプリやシステムの課題解決認定機能 - 🏆 Problem-solving certification function for apps and systems that utilize data
 
 ## クイックスタート
+
+## Quick Start:
 
 1. CKANの仮想環境をアクティブにする(CKANコンテナ等の環境内で実行してください)
 
