@@ -1,41 +1,41 @@
 {% ckan_extends %}
 
 {% block resource_item_title %}
-  {% asset 'feedback/feedback-tooltip-css' %}
+	{% asset 'feedback/feedback-tooltip-css' %}
   <a class="heading" href="{{ url }}" title="{{ res.name or res.description }}">
     {{ h.resource_display_name(res) | truncate(50) }}<span class="format-label" property="dc:format" data-format="{{ res.format.lower() or 'data' }}">{{ h.get_translated(res, 'format') }}</span>
     {{ h.popular('views', res.tracking_summary.total, min=10) if res.tracking_summary }}
   </a>
-  <br>
+	<br>
   {% if h.is_enabled_downloads_org(pkg.owner_org) %}
     <div class = "bubble">
-      <i class="fa fa-arrow-circle-o-down"></i>
+      <i class="fas fa-arrow-circle-down"></i>
       {{ h.get_resource_downloads(res.id) }}
       <div class="description">{{ _('Downloads') }}</div>
     </div>
   {% endif %}
-  {% if h.is_enabled_utilizations_org(pkg.owner_org) %}
+	{% if h.is_enabled_utilizations_org(pkg.owner_org) %}
     <div class="bubble">
-      <i class="fa fa-pencil-square-o"></i>
+      <i class="fas fa-pencil-alt"></i>
       <a href="{{ h.url_for('utilization.search', id=res.id, disable_keyword=true) }}">{{ h.get_resource_utilizations(res.id) }}</a>
       <div class="description">{{ _('Utilizations') }}</div>
     </div>
   {% endif %}
   {% if h.is_enabled_resources_org(pkg.owner_org) %}
     <div class="utilization-data bubble">
-      <i class="fa fa-commenting-o"></i>
+      <i class="fas fa-comment-dots"></i>
       <a href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}">{{ h.get_resource_comments(res.id) }}</a>
       <div class="description">{{ _('Comments') }}</div>
     </div>
     {% if h.is_enabled_rating_org(pkg.owner_org) %}
       <div class="utilization-data bubble">
-        <i class="fa fa-star"></i>
+        <i class="fas fa-star"></i>
         {{ h.get_resource_rating(res.id)|round(1) }}
         <div class="description">{{ _('Rating') }}</div>
       </div>
     {% endif %}
   {% endif %}
-  {% if h.is_enabled_utilizations_org(pkg.owner_org) %}
+	{% if h.is_enabled_utilizations_org(pkg.owner_org) %}
     <div class="bubble">
       <img id="issue-resolution" src="/images/issue_resolution_badge.png">
       {{ h.get_resource_issue_resolutions(res.id) }}
@@ -46,63 +46,67 @@
 
 {% block resource_item_explore %}
   {% if not url_is_edit %}
-    <div class="dropdown btn-group">
-      <a href="#" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-        <i class="fa fa-share"></i>
-        {{ _('Explore') }}
-        <span class="caret"></span>
-      </a>
-      <ul class="dropdown-menu">
-        {% block resource_item_explore_links %}
-          <li>
-            <a href="{{ url }}">
-              {% if not is_activity_archive and res.has_views %}
-                <i class="fa fa-bar-chart-o"></i>
-                {{ _('Preview') }}
-              {% else %}
-                <i class="fa fa-info-circle"></i>
-                {{ _('More information') }}
-              {% endif %}
-            </a>
-          </li>
-          {% if res.url and h.is_url(res.url) %}
+  	<div class="dropdown btn-group">
+    	<a href="#" class="btn btn-primary dropdown-toggle" type="button" id="dropdownExplorer" data-bs-toggle="dropdown" aria-expanded="false">
+      	<i class="fa fa-share"></i>
+      	{{ _('Explore') }}
+      	<span class="caret"></span>
+    	</a>
+    	<ul class="dropdown-menu" aria-labelledby="dropdownExplorer">
+      	{% block resource_item_explore_links %}
+        	{% block explore_view %}
+          	<li>
+            	<a class="dropdown-item" href="{{ url }}">
+              	{% if res.has_views %}
+                	<i class="fa fa-chart-bar"></i>
+                	{{ _('Preview') }}
+              	{% else %}
+                	<i class="fa fa-info-circle"></i>
+                	{{ _('More information') }}
+              	{% endif %}
+            	</a>
+          	</li>
+        	{% endblock explore_view %}
+
+        	{% if res.url and h.is_url(res.url) %}
+      			<li>
+        			<a class="dropdown-item resource-url-analytics" href="{{ res.url }}" target="_blank" rel="noreferrer">
+          			{% if res.has_views or res.url_type == 'upload' %}
+            			<i class="fa fa-arrow-circle-down"></i>
+            			{{ _('Download') }}
+          			{% else %}
+            			<i class="fa fa-external-link"></i>
+            			{{ _('Go to resource') }}
+          			{% endif %}
+        			</a>
+      			</li>
+      		{% endif %}
+      		{% if can_edit %}
+      			<li>
+        			<a class="dropdown-item" href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}">
+          			<i class="fa fa-pencil-square"></i>
+          			{{ _('Edit') }}
+        			</a>
+      			</li>
+      		{% endif %}
+					{% if h.is_enabled_utilizations_org(pkg.owner_org) %}
             <li>
-              <a href="javascript:window.location.href += '/resource/{{ res.id }}/download';" class="resource-url-analytics">
-                {% if res.has_views or res.url_type == 'upload' %}
-                  <i class="fa fa-arrow-circle-o-down"></i>
-                  {{ _('Download') }}
-                {% else %}
-                  <i class="fa fa-external-link"></i>
-                  {{ _('Go to resource') }}
-                {% endif %}
-              </a>
-            </li>
-          {% endif %}
-          {% if can_edit %}
-            <li>
-              <a href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}">
-                <i class="fa fa-pencil-square-o"></i>
-                {{ _('Edit') }}
-              </a>
-            </li>
-          {% endif %}
-          {% if h.is_enabled_utilizations_org(pkg.owner_org) %}
-            <li>
-              <a href="{{ h.url_for('utilization.new', package_name=pkg.name, resource_id=res.id) }}">
-                <i class="fa fa-pencil-square-o"></i>{{ _('Create utilization application') }}
+              <a class="dropdown-item" href="{{ h.url_for('utilization.new', package_name=pkg.name, resource_id=res.id) }}">
+                <i class="fas fa-pencil-alt"></i>
+								{{ _('Post utilization') }}
               </a>
             </li>
           {% endif %}
           {% if h.is_enabled_resources_org(pkg.owner_org) %}
             <li>
-              <a href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}">
-                <i class="fa fa-commenting-o"></i>
+              <a class="dropdown-item" href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}">
+                <i class="fas fa-comment-dots"></i>
                 {{ _('Comment') }}
               </a>
             </li>
           {% endif %}
-        {% endblock %}
-      </ul>
-    </div>
+      	{% endblock %}
+    	</ul>
+  	</div>
   {% endif %}
 {% endblock %}
