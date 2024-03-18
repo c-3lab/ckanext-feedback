@@ -1,5 +1,5 @@
 import ckan.model as model
-from ckan.common import _, c, request
+from ckan.common import _, request, current_user
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -30,16 +30,16 @@ class UtilizationController:
         # If the login user is not an admin, display only approved utilizations
         approval = True
         admin_owner_orgs = None
-        if c.userobj is None:
+        if not isinstance(current_user, model.User):
             # If the user is not login, display only approved utilizations
             approval = True
-        elif c.userobj.sysadmin:
+        elif current_user.sysadmin:
             # If the user is an admin, display all utilizations
             approval = None
         elif is_organization_admin():
             # If the user is an organization admin, display all organization's utilizations
             approval = None
-            admin_owner_orgs = c.userobj.get_group_ids(
+            admin_owner_orgs = current_user.get_group_ids(
                 group_type='organization', capacity='admin'
             )
 
@@ -110,9 +110,9 @@ class UtilizationController:
     def details(utilization_id):
         approval = True
         utilization = detail_service.get_utilization(utilization_id)
-        if c.userobj is None:
+        if not isinstance(current_user, model.User):
             approval = True
-        elif has_organization_admin_role(utilization.owner_org) or c.userobj.sysadmin:
+        elif has_organization_admin_role(utilization.owner_org) or current_user.sysadmin:
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
         comments = detail_service.get_utilization_comments(utilization_id, approval)
@@ -136,7 +136,7 @@ class UtilizationController:
     def approve(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
         resource_id = detail_service.get_utilization(utilization_id).resource_id
-        detail_service.approve_utilization(utilization_id, c.userobj.id)
+        detail_service.approve_utilization(utilization_id, current_user.id)
         summary_service.refresh_utilization_summary(resource_id)
         session.commit()
 
@@ -168,7 +168,7 @@ class UtilizationController:
     @check_administrator
     def approve_comment(utilization_id, comment_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        detail_service.approve_utilization_comment(comment_id, c.userobj.id)
+        detail_service.approve_utilization_comment(comment_id, current_user.id)
         detail_service.refresh_utilization_comments(utilization_id)
         session.commit()
 
@@ -239,7 +239,7 @@ class UtilizationController:
             toolkit.abort(400)
 
         detail_service.create_issue_resolution(
-            utilization_id, description, c.userobj.id
+            utilization_id, description, current_user.id
         )
         summary_service.increment_issue_resolution_summary(utilization_id)
         session.commit()
@@ -251,7 +251,7 @@ class UtilizationController:
         utilization = detail_service.get_utilization(utilization_id)
         if (
             not has_organization_admin_role(utilization.owner_org)
-            and not c.userobj.sysadmin
+            and not current_user.sysadmin
         ):
             toolkit.abort(
                 404,
