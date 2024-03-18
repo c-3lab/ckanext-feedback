@@ -1,5 +1,5 @@
 import ckan.model as model
-from ckan.common import _, c, request
+from ckan.common import _, request, current_user
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -21,12 +21,12 @@ class ResourceController:
     def comment(resource_id):
         approval = True
         resource = comment_service.get_resource(resource_id)
-        if c.userobj is None:
+        if not isinstance(current_user, model.User):
             # if the user is not logged in, display only approved comments
             approval = True
         elif (
             has_organization_admin_role(resource.package.owner_org)
-            or c.userobj.sysadmin
+            or current_user.sysadmin
         ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
@@ -90,7 +90,7 @@ class ResourceController:
         if not resource_comment_id:
             toolkit.abort(400)
 
-        comment_service.approve_resource_comment(resource_comment_id, c.userobj.id)
+        comment_service.approve_resource_comment(resource_comment_id, current_user.id)
         summary_service.refresh_resource_summary(resource_id)
         session.commit()
 
@@ -106,7 +106,7 @@ class ResourceController:
         if not (resource_comment_id and content):
             toolkit.abort(400)
 
-        comment_service.create_reply(resource_comment_id, content, c.userobj.id)
+        comment_service.create_reply(resource_comment_id, content, current_user.id)
         session.commit()
 
         return redirect(url_for('resource_comment.comment', resource_id=resource_id))
@@ -116,7 +116,7 @@ class ResourceController:
         resource = comment_service.get_resource(resource_id)
         if (
             not has_organization_admin_role(resource.package.owner_org)
-            and not c.userobj.sysadmin
+            and not current_user.sysadmin
         ):
             toolkit.abort(
                 404,
