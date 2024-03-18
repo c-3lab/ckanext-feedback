@@ -1,4 +1,4 @@
-from ckan.common import _, request, current_user
+from ckan.common import _, current_user, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
 from flask import redirect, url_for
@@ -23,7 +23,9 @@ class ManagementController:
 
         # If user is organization admin
         if not current_user.sysadmin:
-            ids = current_user.get_group_ids(group_type='organization', capacity='admin')
+            ids = current_user.get_group_ids(
+                group_type='organization', capacity='admin'
+            )
             resource_comments = resource_comment_service.get_resource_comments(
                 owner_orgs=ids
             )

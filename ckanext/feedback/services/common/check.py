@@ -1,6 +1,6 @@
 from ckan.common import _, current_user
-from ckan.plugins import toolkit
 from ckan.model import User
+from ckan.plugins import toolkit
 
 
 def check_administrator(func):

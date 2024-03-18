@@ -1,5 +1,5 @@
 import ckan.model as model
-from ckan.common import _, request, current_user
+from ckan.common import _, current_user, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -112,7 +112,9 @@ class UtilizationController:
         utilization = detail_service.get_utilization(utilization_id)
         if not isinstance(current_user, model.User):
             approval = True
-        elif has_organization_admin_role(utilization.owner_org) or current_user.sysadmin:
+        elif (
+            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
+        ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
         comments = detail_service.get_utilization_comments(utilization_id, approval)

@@ -1,5 +1,5 @@
 import ckan.model as model
-from ckan.common import _, request, current_user
+from ckan.common import _, current_user, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
