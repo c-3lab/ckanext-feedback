@@ -1,8 +1,8 @@
 import sys
 
 import click
+from ckan.model import meta
 from ckan.plugins import toolkit
-from sqlalchemy import create_engine
 
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
@@ -23,16 +23,6 @@ def feedback():
     '''CLI tool for ckanext-feedback plugin.'''
 
 
-def get_engine(host, port, dbname, user, password):
-    try:
-        engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{dbname}')
-    except Exception as e:
-        toolkit.error_shout(e)
-        sys.exit(1)
-    else:
-        return engine
-
-
 @feedback.command(
     name='init', short_help='create tables in ckan db to activate modules.'
 )
@@ -43,43 +33,8 @@ def get_engine(host, port, dbname, user, password):
     type=click.Choice(['utilization', 'resource', 'download']),
     help='specify the module you want to use from utilization, resource, download',
 )
-@click.option(
-    '-h',
-    '--host',
-    envvar='POSTGRES_HOST',
-    default='db',
-    help='specify the host name of postgresql',
-)
-@click.option(
-    '-p',
-    '--port',
-    envvar='POSTGRES_PORT',
-    default=5432,
-    help='specify the port number of postgresql',
-)
-@click.option(
-    '-d',
-    '--dbname',
-    envvar='POSTGRES_DB',
-    default='ckan',
-    help='specify the name of postgresql',
-)
-@click.option(
-    '-u',
-    '--user',
-    envvar='POSTGRES_USER',
-    default='ckan',
-    help='specify the user name of postgresql',
-)
-@click.option(
-    '-P',
-    '--password',
-    envvar='POSTGRES_PASSWORD',
-    default='ckan',
-    help='specify the password to connect postgresql',
-)
-def init(modules, host, port, dbname, user, password):
-    engine = get_engine(host, port, dbname, user, password)
+def init(modules):
+    engine = meta.engine
     try:
         if 'utilization' in modules:
             drop_utilization_tables(engine)
