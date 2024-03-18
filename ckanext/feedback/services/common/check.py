@@ -1,11 +1,12 @@
-from ckan.common import _, c
+from ckan.common import _, current_user
+from ckan.model import User
 from ckan.plugins import toolkit
 
 
 def check_administrator(func):
     def wrapper(*args, **kwargs):
-        if c.userobj is not None:
-            if is_organization_admin() or c.userobj.sysadmin:
+        if isinstance(current_user, User):
+            if is_organization_admin() or current_user.sysadmin:
                 return func(*args, **kwargs)
         toolkit.abort(
             404,
@@ -19,16 +20,16 @@ def check_administrator(func):
 
 
 def is_organization_admin():
-    if c.userobj is None:
+    if not isinstance(current_user, User):
         return False
 
-    ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
+    ids = current_user.get_group_ids(group_type='organization', capacity='admin')
     return len(ids) != 0
 
 
 def has_organization_admin_role(owner_org):
-    if c.userobj is None:
+    if not isinstance(current_user, User):
         return False
 
-    ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
+    ids = current_user.get_group_ids(group_type='organization', capacity='admin')
     return owner_org in ids
