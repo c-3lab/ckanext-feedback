@@ -47,13 +47,13 @@ jobs:
 
       - name: Run test
         run: |
-          docker exec -i ckan-docker-ckan-dev-1 bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --cov-report=xml --ckan-ini=/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests"
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --cov-report=xml --ckan-ini=/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests"
           docker cp ckan-docker-ckan-dev-1:./coverage.xml ./coverage.xml
         working-directory: ./development
 
-#      - name: Upload coverage to Codecov
-#        uses: codecov/codecov-action@v3.1.0
-#        with:
-#          files: ./coverage.xml
-#          fail_ci_if_error: true
-#          working-directory: ./development
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3.1.0
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true
+          working-directory: ./development
