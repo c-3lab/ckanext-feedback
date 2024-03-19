@@ -38,18 +38,18 @@ jobs:
 
       - name: Install requirement to run test
         run: |
-          docker exec -i ckan bash -c "pip install -r /srv/app/src/ckan/dev-requirements.txt"
-          docker exec -i ckan bash -c "pip install pytest-ckan"
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "pip install -r /srv/app/src/ckan/dev-requirements.txt"
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "pip install pytest-ckan"
 
       - name: db setting
         run: |
-          docker exec -i ckan bash -c "PGPASSWORD=ckan createdb ckan_test -O ckan -E utf-8 -h db -U ckan"
-          docker exec -i ckan bash -c "ckan -c /srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests/config/test.ini db init"
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "PGPASSWORD=ckan createdb ckan_test -O ckan -E utf-8 -h db -U ckan"
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "ckan -c /srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests/config/test.ini db init"
 
       - name: Run test
         run: |
-          docker exec -i ckan bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --cov-report=xml --ckan-ini=/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests"
-          docker cp ckan:./coverage.xml ./coverage.xml
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --cov-report=xml --ckan-ini=/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests"
+          docker cp ckan-docker-ckan-dev-1:./coverage.xml ./coverage.xml
         working-directory: ./development
 
 #      - name: Upload coverage to Codecov
