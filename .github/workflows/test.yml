@@ -32,9 +32,9 @@ jobs:
 
       - name: Install ckanext-feedback
         run: |
-          sleep 180
-          docker exec -it ckan-docker-ckan-dev-1 bash -c "chmod 777 /srv/app/src/ckan/ckan/public/base/i18n/ja.js"
-          docker exec -it ckan-docker-ckan-dev-1 bash -c "pip install /srv/app/src_extensions/ckanext-feedback"
+          sleep 60
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "chmod 777 /srv/app/src/ckan/ckan/public/base/i18n/ja.js"
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "pip install /srv/app/src_extensions/ckanext-feedback"
 
 #      - name: Install requirement to run test
 #        run: |
