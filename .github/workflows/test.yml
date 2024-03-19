@@ -22,7 +22,7 @@ jobs:
 
       - name: Copy .env.dev as .env
         run: |
-          cp .env.dev external/.env
+          cp .env.dev external/ckan-docker/.env
         working-directory: ./development
 
       - name: Build container
