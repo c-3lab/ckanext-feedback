@@ -81,7 +81,7 @@
             {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
               {% if comment.approval %}
                 {% if not reply %}
-                  <input type="button" class="btn btn-primary pull-right" data-toggle='modal' data-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
+                  <input type="button" class="btn btn-primary pull-right" data-bs-toggle='modal' data-bs-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
                 {% else %}
                   <input type="button" class="btn btn-primary pull-right" value="{{ _('Reply') }}" disabled/>
                 {% endif %}
@@ -136,7 +136,7 @@
           <form id="reply-form" class="top-centered-content" action="{{ url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
             <input type="hidden" id="selected_resource_comment_id" name="resource_comment_id">
             <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <h4 id="selected_comment_header"></h4>
