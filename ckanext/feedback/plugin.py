@@ -37,7 +37,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # get path to the feedback_config.json file
         # open the file and load the settings
         try:
-            feedback_config_path = config.get('ckan.feedback.config_file', '/etc/ckan')
+            feedback_config_path = config.get('ckan.feedback.config_file', '/srv/app')
             with open(f'{feedback_config_path}/feedback_config.json') as json_file:
                 feedback_config = json.load(
                     json_file, object_hook=lambda d: SimpleNamespace(**d)
