@@ -105,7 +105,7 @@
 		            (group_type ~ '.index',
                   h.humanize_entity_type('group', group_type, 'main nav') or _('Groups'), ['group']) ) }}
               {% if h.is_enabled_utilizations() %}
-                {{ h.build_nav_main( ('utilization.search', _('utilization')) ) }}
+                {{ h.build_nav_main( ('utilization.search', _('Utilization')) ) }}
               {% endif %}
               {% if c.userobj.sysadmin or h.is_organization_admin() %}
                 {{ h.build_nav_main( ('management.comments', _('Management Comments')) ) }}
