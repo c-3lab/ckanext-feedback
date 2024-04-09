@@ -31,12 +31,15 @@
       <td class="dataset-details">{{ h.get_package_issue_resolutions(pkg_dict.id) }}</td>
     </tr>
   {% endif %}
-  
   {% if pkg_dict.url %}
     <tr>
       <th scope="row" class="dataset-label">{{ _('Source') }}</th>
       {% if h.is_url(pkg_dict.url) %}
-        <td class="dataset-details" property="foaf:homepage">{{ h.link_to(pkg_dict.url, pkg_dict.url, rel='foaf:homepage', target='_blank') }}</td>
+        <td class="dataset-details" property="foaf:homepage">
+          <a href="{{ pkg_dict.url }}" rel="foaf:homepage" target="_blank">
+            {{ pkg_dict.url }}
+          </a>
+        </td>
       {% else %}
         <td class="dataset-details" property="foaf:homepage">{{ pkg_dict.url }}</td>
       {% endif %}
@@ -101,5 +104,4 @@
       </tr>
     {% endfor %}
   {% endblock %}
-
 {% endblock %}
