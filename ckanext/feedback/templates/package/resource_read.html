@@ -1,13 +1,15 @@
 {% ckan_extends %}
 
 {% block resource_actions_inner %}
-  {% if h.check_access('package_update', {'id':pkg.id }) and not is_activity_archive %}
-    <li>{% link_for _('Manage'), named_route=pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
-  {% endif %}
-  {% if res.url and h.is_url(res.url) %}
-    <li>
-      <div class="btn-group">
-        <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="javascript:window.location.href += '/download';">
+  {% block action_manage %}
+    {% if h.check_access('package_update', {'id':pkg.id }) %}
+      <li>{% link_for _('Manage'), named_route=pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
+    {% endif %}
+  {% endblock action_manage %}
+  <li>
+    <div class="btn-group">
+      {% if res.url and h.is_url(res.url) %}
+        <a class="btn btn-primary resource-url-analytics" href="javascript:window.location.href += '/download';">
           {% if res.resource_type in ('listing', 'service') %}
             <i class="fa fa-eye"></i> {{ _('View') }}
           {% elif  res.resource_type == 'api' %}
@@ -15,36 +17,45 @@
           {% elif not res.has_views and not res.url_type == 'upload' %}
             <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
           {% else %}
-            <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
+            <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
           {% endif %}
         </a>
-        {% block download_resource_button %}
-          {% if res.datastore_active %}
-            <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-              <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
-              <li>
-                <a href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}"
-                  target="_blank"><span>CSV</span></a>
-                <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='tsv', bom=True) }}"
-                  target="_blank"><span>TSV</span></a>
-                <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}"
-                  target="_blank"><span>JSON</span></a>
-                <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='xml') }}"
-                  target="_blank"><span>XML</span></a>
-              </li>
-            </ul>
-          {% endif %}
-        {% endblock %}
-      </div>
-    </li>
-  {% endif %}
+      {% endif %}
+      {% block download_resource_button %}
+        {% if res.datastore_active %}
+          <button class="btn btn-primary dropdown-toggle" role="button" id="dropdownDownloadFormat" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ _('List of downloadable formats') }}">
+            {% if not res.url or not h.is_url(res.url) %}
+              {{ _('Download') }}&nbsp;
+            {% endif %}
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownDownloadFormat">
+            <li>
+              <a class="dropdown-item" href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}"
+                target="_blank" rel="noreferrer"><span>CSV</span></a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{{ h.url_for('datastore.dump', resource_id=res.id, format='tsv', bom=True) }}"
+                target="_blank" rel="noreferrer"><span>TSV</span></a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}"
+                target="_blank" rel="noreferrer"><span>JSON</span></a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{{ h.url_for('datastore.dump', resource_id=res.id, format='xml') }}"
+                target="_blank" rel="noreferrer"><span>XML</span></a>
+            </li>
+          </ul>
+        {% endif %}
+      {% endblock %}
+    </div>
+  </li>
   {% if h.is_enabled_utilizations_org(pkg.owner_org) %}
     <li>
       <div class="btn-group">
         <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ h.url_for('utilization.new', package_name=pkg.name, resource_id=res.id, return_to_resource=true) }}">
-          <i class="fa fa-pencil-square-o"></i> {{ _('Create utilization application') }}
+          <i class="fas fa-pencil-alt"></i> {{ _('Create utilization application') }}
         </a>
       </div>
     </li>
@@ -53,7 +64,7 @@
     <li>
       <div class="btn-group">
         <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}">
-          <i class="fa fa-commenting-o"></i> {{ _('Comment') }}
+          <i class="fas fa-comment-dots"></i> {{ _('Comment') }}
         </a>
       </div>
     </li>
@@ -137,6 +148,4 @@
       </tbody>
     </table>
   </div>
-
 {% endblock %}
-
