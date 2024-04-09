@@ -3,16 +3,9 @@
 version: "3"
 
 services:
-  ckan:
-    build:
-      # The overridden file's directory development/external/ckan/contrib/docker is used as the base context
-      context: ../../../../
-      dockerfile: Dockerfile
+  ckan-dev:
     init: true
     volumes:
-      - ckan_config:/etc/ckan
-      - ckan_home:/usr/lib/ckan
-      - ckan_storage:/var/lib/ckan
       # Mount the root directory from within development/external/ckan/contrib/docker
-      - ../../../../../:/opt/ckanext-feedback
-      - /opt/ckanext-feedback/development/
+      - ../../../:/srv/app/src_extensions/ckanext-feedback
+      - /srv/app/src_extensions/ckanext-feedback/development/
