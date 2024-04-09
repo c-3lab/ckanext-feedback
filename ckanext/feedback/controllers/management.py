@@ -1,4 +1,4 @@
-from ckan.common import _, c, request
+from ckan.common import _, current_user, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
 from flask import redirect, url_for
@@ -22,8 +22,10 @@ class ManagementController:
         categories = utilization_detail_service.get_utilization_comment_categories()
 
         # If user is organization admin
-        if not c.userobj.sysadmin:
-            ids = c.userobj.get_group_ids(group_type='organization', capacity='admin')
+        if not current_user.sysadmin:
+            ids = current_user.get_group_ids(
+                group_type='organization', capacity='admin'
+            )
             resource_comments = resource_comment_service.get_resource_comments(
                 owner_orgs=ids
             )
@@ -53,7 +55,7 @@ class ManagementController:
             ManagementController._check_organization_admin_role_with_utilization(
                 utilizations
             )
-            comments_service.approve_utilization_comments(comments, c.userobj.id)
+            comments_service.approve_utilization_comments(comments, current_user.id)
             comments_service.refresh_utilizations_comments(utilizations)
             session.commit()
             helpers.flash_success(
@@ -74,7 +76,7 @@ class ManagementController:
             ManagementController._check_organization_admin_role_with_resource(
                 resource_comment_summaries
             )
-            comments_service.approve_resource_comments(comments, c.userobj.id)
+            comments_service.approve_resource_comments(comments, current_user.id)
             comments_service.refresh_resources_comments(resource_comment_summaries)
             session.commit()
             helpers.flash_success(
@@ -130,7 +132,7 @@ class ManagementController:
         for utilization in utilizations:
             if (
                 not has_organization_admin_role(utilization.resource.package.owner_org)
-                and not c.userobj.sysadmin
+                and not current_user.sysadmin
             ):
                 toolkit.abort(
                     404,
@@ -147,7 +149,7 @@ class ManagementController:
                 not has_organization_admin_role(
                     resource_comment_summary.resource.package.owner_org
                 )
-                and not c.userobj.sysadmin
+                and not current_user.sysadmin
             ):
                 toolkit.abort(
                     404,
