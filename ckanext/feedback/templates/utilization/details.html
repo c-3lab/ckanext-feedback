@@ -41,14 +41,14 @@
             <hr>
           </div>
           <h4>{{ _('Issue Resolutions') }}</h4>
-          <a href="#issue-resolution-detail" data-toggle="modal">
+          <a href="#issue-resolution-detail" data-bs-toggle="modal">
             {% if issue_resolutions|length > 0 %}
               <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">
             {% endif %}
             {{ issue_resolutions|length }}
           </a>
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
-            <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
+            <button class="btn btn-primary right-aligned" data-bs-toggle="modal" data-bs-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
           {% endif %}
           <br>
           <hr>
@@ -104,8 +104,8 @@
         <div class="modal-content">
           <form name="issue_resolution_form" class="top-centered-content" action="{{ url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
             <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal">&times;</button>
               <h2 class="modal-title">{{ _('Certification of issue resolution') }}</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <div>
@@ -134,8 +134,8 @@
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h2 class="modal-title">{{ _('Resolved Issue details') }}</h>
+            <h2 class="modal-title">{{ _('Resolved Issue details') }}</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div id="issue-resolution-table" class="modal-body">
             <div>
