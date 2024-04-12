@@ -18,3 +18,4 @@ def create_utilization(resource_id, title, url, description):
         description=description,
     )
     session.add(utilization)
+    return utilization

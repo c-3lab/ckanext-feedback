@@ -1,3 +1,5 @@
+import logging
+
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
@@ -5,6 +7,7 @@ from ckan.logic import get_action
 from ckan.plugins import toolkit
 from flask import redirect, url_for
 
+import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.utilization.details as detail_service
 import ckanext.feedback.services.utilization.edit as edit_service
 import ckanext.feedback.services.utilization.registration as registration_service
@@ -16,6 +19,9 @@ from ckanext.feedback.services.common.check import (
     has_organization_admin_role,
     is_organization_admin,
 )
+from ckanext.feedback.services.common.send_mail import send_email
+
+log = logging.getLogger(__name__)
 
 
 class UtilizationController:
@@ -109,9 +115,27 @@ class UtilizationController:
             toolkit.abort(400)
 
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
-        registration_service.create_utilization(resource_id, title, url, description)
+        utilization = registration_service.create_utilization(
+            resource_id, title, url, description
+        )
         summary_service.create_utilization_summary(resource_id)
+        utilization_id = utilization.id
         session.commit()
+
+        try:
+            resource = comment_service.get_resource(resource_id)
+            send_email(
+                action='Post a Utilization',
+                organization_id=resource.package.owner_org,
+                target_name=resource.name,
+                content_title=title,
+                content=description,
+                url=url_for(
+                    'utilization.details', utilization_id=utilization_id, _external=True
+                ),
+            )
+        except Exception:
+            log.exception('Send email failed, for feedback notification.')
 
         helpers.flash_success(
             _(
@@ -186,6 +210,23 @@ class UtilizationController:
 
         detail_service.create_utilization_comment(utilization_id, category, content)
         session.commit()
+
+        try:
+            utilization = detail_service.get_utilization(utilization_id)
+            send_email(
+                action='Post a Utilization comment',
+                organization_id=comment_service.get_resource(
+                    utilization.resource_id
+                ).package.owner_org,
+                target_name=utilization.title,
+                content_title=category,
+                content=content,
+                url=url_for(
+                    'utilization.details', utilization_id=utilization_id, _external=True
+                ),
+            )
+        except Exception:
+            log.exception('Send email failed, for feedback notification.')
 
         helpers.flash_success(
             _(
