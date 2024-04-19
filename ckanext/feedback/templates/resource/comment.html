@@ -81,13 +81,13 @@
             {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
               {% if comment.approval %}
                 {% if not reply %}
-                  <input type="button" class="btn btn-primary pull-right" data-bs-toggle='modal' data-bs-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
+                  <input type="button" class="btn btn-primary float-end" data-bs-toggle='modal' data-bs-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
                 {% else %}
-                  <input type="button" class="btn btn-primary pull-right" value="{{ _('Reply') }}" disabled/>
+                  <input type="button" class="btn btn-primary float-end" value="{{ _('Reply') }}" disabled/>
                 {% endif %}
               {% else %}
                 <form name="approval_form" action="{{ url_for('resource_comment.approve_comment', resource_id=resource.id ) }}" method="post">
-                    <button class="btn btn-primary pull-right" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}">{{ _('Approve') }}</button>
+                  <button class="btn btn-primary float-end" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}">{{ _('Approve') }}</button>
                 </form>
               {% endif %}
             {% endif %}

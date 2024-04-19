@@ -40,7 +40,7 @@
             <p id="description-error" class="alert alert-error" style="display: none;">{{ _('Please enter a description') }}</p>
           </div>
           <br>
-          <button class="btn btn-primary pull-right" onclick="return checkTitleAndDescriptionExists();">{{ _('Update') }}</button>
+          <button class="btn btn-primary float-end" onclick="return checkTitleAndDescriptionExists();">{{ _('Update') }}</button>
         </form>
         <form name="delete_form" action="{{ url_for('utilization.delete', utilization_id=utilization_details.id) }}" method="post">
           <input type="hidden" id="resource_id" name="resource_id" value="{{ resource_details.resource_id }}"/>
