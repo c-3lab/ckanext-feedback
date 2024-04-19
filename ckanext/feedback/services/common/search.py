@@ -5,7 +5,5 @@ from ckanext.feedback.models.session import session
 
 def get_organization_name(organization=None):
     return (
-        session.query(Group.name.label('name'))
-        .filter(Group.id == organization)
-        .first()
+        session.query(Group.name.label('name')).filter(Group.id == organization).first()
     )

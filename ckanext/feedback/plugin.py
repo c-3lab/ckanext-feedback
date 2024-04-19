@@ -133,7 +133,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             return toolkit.asbool(enable)
         enable_org = org_id in config.get('ckan.feedback.downloads.enable_orgs', [])
         if org is not None:
-            enable_org = org.name in config.get('ckan.feedback.downloads.enable_orgs', [])
+            enable_org = org.name in config.get(
+                'ckan.feedback.downloads.enable_orgs', []
+            )
         downloads_enable = enable and enable_org
         return toolkit.asbool(downloads_enable or not self.is_feedback_config_file)
 
@@ -149,7 +151,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             return toolkit.asbool(enable)
         enable_org = org_id in config.get('ckan.feedback.resources.enable_orgs', [])
         if org is not None:
-            enable_org = org.name in config.get('ckan.feedback.resources.enable_orgs', [])
+            enable_org = org.name in config.get(
+                'ckan.feedback.resources.enable_orgs', []
+            )
         resources_enable = enable and enable_org
         return toolkit.asbool(resources_enable or not self.is_feedback_config_file)
 
@@ -165,7 +169,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             return toolkit.asbool(enable)
         enable_org = org_id in config.get('ckan.feedback.utilizations.enable_orgs', [])
         if org is not None:
-            enable_org = org.name in config.get('ckan.feedback.utilizations.enable_orgs', [])
+            enable_org = org.name in config.get(
+                'ckan.feedback.utilizations.enable_orgs', []
+            )
         utilizations_enable = enable and enable_org
         return toolkit.asbool(utilizations_enable or not self.is_feedback_config_file)
 
