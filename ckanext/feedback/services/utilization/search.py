@@ -54,8 +54,6 @@ def get_utilizations(
             or_(Utilization.approval, Package.owner_org.in_(admin_owner_orgs))
         )
     if organization:
-        query = query.filter(
-            or_(Package.owner_org == organization, Group.name == organization)
-        )
+        query = query.filter(Group.name == organization)
 
     return query.all()
