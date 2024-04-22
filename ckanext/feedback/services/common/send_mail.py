@@ -52,11 +52,14 @@ def send_email(template_name, organization_id, subject, **kwargs):
 
     for user in users:
         try:
-            ckan.lib.mailer.mail_recipient(
-                recipient_name=user['name'],
-                recipient_email=user['email'],
-                subject=subject,
-                body=email_body,
+            toolkit.enqueue_job(
+                ckan.lib.mailer.mail_recipient,
+                kwargs={
+                    'recipient_name': user['name'],
+                    'recipient_email': user['email'],
+                    'subject': subject,
+                    'body': email_body,
+                },
             )
         except Exception:
             log.exception(
