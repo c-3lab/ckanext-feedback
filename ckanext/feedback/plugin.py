@@ -128,10 +128,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Enable/disable the download module
     def is_enabled_downloads_org(self, org_id):
         enable = config.get('ckan.feedback.downloads.enable', True)
-        enable_org = False
-        org = search.get_organization_name(organization=org_id)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
+        enable_org = False
+        org = search.get_organization_name(organization=org_id)
         if org is not None:
             enable_org = org.name in config.get(
                 'ckan.feedback.downloads.enable_orgs', []
@@ -146,10 +146,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Enable/disable the resources module
     def is_enabled_resources_org(self, org_id):
         enable = config.get('ckan.feedback.resources.enable', True)
-        enable_org = False
-        org = search.get_organization_name(organization=org_id)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
+        enable_org = False
+        org = search.get_organization_name(organization=org_id)
         if org is not None:
             enable_org = org.name in config.get(
                 'ckan.feedback.resources.enable_orgs', []
@@ -164,10 +164,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Enable/disable the utilizations module
     def is_enabled_utilizations_org(self, org_id):
         enable = config.get('ckan.feedback.utilizations.enable', True)
-        enable_org = False
-        org = search.get_organization_name(organization=org_id)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
+        enable_org = False
+        org = search.get_organization_name(organization=org_id)
         if org is not None:
             enable_org = org.name in config.get(
                 'ckan.feedback.utilizations.enable_orgs', []
@@ -184,10 +184,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get(
             'ckan.feedback.resources.comment.repeat_post_limit.enable', False
         )
-        enable_org = False
-        org = search.get_organization_name(organization=org_id)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
+        enable_org = False
+        org = search.get_organization_name(organization=org_id)
         if org is not None:
             enable_org = org.name in config.get(
                 'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs',
@@ -205,10 +205,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Enable/disable the rating function
     def is_enabled_rating_org(self, org_id):
         enable = config.get('ckan.feedback.resources.comment.rating.enable', False)
-        enable_org = False
-        org = search.get_organization_name(organization=org_id)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
+        enable_org = False
+        org = search.get_organization_name(organization=org_id)
         if org is not None:
             enable_org = org.name in config.get(
                 'ckan.feedback.resources.comment.rating.enable_orgs', []
