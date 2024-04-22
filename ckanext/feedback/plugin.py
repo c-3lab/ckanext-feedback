@@ -8,6 +8,7 @@ from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
 from ckanext.feedback.services.common import check
+from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download import summary as download_summary_service
 from ckanext.feedback.services.management import comments as management_comments_service
 from ckanext.feedback.services.resource import comment as comment_service
@@ -130,7 +131,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.downloads.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get('ckan.feedback.downloads.enable_orgs', [])
+        enable_org = False
+        organization = feedback_config.get_organization(org_id)
+        if organization is not None:
+            enable_org = organization.name in config.get(
+                'ckan.feedback.downloads.enable_orgs', []
+            )
         downloads_enable = enable and enable_org
         return toolkit.asbool(downloads_enable or not self.is_feedback_config_file)
 
@@ -143,7 +149,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.resources.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get('ckan.feedback.resources.enable_orgs', [])
+        enable_org = False
+        organization = feedback_config.get_organization(org_id)
+        if organization is not None:
+            enable_org = organization.name in config.get(
+                'ckan.feedback.resources.enable_orgs', []
+            )
         resources_enable = enable and enable_org
         return toolkit.asbool(resources_enable or not self.is_feedback_config_file)
 
@@ -156,7 +167,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.utilizations.enable', True)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get('ckan.feedback.utilizations.enable_orgs', [])
+        enable_org = False
+        organization = feedback_config.get_organization(org_id)
+        if organization is not None:
+            enable_org = organization.name in config.get(
+                'ckan.feedback.utilizations.enable_orgs', []
+            )
         utilizations_enable = enable and enable_org
         return toolkit.asbool(utilizations_enable or not self.is_feedback_config_file)
 
@@ -171,10 +187,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         )
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs',
-            [],
-        )
+        enable_org = False
+        organization = feedback_config.get_organization(org_id)
+        if organization is not None:
+            enable_org = organization.name in config.get(
+                'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs',
+                [],
+            )
         repeat_post_limit_enable = enable and enable_org
         return toolkit.asbool(repeat_post_limit_enable)
 
@@ -189,9 +208,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.resources.comment.rating.enable', False)
         if not self.is_feedback_config_file:
             return toolkit.asbool(enable)
-        enable_org = org_id in config.get(
-            'ckan.feedback.resources.comment.rating.enable_orgs', []
-        )
+        enable_org = False
+        organization = feedback_config.get_organization(org_id)
+        if organization is not None:
+            enable_org = organization.name in config.get(
+                'ckan.feedback.resources.comment.rating.enable_orgs', []
+            )
         rating_enable = enable and enable_org
         return toolkit.asbool(rating_enable)
 
