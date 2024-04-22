@@ -1,0 +1,19 @@
+Dear Organization Administrator,
+
+We are writing to notify you that a new submission related to {{ target }} has been received. Please review the details of the submission below:
+
+Submission Title: {{ content_title }}
+
+Submission Content:
+{{ content }}
+
+URL: {{ url }}
+
+This submission is now pending your review. If it meets the required criteria, please proceed with approval.
+
+Please note: This email was generated automatically and cannot receive replies. To take action on this submission, please visit the administrator panel using the URL provided above.
+
+Thank you for your cooperation.
+
+Sincerely,
+System Administrator

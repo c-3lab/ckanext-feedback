@@ -1,0 +1,19 @@
+Dear Organization Administrator,
+
+We have received a new comment regarding {{ target }}. Please review the details of the comment below:
+
+Comment Category: {{ category }}
+
+Comment Details:
+{{ content }}
+
+URL: {{ url }}
+
+This comment is now awaiting your review. Please approve it if it meets the required criteria.
+
+Please note: This email was generated automatically and cannot receive replies. To respond to or take further action on this comment, please visit the administrator panel using the URL provided above.
+
+Thank you for your cooperation.
+
+Sincerely,
+System Administrator

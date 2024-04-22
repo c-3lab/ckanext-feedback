@@ -13,9 +13,7 @@ DEFAULT_TEMPLATE_DIR = (
 )
 
 
-def send_email(action, organization_id, target_name, content_title, content, url):
-    template_name = config.get('ckan.feedback.notice.email.template_name')
-
+def send_email(template_name, organization_id, subject, **kwargs):
     if not toolkit.asbool(config.get('ckan.feedback.notice.email.enable', False)):
         log.info('email notification is disabled.')
         return
@@ -35,23 +33,14 @@ def send_email(action, organization_id, target_name, content_title, content, url
 
     log.info('use template. %s/%s', template_dir, template_name)
 
-    subject = config.get('ckan.feedback.notice.email.subject')
     if not subject:
         subject = 'New Submission Notification'
         log.info('use default_subject: [%s]', subject)
 
     email_body = (
-        Environment(loader=FileSystemLoader(DEFAULT_TEMPLATE_DIR))
+        Environment(loader=FileSystemLoader(template_dir))
         .get_template(template_name)
-        .render(
-            {
-                'action': action,
-                'target': target_name,
-                'content_title': content_title,
-                'content': content,
-                'url': url,
-            }
-        )
+        .render(kwargs)
     )
 
     # Retrieving organization administrators and sending emails

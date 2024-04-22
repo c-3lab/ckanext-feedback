@@ -1,7 +1,7 @@
 import logging
 
 import ckan.model as model
-from ckan.common import _, current_user, g, request
+from ckan.common import _, config, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -79,10 +79,15 @@ class ResourceController:
         try:
             resource = comment_service.get_resource(resource_id)
             send_email(
-                action='Post a Resource comment',
+                template_name=config.get(
+                    'ckan.feedback.notice.email.template_resource_comment'
+                ),
                 organization_id=resource.package.owner_org,
+                subject=config.get(
+                    'ckan.feedback.notice.email.subject_resource_comment'
+                ),
                 target_name=resource.name,
-                content_title=category,
+                category=category,
                 content=content,
                 url=url_for(
                     'resource_comment.comment', resource_id=resource_id, _external=True

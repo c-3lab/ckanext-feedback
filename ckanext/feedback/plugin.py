@@ -112,11 +112,23 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     config['ckan.feedback.notice.email.template_directory'] = (
                         feedback_config.notice.email.template_directory
                     )
-                    config['ckan.feedback.notice.email.template_name'] = (
-                        feedback_config.notice.email.template_name
+                    config['ckan.feedback.notice.email.template_util'] = (
+                        feedback_config.notice.email.template_util
                     )
-                    config['ckan.feedback.notice.email.subject'] = (
-                        feedback_config.notice.email.subject
+                    config['ckan.feedback.notice.email.template_util_comment'] = (
+                        feedback_config.notice.email.template_util_comment
+                    )
+                    config['ckan.feedback.notice.email.template_resource_comment'] = (
+                        feedback_config.notice.email.template_resource_comment
+                    )
+                    config['ckan.feedback.notice.email.subject_util'] = (
+                        feedback_config.notice.email.subject_util
+                    )
+                    config['ckan.feedback.notice.email.subject_util_comment'] = (
+                        feedback_config.notice.email.subject_util_comment
+                    )
+                    config['ckan.feedback.notice.email.subject_resource_comment'] = (
+                        feedback_config.notice.email.subject_resource_comment
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
