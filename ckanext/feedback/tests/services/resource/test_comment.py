@@ -7,7 +7,6 @@ from ckanext.feedback.command.feedback import (
     create_download_tables,
     create_resource_tables,
     create_utilization_tables,
-    get_engine,
 )
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
@@ -31,7 +30,7 @@ class TestComments:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
+        engine = model.meta.engine
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
