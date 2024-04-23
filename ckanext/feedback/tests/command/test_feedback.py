@@ -52,7 +52,7 @@ class TestFeedbackCommand:
         )
 
     def test_feedback_default(self):
-        result = self.runner.invoke(feedback, ['init', '--dbname', engine.url.database])
+        result = self.runner.invoke(feedback, ['init'])
         assert 'Initialize all modules: SUCCESS' in result.output
         assert engine.has_table(Utilization.__table__)
         assert engine.has_table(UtilizationComment.__table__)
@@ -67,7 +67,7 @@ class TestFeedbackCommand:
     def test_feedback_utilization(self):
         result = self.runner.invoke(
             feedback,
-            ['init', '--modules', 'utilization', '--dbname', engine.url.database],
+            ['init', '--modules', 'utilization'],
         )
         assert 'Initialize utilization: SUCCESS' in result.output
         assert engine.has_table(Utilization.__table__)
@@ -82,7 +82,7 @@ class TestFeedbackCommand:
 
     def test_feedback_resource(self):
         result = self.runner.invoke(
-            feedback, ['init', '--modules', 'resource', '--dbname', engine.url.database]
+            feedback, ['init', '--modules', 'resource']
         )
         assert 'Initialize resource: SUCCESS' in result.output
         assert not engine.has_table(Utilization.__table__)
@@ -97,7 +97,7 @@ class TestFeedbackCommand:
 
     def test_feedback_download(self):
         result = self.runner.invoke(
-            feedback, ['init', '--modules', 'download', '--dbname', engine.url.database]
+            feedback, ['init', '--modules', 'download']
         )
         assert 'Initialize download: SUCCESS' in result.output
         assert not engine.has_table(Utilization.__table__)
@@ -110,62 +110,13 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentSummary.__table__)
         assert engine.has_table(DownloadSummary.__table__)
 
-    def test_feedback_with_db_option(self):
-        result = self.runner.invoke(
-            feedback,
-            [
-                'init',
-                '--host',
-                engine.url.host,
-                '--port',
-                engine.url.port,
-                '--dbname',
-                engine.url.database,
-                '--user',
-                engine.url.username,
-                '--password',
-                engine.url.password,
-            ],
-        )
-        assert 'Initialize all modules: SUCCESS' in result.output
-        assert engine.has_table(Utilization.__table__)
-        assert engine.has_table(Utilization.__table__)
-        assert engine.has_table(UtilizationComment.__table__)
-        assert engine.has_table(UtilizationSummary.__table__)
-        assert engine.has_table(IssueResolution.__table__)
-        assert engine.has_table(IssueResolutionSummary.__table__)
-        assert engine.has_table(ResourceComment.__table__)
-        assert engine.has_table(ResourceCommentReply.__table__)
-        assert engine.has_table(ResourceCommentSummary.__table__)
-        assert engine.has_table(DownloadSummary.__table__)
-
-    def test_feedback_engine_error(self):
-        with patch(
-            'ckanext.feedback.command.feedback.create_engine',
-            side_effect=Exception('Error message'),
-        ):
-            result = self.runner.invoke(
-                feedback, ['init', '--dbname', engine.url.database]
-            )
-
-        assert result.exit_code != 0
-        assert not engine.has_table(Utilization.__table__)
-        assert not engine.has_table(UtilizationComment.__table__)
-        assert not engine.has_table(UtilizationSummary.__table__)
-        assert not engine.has_table(IssueResolution.__table__)
-        assert not engine.has_table(IssueResolutionSummary.__table__)
-        assert not engine.has_table(ResourceComment.__table__)
-        assert not engine.has_table(ResourceCommentReply.__table__)
-        assert not engine.has_table(ResourceCommentSummary.__table__)
-        assert not engine.has_table(DownloadSummary.__table__)
-
     def test_feedback_session_error(self):
         with patch(
             'ckanext.feedback.command.feedback.create_utilization_tables',
             side_effect=Exception('Error message'),
         ):
             result = self.runner.invoke(
-                feedback, ['init', '--dbname', engine.url.database]
+                feedback, ['init']
             )
 
         assert result.exit_code != 0
