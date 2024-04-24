@@ -22,6 +22,26 @@ from ckanext.feedback.services.common.check import (
 engine = model.repo.session.get_bind()
 
 
+@pytest.fixture
+def sysadmin_env():
+    user = factories.SysadminWithToken()
+    env = {"Authorization": user["token"]}
+    return env
+
+
+@pytest.fixture
+def user_env():
+    user = factories.UserWithToken()
+    env = {"Authorization": user["token"]}
+    return env
+
+
+def mock_current_user(current_user, user):
+    user_obj = model.User.get(user["name"])
+    # mock current_user
+    current_user.return_value = user_obj
+
+
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestCheck:
     @classmethod
@@ -34,28 +54,26 @@ class TestCheck:
     def setup_method(self, method):
         self.app = Flask(__name__)
 
-    @patch('ckanext.feedback.services.common.check.toolkit')
-    def test_check_administrator(self, mock_toolkit):
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        user.sysadmin = True
-        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+    @patch("flask_login.utils._get_user")
+    def test_check_administrator(self, current_user, app, sysadmin_env):
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
 
         @check_administrator
         def dummy_function():
             return 'function is called'
 
-        with self.app.test_request_context(path='/', environ_base=user_env):
-            g.userobj = user
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
             result = dummy_function()
 
         assert result == 'function is called'
 
-    @patch('ckanext.feedback.services.common.check.toolkit')
-    def test_check_administrator_with_org_admin_user(self, mock_toolkit):
+    @patch("flask_login.utils._get_user")
+    def test_check_administrator_with_org_admin_user(self, current_user, app, user_env):
         user_dict = factories.User()
         user = User.get(user_dict['id'])
-        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+        mock_current_user(current_user, user_dict)
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
@@ -73,8 +91,8 @@ class TestCheck:
         def dummy_function():
             return 'function is called'
 
-        with self.app.test_request_context(path='/', environ_base=user_env):
-            g.userobj = user
+        with app.get(url='/', environ_base=user_env):
+            g.userobj = current_user
             result = dummy_function()
 
         assert result == 'function is called'
@@ -96,15 +114,16 @@ class TestCheck:
             ),
         )
 
+    @patch("flask_login.utils._get_user")
     @patch('ckanext.feedback.services.common.check.toolkit')
-    def test_check_administrator_with_user(self, mock_toolkit):
+    def test_check_administrator_with_user(self, mock_toolkit, current_user):
         @check_administrator
         def dummy_function():
             return 'function is called'
 
         user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        g.userobj = user
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
         dummy_function()
 
         mock_toolkit.abort.assert_called_with(
@@ -115,11 +134,11 @@ class TestCheck:
             ),
         )
 
-    def test_is_organization_admin_with_user(self):
+    @patch("flask_login.utils._get_user")
+    def test_is_organization_admin_with_user(self, current_user, app, user_env):
         user_dict = factories.User()
         user = User.get(user_dict['id'])
-        user.sysadmin = False
-        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+        mock_current_user(current_user, user_dict)
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
@@ -132,8 +151,8 @@ class TestCheck:
         )
         model.Session.add(member)
         model.Session.commit()
-        with self.app.test_request_context(path='/', environ_base=user_env):
-            g.userobj = user
+        with app.get(url='/', environ_base=user_env):
+            g.userobj = current_user
             result = is_organization_admin()
 
         assert result is True
@@ -144,11 +163,11 @@ class TestCheck:
 
         assert result is False
 
-    def test_has_organization_admin_role_with_user(self):
+    @patch("flask_login.utils._get_user")
+    def test_has_organization_admin_role_with_user(self, current_user, app, user_env):
         user_dict = factories.User()
         user = User.get(user_dict['id'])
-        user.sysadmin = False
-        user_env = {'REMOTE_USER': six.ensure_str(user.name)}
+        mock_current_user(current_user, user_dict)
 
         organization_dict1 = factories.Organization()
         organization_dict2 = factories.Organization()
@@ -174,8 +193,8 @@ class TestCheck:
         model.Session.add(member1)
         model.Session.add(member3)
         model.Session.commit()
-        with self.app.test_request_context(path='/', environ_base=user_env):
-            g.userobj = user
+        with app.get(url='/', environ_base=user_env):
+            g.userobj = current_user
             assert has_organization_admin_role(organization1.id) is True
             assert has_organization_admin_role(organization2.id) is False
             assert has_organization_admin_role(organization3.id) is False
