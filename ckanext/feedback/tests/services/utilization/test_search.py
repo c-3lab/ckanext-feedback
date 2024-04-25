@@ -43,7 +43,7 @@ class TestUtilizationDetailsService:
     def test_get_utilizations(self):
         unapproved_org = factories.Organization(
             is_organization=True,
-            name='unapproved_owner',
+            name='unapproved_org_name',
             type='organization',
             title='unapproved_org',
         )
@@ -54,7 +54,7 @@ class TestUtilizationDetailsService:
 
         approved_org = factories.Organization(
             is_organization=True,
-            name='approved_owner',
+            name='approved_org_name',
             type='organization',
             title='approved_org',
         )
@@ -93,6 +93,7 @@ class TestUtilizationDetailsService:
             unapproved_dataset['name'],
             unapproved_org['id'],
             unapproved_org['title'],
+            unapproved_org['name'],
             0,
         )
 
@@ -107,6 +108,7 @@ class TestUtilizationDetailsService:
             approved_dataset['name'],
             approved_org['id'],
             approved_org['title'],
+            approved_org['name'],
             0,
         )
 
@@ -125,8 +127,8 @@ class TestUtilizationDetailsService:
         # with approval
         assert get_utilizations(approval=True) == [approved_utilization]
 
-        # with owner_org
-        assert get_utilizations(owner_org=unapproved_org['id']) == [
+        # with org_name
+        assert get_utilizations(org_name=unapproved_org['name']) == [
             unapproved_utilization
         ]
 

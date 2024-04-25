@@ -6,7 +6,6 @@ from ckanext.feedback.command.feedback import (
     create_download_tables,
     create_resource_tables,
     create_utilization_tables,
-    get_engine,
 )
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.session import session
@@ -31,7 +30,7 @@ class TestDownloadServices:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-        engine = get_engine('db', '5432', 'ckan_test', 'ckan', 'ckan')
+        engine = model.meta.engine
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
