@@ -37,7 +37,7 @@ class UtilizationController:
             # If the user is an admin, display all utilizations
             approval = None
         elif is_organization_admin():
-            # If the user is an organization admin, display all organization's utilizations
+            # If the user is an organization admin, display all utilizations
             approval = None
             admin_owner_orgs = current_user.get_group_ids(
                 group_type='organization', capacity='admin'

@@ -1,13 +1,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-import six
 from ckan import model
 from ckan.common import _
 from ckan.model import User
 from ckan.tests import factories
 from flask import Flask, g
-from flask_babel import Babel
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -22,19 +20,19 @@ engine = model.repo.session.get_bind()
 @pytest.fixture
 def sysadmin_env():
     user = factories.SysadminWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 @pytest.fixture
 def user_env():
     user = factories.UserWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 def mock_current_user(current_user, user):
-    user_obj = model.User.get(user["name"])
+    user_obj = model.User.get(user['name'])
     # mock current_user
     current_user.return_value = user_obj
 
@@ -174,7 +172,7 @@ class TestManagementController:
         _,
         current_user,
         app,
-        sysadmin_env
+        sysadmin_env,
     ):
         comments = ['comment']
         utilization = MagicMock()
@@ -192,9 +190,7 @@ class TestManagementController:
             g.userobj = current_user
             response = ManagementController.approve_bulk_utilization_comments()
 
-        mock_form.getlist.assert_called_once_with(
-            'utilization-comments-checkbox'
-        )
+        mock_form.getlist.assert_called_once_with('utilization-comments-checkbox')
         mock_comments_service.get_utilizations.assert_called_once_with(comments)
         mock_comments_service.approve_utilization_comments.assert_called_once_with(
             comments, user_dict['id']
@@ -219,13 +215,7 @@ class TestManagementController:
     @patch('ckanext.feedback.controllers.management.url_for')
     @patch('ckanext.feedback.controllers.management.request.form')
     def test_approve_bulk_utilization_comments_without_comment(
-        self,
-        mock_form,
-        mock_url_for,
-        mock_redirect,
-        current_user,
-        app,
-        sysadmin_env
+        self, mock_form, mock_url_for, mock_redirect, current_user, app, sysadmin_env
     ):
         mock_form.getlist.return_value = None
         mock_url_for.return_value = 'url'
@@ -369,9 +359,7 @@ class TestManagementController:
             g.userobj = current_user
             response = ManagementController.delete_bulk_utilization_comments()
 
-        mock_form.getlist.assert_called_once_with(
-            'utilization-comments-checkbox'
-        )
+        mock_form.getlist.assert_called_once_with('utilization-comments-checkbox')
         mock_comments_service.get_utilizations.assert_called_once_with(comments)
         mock_comments_service.delete_utilization_comments.assert_called_once_with(
             comments

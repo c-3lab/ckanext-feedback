@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 import pytest
-import six
 from ckan import model
 from ckan.common import _
 from ckan.model import User
@@ -25,19 +24,19 @@ engine = model.repo.session.get_bind()
 @pytest.fixture
 def sysadmin_env():
     user = factories.SysadminWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 @pytest.fixture
 def user_env():
     user = factories.UserWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 def mock_current_user(current_user, user):
-    user_obj = model.User.get(user["name"])
+    user_obj = model.User.get(user['name'])
     # mock current_user
     current_user.return_value = user_obj
 
@@ -54,7 +53,7 @@ class TestCheck:
     def setup_method(self, method):
         self.app = Flask(__name__)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     def test_check_administrator(self, current_user, app, sysadmin_env):
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -69,7 +68,7 @@ class TestCheck:
 
         assert result == 'function is called'
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     def test_check_administrator_with_org_admin_user(self, current_user, app, user_env):
         user_dict = factories.User()
         user = User.get(user_dict['id'])
@@ -114,7 +113,7 @@ class TestCheck:
             ),
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.services.common.check.toolkit')
     def test_check_administrator_with_user(self, mock_toolkit, current_user):
         @check_administrator
@@ -134,7 +133,7 @@ class TestCheck:
             ),
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     def test_is_organization_admin_with_user(self, current_user, app, user_env):
         user_dict = factories.User()
         user = User.get(user_dict['id'])
@@ -163,7 +162,7 @@ class TestCheck:
 
         assert result is False
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     def test_has_organization_admin_role_with_user(self, current_user, app, user_env):
         user_dict = factories.User()
         user = User.get(user_dict['id'])

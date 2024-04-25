@@ -1,6 +1,6 @@
+import ckan.tests.factories as factories
 import pytest
 from ckan import model
-import ckan.tests.factories as factories
 
 from ckanext.feedback.services.common.config import get_organization
 

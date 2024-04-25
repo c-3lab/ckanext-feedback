@@ -81,9 +81,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(DownloadSummary.__table__)
 
     def test_feedback_resource(self):
-        result = self.runner.invoke(
-            feedback, ['init', '--modules', 'resource']
-        )
+        result = self.runner.invoke(feedback, ['init', '--modules', 'resource'])
         assert 'Initialize resource: SUCCESS' in result.output
         assert not engine.has_table(Utilization.__table__)
         assert not engine.has_table(UtilizationComment.__table__)
@@ -96,9 +94,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(DownloadSummary.__table__)
 
     def test_feedback_download(self):
-        result = self.runner.invoke(
-            feedback, ['init', '--modules', 'download']
-        )
+        result = self.runner.invoke(feedback, ['init', '--modules', 'download'])
         assert 'Initialize download: SUCCESS' in result.output
         assert not engine.has_table(Utilization.__table__)
         assert not engine.has_table(UtilizationComment.__table__)
@@ -115,9 +111,7 @@ class TestFeedbackCommand:
             'ckanext.feedback.command.feedback.create_utilization_tables',
             side_effect=Exception('Error message'),
         ):
-            result = self.runner.invoke(
-                feedback, ['init']
-            )
+            result = self.runner.invoke(feedback, ['init'])
 
         assert result.exit_code != 0
         assert not engine.has_table(Utilization.__table__)

@@ -1,7 +1,7 @@
 import json
 import os
-from unittest.mock import patch
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 from ckan import model
@@ -196,7 +196,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_downloads_org(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
@@ -218,7 +220,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_downloads_org(org_name) is True
         os.remove('/srv/app/feedback_config.json')
 
@@ -295,7 +299,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_resources_org(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
@@ -317,7 +323,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_resources_org(org_name) is True
 
     def test_is_enabled_resources(self):
@@ -393,7 +401,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_utilizations_org(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
@@ -415,7 +425,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_utilizations_org(org_name) is True
 
     def test_is_enabled_utilizations(self):
@@ -495,7 +507,10 @@ class TestPlugin:
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {'enable': False, 'enable_orgs': [org_name]}
+                        'repeat_post_limit': {
+                            'enable': False,
+                            'enable_orgs': [org_name],
+                        }
                     }
                 }
             }
@@ -503,7 +518,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_disabled_repeat_post_on_resource_org(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
@@ -537,7 +554,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_disabled_repeat_post_on_resource_org(org_name) is True
 
     def test_is_disabled_repeat_post_on_resource(self):
@@ -633,7 +652,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_rating_org(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
@@ -663,7 +684,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        mock_feedback_config.get_organization.return_value = SimpleNamespace(
+            **{'name': org_name}
+        )
         assert instance.is_enabled_rating_org(org_name) is True
 
     def test_is_enabled_rating(self):

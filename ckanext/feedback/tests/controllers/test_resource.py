@@ -23,19 +23,19 @@ engine = model.repo.session.get_bind()
 @pytest.fixture
 def sysadmin_env():
     user = factories.SysadminWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 @pytest.fixture
 def user_env():
     user = factories.UserWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 def mock_current_user(current_user, user):
-    user_obj = model.User.get(user["name"])
+    user_obj = model.User.get(user['name'])
     # mock current_user
     current_user.return_value = user_obj
 
@@ -52,10 +52,12 @@ class TestResourceController:
     def setup_method(self, method):
         self.app = Flask(__name__)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
-    def test_comment_with_sysadmin(self, mock_request, mock_render, current_user, app, sysadmin_env):
+    def test_comment_with_sysadmin(
+        self, mock_request, mock_render, current_user, app, sysadmin_env
+    ):
         dataset = factories.Dataset()
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -85,10 +87,12 @@ class TestResourceController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
-    def test_comment_with_user(self, mock_request, mock_render, current_user, app, user_env):
+    def test_comment_with_user(
+        self, mock_request, mock_render, current_user, app, user_env
+    ):
         dataset = factories.Dataset()
         user_dict = factories.User()
         mock_current_user(current_user, user_dict)
@@ -226,7 +230,7 @@ class TestResourceController:
         ResourceController.create_comment(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -268,7 +272,7 @@ class TestResourceController:
 
         mock_redirect.assert_called_once_with('resource comment url')
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     def test_approve_comment_with_user(self, mock_toolkit_abort, current_user):
         resource_id = 'resource id'
@@ -286,13 +290,18 @@ class TestResourceController:
             ),
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
     def test_approve_comment_with_other_organization_admin_user(
-        self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort, current_user
+        self,
+        mock_redirect,
+        mock_url_for,
+        mock_comment_service,
+        mock_toolkit_abort,
+        current_user,
     ):
         organization_dict = factories.Organization()
         package = factories.Dataset(owner_org=organization_dict['id'])
@@ -325,7 +334,7 @@ class TestResourceController:
             ),
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -336,7 +345,7 @@ class TestResourceController:
         mock_comment_service,
         mock_summary_service,
         mock_toolkit_abort,
-        current_user
+        current_user,
     ):
         resource_id = 'resource id'
 
@@ -349,7 +358,7 @@ class TestResourceController:
         ResourceController.approve_comment(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -364,7 +373,7 @@ class TestResourceController:
         mock_comment_service,
         mock_summary_service,
         mock_form,
-        current_user
+        current_user,
     ):
         resource_id = 'resource id'
         resource_comment_id = 'resource comment id'
@@ -392,7 +401,7 @@ class TestResourceController:
 
         mock_redirect.assert_called_once_with('resource comment url')
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     def test_reply_with_user(self, mock_toolkit_abort, current_user):
         resource_id = 'resource id'
@@ -410,13 +419,18 @@ class TestResourceController:
             ),
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
     def test_reply_with_other_organization_admin_user(
-        self, mock_redirect, mock_url_for, mock_comment_service, mock_toolkit_abort, current_user
+        self,
+        mock_redirect,
+        mock_url_for,
+        mock_comment_service,
+        mock_toolkit_abort,
+        current_user,
     ):
         organization_dict = factories.Organization()
         package = factories.Dataset(owner_org=organization_dict['id'])
@@ -448,7 +462,7 @@ class TestResourceController:
             ),
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')

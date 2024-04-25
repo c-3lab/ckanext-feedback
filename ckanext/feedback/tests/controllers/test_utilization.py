@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-import six
 from ckan import model
 from ckan.common import _
 from ckan.logic import get_action
@@ -23,19 +22,19 @@ engine = model.repo.session.get_bind()
 @pytest.fixture
 def sysadmin_env():
     user = factories.SysadminWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 @pytest.fixture
 def user_env():
     user = factories.UserWithToken()
-    env = {"Authorization": user["token"]}
+    env = {'Authorization': user['token']}
     return env
 
 
 def mock_current_user(current_user, user):
-    user_obj = model.User.get(user["name"])
+    user_obj = model.User.get(user['name'])
     # mock current_user
     current_user.return_value = user_obj
 
@@ -53,11 +52,19 @@ class TestUtilizationController:
         self.app = Flask(__name__)
         Babel(self.app)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
-    def test_search(self, mock_args, mock_get_utilizations, mock_render, current_user, app, sysadmin_env):
+    def test_search(
+        self,
+        mock_args,
+        mock_get_utilizations,
+        mock_render,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
         dataset = factories.Dataset()
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -88,7 +95,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
@@ -139,11 +146,13 @@ class TestUtilizationController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
-    def test_search_with_user(self, mock_args, mock_get_utilizations, mock_render, current_user, app, user_env):
+    def test_search_with_user(
+        self, mock_args, mock_get_utilizations, mock_render, current_user, app, user_env
+    ):
         dataset = factories.Dataset()
         user_dict = factories.User()
         mock_current_user(current_user, user_dict)
@@ -208,11 +217,13 @@ class TestUtilizationController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.request.args')
-    def test_new(self, mock_args, mock_get_resource, mock_render,current_user, app, user_env):
+    def test_new(
+        self, mock_args, mock_get_resource, mock_render, current_user, app, user_env
+    ):
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
         user_dict = factories.User()
@@ -364,10 +375,12 @@ class TestUtilizationController:
 
         mock_toolkit_abort.assert_called_once_with(400)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    def test_details_approval_with_sysadmin(self, mock_render, mock_detail_service, current_user):
+    def test_details_approval_with_sysadmin(
+        self, mock_render, mock_detail_service, current_user
+    ):
         utilization_id = 'utilization id'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -405,10 +418,12 @@ class TestUtilizationController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    def test_details_approval_with_org_admin(self, mock_render, mock_detail_service, current_user):
+    def test_details_approval_with_org_admin(
+        self, mock_render, mock_detail_service, current_user
+    ):
         utilization_id = 'utilization id'
         user_dict = factories.User()
         user = User.get(user_dict['id'])
@@ -492,7 +507,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_with_user(
@@ -536,7 +551,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
@@ -635,7 +650,7 @@ class TestUtilizationController:
 
         mock_toolkit_abort.assert_called_once_with(400)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.url_for')
@@ -646,7 +661,7 @@ class TestUtilizationController:
         mock_url_for,
         mock_session_commit,
         mock_detail_service,
-        current_user
+        current_user,
     ):
         utilization_id = 'utilization id'
         comment_id = 'comment id'
@@ -670,7 +685,7 @@ class TestUtilizationController:
         )
         mock_redirect.assert_called_once_with('utilization details url')
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
@@ -712,7 +727,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
@@ -729,7 +744,7 @@ class TestUtilizationController:
         mock_session_commit,
         mock_edit_service,
         mock_form,
-        current_user
+        current_user,
     ):
         utilization_id = 'utilization id'
         title = 'title'
@@ -757,7 +772,7 @@ class TestUtilizationController:
         )
         mock_redirect.assert_called_once_with('utilization details url')
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
@@ -792,7 +807,7 @@ class TestUtilizationController:
 
         mock_toolkit_abort.assert_called_once_with(400)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
@@ -809,7 +824,7 @@ class TestUtilizationController:
         mock_summary_service,
         mock_edit_service,
         mock_detail_service,
-        current_user
+        current_user,
     ):
         utilization_id = 'utilization id'
         resource_id = 'resource id'
@@ -835,7 +850,7 @@ class TestUtilizationController:
         mock_url_for.assert_called_once_with('utilization.search')
         mock_redirect.assert_called_once_with('utilization search url')
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
@@ -850,7 +865,7 @@ class TestUtilizationController:
         mock_summary_service,
         mock_detail_service,
         mock_form,
-        current_user
+        current_user,
     ):
         utilization_id = 'utilization id'
         description = 'description'
@@ -875,7 +890,7 @@ class TestUtilizationController:
         )
         mock_redirect.assert_called_once_with('utilization details url')
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
@@ -889,7 +904,7 @@ class TestUtilizationController:
         mock_form,
         mock_abort,
         current_user,
-        app
+        app,
     ):
         utilization_id = 'utilization id'
         description = ''
@@ -905,7 +920,7 @@ class TestUtilizationController:
 
         mock_abort.assert_called_once_with(400)
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_check_organization_adimn_role_with_sysadmin(
@@ -921,7 +936,7 @@ class TestUtilizationController:
         UtilizationController._check_organization_admin_role('utilization_id')
         mock_toolkit_abort.assert_not_called()
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_check_organization_adimn_role_with_org_admin(
@@ -949,7 +964,7 @@ class TestUtilizationController:
         UtilizationController._check_organization_admin_role('utilization_id')
         mock_toolkit_abort.assert_not_called()
 
-    @patch("flask_login.utils._get_user")
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_check_organization_adimn_role_with_user(
