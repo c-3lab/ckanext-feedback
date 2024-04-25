@@ -1,7 +1,9 @@
 import logging
+import os
 
 import ckan.lib.mailer
 import ckan.plugins.toolkit as toolkit
+from ckan.common import config
 from jinja2 import Environment, FileSystemLoader
 
 log = logging.getLogger(__name__)
@@ -12,8 +14,32 @@ DEFAULT_TEMPLATE_DIR = (
 
 
 def send_email(action, organization_id, target_name, content_title, content, url):
-    template_name = 'email_template.text'
-    subject = 'New Submission Notification'
+    template_name = config.get('ckan.feedback.notice.email.template_name')
+
+    if not toolkit.asbool(config.get('ckan.feedback.notice.email.enable', False)):
+        log.info('email notification is disabled.')
+        return
+
+    # settings email_template and subject from [feedback_config.json > ckan.ini]
+    template_dir = config.get('ckan.feedback.notice.email.template_directory')
+    if not os.path.isfile(f'{template_dir}/{template_name}'):
+        template_dir = DEFAULT_TEMPLATE_DIR
+
+    if not os.path.isfile(f'{template_dir}/{template_name}'):
+        log.error(
+            'template_file error. %s/%s: No such file or directory',
+            template_dir,
+            template_name,
+        )
+        return
+
+    log.info('use template. %s/%s', template_dir, template_name)
+
+    subject = config.get('ckan.feedback.notice.email.subject')
+    if not subject:
+        subject = 'New Submission Notification'
+        log.info('use default_subject: [%s]', subject)
+
     email_body = (
         Environment(loader=FileSystemLoader(DEFAULT_TEMPLATE_DIR))
         .get_template(template_name)

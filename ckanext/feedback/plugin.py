@@ -104,6 +104,23 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 except AttributeError as e:
                     toolkit.error_shout(e)
 
+                # the settings related to email notification function
+                try:
+                    config['ckan.feedback.notice.email.enable'] = (
+                        feedback_config.notice.email.enable
+                    )
+                    config['ckan.feedback.notice.email.template_directory'] = (
+                        feedback_config.notice.email.template_directory
+                    )
+                    config['ckan.feedback.notice.email.template_name'] = (
+                        feedback_config.notice.email.template_name
+                    )
+                    config['ckan.feedback.notice.email.subject'] = (
+                        feedback_config.notice.email.subject
+                    )
+                except AttributeError as e:
+                    toolkit.error_shout(e)
+
         except FileNotFoundError:
             toolkit.error_shout('The feedback config file not found')
             self.is_feedback_config_file = False
