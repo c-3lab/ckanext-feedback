@@ -103,6 +103,7 @@ def refresh_resource_summary(resource_id):
         rating_comment = total_comment
     else:
         rating = 0
+        rating_comment = 0
 
     comment = (
         session.query(ResourceComment)

@@ -311,12 +311,14 @@ class TestComments:
             {
                 'id': resource_comment_summary.id,
                 'comment': 1,
+                'rating_comment': 1,
                 'rating': 1,
                 'updated': datetime.now(),
             },
             {
                 'id': another_resource_comment_summary.id,
                 'comment': 1,
+                'rating_comment': 1,
                 'rating': 5,
                 'updated': datetime.now(),
             },
@@ -333,12 +335,14 @@ class TestComments:
             {
                 'id': resource_comment_summary.id,
                 'comment': 0,
+                'rating_comment': 0,
                 'rating': 0,
                 'updated': datetime.now(),
             },
             {
                 'id': another_resource_comment_summary.id,
                 'comment': 0,
+                'rating_comment': 0,
                 'rating': 0,
                 'updated': datetime.now(),
             },

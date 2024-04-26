@@ -76,6 +76,7 @@ class TestResourceServices:
             resource_id=resource['id'],
             comment=1,
             rating=1,
+            rating_comment=1,
             created='2023-03-31 01:23:45.123456',
             updated='2023-03-31 01:23:45.123456',
         )
