@@ -35,10 +35,8 @@ def get_resource_comments(resource_id):
 def get_package_rating(package_id):
     row = (
         session.query(
-            func.sum(
-                ResourceCommentSummary.rating * ResourceCommentSummary.comment
-            ).label('total_rating'),
-            func.sum(ResourceCommentSummary.comment).label('total_comment'),
+            func.sum(ResourceComment.rating).label('total_rating'),
+            func.count(ResourceComment.rating).label('total_comment'),
         )
         .join(Resource)
         .filter(Resource.package_id == package_id)
