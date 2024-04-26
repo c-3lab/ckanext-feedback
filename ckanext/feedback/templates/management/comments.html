@@ -84,10 +84,10 @@
                         {{ h.get_organization(row.utilization.resource.package.owner_org).display_name|truncate(20) }}
                       </td>
                       <td>
-                        <a href="{{ url_for('dataset.search') }}{{ row.utilization.resource.package.title }}">{{ row.utilization.resource.package.title|truncate(20) }}</a>
+                        <a href="{{ url_for('dataset.search') }}{{ row.utilization.resource.package.name }}">{{ row.utilization.resource.package.title|truncate(20) }}</a>
                       </td>
                       <td>
-                        <a href="{{ h.url_for('dataset.search') }}{{ row.utilization.resource.package.title }}/resource/{{ row.utilization.resource.id }}">{{ row.utilization.resource.name|truncate(20) }}</a>
+                        <a href="{{ h.url_for('dataset.search') }}{{ row.utilization.resource.package.name }}/resource/{{ row.utilization.resource.id }}">{{ row.utilization.resource.name|truncate(20) }}</a>
                       </td>
                       <td data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
                       <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
@@ -148,10 +148,10 @@
                         {{ h.get_organization(row.resource.package.owner_org).display_name|truncate(20) }}
                       </td>
                       <td>
-                        <a href="{{ url_for('dataset.search') }}{{ row.resource.package.title }}">{{ row.resource.package.title|truncate(20) }}</a>
+                        <a href="{{ url_for('dataset.search') }}{{ row.resource.package.name }}">{{ row.resource.package.title|truncate(20) }}</a>
                       </td>
                       <td>
-                        <a href="{{ h.url_for('dataset.search') }}{{ row.resource.package.title }}/resource/{{ row.resource.id }}">{{ row.resource.name|truncate(20) }}</a>
+                        <a href="{{ h.url_for('dataset.search') }}{{ row.resource.package.name }}/resource/{{ row.resource.id }}">{{ row.resource.name|truncate(20) }}</a>
                       </td>
                       <td data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
                       <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
