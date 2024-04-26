@@ -37,7 +37,7 @@ def get_package_rating(package_id):
         session.query(
             func.sum(
                 ResourceCommentSummary.rating * ResourceCommentSummary.rating_comment
-                     ).label('total_rating'),
+            ).label('total_rating'),
             func.sum(ResourceCommentSummary.rating_comment).label('rating_comment'),
         )
         .join(Resource)
@@ -124,7 +124,7 @@ def refresh_resource_summary(resource_id):
             resource_id=resource_id,
             rating=rating,
             comment=comment,
-            rating_comment=rating_comment
+            rating_comment=rating_comment,
         )
         session.add(summary)
     else:
