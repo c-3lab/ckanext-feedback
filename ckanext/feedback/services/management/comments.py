@@ -85,7 +85,16 @@ def refresh_resources_comments(resource_comment_summaries):
         if row.total_rating is None:
             rating = 0
         else:
-            rating = row.total_rating / row.total_comment
+            total_rating_comment = (
+                session.query(ResourceComment)
+                .filter(
+                    ResourceComment.resource_id == resource_comment_summary.resource_id,
+                    ResourceComment.approval,
+                    ResourceComment.rating.isnot(None),
+                )
+                .count()
+            )
+            rating = row.total_rating / total_rating_comment
         mappings.append({
             'id': resource_comment_summary.id,
             'comment': row.total_comment,
