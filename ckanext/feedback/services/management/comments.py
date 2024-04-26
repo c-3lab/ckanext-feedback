@@ -75,6 +75,7 @@ def refresh_resources_comments(resource_comment_summaries):
             session.query(
                 func.sum(ResourceComment.rating).label('total_rating'),
                 func.count().label('total_comment'),
+                func.count(ResourceComment.rating).label('total_rating_comment'),
             )
             .filter(
                 ResourceComment.resource_id == resource_comment_summary.resource.id,
@@ -85,16 +86,7 @@ def refresh_resources_comments(resource_comment_summaries):
         if row.total_rating is None:
             rating = 0
         else:
-            total_rating_comment = (
-                session.query(ResourceComment)
-                .filter(
-                    ResourceComment.resource_id == resource_comment_summary.resource_id,
-                    ResourceComment.approval,
-                    ResourceComment.rating.isnot(None),
-                )
-                .count()
-            )
-            rating = row.total_rating / total_rating_comment
+            rating = row.total_rating / row.total_rating_comment
         mappings.append({
             'id': resource_comment_summary.id,
             'comment': row.total_comment,
