@@ -10,6 +10,7 @@
   <li class="active"><a href="{{ h.url_for('management.comments') }}">{{ _('Management Comments') }}</a></li>
 {% endblock %}
 
+{% block title %}{{ _('Management Comments') }} - {{ super() }}{% endblock %}
 
 {% block primary %}
   <article class="module">

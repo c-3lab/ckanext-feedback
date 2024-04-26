@@ -12,6 +12,8 @@
     <li class="active"><a href="{{ h.url_for('utilization.details', utilization_id=utilization_id) }}">{{ _('Details') }}</a></li>
   {% endblock %}
 
+  {% block title %}{{ _('Detail') }} - {{ utilization.title }} - {{ _('Utilization') }} - CKAN{% endblock %}
+
   {% block primary %}
     <article class="module" role="main">
       <div class="module-content">

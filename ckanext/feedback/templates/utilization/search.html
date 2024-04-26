@@ -12,6 +12,8 @@
     <li class="active"><a href="{{ h.url_for('utilization.search') }}">{{ _('Utilization') }}</a></li>
   {% endblock %}
 
+  {% block title %}{{ _('Utilization') }} - CKAN{% endblock %}
+
   {% block primary %}
     <form class="top-centered-content" method="get">
       {% block search_by_keyword %}
