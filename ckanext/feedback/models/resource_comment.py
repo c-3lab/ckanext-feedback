@@ -76,7 +76,10 @@ class ResourceCommentSummary(Base):
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
     )
+    # the total count of all comment
     comment = Column(Integer, default=0)
+    # the number of comments that have ratings
+    rating_comment = Column(Integer, default=0)
     rating = Column(Numeric, default=0)
     created = Column(TIMESTAMP, default=datetime.now)
     updated = Column(TIMESTAMP)

@@ -90,6 +90,7 @@ def refresh_resources_comments(resource_comment_summaries):
         mappings.append({
             'id': resource_comment_summary.id,
             'comment': row.total_comment,
+            'rating_comment': row.total_rating_comment,
             'rating': rating,
             'updated': datetime.now(),
         })
