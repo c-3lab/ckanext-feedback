@@ -15,6 +15,8 @@
     <li class="active"><a href="">{{ _('Create utilization application') }}</a></li>
   {% endblock %}
 
+  {% block title %}{{ _('Create Utilization Application') }} - {{ pkg_dict.title }} - {{ resource.name }} - CKAN{% endblock %}
+
   {%- block primary %}
     <article class="module" role="main">
       <div class="module-content">

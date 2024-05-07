@@ -13,6 +13,8 @@
     <li class="active"><a href="">{{ _('Edit') }}</a></li>
   {% endblock %}
 
+  {% block title %}{{ _('Edit Utilization') }} - {{ utilization_details.title }} - {{ resource_details.package_name }} - {{ resource_details.resource_name }} - CKAN{% endblock %}
+
   {% block primary %}
     <article class="module" role="main">
       <div class="module-content">
