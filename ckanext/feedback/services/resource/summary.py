@@ -36,16 +36,16 @@ def get_package_rating(package_id):
     row = (
         session.query(
             func.sum(
-                ResourceCommentSummary.rating * ResourceCommentSummary.comment
+                ResourceCommentSummary.rating * ResourceCommentSummary.rating_comment
             ).label('total_rating'),
-            func.sum(ResourceCommentSummary.comment).label('total_comment'),
+            func.sum(ResourceCommentSummary.rating_comment).label('rating_comment'),
         )
         .join(Resource)
         .filter(Resource.package_id == package_id)
         .first()
     )
-    if row and row.total_comment and row.total_comment > 0:
-        return row.total_rating / row.total_comment
+    if row and row.rating_comment and row.rating_comment > 0:
+        return row.total_rating / row.rating_comment
     else:
         return 0
 
@@ -100,8 +100,10 @@ def refresh_resource_summary(resource_id):
     )
     if total_comment > 0:
         rating = total_rating / total_comment
+        rating_comment = total_comment
     else:
         rating = 0
+        rating_comment = 0
 
     comment = (
         session.query(ResourceComment)
@@ -123,9 +125,11 @@ def refresh_resource_summary(resource_id):
             resource_id=resource_id,
             rating=rating,
             comment=comment,
+            rating_comment=rating_comment,
         )
         session.add(summary)
     else:
         summary.rating = rating
         summary.comment = comment
+        summary.rating_comment = rating_comment
         summary.updated = datetime.now()
