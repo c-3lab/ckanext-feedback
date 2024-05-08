@@ -1,5 +1,5 @@
 import ckan.model as model
-from ckan.common import _, current_user, request
+from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -48,6 +48,31 @@ class UtilizationController:
             id, keyword, approval, admin_owner_orgs, org_name
         )
 
+        g.pkg_dict = {}
+        if not org_name == '':
+            g.pkg_dict = {
+                'organization': {
+                    'name': org_name,
+                }
+            }
+        elif not id == '':
+            resource = registration_service.get_resource(id)
+            package = model.Package.get(id)
+            if resource:
+                g.pkg_dict = {
+                    'organization': {
+                        'name': resource.package.get_groups(group_type='organization')[
+                            0
+                        ].name
+                    }
+                }
+            elif package:
+                g.pkg_dict = {
+                    'organization': {
+                        'name': package.get_groups(group_type='organization')[0].name
+                    }
+                }
+
         return toolkit.render(
             'utilization/search.html',
             {
@@ -65,6 +90,11 @@ class UtilizationController:
         resource = registration_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(context, {'id': resource.package.id})
+        g.pkg_dict = {
+            'organization': {
+                'name': resource.package.get_groups(group_type='organization')[0].name
+            }
+        }
 
         return toolkit.render(
             'utilization/new.html',
@@ -120,6 +150,13 @@ class UtilizationController:
         comments = detail_service.get_utilization_comments(utilization_id, approval)
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
+        g.pkg_dict = {
+            'organization': {
+                'name': registration_service.get_resource(utilization.resource_id)
+                .package.get_groups(group_type='organization')[0]
+                .name
+            }
+        }
 
         return toolkit.render(
             'utilization/details.html',
@@ -185,6 +222,14 @@ class UtilizationController:
         resource_details = edit_service.get_resource_details(
             utilization_details.resource_id
         )
+        utilization = detail_service.get_utilization(utilization_id)
+        g.pkg_dict = {
+            'organization': {
+                'name': registration_service.get_resource(utilization.resource_id)
+                .package.get_groups(group_type='organization')[0]
+                .name
+            }
+        }
 
         return toolkit.render(
             'utilization/edit.html',

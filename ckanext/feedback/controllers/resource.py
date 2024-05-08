@@ -1,5 +1,5 @@
 import ckan.model as model
-from ckan.common import _, current_user, request
+from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -36,6 +36,11 @@ class ResourceController:
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(context, {'id': resource.package_id})
+        g.pkg_dict = {
+            'organization': {
+                'name': resource.package.get_groups(group_type='organization')[0].name
+            }
+        }
 
         return toolkit.render(
             'resource/comment.html',
