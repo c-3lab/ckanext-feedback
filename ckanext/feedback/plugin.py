@@ -112,20 +112,20 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     config['ckan.feedback.notice.email.template_directory'] = (
                         feedback_config.notice.email.template_directory
                     )
-                    config['ckan.feedback.notice.email.template_util'] = (
-                        feedback_config.notice.email.template_util
+                    config['ckan.feedback.notice.email.template_utilization'] = (
+                        feedback_config.notice.email.template_utilization
                     )
-                    config['ckan.feedback.notice.email.template_util_comment'] = (
-                        feedback_config.notice.email.template_util_comment
-                    )
+                    config[
+                        'ckan.feedback.notice.email.template_utilization_comment'
+                    ] = feedback_config.notice.email.template_utilization_comment
                     config['ckan.feedback.notice.email.template_resource_comment'] = (
                         feedback_config.notice.email.template_resource_comment
                     )
-                    config['ckan.feedback.notice.email.subject_util'] = (
-                        feedback_config.notice.email.subject_util
+                    config['ckan.feedback.notice.email.subject_utilization'] = (
+                        feedback_config.notice.email.subject_utilization
                     )
-                    config['ckan.feedback.notice.email.subject_util_comment'] = (
-                        feedback_config.notice.email.subject_util_comment
+                    config['ckan.feedback.notice.email.subject_utilization_comment'] = (
+                        feedback_config.notice.email.subject_utilization_comment
                     )
                     config['ckan.feedback.notice.email.subject_resource_comment'] = (
                         feedback_config.notice.email.subject_resource_comment

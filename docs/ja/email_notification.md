@@ -48,13 +48,13 @@
         * Utilizationの新規投稿通知に使用するテンプレート名
 
             ```ini
-            ckan.feedback.notice.email.template_util = utilization.text
+            ckan.feedback.notice.email.template_utilization = utilization.text
             ```
 
         * Utilizationへのコメント投稿通知に使用するテンプレート名
 
             ```ini
-            ckan.feedback.notice.email.template_util_comment = utilization_comment.text
+            ckan.feedback.notice.email.template_utilization_comment = utilization_comment.text
             ```
 
         ※ 独自のテンプレートを使用する場合は任意のテンプレート名に変更可能。
@@ -70,13 +70,13 @@
         * Utilizationの新規投稿通知に使用する件名
 
             ```ini
-            ckan.feedback.notice.email.subject_util = Post a Utilization
+            ckan.feedback.notice.email.subject_utilization = Post a Utilization
             ```
 
         * Utilizationへのコメント投稿通知に使用する件名
 
             ```ini
-            ckan.feedback.notice.email.subject_util_comment = Post a Utilization comment
+            ckan.feedback.notice.email.subject_utilization_comment = Post a Utilization comment
             ```
 
         ※指定がない場合は「New Submission Notification」となる。

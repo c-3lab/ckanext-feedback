@@ -125,9 +125,11 @@ class UtilizationController:
         try:
             resource = comment_service.get_resource(resource_id)
             send_email(
-                template_name=config.get('ckan.feedback.notice.email.template_util'),
+                template_name=config.get(
+                    'ckan.feedback.notice.email.template_utilization'
+                ),
                 organization_id=resource.package.owner_org,
-                subject=config.get('ckan.feedback.notice.email.subject_util'),
+                subject=config.get('ckan.feedback.notice.email.subject_utilization'),
                 target_name=resource.name,
                 content_title=title,
                 content=description,
@@ -216,12 +218,14 @@ class UtilizationController:
             utilization = detail_service.get_utilization(utilization_id)
             send_email(
                 template_name=config.get(
-                    'ckan.feedback.notice.email.template_util_comment'
+                    'ckan.feedback.notice.email.template_utilization_comment'
                 ),
                 organization_id=comment_service.get_resource(
                     utilization.resource_id
                 ).package.owner_org,
-                subject=config.get('ckan.feedback.notice.email.subject_util_comment'),
+                subject=config.get(
+                    'ckan.feedback.notice.email.subject_utilization_comment'
+                ),
                 target_name=utilization.title,
                 category=category,
                 content=content,
