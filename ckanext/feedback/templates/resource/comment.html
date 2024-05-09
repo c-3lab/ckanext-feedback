@@ -83,7 +83,11 @@
             {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
               {% if comment.approval %}
                 {% if not reply %}
-                  <input type="button" class="btn btn-primary float-end" data-bs-toggle='modal' data-bs-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
+                  {% if h.is_bootstrap_3() %}
+                    <input type="button" class="btn btn-primary pull-right" data-toggle='modal' data-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
+                  {% else %}
+                    <input type="button" class="btn btn-primary float-end" data-bs-toggle='modal' data-bs-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
+                  {% endif %}
                 {% else %}
                   <input type="button" class="btn btn-primary float-end" value="{{ _('Reply') }}" disabled/>
                 {% endif %}
@@ -132,34 +136,65 @@
       </div>
     </article>
 
-    <div id="reply-form-window" class="modal fade" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form id="reply-form" class="top-centered-content" action="{{ url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
-            <input type="hidden" id="selected_resource_comment_id" name="resource_comment_id">
-            <div class="modal-header">
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <h4 id="selected_comment_header"></h4>
-              <p class="content-align wrap-text" id="selected_comment"></p>
-              <div class="form-group control-full">
-                <label class="control-label" for="code">{{ _('Input') }}</label>
-                <div class="controls ">
-                  <textarea id="reply_content" name="reply_content" cols="20" rows="3" placeholder="" class="form-control"></textarea>
-                </div>
-                <div>
-                  <p id="reply-error" class="alert alert-error" style="display: none;">{{ _('Please enter your reply') }}</p>
+    {% if h.is_bootstrap_3() %}
+      <div id="reply-form-window" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form id="reply-form" class="top-centered-content" action="{{ url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
+              <input type="hidden" id="selected_resource_comment_id" name="resource_comment_id">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <h4 id="selected_comment_header"></h4>
+                <p class="content-align wrap-text" id="selected_comment"></p>
+                <div class="form-group control-full">
+                  <label class="control-label" for="code">{{ _('Input') }}</label>
+                  <div class="controls ">
+                    <textarea id="reply_content" name="reply_content" cols="20" rows="3" placeholder="" class="form-control"></textarea>
+                  </div>
+                  <div>
+                    <p id="reply-error" class="alert alert-error" style="display: none;">{{ _('Please enter your reply') }}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="modal-footer">
-              <button class="btn btn-primary" onclick="return checkReplyExists();">{{ _('Send') }}</button>
-            </div>
-          </form>
+              <div class="modal-footer">
+                <button class="btn btn-primary" onclick="return checkReplyExists();">{{ _('Send') }}</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    {% else %}
+      <div id="reply-form-window" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form id="reply-form" class="top-centered-content" action="{{ url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
+              <input type="hidden" id="selected_resource_comment_id" name="resource_comment_id">
+              <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <h4 id="selected_comment_header"></h4>
+                <p class="content-align wrap-text" id="selected_comment"></p>
+                <div class="form-group control-full">
+                  <label class="control-label" for="code">{{ _('Input') }}</label>
+                  <div class="controls ">
+                    <textarea id="reply_content" name="reply_content" cols="20" rows="3" placeholder="" class="form-control"></textarea>
+                  </div>
+                  <div>
+                    <p id="reply-error" class="alert alert-error" style="display: none;">{{ _('Please enter your reply') }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-primary" onclick="return checkReplyExists();">{{ _('Send') }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   {% endblock -%}
 
   {% block secondary %}{% endblock %}
