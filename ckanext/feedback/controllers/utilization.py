@@ -52,7 +52,6 @@ class UtilizationController:
         # set it as a global variable accessible from templates.
         if id and not org_name:
             resource = registration_service.get_resource(id)
-            package: model.Package
             if resource:
                 package = resource.package
             else:
