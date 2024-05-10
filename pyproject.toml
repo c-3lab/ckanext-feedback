@@ -65,6 +65,7 @@ python-magic = "0.4.15"
 pyyaml = "6.0.1"
 webassets = "0.12.1"
 pyjwt = "1.7.1"
+pre-commit = "3.5.0"
 
 [build-system]
 requires = ["poetry-core"]
