@@ -43,7 +43,7 @@
             <hr>
           </div>
           <h4>{{ _('Issue Resolutions') }}</h4>
-          {% if h.is_bootstrap_3() %}
+          {% if h.is_base_public_folder_bs3() %}
             <a href="#issue-resolution-detail" data-toggle="modal">
           {% else %}
             <a href="#issue-resolution-detail" data-bs-toggle="modal">
@@ -54,7 +54,7 @@
             {{ issue_resolutions|length }}
           </a>
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
-            {% if h.is_bootstrap_3() %}
+            {% if h.is_base_public_folder_bs3() %}
               <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
             {% else %}
               <button class="btn btn-primary right-aligned" data-bs-toggle="modal" data-bs-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
@@ -109,7 +109,7 @@
       </div>
     </article>
 
-    {% if h.is_bootstrap_3() %}
+    {% if h.is_base_public_folder_bs3() %}
       <div id="issue-resolution-form" class="modal fade" tabindex="-1">
         <div class="modal-dialog">
           <div class="modal-content">

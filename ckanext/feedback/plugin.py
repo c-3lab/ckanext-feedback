@@ -221,7 +221,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         enable = config.get('ckan.feedback.resources.comment.rating.enable', False)
         return toolkit.asbool(enable)
 
-    def is_bootstrap_3(self):
+    def is_base_public_folder_bs3(self):
         base_templates_folder = config.get('ckan.base_public_folder', 'public')
         return base_templates_folder == 'public-bs3'
 
@@ -244,7 +244,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_enabled_rating': self.is_enabled_rating,
             'is_enabled_rating_org': self.is_enabled_rating_org,
             'is_organization_admin': check.is_organization_admin,
-            'is_bootstrap_3': self.is_bootstrap_3,
+            'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,

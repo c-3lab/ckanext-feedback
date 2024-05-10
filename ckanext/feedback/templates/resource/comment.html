@@ -83,7 +83,7 @@
             {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
               {% if comment.approval %}
                 {% if not reply %}
-                  {% if h.is_bootstrap_3() %}
+                  {% if h.is_base_public_folder_bs3() %}
                     <input type="button" class="btn btn-primary pull-right" data-toggle='modal' data-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
                   {% else %}
                     <input type="button" class="btn btn-primary float-end" data-bs-toggle='modal' data-bs-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
@@ -136,7 +136,7 @@
       </div>
     </article>
 
-    {% if h.is_bootstrap_3() %}
+    {% if h.is_base_public_folder_bs3() %}
       <div id="reply-form-window" class="modal fade" tabindex="-1">
         <div class="modal-dialog">
           <div class="modal-content">
