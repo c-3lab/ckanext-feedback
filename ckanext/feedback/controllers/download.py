@@ -1,7 +1,12 @@
-from ckan.views.resource import download
+import logging
+
+import ckan.views.resource as resource
 from flask import request
 
+from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download.summary import increment_resource_downloads
+
+log = logging.getLogger(__name__)
 
 
 class DownloadController:
@@ -10,4 +15,14 @@ class DownloadController:
     def extended_download(package_type, id, resource_id, filename=None):
         if request.headers.get('Sec-Fetch-Dest') == 'document':
             increment_resource_downloads(resource_id)
-        return download(package_type, id, resource_id, filename=filename)
+
+        handler = feedback_config.download_handler()
+        if not handler:
+            log.debug("Use default CKAN callback for resource.download")
+            handler = resource.download
+        return handler(
+            package_type=package_type,
+            id=id,
+            resource_id=resource_id,
+            filename=filename,
+        )
