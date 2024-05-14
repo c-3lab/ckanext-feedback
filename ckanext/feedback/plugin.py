@@ -1,8 +1,10 @@
 import json
 from types import SimpleNamespace
+from typing import Any
 
+import ckan.model as model
 from ckan import plugins
-from ckan.common import config
+from ckan.common import _, config
 from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 
@@ -17,13 +19,16 @@ from ckanext.feedback.services.utilization import summary as utilization_summary
 from ckanext.feedback.views import download, management, resource, utilization
 
 
-class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
+class FeedbackPlugin(
+    plugins.SingletonPlugin, DefaultTranslation, toolkit.DefaultDatasetForm
+):
     # Declare class implements
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IClick)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.ITranslation)
+    plugins.implements(plugins.IResourceController)
 
     # IConfigurer
 
@@ -262,3 +267,32 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_rating': resource_summary_service.get_package_rating,
             'get_organization': management_comments_service.get_organization,
         }
+
+    # IResourceController
+
+    def before_resource_show(self, resource_dict: dict[str, Any]) -> dict[str, Any]:
+        owner_org = model.Package.get(resource_dict['package_id']).owner_org
+        resource_id = resource_dict['id']
+        if self.is_enabled_downloads_org(owner_org):
+            resource_dict[_('Downloads')] = (
+                download_summary_service.get_resource_downloads(resource_id)
+            )
+
+        if self.is_enabled_utilizations_org(owner_org):
+            resource_dict[_('Utilizations')] = (
+                utilization_summary_service.get_resource_utilizations(resource_id)
+            )
+            resource_dict[_('Issue Resolutions')] = (
+                utilization_summary_service.get_resource_issue_resolutions(resource_id)
+            )
+
+        if self.is_enabled_resources_org(owner_org):
+            resource_dict[_('Comments')] = (
+                resource_summary_service.get_resource_comments(resource_id)
+            )
+            if self.is_enabled_rating_org(owner_org):
+                resource_dict[_('Rating')] = round(
+                    resource_summary_service.get_resource_rating(resource_id), 1
+                )
+
+        return resource_dict
