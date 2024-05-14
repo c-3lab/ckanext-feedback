@@ -43,7 +43,7 @@
 
 ## downloadモジュールを外部プラグインと連携する場合
 
-リソースがダウンロードされると、downloadモジュールはダウンロード数のカウント追加処理を行った後、デフォルトのダウンロードコールバックを呼び出します。CKAN>=2.10 を使用していて、一部のプラグインが`resource.download`ルートを再定義する場合(ckanext-googleanalytics など)、`ckan.views.resource:download`を使用する代わりにどの関数を呼び出す必要があるかを設定変数`ckan.feedback.download_handler`にて指定できます。</br>
+リソースがダウンロードされると、downloadモジュールはダウンロード数のカウント追加処理を行った後、デフォルトのダウンロードコールバックを呼び出します。CKAN>=2.10 を使用していて、一部のプラグインが`resource.download`ルートを再定義する場合(ckanext-googleanalytics など)、`ckan.views.resource:download`を使用する代わりにどの関数を呼び出す必要があるかを`ckan.ini`内の設定変数`ckan.feedback.download_handler`にて指定できます。</br>
 例として、ckanext-googleanalytics を指定する場合は、以下の設定を使用できます。
 
 ```bash
