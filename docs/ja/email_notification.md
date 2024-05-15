@@ -19,6 +19,16 @@
     CKAN_SMTP_PASSWORD=pass
     ```
 
+    上記の手順で設定を行わない、つまり設定値が空の場合、手順3 以降にて`ckan.ini`内の以下の項目で使用するSMTPサーバの設定を行う。</br>
+    ※設定の反映にはWebアプリケーションサーバの再起動が必要
+
+    ```ini
+    smtp.server = smtp.corporateict.domain:25
+    smtp.starttls = true
+    smtp.user = user
+    smtp.password = pass
+    ```
+
 2. インストール
     * [クイックスタート](../../README.md) **1~4番**の手順を参照してください
 
