@@ -109,131 +109,77 @@
       </div>
     </article>
 
-    {% if h.is_base_public_folder_bs3() %}
-      <div id="issue-resolution-form" class="modal fade" tabindex="-1">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <form name="issue_resolution_form" class="top-centered-content" action="{{ url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
-              <div class="modal-header">
+    <div id="issue-resolution-form" class="modal fade" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form name="issue_resolution_form" class="top-centered-content" action="{{ url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
+            <div class="modal-header">
+              {% if h.is_base_public_folder_bs3() %}
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h2 class="modal-title">{{ _('Certification of issue resolution') }}</h2>
-              </div>
-              <div class="modal-body">
-                <div>
-                  <p><small>{{ _('What is certification of issue resolution?') }}</small></p>
-                  <p><small>{{ _('If it is determined that the content of the utilization method leads to the solution of the problem, it can be certified as a problem solution.') }}</small></p>
-                </div>
-                <div class="form-group control-full">
-                  <label class="control-label" for="code">{{ _('Resolved Issue') }}</label>
-                  <div class="controls">
-                    <textarea id="description" name="description" cols="20" rows="3" placeholder="" class="form-control"></textarea>
-                  </div>
-                  <div>
-                    <p id="description-error" class="alert alert-error" style="display: none;">{{ _('Please enter your issue resolution content') }}</p>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn btn-primary" onclick="return checkDescriptionExists()">{{ _('Certificate') }}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div id="issue-resolution-detail" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2 class="modal-title">{{ _('Resolved Issue details') }}</h>
-              <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-            <div id="issue-resolution-table" class="modal-body">
-              <div>
-                <table class="table table-bordered table-striped table-responsive">
-                  <thead class="table-header">
-                    <tr>
-                      <th class="col-md-3">{{ _('Certificated') }}</th>
-                      <th>{{ _('Resolved Issue') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for issue_resolution in issue_resolutions %}
-                      <tr>
-                        <td>{{ issue_resolution.created.strftime('%Y/%m/%d %H:%M:%S') }}</td>
-                        <td class="multiple-line">{{ issue_resolution.description }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    {% else %}
-      <div id="issue-resolution-form" class="modal fade" tabindex="-1">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <form name="issue_resolution_form" class="top-centered-content" action="{{ url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
-              <div class="modal-header">
+              {% else %}
                 <h2 class="modal-title">{{ _('Certification of issue resolution') }}</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              {% endif %}
+            </div>
+            <div class="modal-body">
+              <div>
+                <p><small>{{ _('What is certification of issue resolution?') }}</small></p>
+                <p><small>{{ _('If it is determined that the content of the utilization method leads to the solution of the problem, it can be certified as a problem solution.') }}</small></p>
               </div>
-              <div class="modal-body">
+              <div class="form-group control-full">
+                <label class="control-label" for="code">{{ _('Resolved Issue') }}</label>
+                <div class="controls">
+                  <textarea id="description" name="description" cols="20" rows="3" placeholder="" class="form-control"></textarea>
+                </div>
                 <div>
-                  <p><small>{{ _('What is certification of issue resolution?') }}</small></p>
-                  <p><small>{{ _('If it is determined that the content of the utilization method leads to the solution of the problem, it can be certified as a problem solution.') }}</small></p>
-                </div>
-                <div class="form-group control-full">
-                  <label class="control-label" for="code">{{ _('Resolved Issue') }}</label>
-                  <div class="controls">
-                    <textarea id="description" name="description" cols="20" rows="3" placeholder="" class="form-control"></textarea>
-                  </div>
-                  <div>
-                    <p id="description-error" class="alert alert-error" style="display: none;">{{ _('Please enter your issue resolution content') }}</p>
-                  </div>
+                  <p id="description-error" class="alert alert-error" style="display: none;">{{ _('Please enter your issue resolution content') }}</p>
                 </div>
               </div>
-              <div class="modal-footer">
-                <button class="btn btn-primary" onclick="return checkDescriptionExists()">{{ _('Certificate') }}</button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" onclick="return checkDescriptionExists()">{{ _('Certificate') }}</button>
+            </div>
+          </form>
         </div>
       </div>
+    </div>
 
-      <div id="issue-resolution-detail" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
+    <div id="issue-resolution-detail" class="modal fade" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            {% if h.is_base_public_folder_bs3() %}
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h2 class="modal-title">{{ _('Resolved Issue details') }}</h2>
+            {% else %}
               <h2 class="modal-title">{{ _('Resolved Issue details') }}</h2>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div id="issue-resolution-table" class="modal-body">
-              <div>
-                <table class="table table-bordered table-striped table-responsive">
-                  <thead class="table-header">
+            {% endif %}
+          </div>
+          <div id="issue-resolution-table" class="modal-body">
+            <div>
+              <table class="table table-bordered table-striped table-responsive">
+                <thead class="table-header">
+                  <tr>
+                    <th class="col-md-3">{{ _('Certificated') }}</th>
+                    <th>{{ _('Resolved Issue') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for issue_resolution in issue_resolutions %}
                     <tr>
-                      <th class="col-md-3">{{ _('Certificated') }}</th>
-                      <th>{{ _('Resolved Issue') }}</th>
+                      <td>{{ issue_resolution.created.strftime('%Y/%m/%d %H:%M:%S') }}</td>
+                      <td class="multiple-line">{{ issue_resolution.description }}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {% for issue_resolution in issue_resolutions %}
-                      <tr>
-                        <td>{{ issue_resolution.created.strftime('%Y/%m/%d %H:%M:%S') }}</td>
-                        <td class="multiple-line">{{ issue_resolution.description }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
-    {% endif %}
+    </div>
   {% endblock %}
 
   {% block secondary %}{% endblock %}
