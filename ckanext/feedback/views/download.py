@@ -31,6 +31,7 @@ def get_download_blueprint():
     return blueprint
 
 
+# Handler to Use When Called from External Extensions
 def download(package_type, id, resource_id, filename=None):
     if config.get('ckan.feedback.downloads.enable', True):
         handler = DownloadController.extended_download
