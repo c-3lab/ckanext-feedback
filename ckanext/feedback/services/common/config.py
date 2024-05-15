@@ -8,7 +8,7 @@ from ckanext.feedback.models.session import session
 
 log = logging.getLogger(__name__)
 
-CONFIG_HANDLER_PATH = "ckan.feedback.download_handler"
+CONFIG_HANDLER_PATH = 'ckan.feedback.download_handler'
 
 
 def get_organization(org_id=None):
@@ -21,6 +21,6 @@ def download_handler():
         handler = import_string(handler_path, silent=True)
     else:
         handler = None
-        log.warning(("Missing {} config option.").format(CONFIG_HANDLER_PATH))
+        log.warning(f'Missing {CONFIG_HANDLER_PATH} config option.')
 
     return handler

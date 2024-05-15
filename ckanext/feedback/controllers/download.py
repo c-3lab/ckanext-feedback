@@ -18,7 +18,7 @@ class DownloadController:
 
         handler = feedback_config.download_handler()
         if not handler:
-            log.debug("Use default CKAN callback for resource.download")
+            log.debug('Use default CKAN callback for resource.download')
             handler = resource.download
         return handler(
             package_type=package_type,
