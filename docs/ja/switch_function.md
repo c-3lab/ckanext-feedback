@@ -43,16 +43,20 @@
 
 ## downloadモジュールを外部プラグインと連携する場合
 
-リソースがダウンロードされると、downloadモジュールはダウンロード数のカウント追加処理を行った後、デフォルトのダウンロードコールバックを呼び出します。CKAN>=2.10 を使用していて、一部のプラグインが`resource.download`ルートを再定義する場合(ckanext-googleanalytics など)、`ckan.views.resource:download`を使用する代わりにどの関数を呼び出す必要があるかを`ckan.ini`内の設定変数`ckan.feedback.download_handler`にて指定できます。</br>
-例として、ckanext-googleanalytics を指定する場合は、以下の設定を使用できます。
+リソースがダウンロードされると、downloadモジュールはダウンロード数のカウント処理を行った後、デフォルトのダウンロードコールバックである`ckan.views.resource:download`を呼び出します。しかし、`ckan.ini`内の設定変数`ckan.feedback.download_handler`により、`ckan.views.resource:download`を他のExtension（例：[googleanalytics](https://github.com/ckan/ckanext-googleanalytics)）のダウンロードハンドラに置き換えることも可能です。
+
+例：ckanext-googleanalytics の場合
 
 ```bash
 ckan.feedback.download_handler = ckanext.googleanalytics.views:download
 ```
 
-上記とは逆に、外部プラグインからckanext-feedbackのdownloadモジュールをコールバックとして指定する場合、`ckanext.feedback.views.download:download`が使用できます。</br>
-例として、ckanext-googleanalyticsのdownloadハンドラとしてckanext-feedbackのdownloadモジュールを指定する場合は、以下の設定を使用できます。
+また、逆に外部ハンドラを設定できる他のExtensionのコールバックとしてckanext-feedbackのdownloadモジュールを指定したい場合は、`ckanext.feedback.views.download:download`を使用できます。
+
+例：ckanext-googleanalytics の場合
 
 ```bash
 googleanalytics.download_handler = ckanext.feedback.views.download:download
 ```
+
+これらの連携方法は、複数のextensionを使用する際に`/download`などのパスが競合してしまう場合に役立ちます。
