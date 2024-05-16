@@ -40,3 +40,25 @@
 
 3. テーブル作成(まだの方のみ)
     * [feedbackコマンド](./feedback_command.md)の```-modules```オプションを参考に**オンにするモジュール**のテーブル作成を行なってください
+
+## downloadモジュールを外部プラグインと連携する場合
+
+リソースがダウンロードされると、downloadモジュールはダウンロード数のカウント処理を行った後、デフォルトのダウンロードコールバックである`ckan.views.resource:download`を呼び出します。</br>
+しかし、そのコールバックを他Extensionの関数（例：[googleanalytics](https://github.com/ckan/ckanext-googleanalytics) のdonwload関数）に変更したい場合があります。</br>
+その場合ckan.ini内の設定変数ckan.feedback.download_handlerへ対象の関数を指定することで置き換えることも可能です。
+
+例：ckanext-googleanalytics の場合
+
+```bash
+ckan.feedback.download_handler = ckanext.googleanalytics.views:download
+```
+
+また、逆に外部ハンドラを設定できる他のExtensionのコールバックとしてckanext-feedbackのdownloadモジュールを指定したい場合は、`ckanext.feedback.views.download:download`を使用できます。
+
+例：ckanext-googleanalytics の場合
+
+```bash
+googleanalytics.download_handler = ckanext.feedback.views.download:download
+```
+
+これらの連携方法は、複数のextensionを使用する際に`/download`などのパスが競合してしまう場合に役立ちます。
