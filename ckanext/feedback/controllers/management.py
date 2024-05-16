@@ -1,4 +1,4 @@
-from ckan.common import _, current_user, request
+from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
 from flask import redirect, url_for
@@ -32,6 +32,11 @@ class ManagementController:
             utilization_comments = utilization_detail_service.get_utilization_comments(
                 owner_orgs=ids
             )
+            g.pkg_dict = {
+                'organization': {
+                    'name': current_user.get_groups(group_type='organization')[0].name,
+                }
+            }
         else:
             resource_comments = resource_comment_service.get_resource_comments()
             utilization_comments = utilization_detail_service.get_utilization_comments()
