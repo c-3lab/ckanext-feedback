@@ -19,9 +19,7 @@ from ckanext.feedback.services.utilization import summary as utilization_summary
 from ckanext.feedback.views import download, management, resource, utilization
 
 
-class FeedbackPlugin(
-    plugins.SingletonPlugin, DefaultTranslation, toolkit.DefaultDatasetForm
-):
+class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Declare class implements
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IClick)
