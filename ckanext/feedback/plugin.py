@@ -7,7 +7,6 @@ from ckan import plugins
 from ckan.common import _, config
 from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
-from ckan.types import Context
 
 from ckanext.feedback.command import feedback
 from ckanext.feedback.services.common import check
@@ -29,7 +28,7 @@ class FeedbackPlugin(
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.ITranslation)
-    plugins.implements(plugins.IResourceController)
+    plugins.implements(plugins.IResourceController, inherit=True)
 
     # IConfigurer
 
@@ -270,35 +269,6 @@ class FeedbackPlugin(
         }
 
     # IResourceController
-
-    def before_resource_create(
-        self, context: Context, resource: dict[str, Any]
-    ) -> None:
-        return
-
-    def after_resource_create(self, context: Context, resource: dict[str, Any]) -> None:
-        return
-
-    def before_resource_update(
-        self, context: Context, current: dict[str, Any], resource: dict[str, Any]
-    ) -> None:
-        return
-
-    def after_resource_update(self, context: Context, resource: dict[str, Any]) -> None:
-        return
-
-    def before_resource_delete(
-        self,
-        context: Context,
-        resource: dict[str, Any],
-        resources: list[dict[str, Any]],
-    ) -> None:
-        return
-
-    def after_resource_delete(
-        self, context: Context, resources: list[dict[str, Any]]
-    ) -> None:
-        return
 
     def before_resource_show(self, resource_dict: dict[str, Any]) -> dict[str, Any]:
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
