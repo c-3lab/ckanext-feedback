@@ -26,6 +26,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.ITranslation)
+    plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
 
     # IConfigurer
@@ -270,6 +271,55 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_rating': resource_summary_service.get_package_rating,
             'get_organization': management_comments_service.get_organization,
         }
+
+    # IPackageController
+
+    def before_dataset_view(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
+        package_id = pkg_dict['id']
+        owner_org = model.Package.get(package_id).owner_org
+
+        if not pkg_dict['extras']:
+            pkg_dict['extras'] = []
+
+        def add_pkg_dict_extras(key: str, value: str):
+            pkg_dict['extras'].append({'key': key, 'value': value})
+
+        if self.is_enabled_downloads_org(owner_org):
+            add_pkg_dict_extras(
+                key=_('Downloads'),
+                value=download_summary_service.get_package_downloads(package_id),
+            )
+
+        if self.is_enabled_utilizations_org(owner_org):
+            add_pkg_dict_extras(
+                key=_('Utilizations'),
+                value=(
+                    utilization_summary_service.get_package_utilizations(package_id)
+                ),
+            )
+            add_pkg_dict_extras(
+                key=_('Issue Resolutions'),
+                value=(
+                    utilization_summary_service.get_package_issue_resolutions(
+                        package_id
+                    )
+                ),
+            )
+
+        if self.is_enabled_resources_org(owner_org):
+            add_pkg_dict_extras(
+                key=_('Comments'),
+                value=resource_summary_service.get_package_comments(package_id),
+            )
+            if self.is_enabled_rating_org(owner_org):
+                add_pkg_dict_extras(
+                    key=_('Rating'),
+                    value=round(
+                        resource_summary_service.get_package_rating(package_id), 1
+                    ),
+                )
+
+        return pkg_dict
 
     # IResourceController
 
