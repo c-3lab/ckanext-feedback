@@ -20,6 +20,9 @@
         <br>
         {% if not disable_keyword %}
           <h4>{{ _('Keyword Search') }}</h4>
+          {% if c.pkg_dict %}
+            <input type="hidden" name="organization"  value="{{ c.pkg_dict['organization']['name'] }}">
+          {% endif %}
           <div class="input-group search-input-group">
             <input id="field-giant-search" type="text" class="form-control input-lg" name="keyword" placeholder="{{ _('Keyword Search...') }}" aria-label="{{ _('Search utilization data') }}" autocomplete="off" value="{{ keyword }}"/>
             <span class="input-group-btn">
