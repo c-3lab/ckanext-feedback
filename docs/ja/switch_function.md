@@ -17,7 +17,9 @@
 
 * 各モジュールとオプションを設定するには、以下の２通りの方法があります。
   * `ckan.ini`にオンオフの設定を記述する。
+    * Organizationごとにモジュールのオンオフ設定はできない
   * `feedback_config.json`に設定を記述し、CKAN環境に配置する。
+    * Organizationごとにモジュールのオンオフ設定が可能
 
 `ckan.ini`と`feedback_config.json`の2つの設定を行った場合、  
 `feedback_config.json`に記述した設定が`ckan.ini`に記述した設定よりも優先されます。  
@@ -49,6 +51,7 @@
 
 ### `ckan.ini`でオンオフの設定を行う場合
 
+※ この方法で設定を行った場合はすべてのOrganizationにおいて、モジュールがオンまたは、オフになる
 ※ `feedback_config.json`に設定が記述され、CKAN環境に配置されている場合は本設定は反映されません
 
 1. **オフにするモジュール**について、`ckan.plugins`の下に以下の記述を追記する
@@ -129,6 +132,8 @@
         }
     }
     ```
+
+    ※ `name`が記述されていないOrganizationは、モジュールやオプションはオフとなる
 
 2. `feedback_config.json`をCKAN環境に配置する
     * `/srv/app`配下に`feedback_config.json`を配置する
