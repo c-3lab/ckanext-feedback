@@ -101,7 +101,7 @@
       * organization1とorganization2において、Resourceをオンにする
       * また、1つのリソースに対する複数回のコメント制限するオプションはオフにする
       * organization1のみリソースへの評価機能をオンにする
-      * `{organization1のname}`, `{organization2のname}`にはそれぞれのOrganizationの`name`を記述してください
+        * `{organization1のname}`, `{organization2のname}`にはそれぞれのOrganizationの`name`を記述してください
 
     ```json
     {   
@@ -130,7 +130,7 @@
         * `{feedback_config.jsonを格納しているディレクトリパス}`にパスを記述してください (例) `/etc/ckan/default`
 
       ```bash
-      'ckan.feedback.config_file = {feedback_config.jsonを格納しているディレクトリパス}'
+      ckan.feedback.config_file = {feedback_config.jsonを格納しているディレクトリパス}
       ```
 
 3. テーブル作成(まだの方のみ)
