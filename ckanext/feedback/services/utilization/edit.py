@@ -25,9 +25,10 @@ def get_resource_details(resource_id):
 
 
 # Update utilization
-def update_utilization(utilization_id, title, description):
+def update_utilization(utilization_id, title, url, description):
     utilization = session.query(Utilization).get(utilization_id)
     utilization.title = title
+    utilization.url = url
     utilization.description = description
 
 

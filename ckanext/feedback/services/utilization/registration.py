@@ -10,10 +10,11 @@ def get_resource(resource_id):
 
 
 # Create new utilization
-def create_utilization(resource_id, title, description):
+def create_utilization(resource_id, title, url, description):
     utilization = Utilization(
         resource_id=resource_id,
         title=title,
+        url=url,
         description=description,
     )
     session.add(utilization)
