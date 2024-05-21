@@ -145,9 +145,11 @@ class UtilizationController:
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
         g.pkg_dict = {
             'organization': {
-                'name': registration_service.get_resource(utilization.resource_id)
-                .package.get_groups(group_type='organization')[0]
-                .name
+                'name': (
+                    registration_service.get_resource(utilization.resource_id)
+                    .package.get_groups(group_type='organization')[0]
+                    .name
+                )
             }
         }
 
@@ -217,11 +219,11 @@ class UtilizationController:
         )
         g.pkg_dict = {
             'organization': {
-                'name': registration_service.get_resource(
-                    utilization_details.resource_id
+                'name': (
+                    registration_service.get_resource(utilization_details.resource_id)
+                    .package.get_groups(group_type='organization')[0]
+                    .name
                 )
-                .package.get_groups(group_type='organization')[0]
-                .name
             }
         }
 
