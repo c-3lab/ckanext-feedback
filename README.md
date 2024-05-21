@@ -70,6 +70,9 @@ Feedback enables an ecosystem between users and providers that continually impro
 * 特定のモジュールのみを利用することも可能です
   * 設定方法は[オンオフ機能の詳細ドキュメント](./docs/ja/switch_function.md)をご覧ください
 
+* ログインの有無やログインしているユーザーの権限(adminなど)によって、実行可能なアクションを設定しています
+  * 権限に関する詳細は[管理者権限の詳細ドキュメント](./docs/ja/authority.md)をご覧ください
+
 ## 開発者向け
 
 ### ビルド方法
