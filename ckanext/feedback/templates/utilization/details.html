@@ -38,6 +38,9 @@
             <h4>{{ _('Resource') }}</h4>
             <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>
             <hr>
+            <h4>{{ _('URL') }}</h4>
+            <a href="{{ row.url }}" target="_blank">{{ row.url }}</a>
+            <hr>
             <h4>{{ _('Utilization description') }}</h4>
             <p class="multiple-line">{{ row.description }}</p>
             <hr>
