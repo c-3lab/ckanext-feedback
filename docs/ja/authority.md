@@ -30,7 +30,7 @@
 * Utilization画面内のアクションに関する権限をまとめたマトリクス図(閲覧・編集・削除)
 ![Utilization画面内のアクションに関する権限をまとめたマトリクス図(閲覧・編集・削除)](../assets/authority_utilization_crud.png)
 
-  ※1 Status欄は表示されるが、空欄
+  ※1 Status欄は表示されるが、空欄となる  
   ※2 Status欄が表示されない
 
 * Utilization画面内のアクションに関する権限をまとめたマトリクス図(認定・承認)
