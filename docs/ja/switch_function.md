@@ -21,6 +21,12 @@
 
 `ckan.ini`と`feedback_config.json`の2つの設定を行った場合、  
 `feedback_config.json`に記述した設定が`ckan.ini`に記述した設定よりも優先されます。  
+
+(例)  
+`ckan.ini`にUtilizationの`enable`を`false`として記載  
+`feedback_config.json`にUtilizationの`enable`を`true`として記載し、`enable_org`にorganization1の`name`を記述  
+→ `feedback_config.json`の設定が優先され、organization1にて、Utilizationがオンになる  
+
 詳細は以下のマトリクスを参照して下さい。  
 
 * 縦軸：`ckan.ini`への設定記述の有無と記述された設定(`enable`)を表現しています。
