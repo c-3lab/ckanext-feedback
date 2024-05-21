@@ -27,6 +27,7 @@ class Utilization(Base):
         nullable=False,
     )
     title = Column(Text)
+    url = Column(Text)
     description = Column(Text)
     comment = Column(Integer, default=0)
     created = Column(TIMESTAMP, default=datetime.now)
