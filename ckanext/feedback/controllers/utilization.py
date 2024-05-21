@@ -103,12 +103,13 @@ class UtilizationController:
         package_name = request.form.get('package_name', '')
         resource_id = request.form.get('resource_id', '')
         title = request.form.get('title', '')
+        url = request.form.get('url', '')
         description = request.form.get('description', '')
         if not (resource_id and title and description):
             toolkit.abort(400)
 
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
-        registration_service.create_utilization(resource_id, title, description)
+        registration_service.create_utilization(resource_id, title, url, description)
         summary_service.create_utilization_summary(resource_id)
         session.commit()
 
@@ -238,11 +239,12 @@ class UtilizationController:
     def update(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
         title = request.form.get('title', '')
+        url = request.form.get('url', '')
         description = request.form.get('description', '')
         if not (title and description):
             toolkit.abort(400)
 
-        edit_service.update_utilization(utilization_id, title, description)
+        edit_service.update_utilization(utilization_id, title, url, description)
         session.commit()
 
         helpers.flash_success(
