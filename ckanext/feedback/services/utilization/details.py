@@ -17,6 +17,7 @@ def get_utilization(utilization_id):
     return (
         session.query(
             Utilization.title,
+            Utilization.url,
             Utilization.description,
             Utilization.comment,
             Utilization.approval,
