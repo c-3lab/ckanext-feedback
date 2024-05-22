@@ -44,12 +44,15 @@ jobs:
       - name: db setting
         run: |
           docker exec -i ckan-docker-ckan-dev-1 bash -c "ckan -c /usr/lib/python3.10/site-packages/ckanext/feedback/tests/config/test.ini db init"
-
+      
       - name: Run test
         run: |
           docker exec -i ckan-docker-ckan-dev-1 bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --cov-report=xml:/tmp/coverage.xml --ckan-ini=/usr/lib/python3.10/site-packages/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/python3.10/site-packages/ckanext/feedback/tests"
-          docker cp ckan-docker-ckan-dev-1:/tmp/coverage.xml ./coverage.xml
-        working-directory: ./development
+      
+      - name: copy coverage.xml
+        if: always()
+        run: |
+          docker cp ckan-docker-ckan-dev-1:/tmp/coverage.xml ./development/coverage.xml
 
       - name: Upload coverage to Codecov
         if: always()
