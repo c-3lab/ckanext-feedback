@@ -91,9 +91,9 @@
 
         ※指定がない場合は「New Submission Notification」となる。
 
-4. workerの起動
-    * メール送信をバックグラウンドで実行する為のworkerを起動する。
+4. workerの起動確認
+    * メール送信をバックグラウンドで実行する為のworkerコンテナ:`ckan-docker-ckan-worker-1`が起動している事を確認する。
 
     ```bash
-    ckan -c ckan.ini jobs worker
+    docker ps
     ```
