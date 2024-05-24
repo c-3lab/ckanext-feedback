@@ -68,16 +68,20 @@
           <h4>{{ _('Comments') }}</h4>
           <p>{{ row.comment }}</p>
           <hr>
-          <form name="comment_form" action="{{ url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
+          <form id="comment_form" name="comment_form" action="{{ url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
             <h4>{{ _('Comment') }}</h4>
             <select name="category" id="category">
               {% for category in categories %}
+                {% if category.name == selected_category %}
+                <option value="{{ category.name }}" selected>{{ _(category.value) }}</option>
+                {% else %}
                 <option value="{{ category.name }}">{{ _(category.value) }}</option>
+                {% endif %}
               {% endfor %}
             </select>
             <br>
             <br>
-            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content"></textarea>
+            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content">{{ content }}</textarea>
             <div>
               <p id="content-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
             </div>
@@ -190,6 +194,15 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-detail-js' %}
+    {% if h.is_enabled_feedback_recaptcha %}
+      <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
+      <script>
+        let feedback_recaptcha_target_form = 'comment_form'
+        let feedback_recaptcha_action = 'utilization_comment'
+        let feedback_recaptcha_publickey = '{{ h.get_feedback_recaptcha_publickey() }}'
+      </script>
+      {% asset 'feedback/feedback-recaptcha-js'%}
+    {% endif %}
   {% endblock -%}
 
 {% endif %}

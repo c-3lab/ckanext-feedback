@@ -165,7 +165,7 @@ class UtilizationController:
 
     # utilization/<utilization_id>
     @staticmethod
-    def details(utilization_id):
+    def details(utilization_id, category='', content=''):
         approval = True
         utilization = detail_service.get_utilization(utilization_id)
         if not isinstance(current_user, model.User):
@@ -196,6 +196,8 @@ class UtilizationController:
                 'comments': comments,
                 'categories': categories,
                 'issue_resolutions': issue_resolutions,
+                'selected_category': category,
+                'content': content,
             },
         )
 
@@ -218,6 +220,10 @@ class UtilizationController:
         content = request.form.get('content', '')
         if not (category and content):
             toolkit.abort(400)
+
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return UtilizationController.details(utilization_id, category, content)
 
         detail_service.create_utilization_comment(utilization_id, category, content)
         session.commit()
