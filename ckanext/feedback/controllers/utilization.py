@@ -83,7 +83,7 @@ class UtilizationController:
 
     # utilization/new
     @staticmethod
-    def new(resource_id=None):
+    def new(resource_id=None, title='', description=''):
         if not resource_id:
             resource_id = request.args.get('resource_id', '')
         return_to_resource = request.args.get('return_to_resource', False)
@@ -102,6 +102,8 @@ class UtilizationController:
                 'pkg_dict': package,
                 'return_to_resource': return_to_resource,
                 'resource': resource,
+                'title': title,
+                'description': description,
             },
         )
 
@@ -118,7 +120,7 @@ class UtilizationController:
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
-            return UtilizationController.new(resource_id)
+            return UtilizationController.new(resource_id, title, description)
 
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
         utilization = registration_service.create_utilization(

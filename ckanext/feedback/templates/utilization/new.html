@@ -33,7 +33,7 @@
           <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
           <input type="hidden" id="resource_id" name="resource_id" value="{{ resource.id }}">
           <h4>{{ _('Title') }}</h4>
-          <input type="text" class="form-control" id="title" name="title"/>
+          <input type="text" class="form-control" id="title" name="title" value="{{ title }}"/>
           <div>
             <p id="title-error" class="alert alert-error" style="display: none;">{{ _('Please enter a title') }}</p>
           </div>
@@ -45,7 +45,7 @@
           <br>
           <hr>
           <h4>{{ _('Description') }}</h4>
-          <textarea class="form-control" cols="20" rows="5" id="description" name="description"></textarea>
+          <textarea class="form-control" cols="20" rows="5" id="description" name="description">{{ description }}</textarea>
           <div>
             <p id="description-error" class="alert alert-error" style="display: none;">{{ _('Please enter a description') }}</p>
           </div>
