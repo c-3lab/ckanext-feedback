@@ -13,6 +13,7 @@ from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download import summary as download_summary_service
 from ckanext.feedback.services.management import comments as management_comments_service
+from ckanext.feedback.services.recaptcha import check as recaptcha_check_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
@@ -100,6 +101,20 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     )
                     config['ckan.feedback.utilizations.enable_orgs'] = (
                         feedback_config.utilizations.enable_orgs
+                    )
+                except AttributeError as e:
+                    toolkit.error_shout(e)
+
+                # the settings related to recaptcha module
+                try:
+                    config['ckan.feedback.recaptcha.enable'] = (
+                        feedback_config.recaptcha.enable
+                    )
+                    config['ckan.feedback.recaptcha.privatekey'] = (
+                        feedback_config.recaptcha.privatekey
+                    )
+                    config['ckan.feedback.recaptcha.publickey'] = (
+                        feedback_config.recaptcha.publickey
                     )
                 except AttributeError as e:
                     toolkit.error_shout(e)
@@ -299,6 +314,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_resource_rating': resource_summary_service.get_resource_rating,
             'get_package_rating': resource_summary_service.get_package_rating,
             'get_organization': management_comments_service.get_organization,
+            'is_enabled_feedback_recaptcha': (
+                recaptcha_check_service.is_enabled_recaptcha
+            ),
+            'get_feedback_recaptcha_publickey': (
+                recaptcha_check_service.get_feedback_recaptcha_publickey
+            ),
         }
 
     # IPackageController

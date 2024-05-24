@@ -19,6 +19,7 @@ from ckanext.feedback.services.common.check import (
     has_organization_admin_role,
     is_organization_admin,
 )
+from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.services.common.send_mail import send_email
 
 log = logging.getLogger(__name__)
@@ -82,8 +83,9 @@ class UtilizationController:
 
     # utilization/new
     @staticmethod
-    def new():
-        resource_id = request.args.get('resource_id', '')
+    def new(resource_id=None):
+        if not resource_id:
+            resource_id = request.args.get('resource_id', '')
         return_to_resource = request.args.get('return_to_resource', False)
         resource = registration_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
@@ -113,6 +115,10 @@ class UtilizationController:
         description = request.form.get('description', '')
         if not (resource_id and title and description):
             toolkit.abort(400)
+
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return UtilizationController.new(resource_id)
 
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
         utilization = registration_service.create_utilization(
