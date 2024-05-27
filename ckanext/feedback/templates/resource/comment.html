@@ -182,9 +182,9 @@
     {% if h.is_enabled_feedback_recaptcha %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
-        let feedback_recaptcha_target_form = 'comment_form'
-        let feedback_recaptcha_action = 'resource_comment'
-        let feedback_recaptcha_publickey = '{{ h.get_feedback_recaptcha_publickey() }}'
+        const feedbackRecaptchaTargetForm = 'comment_form'
+        const feedbackRecaptchaAction = 'resource_comment'
+        const feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
       </script>
       {% asset 'feedback/feedback-recaptcha-js'%}
     {% endif %}
