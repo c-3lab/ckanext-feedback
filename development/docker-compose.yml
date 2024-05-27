@@ -9,3 +9,24 @@ services:
       # Mount the root directory from within development/external/ckan/contrib/docker
       - ../../../:/srv/app/src_extensions/ckanext-feedback
       - /srv/app/src_extensions/ckanext-feedback/development/
+
+  ckan-worker:
+    build:
+      context:  ckan/
+      dockerfile: Dockerfile.dev
+      args:
+        - TZ=${TZ}
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../../../:/srv/app/src_extensions/ckanext-feedback
+      - /srv/app/src_extensions/ckanext-feedback/development/
+    restart: unless-stopped
+    command: bash -c "ckan -c ckan.ini jobs worker"

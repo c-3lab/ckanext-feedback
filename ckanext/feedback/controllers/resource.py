@@ -1,5 +1,7 @@
+import logging
+
 import ckan.model as model
-from ckan.common import _, current_user, g, request
+from ckan.common import _, config, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -12,6 +14,9 @@ from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
 )
+from ckanext.feedback.services.common.send_mail import send_email
+
+log = logging.getLogger(__name__)
 
 
 class ResourceController:
@@ -70,6 +75,26 @@ class ResourceController:
         comment_service.create_resource_comment(resource_id, category, content, rating)
         summary_service.create_resource_summary(resource_id)
         session.commit()
+
+        try:
+            resource = comment_service.get_resource(resource_id)
+            send_email(
+                template_name=config.get(
+                    'ckan.feedback.notice.email.template_resource_comment'
+                ),
+                organization_id=resource.package.owner_org,
+                subject=config.get(
+                    'ckan.feedback.notice.email.subject_resource_comment'
+                ),
+                target_name=resource.name,
+                category=category,
+                content=content,
+                url=url_for(
+                    'resource_comment.comment', resource_id=resource_id, _external=True
+                ),
+            )
+        except Exception:
+            log.exception('Send email failed, for feedback notification.')
 
         helpers.flash_success(
             _(
