@@ -67,7 +67,6 @@ def _check_recaptcha_v3_base(request: Request) -> None:
         raise CaptchaError()
 
     logger.info(f"reCAPTCHA verification passed successfully:{data}")
-    return
 
 
 def is_recaptcha_verified(request: Request):
