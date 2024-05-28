@@ -19,6 +19,7 @@ from ckanext.feedback.services.common.check import (
     has_organization_admin_role,
     is_organization_admin,
 )
+from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.services.common.send_mail import send_email
 
 log = logging.getLogger(__name__)
@@ -82,8 +83,9 @@ class UtilizationController:
 
     # utilization/new
     @staticmethod
-    def new():
-        resource_id = request.args.get('resource_id', '')
+    def new(resource_id=None, title='', description=''):
+        if not resource_id:
+            resource_id = request.args.get('resource_id', '')
         return_to_resource = request.args.get('return_to_resource', False)
         resource = registration_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
@@ -100,6 +102,8 @@ class UtilizationController:
                 'pkg_dict': package,
                 'return_to_resource': return_to_resource,
                 'resource': resource,
+                'title': title,
+                'description': description,
             },
         )
 
@@ -113,6 +117,10 @@ class UtilizationController:
         description = request.form.get('description', '')
         if not (resource_id and title and description):
             toolkit.abort(400)
+
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return UtilizationController.new(resource_id, title, description)
 
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
         utilization = registration_service.create_utilization(
@@ -157,7 +165,7 @@ class UtilizationController:
 
     # utilization/<utilization_id>
     @staticmethod
-    def details(utilization_id):
+    def details(utilization_id, category='', content=''):
         approval = True
         utilization = detail_service.get_utilization(utilization_id)
         if not isinstance(current_user, model.User):
@@ -188,6 +196,8 @@ class UtilizationController:
                 'comments': comments,
                 'categories': categories,
                 'issue_resolutions': issue_resolutions,
+                'selected_category': category,
+                'content': content,
             },
         )
 
@@ -210,6 +220,10 @@ class UtilizationController:
         content = request.form.get('content', '')
         if not (category and content):
             toolkit.abort(400)
+
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return UtilizationController.details(utilization_id, category, content)
 
         detail_service.create_utilization_comment(utilization_id, category, content)
         session.commit()

@@ -14,6 +14,7 @@ from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
 )
+from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.services.common.send_mail import send_email
 
 log = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class ResourceController:
     # Render HTML pages
     # resource_comment/<resource_id>
     @staticmethod
-    def comment(resource_id):
+    def comment(resource_id, category='', content=''):
         approval = True
         resource = comment_service.get_resource(resource_id)
         if not isinstance(current_user, model.User):
@@ -55,6 +56,8 @@ class ResourceController:
                 'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
+                'selected_category': category,
+                'content': content,
             },
         )
 
@@ -71,6 +74,10 @@ class ResourceController:
             rating = int(request.form.get('rating'))
         if not (category and content):
             toolkit.abort(400)
+
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return ResourceController.comment(resource_id, category, content)
 
         comment_service.create_resource_comment(resource_id, category, content, rating)
         summary_service.create_resource_summary(resource_id)
