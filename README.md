@@ -145,29 +145,23 @@ Feedback enables an ecosystem between users and providers that continually impro
 2. コンテナ内に入る
 
     ```bash
-    docker exec -it --user root ckan /bin/bash
+    docker exec -it --user root ckan-docker-ckan-dev-1 /bin/bash
     ```
 
 3. その他の必要なものをインストールする
 
     ```bash
-    pip install -r /usr/lib/ckan/venv/src/ckan/dev-requirements.txt
+    pip install -r /srv/app/src/ckan/dev-requirements.txt
     pip install pytest-ckan
     ```
 
-4. テスト用DBを作成する
+4. ディレクトリを移動
 
     ```bash
-    createdb ckan_test -O ckan -E utf-8 -h db -U ckan
+    cd /srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests
     ```
 
-5. ディレクトリを移動
-
-    ```bash
-    cd /usr/lib/ckan/venv/lib/python3.8/site-packages/ckanext/feedback/tests
-    ```
-
-6. テストを実行
+5. テストを実行
 
     ```bash
     CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest -s --ckan-ini=config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings ./
