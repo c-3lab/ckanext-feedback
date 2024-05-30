@@ -72,11 +72,12 @@ def get_registered_issue_resolution(utilization_id):
     )
 
 
-def register_utilization(id, resource_id, title, description, approval):
+def register_utilization(id, resource_id, title, url, description, approval):
     utilization = Utilization(
         id=id,
         resource_id=resource_id,
         title=title,
+        url=url,
         description=description,
         approval=approval,
     )
@@ -133,12 +134,14 @@ class TestUtilizationDetailsService:
 
         id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(id, resource['id'], title, description, False)
+        register_utilization(id, resource['id'], title, url, description, False)
 
         result = get_utilization(id)
         expected_utilization = (
             title,
+            url,
             description,
             0,
             False,
@@ -158,8 +161,9 @@ class TestUtilizationDetailsService:
 
         id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(id, resource['id'], title, description, False)
+        register_utilization(id, resource['id'], title, url, description, False)
 
         result = get_registered_utilization(resource['id'])
         unapproved_utilization = (id, False, None, None)
@@ -179,8 +183,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(utilization_id, resource['id'], title, description, False)
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, False
+        )
         utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
@@ -253,8 +260,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(utilization_id, resource['id'], title, description, False)
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, False
+        )
         utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
@@ -308,8 +318,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(utilization_id, resource['id'], title, description, False)
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, False
+        )
         utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
@@ -364,8 +377,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(utilization_id, resource['id'], title, description, False)
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, False
+        )
         utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
@@ -417,8 +433,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(utilization_id, resource['id'], title, description, False)
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, False
+        )
         utilization = get_registered_utilization(resource['id'])
 
         category = UtilizationCommentCategory.REQUEST
@@ -442,8 +461,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(utilization_id, resource['id'], title, description, False)
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, False
+        )
         utilization = get_registered_utilization(resource['id'])
 
         created = datetime.now()
@@ -480,10 +502,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         utilization_description = 'test description'
 
         register_utilization(
-            utilization_id, resource['id'], title, utilization_description, False
+            utilization_id, resource['id'], title, url, utilization_description, False
         )
 
         utilization = get_registered_utilization(resource['id'])
@@ -514,10 +537,11 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         utilization_description = 'test description'
 
         register_utilization(
-            utilization_id, resource['id'], title, utilization_description, False
+            utilization_id, resource['id'], title, url, utilization_description, False
         )
 
         utilization = get_registered_utilization(resource['id'])
@@ -540,6 +564,7 @@ class TestUtilizationDetailsService:
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
 
         created = datetime.now()
@@ -548,7 +573,9 @@ class TestUtilizationDetailsService:
         category = UtilizationCommentCategory.QUESTION
         content = 'test content'
 
-        register_utilization(utilization_id, resource['id'], title, description, True)
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, True
+        )
 
         result = get_utilization(utilization_id)
 
