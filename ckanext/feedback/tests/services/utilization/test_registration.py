@@ -19,6 +19,7 @@ def get_utilization(resource_id):
     return (
         session.query(
             Utilization.title,
+            Utilization.url,
             Utilization.description,
         )
         .filter(Utilization.resource_id == resource_id)
@@ -55,13 +56,15 @@ class TestUtilizationDetailsService:
         resource = factories.Resource()
 
         title = 'test title'
+        url = 'test url'
         description = 'test description'
 
         assert get_utilization(resource['id']) is None
 
-        create_utilization(resource['id'], title, description)
+        create_utilization(resource['id'], title, url, description)
 
         result = get_utilization(resource['id'])
 
         assert result.title == title
+        assert result.url == url
         assert result.description == description
