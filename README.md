@@ -158,7 +158,7 @@ Feedback enables an ecosystem between users and providers that continually impro
 4. ディレクトリを移動
 
     ```bash
-    cd /srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests
+    cd /usr/lib/python3.10/site-packages/ckanext/feedback/tests
     ```
 
 5. テストを実行
