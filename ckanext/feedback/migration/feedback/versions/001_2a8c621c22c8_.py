@@ -1,7 +1,7 @@
 """Add columns
 
 Revision ID: 2a8c621c22c8
-Revises:
+Revises: 40bf9a900ef5
 Create Date: 2024-05-22 02:36:08.154409
 
 """
@@ -12,7 +12,7 @@ from ckan.migration import skip_based_on_legacy_engine_version
 
 # revision identifiers, used by Alembic.
 revision = '2a8c621c22c8'
-down_revision = None
+down_revision = '40bf9a900ef5'
 branch_labels = None
 depends_on = None
 
