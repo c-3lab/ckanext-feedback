@@ -37,7 +37,7 @@ class TestDownloadController:
     def setup_method(self, method):
         self.app = Flask(__name__)
 
-    @patch('ckanext.feedback.controllers.download.download')
+    @patch('ckan.views.resource.download')
     def test_extended_download(self, download):
         resource = factories.Resource()
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
@@ -47,7 +47,7 @@ class TestDownloadController:
             assert get_downloads(resource['id']) == 1
             assert download
 
-    @patch('ckanext.feedback.controllers.download.download')
+    @patch('ckan.views.resource.download')
     def test_extended_download_with_preview(self, download):
         resource = factories.Resource()
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
