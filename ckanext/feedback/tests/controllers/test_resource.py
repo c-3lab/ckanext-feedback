@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 from ckan import model
@@ -58,8 +58,9 @@ class TestResourceController:
     def test_comment_with_sysadmin(
         self, mock_request, mock_render, current_user, app, sysadmin_env
     ):
-        dataset = factories.Dataset()
         user_dict = factories.Sysadmin()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
         mock_current_user(current_user, user_dict)
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
@@ -84,6 +85,8 @@ class TestResourceController:
                 'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
+                'selected_category': '',
+                'content': '',
             },
         )
 
@@ -93,8 +96,9 @@ class TestResourceController:
     def test_comment_with_user(
         self, mock_request, mock_render, current_user, app, user_env
     ):
-        dataset = factories.Dataset()
         user_dict = factories.User()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
         mock_current_user(current_user, user_dict)
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
@@ -119,13 +123,16 @@ class TestResourceController:
                 'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
+                'selected_category': '',
+                'content': '',
             },
         )
 
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
     def test_comment_without_user(self, mock_request, mock_render, app):
-        dataset = factories.Dataset()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
 
@@ -149,6 +156,8 @@ class TestResourceController:
                 'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
+                'selected_category': '',
+                'content': '',
             },
         )
 
@@ -194,8 +203,13 @@ class TestResourceController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with(
-            'resource_comment.comment', resource_id=resource_id
+        mock_url_for.assert_has_calls(
+            [
+                call(
+                    'resource_comment.comment', resource_id=resource_id, _external=True
+                ),
+                call('resource_comment.comment', resource_id=resource_id),
+            ]
         )
         mock_redirect.assert_called_once_with('resource comment')
         mock_make_response.assert_called_once_with(mock_redirect())
