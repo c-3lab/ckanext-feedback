@@ -54,6 +54,12 @@ Feedback enables an ecosystem between users and providers that continually impro
     ckan --config=/etc/ckan/production.ini feedback init
     ```
 
+6. フィードバック機能に必要なデータベースの更新を行う
+
+    ```bash
+    ckan db upgrade -p feedback
+    ```
+
 ## 構成
 
 ### 本Extensionは3つのモジュールで構成されています

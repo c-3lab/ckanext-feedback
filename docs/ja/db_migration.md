@@ -1,30 +1,40 @@
 # models更新とDBへの反映
 
-`ckanext-feedback/ckanext/feedback/tests/models` 以下の各モデルについて修正を行った場合、DBの実体にも反映する必要があります。  
+`ckanext/feedback/models` 以下の各モデルについて修正を行った場合、DBの実体にも反映する必要があります。  
 [CKAN公式のベストプラクティス](https://docs.ckan.org/en/latest/extensions/best-practices.html)に従ったDBアップデート方法を説明します。
 
 ## マイグレーションスクリプトの作成
 
-ckanext-feedbackがインストールされたコンテナ内で `ckan generate migration -p feedback` を実行すると、マイグレーションスクリプトのひな形が`/usr/lib/python3.10/site-packages/ckanext/feedback/migration/feedback/versions/`に作成されます。  
-作成されたスクリプトファイルには適切なリビジョンIDが設定されているため、通常はこの作成されたファイルを編集して使用することが推奨されます。  
+マイグレーションに関するファイルは`ckanext/feedback/migration/feedback/`以下に存在します。
+ディレクトリを移動し、`alembic revision`コマンドを実行する事で、マイグレーションスクリプトのひな形が`ckanext/feedback/migration/feedback/versions/`に作成されます。
+作成されたスクリプトファイルには適切なリビジョンIDが設定されているため、通常はこの作成されたファイルを編集して使用することが推奨されます。
+
+また、作成するマイグレーションスクリプトにメッセージを付ける場合は、`-m "message"`を追加します。
+
+例）
+
+```bash
+cd ckanext/feedback/migration/feedback
+alembic revision -m "Add some columns to utilizations table"
+```
 
 ### ひな形の例
 
 ```python
+"""Add some columns to utilizations table
+
+Revision ID: ba229313341d
+Revises: 2a8c621c22c8
+Create Date: 2024-06-03 09:43:44.127539
+
 """
-
-Revision ID: 40bf9a900ef5
-Revises:
-Create Date: 2024-05-30 04:24:42.871134
-
-"""
-
 from alembic import op
 import sqlalchemy as sa
 
+
 # revision identifiers, used by Alembic.
-revision = '40bf9a900ef5'
-down_revision = None
+revision = 'ba229313341d'
+down_revision = '2a8c621c22c8'
 branch_labels = None
 depends_on = None
 
@@ -35,10 +45,8 @@ def upgrade():
 
 def downgrade():
     pass
-```
 
-### マイグレーションスクリプトの保存
-編集したファイルを恒久的に保存するためには、`/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/migration/feedback/versions/`にコピーしてください。このディレクトリに保存することで、ckanext-feedbackの再インストール時にコピー元のディレクトリへ適切に配置されます。
+```
 
 ## マイグレーションスクリプトの編集
 
@@ -47,6 +55,12 @@ SQLAlchemyを使用したカラムの追加や削除などの一般的なスキ�
 詳しい内容は[Alembicチュートリアル](https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-second-migration)を参照してください。
 
 ## マイグレーションの実行
+
+マイグレーションスクリプトの実行は`ckan-docker-ckan-dev-1`コンテナ内で行います。
+
+```bash
+docker exec -it --user root ckan-docker-ckan-dev-1 /bin/bash
+```
 
 マイグレーションスクリプトの適用を行う場合は `ckan db upgrade -p feedback` を実行してください。
 
@@ -57,7 +71,7 @@ SQLAlchemyを使用したカラムの追加や削除などの一般的なスキ�
 
 ## マイグレーション適用状況の確認
 
-`/usr/lib/python3.10/site-packages/ckanext/feedback/migration/feedback`に移動して、以下のコマンドを適宜実行してください。
+コンテナ内の`/usr/lib/python3.10/site-packages/ckanext/feedback/migration/feedback`に移動して、以下のコマンドを適宜実行してください。
 
 ### 現在のリビジョンIDの確認
 
@@ -82,4 +96,4 @@ alembic stamp 40bf9a900ef5
 ckan db upgrade -p feedback
 ```
 
-※`40bf9a900ef5`は初期リビジョンである`ckanext-feedback/ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py`のID。
+※`40bf9a900ef5`は初期リビジョンである`ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py`のID。

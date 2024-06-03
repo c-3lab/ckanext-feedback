@@ -109,3 +109,8 @@ ckan --config=/etc/ckan/production.ini feedback init -P root
 # ホスト名として"postgresdb", ユーザ名として"root", パスワードとして"root"を指定する
 ckan --config=/etc/ckan/production.ini feedback init -h postgresdb -u root -P root
 ```
+
+## データベース更新方法
+
+データベースを初期化せずにスキーマを更新する方法については、以下のドキュメントを参照してください。</br>
+- [db_migration.md](../../docs/ja/db_migration.md)
