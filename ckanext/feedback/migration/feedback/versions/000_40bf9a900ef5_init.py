@@ -1,4 +1,4 @@
-"""init
+"""feedback db init
 
 Revision ID: 40bf9a900ef5
 Revises:
@@ -14,6 +14,9 @@ depends_on = None
 
 
 def upgrade():
+    """
+    今後の実装でckan feedback initコマンドに相当するcreate tableを書く予定
+    """
     pass
 
 
