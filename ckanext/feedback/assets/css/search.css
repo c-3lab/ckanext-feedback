@@ -79,3 +79,8 @@ td, th {
   text-align: right;
   margin-left: 1px;
 }
+
+#issue-resolution {
+  width: 28px !important;
+  height: 28px !important;
+}

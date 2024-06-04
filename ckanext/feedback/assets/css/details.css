@@ -35,3 +35,8 @@
   height: 400px;
   overflow-y: scroll;
 }
+
+#issue-resolution {
+  width: 28px !important;
+  height: 28px !important;
+}
