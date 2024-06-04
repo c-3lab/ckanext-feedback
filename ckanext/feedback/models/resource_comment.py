@@ -10,9 +10,9 @@ from sqlalchemy import (
     TIMESTAMP,
     Column,
     Enum,
+    Float,
     ForeignKey,
     Integer,
-    Numeric,
     Text,
 )
 from sqlalchemy.orm import relationship
@@ -80,7 +80,7 @@ class ResourceCommentSummary(Base):
     comment = Column(Integer, default=0)
     # the number of comments that have ratings
     rating_comment = Column(Integer, default=0)
-    rating = Column(Numeric, default=0)
+    rating = Column(Float, default=0)
     created = Column(TIMESTAMP, default=datetime.now)
     updated = Column(TIMESTAMP)
 
