@@ -52,7 +52,7 @@
             <a href="#issue-resolution-detail" data-bs-toggle="modal">
           {% endif %}
             {% if issue_resolutions|length > 0 %}
-              <img src="/images/issue_resolution_badge.png" alt="issue resolution badge" width="28" height="28">
+              <img id="issue-resolution" src="/images/issue_resolution_badge.png" alt="issue resolution badge">
             {% endif %}
             {{ issue_resolutions|length }}
           </a>
