@@ -14,8 +14,8 @@ from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
 )
-from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.services.common.send_mail import send_email
+from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
 log = logging.getLogger(__name__)
 
@@ -43,9 +43,7 @@ class ResourceController:
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(context, {'id': resource.package_id})
         g.pkg_dict = {
-            'organization': {
-                'name': resource.package.get_groups(group_type='organization')[0].name
-            }
+            'organization': {'name': model.Group.get(resource.package.owner_org).name}
         }
 
         return toolkit.render(

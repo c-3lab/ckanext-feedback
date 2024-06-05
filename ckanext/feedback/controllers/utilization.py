@@ -19,8 +19,8 @@ from ckanext.feedback.services.common.check import (
     has_organization_admin_role,
     is_organization_admin,
 )
-from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.services.common.send_mail import send_email
+from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class UtilizationController:
             else:
                 package = model.Package.get(id)
             if package:
-                org_name = package.get_groups(group_type='organization')[0].name
+                org_name = model.Group.get(package.owner_org).name
         if org_name:
             g.pkg_dict = {
                 'organization': {
@@ -91,9 +91,7 @@ class UtilizationController:
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(context, {'id': resource.package.id})
         g.pkg_dict = {
-            'organization': {
-                'name': resource.package.get_groups(group_type='organization')[0].name
-            }
+            'organization': {'name': model.Group.get(resource.package.owner_org).name}
         }
 
         return toolkit.render(
@@ -181,9 +179,11 @@ class UtilizationController:
         g.pkg_dict = {
             'organization': {
                 'name': (
-                    registration_service.get_resource(utilization.resource_id)
-                    .package.get_groups(group_type='organization')[0]
-                    .name
+                    model.Group.get(
+                        registration_service.get_resource(
+                            utilization.resource_id
+                        ).package.owner_org
+                    ).name
                 )
             }
         }
@@ -283,9 +283,11 @@ class UtilizationController:
         g.pkg_dict = {
             'organization': {
                 'name': (
-                    registration_service.get_resource(utilization_details.resource_id)
-                    .package.get_groups(group_type='organization')[0]
-                    .name
+                    model.Group.get(
+                        registration_service.get_resource(
+                            utilization_details.resource_id
+                        ).package.owner_org
+                    ).name
                 )
             }
         }
