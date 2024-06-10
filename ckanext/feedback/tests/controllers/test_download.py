@@ -37,22 +37,48 @@ class TestDownloadController:
     def setup_method(self, method):
         self.app = Flask(__name__)
 
-    @patch('ckan.views.resource.download')
-    def test_extended_download(self, download):
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    def test_extended_download(self, mock_download, mock_download_handler):
         resource = factories.Resource()
+        mock_download_handler.return_value = None
+
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
             assert get_downloads(resource['id']) == 1
-            assert download
+            mock_download.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=None,
+            )
 
-    @patch('ckan.views.resource.download')
-    def test_extended_download_with_preview(self, download):
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    def test_extended_download_with_preview(self, mock_download):
         resource = factories.Resource()
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
             assert get_downloads(resource['id']) is None
-            assert download
+            assert mock_download
+
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    def test_extended_download_with_set_download_handler(
+        self, handler, mock_download_handler
+    ):
+        resource = factories.Resource()
+        mock_download_handler.return_value = handler
+        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+            handler.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=None,
+            )
