@@ -14,8 +14,8 @@ from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
 )
-from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.services.common.send_mail import send_email
+from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
 log = logging.getLogger(__name__)
 

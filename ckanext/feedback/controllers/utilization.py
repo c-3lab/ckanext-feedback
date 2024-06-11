@@ -20,8 +20,8 @@ from ckanext.feedback.services.common.check import (
     has_organization_admin_role,
     is_organization_admin,
 )
-from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.services.common.send_mail import send_email
+from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
 log = logging.getLogger(__name__)
 
@@ -119,9 +119,7 @@ class UtilizationController:
 
         if url and not validate_service.validate_url(url):
             helpers.flash_error(
-                _(
-                    'Please provide a valid URL'
-                ),
+                _('Please provide a valid URL'),
                 allow_html=True,
             )
             return UtilizationController.new(resource_id, title, description)
@@ -322,9 +320,7 @@ class UtilizationController:
 
         if url and not validate_service.validate_url(url):
             helpers.flash_error(
-                _(
-                    'Please provide a valid URL'
-                ),
+                _('Please provide a valid URL'),
                 allow_html=True,
             )
             return UtilizationController.edit(utilization_id)

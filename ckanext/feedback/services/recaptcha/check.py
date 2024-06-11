@@ -27,12 +27,12 @@ def _check_recaptcha_v3_base(request: Request) -> None:
     client_ip_address = request.remote_addr or 'Unknown IP Address'
     recaptcha_response = request.form.get('g-recaptcha-response', '')
     if not recaptcha_response:
-        logger.warning("not recaptcha_response")
+        logger.warning('not recaptcha_response')
         raise CaptchaError()
 
     recaptcha_private_key = config.get('ckan.feedback.recaptcha.privatekey')
     if not recaptcha_private_key:
-        logger.warning("not recaptcha_private_key")
+        logger.warning('not recaptcha_private_key')
         raise CaptchaError()
 
     # reCAPTCHA v3
@@ -54,19 +54,19 @@ def _check_recaptcha_v3_base(request: Request) -> None:
 
     try:
         if not data['success']:
-            logger.warning(f"not success:{data}")
+            logger.warning(f'not success:{data}')
             raise CaptchaError()
         if data['score'] < score_threshold:
             logger.warning(
-                f"Score is below the threshold:{data}:score_threshold={score_threshold}"
+                f'Score is below the threshold:{data}:score_threshold={score_threshold}'
             )
             raise CaptchaError()
     except IndexError:
         # Something weird with recaptcha response
-        logger.error("IndexError")
+        logger.error('IndexError')
         raise CaptchaError()
 
-    logger.info(f"reCAPTCHA verification passed successfully:{data}")
+    logger.info(f'reCAPTCHA verification passed successfully:{data}')
 
 
 def is_recaptcha_verified(request: Request):
