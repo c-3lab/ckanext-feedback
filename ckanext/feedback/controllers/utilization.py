@@ -13,6 +13,7 @@ import ckanext.feedback.services.utilization.edit as edit_service
 import ckanext.feedback.services.utilization.registration as registration_service
 import ckanext.feedback.services.utilization.search as search_service
 import ckanext.feedback.services.utilization.summary as summary_service
+import ckanext.feedback.services.utilization.validate as validate_service
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
@@ -115,6 +116,16 @@ class UtilizationController:
         title = request.form.get('title', '')
         url = request.form.get('url', '')
         description = request.form.get('description', '')
+
+        if url and not validate_service.validate_url(url):
+            helpers.flash_error(
+                _(
+                    'Please provide a valid URL'
+                ),
+                allow_html=True,
+            )
+            return UtilizationController.new(resource_id, title, description)
+
         if not (resource_id and title and description):
             toolkit.abort(400)
 
@@ -308,6 +319,15 @@ class UtilizationController:
         description = request.form.get('description', '')
         if not (title and description):
             toolkit.abort(400)
+
+        if url and not validate_service.validate_url(url):
+            helpers.flash_error(
+                _(
+                    'Please provide a valid URL'
+                ),
+                allow_html=True,
+            )
+            return UtilizationController.edit(utilization_id)
 
         edit_service.update_utilization(utilization_id, title, url, description)
         session.commit()
