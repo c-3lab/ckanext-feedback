@@ -122,10 +122,10 @@ class TestUtilizationController:
         user_dict = factories.User()
         user = User.get(user_dict['id'])
         mock_current_user(current_user, user_dict)
-        resource = factories.Resource(package_id=dataset['id'])
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
+        organization.name = 'test organization'
 
         mock_dataset = MagicMock()
         mock_dataset.owner_org = organization_dict['id']
@@ -147,9 +147,10 @@ class TestUtilizationController:
         disable_keyword = 'disable keyword'
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': resource['id'],
+            'id': dataset['id'],
             'keyword': keyword,
             'disable_keyword': disable_keyword,
+            'organization': organization.name,
         }.get(x, default)
 
         with app.get(url='/', environ_base=user_env):
@@ -157,7 +158,7 @@ class TestUtilizationController:
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, None, [organization_dict['id']], ''
+            dataset['id'], keyword, None, [organization_dict['id']], 'test organization'
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
@@ -186,7 +187,6 @@ class TestUtilizationController:
         dataset = factories.Dataset()
         user_dict = factories.User()
         mock_current_user(current_user, user_dict)
-        resource = factories.Resource(package_id=dataset['id'])
 
         mock_dataset = MagicMock()
         mock_dataset.owner_org = factories.Organization()['id']
@@ -198,7 +198,7 @@ class TestUtilizationController:
         disable_keyword = 'disable keyword'
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': resource['id'],
+            'id': dataset['id'],
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
@@ -208,7 +208,7 @@ class TestUtilizationController:
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, True, None, ''
+            dataset['id'], keyword, True, None, ''
         )
         mock_render.assert_called_once_with(
             'utilization/search.html',
@@ -260,6 +260,100 @@ class TestUtilizationController:
             },
         )
 
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.model.Group.get')
+    @patch('ckanext.feedback.controllers.utilization.model.Package.get')
+    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request.args')
+    def test_search_with_package(
+        self,
+        mock_args,
+        mock_get_utilizations,
+        mock_get_resource,
+        mock_package_get,
+        mock_group_get,
+        mock_render,
+        app,
+    ):
+        mock_organization = MagicMock()
+        mock_organization.id = 'org_id'
+        mock_organization.name = 'org_name'
+
+        mock_dataset = MagicMock()
+        mock_dataset.owner_org = mock_organization.id
+
+        mock_get_resource.return_value = None
+        mock_package_get.return_value = mock_dataset
+        mock_group_get.return_value = mock_organization
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+
+        mock_args.get.side_effect = lambda x, default: {
+            'id': mock_dataset.id,
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+        }.get(x, default)
+
+        with app.get(url='/'):
+            g.userobj = None
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(
+            mock_dataset.id, keyword, True, None, ''
+        )
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': keyword,
+                'disable_keyword': disable_keyword,
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.model.Package.get')
+    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.request.args')
+    def test_search_without_id(
+        self,
+        mock_args,
+        mock_get_utilizations,
+        mock_get_resource,
+        mock_package_get,
+        mock_render,
+        app,
+    ):
+        mock_get_resource.return_value = None
+        mock_package_get.return_value = None
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+
+        mock_args.get.side_effect = lambda x, default: {
+            'id': 'test_id',
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+        }.get(x, default)
+
+        with app.get(url='/'):
+            g.userobj = None
+            UtilizationController.search()
+
+        mock_get_utilizations.assert_called_once_with(
+            'test_id', keyword, True, None, ''
+        )
+        mock_render.assert_called_once_with(
+            'utilization/search.html',
+            {
+                'keyword': keyword,
+                'disable_keyword': disable_keyword,
+                'utilizations': mock_get_utilizations.return_value,
+            },
+        )
+
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
@@ -301,6 +395,43 @@ class TestUtilizationController:
                 'resource': mock_resource,
                 'title': '',
                 'description': '',
+            },
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    def test_new_with_resource_id(self, mock_get_resource, mock_render, current_user):
+        dataset = factories.Dataset()
+        resource = factories.Resource(package_id=dataset['id'])
+        user_dict = factories.User()
+        mock_current_user(current_user, user_dict)
+
+        mock_organization = factories.Organization()
+        mock_dataset = MagicMock()
+        mock_dataset.id = dataset['id']
+        mock_dataset.owner_org = mock_organization['id']
+        mock_resource = MagicMock()
+        mock_resource.id = resource['id']
+        mock_resource.package = mock_dataset
+        mock_get_resource.return_value = mock_resource
+
+        g.userobj = current_user
+        UtilizationController.new(
+            resource_id=resource['id'], title='title', description='description'
+        )
+
+        context = {'model': model, 'session': Session, 'for_view': True}
+        package = get_action('package_show')(context, {'id': dataset['id']})
+
+        mock_render.assert_called_once_with(
+            'utilization/new.html',
+            {
+                'pkg_dict': package,
+                'return_to_resource': False,
+                'resource': mock_resource,
+                'title': 'title',
+                'description': 'description',
             },
         )
 
@@ -371,7 +502,7 @@ class TestUtilizationController:
         package_name = 'package'
         resource_id = 'resource id'
         title = 'title'
-        url = 'url'
+        url = ''
         description = 'description'
         return_to_resource = False
 
@@ -431,6 +562,37 @@ class TestUtilizationController:
         UtilizationController.create()
 
         mock_toolkit_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.UtilizationController.new')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    def test_create_without_bad_recaptcha(
+        self,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_new,
+        mock_form,
+    ):
+        package_name = ''
+        resource_id = 'resource id'
+        title = 'title'
+        url = ''
+        description = 'description'
+        return_to_resource = True
+
+        mock_form.get.side_effect = [
+            package_name,
+            resource_id,
+            title,
+            url,
+            description,
+            return_to_resource,
+        ]
+
+        mock_is_recaptcha_verified.return_value = False
+        UtilizationController.create()
+        mock_new.assert_called_once_with(resource_id, title, description)
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.validate_service')
@@ -833,6 +995,30 @@ class TestUtilizationController:
 
         mock_toolkit_abort.assert_called_once_with(400)
 
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    def test_create_comment_without_bad_recaptcha(
+        self,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_details,
+        mock_form,
+    ):
+        utilization_id = 'utilization_id'
+        category = 'category'
+        content = 'content'
+
+        mock_form.get.side_effect = [
+            category,
+            content,
+        ]
+
+        mock_is_recaptcha_verified.return_value = False
+        UtilizationController.create_comment(utilization_id)
+        mock_details.assert_called_once_with(utilization_id, category, content)
+
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
@@ -939,7 +1125,7 @@ class TestUtilizationController:
         current_user,
     ):
         utilization_id = 'utilization id'
-        url = 'url'
+        url = ''
         title = 'title'
         description = 'description'
 
@@ -1000,6 +1186,38 @@ class TestUtilizationController:
         UtilizationController.update(utilization_id)
 
         mock_toolkit_abort.assert_called_once_with(400)
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.UtilizationController.edit')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_update_without_url(
+        self,
+        mock_detail_service,
+        mock_flash_error,
+        mock_edit,
+        mock_form,
+        current_user,
+    ):
+        utilization_id = 'utilization id'
+        url = 'test_url'
+        title = 'title'
+        description = 'description'
+
+        mock_form.get.side_effect = [title, url, description]
+
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+        UtilizationController.update(utilization_id)
+
+        mock_edit.assert_called_once_with(utilization_id)
+        mock_flash_error.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
