@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 import pytest
 from ckan import model
-from ckan.common import config
+from ckan.common import _, config
+from ckan.tests import factories
 
 from ckanext.feedback.command import feedback
 from ckanext.feedback.command.feedback import (
@@ -53,6 +54,25 @@ class TestPlugin:
                     'enable': True,
                     'enable_orgs': [],
                 },
+                "notice": {
+                    "email": {
+                        "enable": True,
+                        "template_directory": "/opt/ckan/default/src/ckanext-feedback/"
+                        "ckanext/feedback/templates/email_notification",
+                        "template_utilization": "utilization.text",
+                        "template_utilization_comment": "utilization_comment.text",
+                        "template_resource_comment": "resource_comment.text",
+                        "subject_utilization": "Post a Utilization",
+                        "subject_utilization_comment": "Post a Utilization comment",
+                        "subject_resource_comment": "Post a Resource comment",
+                    }
+                },
+                "recaptcha": {
+                    "enable": True,
+                    "publickey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "privatekey": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+                    "score_threshold": 0.5,
+                },
             }
         }
         with open('/srv/app/feedback_config.json', 'w') as f:
@@ -76,6 +96,46 @@ class TestPlugin:
         assert config.get('ckan.feedback.resources.comment.rating.enable_orgs') == []
         assert config.get('ckan.feedback.downloads.enable') is True
         assert config.get('ckan.feedback.downloads.enable_orgs') == []
+        assert config.get('ckan.feedback.notice.email.enable') is True
+        assert (
+            config.get('ckan.feedback.notice.email.template_directory')
+            == "/opt/ckan/default/src/ckanext-feedback/"
+            "ckanext/feedback/templates/email_notification"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.template_utilization')
+            == "utilization.text"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.template_utilization_comment')
+            == "utilization_comment.text"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.template_resource_comment')
+            == "resource_comment.text"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.subject_utilization')
+            == "Post a Utilization"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.subject_utilization_comment')
+            == "Post a Utilization comment"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.subject_resource_comment')
+            == "Post a Resource comment"
+        )
+        assert config.get('ckan.feedback.recaptcha.enable') is True
+        assert (
+            config.get('ckan.feedback.recaptcha.publickey')
+            == "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        )
+        assert (
+            config.get('ckan.feedback.recaptcha.privatekey')
+            == "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+        )
+        assert config.get('ckan.feedback.recaptcha.score_threshold') == 0.5
 
         # with .ini file enable is opposite from feedback_config.json
         config['ckan.feedback.utilizations.enable'] = False
@@ -83,6 +143,18 @@ class TestPlugin:
         config['ckan.feedback.downloads.enable'] = False
         config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
         config['ckan.feedback.resources.comment.rating.enable'] = True
+        config['ckan.feedback.notice.email.enable'] = True
+        config['ckan.feedback.notice.email.template_directory'] = ''
+        config['ckan.feedback.notice.email.template_utilization'] = ''
+        config['ckan.feedback.notice.email.template_utilization_comment'] = ''
+        config['ckan.feedback.notice.email.template_resource_comment'] = ''
+        config['ckan.feedback.notice.email.subject_utilization'] = ''
+        config['ckan.feedback.notice.email.subject_utilization_comment'] = ''
+        config['ckan.feedback.notice.email.subject_resource_comment'] = ''
+        config['ckan.feedback.recaptcha.enable'] = True
+        config['ckan.feedback.recaptcha.publickey'] = ''
+        config['ckan.feedback.recaptcha.privatekey'] = ''
+        config['ckan.feedback.recaptcha.score_threshold'] = ''
         instance.update_config(config)
         assert instance.is_feedback_config_file is True
         assert config.get('ckan.feedback.utilizations.enable') is True
@@ -93,6 +165,46 @@ class TestPlugin:
         )
         assert config.get('ckan.feedback.resources.comment.rating.enable') is False
         assert config.get('ckan.feedback.downloads.enable') is True
+        assert config.get('ckan.feedback.notice.email.enable') is True
+        assert (
+            config.get('ckan.feedback.notice.email.template_directory')
+            == "/opt/ckan/default/src/ckanext-feedback/"
+            "ckanext/feedback/templates/email_notification"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.template_utilization')
+            == "utilization.text"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.template_utilization_comment')
+            == "utilization_comment.text"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.template_resource_comment')
+            == "resource_comment.text"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.subject_utilization')
+            == "Post a Utilization"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.subject_utilization_comment')
+            == "Post a Utilization comment"
+        )
+        assert (
+            config.get('ckan.feedback.notice.email.subject_resource_comment')
+            == "Post a Resource comment"
+        )
+        assert config.get('ckan.feedback.recaptcha.enable') is True
+        assert (
+            config.get('ckan.feedback.recaptcha.publickey')
+            == "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        )
+        assert (
+            config.get('ckan.feedback.recaptcha.privatekey')
+            == "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+        )
+        assert config.get('ckan.feedback.recaptcha.score_threshold') == 0.5
 
     @patch('ckanext.feedback.plugin.toolkit')
     def test_update_config_attribute_error(self, mock_toolkit):
@@ -732,3 +844,155 @@ class TestPlugin:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
         assert instance.is_enabled_rating() is True
+
+    def test_is_base_public_folder_bs3(self):
+        instance = FeedbackPlugin()
+        assert instance.is_base_public_folder_bs3() is False
+
+        config['ckan.base_public_folder'] = 'public-bs3'
+        instance.update_config(config)
+        assert instance.is_base_public_folder_bs3() is True
+
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_rating_org')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.utilization_summary_service')
+    @patch('ckanext.feedback.plugin.resource_summary_service')
+    def test_before_dataset_view_with_True(
+        self,
+        mock_resource_summary_service,
+        mock_utilization_summary_service,
+        mock_download_summary_service,
+        mock_is_enabled_rating_org,
+        mock_is_enabled_resources_org,
+        mock_is_enabled_utilizations_org,
+        mock_is_enabled_downloads_org,
+    ):
+        instance = FeedbackPlugin()
+
+        mock_is_enabled_rating_org.return_value = False
+        mock_is_enabled_resources_org.return_value = True
+        mock_is_enabled_utilizations_org.return_value = True
+        mock_is_enabled_downloads_org.return_value = True
+
+        mock_resource_summary_service.get_package_comments.return_value = 9999
+        mock_resource_summary_service.get_package_rating.return_value = 23.333
+        mock_utilization_summary_service.get_package_utilizations.return_value = 9999
+        mock_utilization_summary_service.get_package_issue_resolutions.return_value = (
+            9999
+        )
+        mock_download_summary_service.get_package_downloads.return_value = 9999
+
+        dataset = factories.Dataset()
+
+        instance.before_dataset_view(dataset)
+        assert dataset['extras'] == [
+            {'key': _('Downloads'), 'value': 9999},
+            {'key': _('Utilizations'), 'value': 9999},
+            {'key': _('Issue Resolutions'), 'value': 9999},
+            {'key': _('Comments'), 'value': 9999},
+        ]
+
+        mock_is_enabled_rating_org.return_value = True
+
+        dataset['extras'] = []
+        instance.before_dataset_view(dataset)
+        assert dataset['extras'] == [
+            {'key': _('Downloads'), 'value': 9999},
+            {'key': _('Utilizations'), 'value': 9999},
+            {'key': _('Issue Resolutions'), 'value': 9999},
+            {'key': _('Comments'), 'value': 9999},
+            {'key': _('Rating'), 'value': 23.3},
+        ]
+
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
+    def test_before_dataset_view_with_False(
+        self,
+        mock_is_enabled_resources_org,
+        mock_is_enabled_utilizations_org,
+        mock_is_enabled_downloads_org,
+    ):
+        instance = FeedbackPlugin()
+
+        mock_is_enabled_resources_org.return_value = False
+        mock_is_enabled_utilizations_org.return_value = False
+        mock_is_enabled_downloads_org.return_value = False
+        dataset = factories.Dataset()
+        dataset['extras'] = [
+            'test',
+        ]
+        before_dataset = dataset
+
+        instance.before_dataset_view(dataset)
+        assert before_dataset == dataset
+
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_rating_org')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.utilization_summary_service')
+    @patch('ckanext.feedback.plugin.resource_summary_service')
+    def test_before_resource_show_with_True(
+        self,
+        mock_resource_summary_service,
+        mock_utilization_summary_service,
+        mock_download_summary_service,
+        mock_is_enabled_rating_org,
+        mock_is_enabled_resources_org,
+        mock_is_enabled_utilizations_org,
+        mock_is_enabled_downloads_org,
+    ):
+        instance = FeedbackPlugin()
+
+        mock_is_enabled_rating_org.return_value = False
+        mock_is_enabled_resources_org.return_value = True
+        mock_is_enabled_utilizations_org.return_value = True
+        mock_is_enabled_downloads_org.return_value = True
+
+        mock_resource_summary_service.get_resource_comments.return_value = 9999
+        mock_resource_summary_service.get_resource_rating.return_value = 23.333
+        mock_utilization_summary_service.get_resource_utilizations.return_value = 9999
+        mock_utilization_summary_service.get_resource_issue_resolutions.return_value = (
+            9999
+        )
+        mock_download_summary_service.get_resource_downloads.return_value = 9999
+
+        resource = factories.Resource()
+
+        instance.before_resource_show(resource)
+        assert resource[_('Downloads')] == 9999
+        assert resource[_('Utilizations')] == 9999
+        assert resource[_('Issue Resolutions')] == 9999
+        assert resource[_('Comments')] == 9999
+
+        mock_is_enabled_rating_org.return_value = True
+        instance.before_resource_show(resource)
+        assert resource[_('Rating')] == 23.3
+
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
+    def test_before_resource_show_with_False(
+        self,
+        mock_is_enabled_resources_org,
+        mock_is_enabled_utilizations_org,
+        mock_is_enabled_downloads_org,
+    ):
+        instance = FeedbackPlugin()
+
+        mock_is_enabled_resources_org.return_value = False
+        mock_is_enabled_utilizations_org.return_value = False
+        mock_is_enabled_downloads_org.return_value = False
+        resource = factories.Resource()
+        resource['extras'] = [
+            'test',
+        ]
+        before_resource = resource
+
+        instance.before_resource_show(resource)
+        assert before_resource == resource
