@@ -1,10 +1,10 @@
-from ckan.logic import get_validator
+import ckan.logic.validators as validators
 
 
 def validate_url(url):
     errors = {'key': []}
     context = {}
-    get_validator('url_validator')('key', {'key': url}, errors, context)
+    validators.url_validator('key', {'key': url}, errors, context)
     if errors['key']:
         return False
     return True
