@@ -1,4 +1,4 @@
-"""Add columns
+"""Add columns: rating_comment to resource_comment_summary, and url to utilization.
 
 Revision ID: 2a8c621c22c8
 Revises: 40bf9a900ef5

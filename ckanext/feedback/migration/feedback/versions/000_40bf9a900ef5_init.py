@@ -1,4 +1,4 @@
-"""feedback db init
+"""Create tables for feedback plugin
 
 Revision ID: 40bf9a900ef5
 Revises:
