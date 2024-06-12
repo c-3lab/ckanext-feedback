@@ -375,6 +375,90 @@ class TestUtilizationController:
 
         mock_toolkit_abort.assert_called_once_with(400)
 
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.validate_service')
+    @patch('ckanext.feedback.controllers.utilization.registration_service')
+    @patch('ckanext.feedback.controllers.utilization.summary_service')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.utilization.url_for')
+    @patch('ckanext.feedback.controllers.utilization.redirect')
+    def test_create_with_valid_url(
+        self,
+        mock_redirect,
+        mock_url_for,
+        mock_flash_success,
+        mock_session_commit,
+        mock_summary_service,
+        mock_registration_service,
+        mock_validate_service,
+        mock_form,
+    ):
+        package_name = 'package'
+        resource_id = 'resource id'
+        title = 'title'
+        valid_url = 'https://example.com'
+        description = 'description'
+        return_to_resource = True
+
+        mock_form.get.side_effect = [
+            package_name,
+            resource_id,
+            title,
+            valid_url,
+            description,
+            return_to_resource,
+        ]
+        mock_url_for.return_value = 'resource read url'
+        mock_validate_service.validate_url.return_value = []
+
+        UtilizationController.create()
+
+        mock_validate_service.validate_url.assert_called_once_with(valid_url)
+        mock_registration_service.create_utilization.assert_called_with(
+            resource_id, title, valid_url, description
+        )
+        mock_summary_service.create_utilization_summary.assert_called_with(resource_id)
+        mock_session_commit.assert_called_once()
+        mock_flash_success.assert_called_once()
+        mock_url_for.assert_called_once_with(
+            'resource.read', id=package_name, resource_id=resource_id
+        )
+        mock_redirect.assert_called_with('resource read url')
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.UtilizationController.new')
+    @patch('ckanext.feedback.controllers.utilization.validate_service')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    def test_create_with_invalid_url(
+        self,
+        mock_flash_error,
+        mock_validate_service,
+        mock_new,
+        mock_form,
+    ):
+        package_name = 'package'
+        resource_id = 'resource id'
+        title = 'title'
+        invalid_url = 'invalid_url'
+        description = 'description'
+        return_to_resource = True
+
+        mock_form.get.side_effect = [
+            package_name,
+            resource_id,
+            title,
+            invalid_url,
+            description,
+            return_to_resource,
+        ]
+        mock_validate_service.validate_url.return_value = ['Please provide a valid URL']
+
+        UtilizationController.create()
+
+        mock_flash_error.assert_called_once()
+        mock_new.assert_called_once_with(resource_id, title, description)
+
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
