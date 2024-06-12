@@ -61,9 +61,9 @@ def _check_recaptcha_v3_base(request: Request) -> None:
                 f'Score is below the threshold:{data}:score_threshold={score_threshold}'
             )
             raise CaptchaError()
-    except IndexError:
+    except KeyError:
         # Something weird with recaptcha response
-        logger.error('IndexError')
+        logger.error("KeyError")
         raise CaptchaError()
 
     logger.info(f'reCAPTCHA verification passed successfully:{data}')
