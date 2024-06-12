@@ -62,8 +62,4 @@ def send_email(template_name, organization_id, subject, **kwargs):
                 },
             )
         except Exception:
-            log.exception(
-                'To:%s[%s]',
-                user['name'],
-                user['email'],
-            )
+            log.exception(f'user: {user}')
