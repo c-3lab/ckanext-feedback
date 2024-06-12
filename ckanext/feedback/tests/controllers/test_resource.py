@@ -169,8 +169,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
     @patch('ckanext.feedback.controllers.resource.make_response')
+    @patch('ckanext.feedback.controllers.resource.send_email')
     def test_create_comment(
         self,
+        mock_send_email,
         mock_make_response,
         mock_redirect,
         mock_url_for,
@@ -191,6 +193,7 @@ class TestResourceController:
             rating,
             rating,
         ]
+        mock_send_email.side_effect = Exception("Mock Exception")
 
         mock_url_for.return_value = 'resource comment'
         resp = ResourceController.create_comment(resource_id)
@@ -243,6 +246,32 @@ class TestResourceController:
         ]
         ResourceController.create_comment(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    def test_create_comment_without_bad_recaptcha(
+        self,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_comment,
+        mock_form,
+    ):
+        resource_id = 'resource_id'
+        comment_content = 'comment_content'
+        category = 'category'
+
+        mock_form.get.side_effect = [
+            comment_content,
+            comment_content,
+            category,
+            None,
+        ]
+
+        mock_is_recaptcha_verified.return_value = False
+        ResourceController.create_comment(resource_id)
+        mock_comment.assert_called_once_with(resource_id, category, comment_content)
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.request.form')
