@@ -117,7 +117,7 @@ class UtilizationController:
         url = request.form.get('url', '')
         description = request.form.get('description', '')
 
-        if url and not validate_service.validate_url(url):
+        if url and validate_service.validate_url(url):
             helpers.flash_error(
                 _('Please provide a valid URL'),
                 allow_html=True,
@@ -318,7 +318,7 @@ class UtilizationController:
         if not (title and description):
             toolkit.abort(400)
 
-        if url and not validate_service.validate_url(url):
+        if url and validate_service.validate_url(url):
             helpers.flash_error(
                 _('Please provide a valid URL'),
                 allow_html=True,
