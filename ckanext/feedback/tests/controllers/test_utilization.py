@@ -414,9 +414,7 @@ class TestUtilizationController:
 
         UtilizationController.create()
 
-        mock_validate_service.validate_url.assert_called_once_with(
-            valid_url
-        )
+        mock_validate_service.validate_url.assert_called_once_with(valid_url)
         mock_registration_service.create_utilization.assert_called_with(
             resource_id, title, valid_url, description
         )

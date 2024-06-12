@@ -26,6 +26,6 @@ class TestUtilizationDetailsService:
         assert result == []
 
     def test_validate_with_invalid_url(self):
-        example_invalid_url = "invalid_url"
+        example_invalid_url = 'invalid_url'
         result = validate_url(example_invalid_url)
         assert result == ['Please provide a valid URL']
