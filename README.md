@@ -92,53 +92,9 @@ Feedback enables an ecosystem between users and providers that continually impro
 
 2. `ckanext-feedback/development`下にある`container_setup.sh`を実行し、コンテナを起動
 
-3. CKAN公式の手順に従い、以下のコマンドを実行
+3. ckanext-feedbackをインストールして必要なテーブルを作成するために、`ckanext-feedback/development`下にある`feedback_setup.sh`を実行する
 
-    ```bash
-    docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
-    ```
-
-    ```bash
-    docker exec -it ckan /usr/local/bin/ckan -c /etc/ckan/production.ini sysadmin add admin
-    ```
-
-4. 以下のコマンドを実行し、コンテナ内に入る
-
-    ```bash
-    docker exec -it ckan bash
-    ```
-
-5. CKANの仮想環境をアクティブにする
-
-    ```bash
-    . /usr/lib/ckan/venv/bin/activate
-    ```
-
-6. 仮想環境にckanext-feedbackをインストールする
-
-    ```bash
-    pip install /opt/ckanext-feedback
-    ```
-
-7. 以下のコマンドで設定を行うためのファイルを開く
-
-    ```bash
-    vim /etc/ckan/production.ini
-    ```
-
-8. 以下の行に`feedback`を追加
-
-    ```bash
-    ckan.plugins = stats ・・・ recline_view feedback
-    ```
-
-9. フィードバック機能に必要なテーブルを作成する
-
-    ```bash
-    ckan --config=/etc/ckan/production.ini feedback init
-    ```
-
-10. `http://localhost:5000`にアクセスする
+4. `http://localhost:5000`にアクセスする
 
 ### LinterとFomatterの設定
 
