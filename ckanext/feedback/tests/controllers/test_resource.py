@@ -59,10 +59,15 @@ class TestResourceController:
         self, mock_request, mock_render, current_user, app, sysadmin_env
     ):
         user_dict = factories.Sysadmin()
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
         mock_current_user(current_user, user_dict)
-        resource = factories.Resource(package_id=dataset['id'])
+
+        organization_dict = factories.Organization(
+            name='org_name',
+        )
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
+        resource['package'] = package
+        # session.commit()
         resource_id = resource['id']
 
         with app.get(url='/', environ_base=sysadmin_env):
@@ -75,12 +80,15 @@ class TestResourceController:
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(context, {'id': resource.package_id})
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
 
+        assert g.pkg_dict["organization"]['name'] == 'org_name'
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
-                'resource': resource,
+                'resource': resource.Resource,
                 'pkg_dict': package,
                 'comments': comments,
                 'categories': categories,
@@ -113,12 +121,14 @@ class TestResourceController:
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(context, {'id': resource.package_id})
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
-                'resource': resource,
+                'resource': resource.Resource,
                 'pkg_dict': package,
                 'comments': comments,
                 'categories': categories,
@@ -146,12 +156,14 @@ class TestResourceController:
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(context, {'id': resource.package_id})
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
-                'resource': resource,
+                'resource': resource.Resource,
                 'pkg_dict': package,
                 'comments': comments,
                 'categories': categories,

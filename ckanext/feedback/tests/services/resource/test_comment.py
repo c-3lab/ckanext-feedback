@@ -36,8 +36,15 @@ class TestComments:
         create_download_tables(engine)
 
     def test_get_resource(self):
-        resource = factories.Resource()
-        assert type(get_resource(resource['id'])) is model.resource.Resource
+        organization_dict = factories.Organization(
+            name='org_name',
+        )
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
+        session.commit()
+        assert get_resource(resource['id'])
+        assert get_resource(resource['id']).organization_id == package['id']
+        assert get_resource(resource['id']).organization_name == "org_name"
 
     def test_get_resource_comments(self):
         assert not get_resource_comments()

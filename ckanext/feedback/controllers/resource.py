@@ -31,7 +31,7 @@ class ResourceController:
             # if the user is not logged in, display only approved comments
             approval = True
         elif (
-            has_organization_admin_role(resource.package.owner_org)
+            has_organization_admin_role(resource.Resource.package.owner_org)
             or current_user.sysadmin
         ):
             # if the user is an organization admin or a sysadmin, display all comments
@@ -41,15 +41,15 @@ class ResourceController:
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(context, {'id': resource.package_id})
-        g.pkg_dict = {
-            'organization': {'name': model.Group.get(resource.package.owner_org).name}
-        }
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return toolkit.render(
             'resource/comment.html',
             {
-                'resource': resource,
+                'resource': resource.Resource,
                 'pkg_dict': package,
                 'comments': comments,
                 'categories': categories,
@@ -87,11 +87,11 @@ class ResourceController:
                 template_name=config.get(
                     'ckan.feedback.notice.email.template_resource_comment'
                 ),
-                organization_id=resource.package.owner_org,
+                organization_id=resource.Resource.package.owner_org,
                 subject=config.get(
                     'ckan.feedback.notice.email.subject_resource_comment'
                 ),
-                target_name=resource.name,
+                target_name=resource.Resource.name,
                 category=category,
                 content=content,
                 url=url_for(
@@ -150,7 +150,7 @@ class ResourceController:
     def _check_organization_admin_role(resource_id):
         resource = comment_service.get_resource(resource_id)
         if (
-            not has_organization_admin_role(resource.package.owner_org)
+            not has_organization_admin_role(resource.Resource.package.owner_org)
             and not current_user.sysadmin
         ):
             toolkit.abort(
