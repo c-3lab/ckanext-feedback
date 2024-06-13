@@ -90,7 +90,7 @@ Feedback enables an ecosystem between users and providers that continually impro
     git clone https://github.com/c-3lab/ckanext-feedback.git
     ```
 
-2. `ckanext-feedback/development`下にある`setup.py`を実行し、コンテナを起動
+2. `ckanext-feedback/development`下にある`container_setup.sh`を実行し、コンテナを起動
 
 3. CKAN公式の手順に従い、以下のコマンドを実行
 
