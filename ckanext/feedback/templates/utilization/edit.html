@@ -18,7 +18,7 @@
   {% block primary %}
     <article class="module" role="main">
       <div class="module-content">
-        {% set message = _('Deleting this utilization will also delete all related comments.\nAre you sure?')  %}
+        {% set message = _('Deleting this utilization will also delete all related comments and certifications of issue resolution.\nAre you sure?')  %}
         <input type="hidden" id="message" name="message" value="{{ message }}">
         <div class="wrap-text">
           <h4>{{ _('Dataset') }}</h4>
