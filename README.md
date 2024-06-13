@@ -54,7 +54,8 @@ Feedback enables an ecosystem between users and providers that continually impro
     ckan --config=/etc/ckan/production.ini feedback init
     ```
 
-6. フィードバック機能に必要なデータベースの更新を行う
+6. フィードバック機能に必要なデータベースの更新を行う  
+（ckanext-feedback 1.2.0以前からアップグレードする場合）
 
     ```bash
     ckan db upgrade -p feedback

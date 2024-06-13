@@ -59,7 +59,7 @@ SQLAlchemyを使用したカラムの追加や削除などの一般的なスキ�
 マイグレーションスクリプトの実行は`ckan-docker-ckan-dev-1`コンテナ内で行います。
 
 ```bash
-docker exec -it --user root ckan-docker-ckan-dev-1 /bin/bash
+docker exec -it ckan-docker-ckan-dev-1 /bin/bash
 ```
 
 マイグレーションスクリプトの適用を行う場合は `ckan db upgrade -p feedback` を実行してください。
