@@ -140,6 +140,24 @@ Feedback enables an ecosystem between users and providers that continually impro
 
 10. `http://localhost:5000`にアクセスする
 
+### LinterとFomatterの設定
+
+1. poetryをインストールする
+
+    ```bash
+    pip install poetry
+    ```
+
+2. LinterとFomatterを使えるようにする
+
+    ```bash
+    poetry install
+    poetry run pre-commit install
+    ```
+
+    * 以後、git commit 時に、staging されているファイルに対して isort, black, pflake8 が実行され、それらによる修正が発生すると、commit されなくなる。
+    * 手動で isort, black, pflake8 を行いたい場合、poetry run pre-commit で可能。
+
 ### 参考ドキュメント
 
 * [feedbackコマンド 詳細ドキュメント](./docs/ja/feedback_command.md)
