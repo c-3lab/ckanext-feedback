@@ -116,6 +116,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     config['ckan.feedback.recaptcha.publickey'] = (
                         feedback_config.recaptcha.publickey
                     )
+                    config['ckan.feedback.recaptcha.score_threshold'] = (
+                        feedback_config.recaptcha.score_threshold
+                    )
                 except AttributeError as e:
                     toolkit.error_shout(e)
 

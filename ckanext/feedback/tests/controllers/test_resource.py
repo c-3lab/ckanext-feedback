@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 from ckan import model
@@ -58,8 +58,9 @@ class TestResourceController:
     def test_comment_with_sysadmin(
         self, mock_request, mock_render, current_user, app, sysadmin_env
     ):
-        dataset = factories.Dataset()
         user_dict = factories.Sysadmin()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
         mock_current_user(current_user, user_dict)
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
@@ -84,6 +85,8 @@ class TestResourceController:
                 'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
+                'selected_category': '',
+                'content': '',
             },
         )
 
@@ -93,8 +96,9 @@ class TestResourceController:
     def test_comment_with_user(
         self, mock_request, mock_render, current_user, app, user_env
     ):
-        dataset = factories.Dataset()
         user_dict = factories.User()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
         mock_current_user(current_user, user_dict)
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
@@ -119,13 +123,16 @@ class TestResourceController:
                 'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
+                'selected_category': '',
+                'content': '',
             },
         )
 
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
     def test_comment_without_user(self, mock_request, mock_render, app):
-        dataset = factories.Dataset()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
 
@@ -149,6 +156,8 @@ class TestResourceController:
                 'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
+                'selected_category': '',
+                'content': '',
             },
         )
 
@@ -160,8 +169,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.url_for')
     @patch('ckanext.feedback.controllers.resource.redirect')
     @patch('ckanext.feedback.controllers.resource.make_response')
+    @patch('ckanext.feedback.controllers.resource.send_email')
     def test_create_comment(
         self,
+        mock_send_email,
         mock_make_response,
         mock_redirect,
         mock_url_for,
@@ -182,6 +193,7 @@ class TestResourceController:
             rating,
             rating,
         ]
+        mock_send_email.side_effect = Exception("Mock Exception")
 
         mock_url_for.return_value = 'resource comment'
         resp = ResourceController.create_comment(resource_id)
@@ -194,8 +206,13 @@ class TestResourceController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with(
-            'resource_comment.comment', resource_id=resource_id
+        mock_url_for.assert_has_calls(
+            [
+                call(
+                    'resource_comment.comment', resource_id=resource_id, _external=True
+                ),
+                call('resource_comment.comment', resource_id=resource_id),
+            ]
         )
         mock_redirect.assert_called_once_with('resource comment')
         mock_make_response.assert_called_once_with(mock_redirect())
@@ -229,6 +246,32 @@ class TestResourceController:
         ]
         ResourceController.create_comment(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    def test_create_comment_without_bad_recaptcha(
+        self,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_comment,
+        mock_form,
+    ):
+        resource_id = 'resource_id'
+        comment_content = 'comment_content'
+        category = 'category'
+
+        mock_form.get.side_effect = [
+            comment_content,
+            comment_content,
+            category,
+            None,
+        ]
+
+        mock_is_recaptcha_verified.return_value = False
+        ResourceController.create_comment(resource_id)
+        mock_comment.assert_called_once_with(resource_id, category, comment_content)
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.request.form')

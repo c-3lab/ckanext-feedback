@@ -23,11 +23,12 @@ def get_registered_utilization(id):
     return session.query(Utilization).filter(Utilization.id == id).first()
 
 
-def register_utilization(id, resource_id, title, description, approval):
+def register_utilization(id, resource_id, title, url, description, approval):
     utilization = Utilization(
         id=id,
         resource_id=resource_id,
         title=title,
+        url=url,
         description=description,
         approval=approval,
     )
@@ -52,8 +53,9 @@ class TestUtilizationDetailsService:
 
         id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(id, resource['id'], title, description, False)
+        register_utilization(id, resource['id'], title, url, description, False)
 
         result = get_utilization_details(id)
         utilization = get_registered_utilization(id)
@@ -75,17 +77,20 @@ class TestUtilizationDetailsService:
 
         id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(id, resource['id'], title, description, False)
+        register_utilization(id, resource['id'], title, url, description, False)
 
         updated_title = 'test updated title'
+        updated_url = 'test updated url'
         updated_description = 'test updated description'
 
-        update_utilization(id, updated_title, updated_description)
+        update_utilization(id, updated_title, updated_url, updated_description)
 
         utilization = get_registered_utilization(id)
 
         assert utilization.title == updated_title
+        assert utilization.url == updated_url
         assert utilization.description == updated_description
 
     def test_delete_utilization(self):
@@ -94,8 +99,9 @@ class TestUtilizationDetailsService:
 
         id = str(uuid.uuid4())
         title = 'test title'
+        url = 'test url'
         description = 'test description'
-        register_utilization(id, resource['id'], title, description, False)
+        register_utilization(id, resource['id'], title, url, description, False)
 
         assert get_registered_utilization(id).id == id
 
