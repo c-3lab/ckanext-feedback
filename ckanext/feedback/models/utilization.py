@@ -42,9 +42,13 @@ class Utilization(Base):
     comments = relationship(
         'UtilizationComment', back_populates='utilization', cascade='all, delete-orphan'
     )
-    issue_resolutions = relationship('IssueResolution', back_populates='utilization')
+    issue_resolutions = relationship(
+        'IssueResolution', back_populates='utilization', cascade='all, delete-orphan'
+    )
     issue_resolution_summary = relationship(
-        'IssueResolutionSummary', back_populates='utilization'
+        'IssueResolutionSummary',
+        back_populates='utilization',
+        cascade='all, delete-orphan',
     )
 
 

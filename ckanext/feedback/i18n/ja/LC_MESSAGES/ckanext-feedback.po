@@ -510,10 +510,10 @@ msgstr "利活用方法修正"
 
 #: ckanext/feedback/templates/utilization/edit.html:21
 msgid ""
-"Deleting this utilization will also delete all related comments.\n"
+"Deleting this utilization will also delete all related comments and certifications of issue resolution.\n"
 "Are you sure?"
 msgstr ""
-"利活用方法を削除すると紐づいているコメントも削除されます。\n"
+"利活用方法を削除すると紐づいているコメントと課題解決の認定も削除されます。\n"
 "よろしいですか？"
 
 #: ckanext/feedback/templates/utilization/edit.html:32
