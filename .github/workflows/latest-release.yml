@@ -26,22 +26,24 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Copy .env.template as .env
-        run: cp external/ckan/contrib/docker/.env.template external/ckan/contrib/docker/.env
+      - name: Copy .env.dev as .env
+        run: |
+          cp .env.dev external/ckan-docker/.env
         working-directory: ./development
 
-      - name: Build images
-        run: docker compose -f external/ckan/contrib/docker/docker-compose.yml -f docker-compose.yml up --build -d
+      - name: Build container
+        run: |
+          docker compose -f external/ckan-docker/docker-compose.dev.yml -f docker-compose.yml up --build -d
         working-directory: ./development
 
       - name: Install poetry in CKAN container
         run: docker exec ckan pip install poetry
 
       - name: Install packages with poetry
-        run: docker exec -w /opt/ckanext-feedback ckan poetry install
+        run: docker exec -w /srv/app/src_extensions/ckanext-feedback ckan poetry install
 
       - name: Generate translation file
-        run: docker exec -w /opt/ckanext-feedback ckan poetry run poe babel-compile
+        run: docker exec -w /srv/app/src_extensions/ckanext-feedback ckan poetry run poe babel-compile
 
       - name: Check translation file
         run: ls ckanext/feedback/i18n/ja/LC_MESSAGES
