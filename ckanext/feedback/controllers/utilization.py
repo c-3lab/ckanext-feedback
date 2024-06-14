@@ -344,6 +344,7 @@ class UtilizationController:
         UtilizationController._check_organization_admin_role(utilization_id)
         resource_id = detail_service.get_utilization(utilization_id).resource_id
         edit_service.delete_utilization(utilization_id)
+        session.commit()
         summary_service.refresh_utilization_summary(resource_id)
         session.commit()
 
