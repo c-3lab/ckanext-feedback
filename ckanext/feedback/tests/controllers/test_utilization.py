@@ -1257,7 +1257,7 @@ class TestUtilizationController:
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
             resource_id
         )
-        mock_session_commit.assert_called_once()
+        assert mock_session_commit.call_count == 2
         mock_flash_success.assert_called_once()
         mock_url_for.assert_called_once_with('utilization.search')
         mock_redirect.assert_called_once_with('utilization search url')
