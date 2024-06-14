@@ -57,3 +57,10 @@ def get_utilizations(
         query = query.filter(Group.name == org_name)
 
     return query.all()
+
+
+def get_organization_name_from_pkg(id):
+    package = Package.get(id)
+    if package:
+        return Group.get(package.owner_org).name
+    return None

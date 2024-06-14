@@ -9,10 +9,7 @@ from ckanext.feedback.command.feedback import (
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization
-from ckanext.feedback.services.utilization.registration import (
-    create_utilization,
-    get_resource,
-)
+from ckanext.feedback.services.utilization.registration import create_utilization
 
 
 def get_utilization(resource_id):
@@ -38,19 +35,6 @@ class TestUtilizationDetailsService:
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
-
-    def test_get_resource(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
-        result = get_resource(resource['id'])
-
-        assert result.id == resource['id']
-        assert result.package_id == resource['package_id']
-        assert result.name == resource['name']
-        assert result.description == resource['description']
-        assert result.format == resource['format']
-        assert result.url == resource['url']
 
     def test_create_utilization(self):
         resource = factories.Resource()
