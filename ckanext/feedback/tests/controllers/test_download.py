@@ -40,7 +40,9 @@ class TestDownloadController:
     @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
     @patch('ckanext.feedback.controllers.download.resource.download')
     def test_extended_download(self, mock_download, mock_download_handler):
-        resource = factories.Resource()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
+        resource = factories.Resource(package_id=dataset['id'])
         mock_download_handler.return_value = None
 
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
@@ -52,7 +54,7 @@ class TestDownloadController:
                 package_type='package_type',
                 id=resource['package_id'],
                 resource_id=resource['id'],
-                filename=None,
+                filename=resource['url'],
             )
 
     @patch('ckanext.feedback.controllers.download.resource.download')
@@ -60,7 +62,7 @@ class TestDownloadController:
         resource = factories.Resource()
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
             DownloadController.extended_download(
-                'package_type', resource['package_id'], resource['id'], None
+                'package_type', resource['package_id'], resource['id'], resource['url']
             )
             assert get_downloads(resource['id']) is None
             assert mock_download
@@ -74,11 +76,11 @@ class TestDownloadController:
         mock_download_handler.return_value = handler
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
             DownloadController.extended_download(
-                'package_type', resource['package_id'], resource['id'], None
+                'package_type', resource['package_id'], resource['id'], resource['url']
             )
             handler.assert_called_once_with(
                 package_type='package_type',
                 id=resource['package_id'],
                 resource_id=resource['id'],
-                filename=None,
+                filename=resource['url'],
             )
