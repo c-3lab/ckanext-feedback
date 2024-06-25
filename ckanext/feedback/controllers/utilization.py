@@ -59,13 +59,11 @@ class UtilizationController:
         # If the organization name can be identified,
         # set it as a global variable accessible from templates.
         if id and not org_name:
-            resource = registration_service.get_resource(id)
+            resource = comment_service.get_resource(id)
             if resource:
-                package = resource.package
+                org_name = resource.organization_name
             else:
-                package = model.Package.get(id)
-            if package:
-                org_name = model.Group.get(package.owner_org).name
+                org_name = search_service.get_organization_name_from_pkg(id)
         if org_name:
             g.pkg_dict = {
                 'organization': {
@@ -88,19 +86,19 @@ class UtilizationController:
         if not resource_id:
             resource_id = request.args.get('resource_id', '')
         return_to_resource = request.args.get('return_to_resource', False)
-        resource = registration_service.get_resource(resource_id)
+        resource = comment_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(context, {'id': resource.package.id})
-        g.pkg_dict = {
-            'organization': {'name': model.Group.get(resource.package.owner_org).name}
-        }
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package.id}
+        )
+        g.pkg_dict = {'organization': {'name': resource.Resource.organization_name}}
 
         return toolkit.render(
             'utilization/new.html',
             {
                 'pkg_dict': package,
                 'return_to_resource': return_to_resource,
-                'resource': resource,
+                'resource': resource.Resource,
                 'title': title,
                 'description': description,
             },
@@ -188,11 +186,9 @@ class UtilizationController:
         g.pkg_dict = {
             'organization': {
                 'name': (
-                    model.Group.get(
-                        registration_service.get_resource(
-                            utilization.resource_id
-                        ).package.owner_org
-                    ).name
+                    comment_service.get_resource(
+                        utilization.resource_id
+                    ).organization_name
                 )
             }
         }
@@ -292,11 +288,9 @@ class UtilizationController:
         g.pkg_dict = {
             'organization': {
                 'name': (
-                    model.Group.get(
-                        registration_service.get_resource(
-                            utilization_details.resource_id
-                        ).package.owner_org
-                    ).name
+                    comment_service.get_resource(
+                        utilization_details.resource_id
+                    ).organization_name
                 )
             }
         }

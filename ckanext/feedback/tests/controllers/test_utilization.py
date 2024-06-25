@@ -54,7 +54,7 @@ class TestUtilizationController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search(
@@ -105,7 +105,7 @@ class TestUtilizationController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search_with_org_admin(
@@ -171,7 +171,7 @@ class TestUtilizationController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search_with_user(
@@ -220,7 +220,7 @@ class TestUtilizationController:
         )
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search_without_user(
@@ -263,7 +263,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.model.Group.get')
     @patch('ckanext.feedback.controllers.utilization.model.Package.get')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search_with_package(
@@ -314,7 +314,7 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.model.Package.get')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search_without_id(
@@ -356,7 +356,7 @@ class TestUtilizationController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_new(
         self, mock_args, mock_get_resource, mock_render, current_user, app, user_env
@@ -376,8 +376,10 @@ class TestUtilizationController:
         mock_dataset.id = dataset['id']
         mock_dataset.owner_org = mock_organization['id']
         mock_resource = MagicMock()
-        mock_resource.id = resource['id']
-        mock_resource.package = mock_dataset
+        mock_resource.Resource.id = resource['id']
+        mock_resource.Resource.package = mock_dataset
+        mock_resource.organization_id = mock_organization['id']
+        mock_resource.organization_name = mock_organization['name']
         mock_get_resource.return_value = mock_resource
 
         with app.get(url='/', environ_base=user_env):
@@ -392,7 +394,7 @@ class TestUtilizationController:
             {
                 'pkg_dict': package,
                 'return_to_resource': True,
-                'resource': mock_resource,
+                'resource': mock_resource.Resource,
                 'title': '',
                 'description': '',
             },
@@ -400,7 +402,7 @@ class TestUtilizationController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     def test_new_with_resource_id(self, mock_get_resource, mock_render, current_user):
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
@@ -412,8 +414,10 @@ class TestUtilizationController:
         mock_dataset.id = dataset['id']
         mock_dataset.owner_org = mock_organization['id']
         mock_resource = MagicMock()
-        mock_resource.id = resource['id']
-        mock_resource.package = mock_dataset
+        mock_resource.Resource.id = resource['id']
+        mock_resource.Resource.package = mock_dataset
+        mock_resource.organization_id = mock_organization['id']
+        mock_resource.organization_name = mock_organization['name']
         mock_get_resource.return_value = mock_resource
 
         g.userobj = current_user
@@ -429,7 +433,7 @@ class TestUtilizationController:
             {
                 'pkg_dict': package,
                 'return_to_resource': False,
-                'resource': mock_resource,
+                'resource': mock_resource.Resource,
                 'title': 'title',
                 'description': 'description',
             },
@@ -679,7 +683,7 @@ class TestUtilizationController:
         mock_new.assert_called_once_with(resource_id, title, description)
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_approval_with_sysadmin(
@@ -704,7 +708,9 @@ class TestUtilizationController:
         mock_dataset = MagicMock()
         mock_dataset.owner_org = organization_dict['id']
         mock_resource = MagicMock()
-        mock_resource.package = mock_dataset
+        mock_resource.Resource.package = mock_dataset
+        mock_resource.organization_id = organization_dict['id']
+        mock_resource.organization_name = organization_dict['name']
         mock_get_resource.return_value = mock_resource
 
         UtilizationController.details(utilization_id)
@@ -731,7 +737,7 @@ class TestUtilizationController:
         )
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_approval_with_org_admin(
@@ -768,7 +774,9 @@ class TestUtilizationController:
         mock_dataset = MagicMock()
         mock_dataset.owner_org = organization_dict['id']
         mock_resource = MagicMock()
-        mock_resource.package = mock_dataset
+        mock_resource.Resource.package = mock_dataset
+        mock_resource.organization_id = organization_dict['id']
+        mock_resource.organization_name = organization_dict['name']
         mock_get_resource.return_value = mock_resource
 
         UtilizationController.details(utilization_id)
@@ -794,7 +802,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_approval_without_user(
@@ -842,7 +850,7 @@ class TestUtilizationController:
         )
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_with_user(
@@ -1057,7 +1065,7 @@ class TestUtilizationController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
-    @patch('ckanext.feedback.controllers.utilization.registration_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_edit(
         self,

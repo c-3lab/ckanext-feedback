@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from flask import request
@@ -17,7 +18,11 @@ def get_resource(resource_id):
     return (
         session.query(
             Resource,
+            Package.id.label('organization_id'),
+            Group.name.label('organization_name'),
         )
+        .join(Package)
+        .join(Group, Package.owner_org == Group.id)
         .filter(Resource.id == resource_id)
         .first()
     )
