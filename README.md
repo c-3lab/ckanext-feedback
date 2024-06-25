@@ -90,55 +90,29 @@ Feedback enables an ecosystem between users and providers that continually impro
     git clone https://github.com/c-3lab/ckanext-feedback.git
     ```
 
-2. `ckanext-feedback/development`下にある`setup.py`を実行し、コンテナを起動
+2. `ckanext-feedback/development`下にある`container_setup.sh`を実行し、コンテナを起動
 
-3. CKAN公式の手順に従い、以下のコマンドを実行
+3. ckanext-feedbackをインストールして必要なテーブルを作成するために、`ckanext-feedback/development`下にある`feedback_setup.sh`を実行する
 
-    ```bash
-    docker exec ckan /usr/local/bin/ckan -c /etc/ckan/production.ini datastore set-permissions | docker exec -i db psql -U ckan
-    ```
+4. `http://localhost:5000`にアクセスする
 
-    ```bash
-    docker exec -it ckan /usr/local/bin/ckan -c /etc/ckan/production.ini sysadmin add admin
-    ```
+### LinterとFomatterの設定
 
-4. 以下のコマンドを実行し、コンテナ内に入る
+1. poetryをインストールする
 
     ```bash
-    docker exec -it ckan bash
+    pip install poetry
     ```
 
-5. CKANの仮想環境をアクティブにする
+2. LinterとFomatterを使えるようにする
 
     ```bash
-    . /usr/lib/ckan/venv/bin/activate
+    poetry install
+    poetry run pre-commit install
     ```
 
-6. 仮想環境にckanext-feedbackをインストールする
-
-    ```bash
-    pip install /opt/ckanext-feedback
-    ```
-
-7. 以下のコマンドで設定を行うためのファイルを開く
-
-    ```bash
-    vim /etc/ckan/production.ini
-    ```
-
-8. 以下の行に`feedback`を追加
-
-    ```bash
-    ckan.plugins = stats ・・・ recline_view feedback
-    ```
-
-9. フィードバック機能に必要なテーブルを作成する
-
-    ```bash
-    ckan --config=/etc/ckan/production.ini feedback init
-    ```
-
-10. `http://localhost:5000`にアクセスする
+    * 以後、git commit 時に、staging されているファイルに対して isort, black, pflake8 が実行され、それらによる修正が発生すると、commit されなくなる。
+    * 手動で isort, black, pflake8 を行いたい場合、poetry run pre-commit で可能。
 
 ### 参考ドキュメント
 
