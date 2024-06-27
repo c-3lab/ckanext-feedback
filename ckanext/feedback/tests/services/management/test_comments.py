@@ -205,10 +205,12 @@ class TestComments:
         session.commit()
 
         mock_get_utilization_comments.return_value = 0
-        comments.refresh_utilizations_comments([
-            get_registered_utilization(resource['id'])[0],
-            get_registered_utilization(resource['id'])[1],
-        ])
+        comments.refresh_utilizations_comments(
+            [
+                get_registered_utilization(resource['id'])[0],
+                get_registered_utilization(resource['id'])[1],
+            ]
+        )
 
         expected_args = (
             Utilization,
@@ -378,12 +380,14 @@ class TestComments:
 
         expected_args = (
             UtilizationComment,
-            [{
-                'id': comment_id,
-                'approval': True,
-                'approved': datetime.now(),
-                'approval_user_id': None,
-            }],
+            [
+                {
+                    'id': comment_id,
+                    'approval': True,
+                    'approved': datetime.now(),
+                    'approval_user_id': None,
+                }
+            ],
         )
 
         assert mock_mappings.call_args[0] == expected_args
@@ -435,12 +439,14 @@ class TestComments:
 
         expected_args = (
             ResourceComment,
-            [{
-                'id': resource_comment[0].id,
-                'approval': True,
-                'approved': datetime.now(),
-                'approval_user_id': None,
-            }],
+            [
+                {
+                    'id': resource_comment[0].id,
+                    'approval': True,
+                    'approved': datetime.now(),
+                    'approval_user_id': None,
+                }
+            ],
         )
 
         assert mock_mappings.call_args[0] == expected_args

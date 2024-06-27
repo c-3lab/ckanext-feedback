@@ -87,13 +87,15 @@ def refresh_resources_comments(resource_comment_summaries):
             rating = 0
         else:
             rating = row.total_rating / row.total_rating_comment
-        mappings.append({
-            'id': resource_comment_summary.id,
-            'comment': row.total_comment,
-            'rating_comment': row.total_rating_comment,
-            'rating': rating,
-            'updated': datetime.now(),
-        })
+        mappings.append(
+            {
+                'id': resource_comment_summary.id,
+                'comment': row.total_comment,
+                'rating_comment': row.total_rating_comment,
+                'rating': rating,
+                'updated': datetime.now(),
+            }
+        )
     session.bulk_update_mappings(ResourceCommentSummary, mappings)
 
 
