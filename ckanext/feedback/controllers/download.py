@@ -5,6 +5,7 @@ from flask import request
 
 from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download.summary import increment_resource_downloads
+from ckanext.feedback.services.resource.comment import get_resource
 
 log = logging.getLogger(__name__)
 
@@ -13,6 +14,9 @@ class DownloadController:
     # extend default download function to count when a resource is downloaded
     @staticmethod
     def extended_download(package_type, id, resource_id, filename=None):
+        if filename is None:
+            filename = get_resource(resource_id).Resource.url
+
         if request.headers.get('Sec-Fetch-Dest') == 'document':
             increment_resource_downloads(resource_id)
 
