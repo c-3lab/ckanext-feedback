@@ -44,12 +44,14 @@ class TestDownloadController:
         mock_extended_download.return_value = mock_extended_download
 
         # with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
-        download('package_type', resource['package_id'], resource['id'], None)
+        download(
+            'package_type', resource['package_id'], resource['id'], resource['url']
+        )
         mock_extended_download.assert_called_once_with(
             package_type='package_type',
             id=resource['package_id'],
             resource_id=resource['id'],
-            filename=None,
+            filename=resource['url'],
         )
 
     @patch('ckanext.feedback.views.download.feedback_config.download_handler')
@@ -61,12 +63,14 @@ class TestDownloadController:
         mock_download_handler.return_value = None
         config['ckan.feedback.downloads.enable'] = False
 
-        download('package_type', resource['package_id'], resource['id'], None)
+        download(
+            'package_type', resource['package_id'], resource['id'], resource['url']
+        )
         mock_download.assert_called_once_with(
             package_type='package_type',
             id=resource['package_id'],
             resource_id=resource['id'],
-            filename=None,
+            filename=resource['url'],
         )
 
     @patch('ckanext.feedback.views.download.feedback_config.download_handler')
@@ -74,7 +78,9 @@ class TestDownloadController:
     def test_download_false_with_set_download_handler(
         self, mock_extended_download, mock_download_handler
     ):
-        resource = factories.Resource()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
+        resource = factories.Resource(package_id=dataset['id'])
         mock_download_handler.return_value = mock_extended_download
         config['ckan.feedback.downloads.enable'] = False
 

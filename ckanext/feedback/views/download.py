@@ -6,6 +6,7 @@ from flask import Blueprint
 
 from ckanext.feedback.controllers.download import DownloadController
 from ckanext.feedback.services.common import config as feedback_config
+from ckanext.feedback.services.resource.comment import get_resource
 from ckanext.feedback.views.error_handler import add_error_handler
 
 log = logging.getLogger(__name__)
@@ -33,6 +34,9 @@ def get_download_blueprint():
 
 # Handler to Use When Called from External Extensions
 def download(package_type, id, resource_id, filename=None):
+    if filename is None:
+        filename = get_resource(resource_id).Resource.url
+
     if config.get('ckan.feedback.downloads.enable', True):
         handler = DownloadController.extended_download
     else:
