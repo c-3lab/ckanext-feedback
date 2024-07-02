@@ -168,6 +168,7 @@ class TestUtilizationController:
                 'utilizations': mock_get_utilizations.return_value,
             },
         )
+        assert g.pkg_dict['organization']['name'] == organization.name
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -233,6 +234,7 @@ class TestUtilizationController:
         mock_dataset.owner_org = factories.Organization()['id']
         mock_resource = MagicMock()
         mock_resource.package = mock_dataset
+        mock_resource.organization_name = 'test_organization'
         mock_get_resource.return_value = mock_resource
 
         keyword = 'keyword'
@@ -259,6 +261,7 @@ class TestUtilizationController:
                 'utilizations': mock_get_utilizations.return_value,
             },
         )
+        assert g.pkg_dict['organization']['name'] == 'test_organization'
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.model.Group.get')
@@ -311,6 +314,7 @@ class TestUtilizationController:
                 'utilizations': mock_get_utilizations.return_value,
             },
         )
+        assert g.pkg_dict['organization']['name'] == mock_organization.name
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.model.Package.get')
@@ -880,6 +884,7 @@ class TestUtilizationController:
         mock_dataset.owner_org = mock_organization['id']
         mock_resource = MagicMock()
         mock_resource.package = mock_dataset
+        mock_resource.organization_name = 'test_organization'
         mock_get_resource.return_value = mock_resource
 
         UtilizationController.details(utilization_id)
@@ -904,6 +909,7 @@ class TestUtilizationController:
                 'content': '',
             },
         )
+        assert g.pkg_dict['organization']['name'] == 'test_organization'
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
@@ -1095,6 +1101,7 @@ class TestUtilizationController:
         mock_dataset.owner_org = mock_organization['id']
         mock_resource = MagicMock()
         mock_resource.package = mock_dataset
+        mock_resource.organization_name = 'test_organization'
         mock_get_resource.return_value = mock_resource
 
         g.userobj = current_user
@@ -1113,6 +1120,7 @@ class TestUtilizationController:
                 'resource_details': resource_details,
             },
         )
+        assert g.pkg_dict['organization']['name'] == 'test_organization'
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.request.form')
