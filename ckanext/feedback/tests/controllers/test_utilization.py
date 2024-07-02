@@ -399,6 +399,7 @@ class TestUtilizationController:
                 'description': '',
             },
         )
+        assert g.pkg_dict['organization']['name'] == mock_organization['name']
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
