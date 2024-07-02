@@ -91,7 +91,7 @@ class UtilizationController:
         package = get_action('package_show')(
             context, {'id': resource.Resource.package.id}
         )
-        g.pkg_dict = {'organization': {'name': resource.Resource.organization_name}}
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return toolkit.render(
             'utilization/new.html',
