@@ -152,6 +152,7 @@ class TestManagementController:
                 'tab': 'utilization-comments',
             },
         )
+        assert g.pkg_dict['organization']['name'] is not None
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management._')
