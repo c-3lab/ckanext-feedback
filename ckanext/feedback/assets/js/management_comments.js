@@ -21,6 +21,26 @@ function changeAllChekbox(e) {
 function runBulkAction(action) {
   const form = document.getElementById('comments-form');
   form.setAttribute("action", action);
+
+  let countRows;
+  if (form['tab-menu'].value === "utilization-comments") {
+    countRows = document.querySelectorAll('input[name="utilization-comments-checkbox"]:checked').length;
+  } else {
+    countRows = document.querySelectorAll('input[name="resource-comments-checkbox"]:checked').length;
+  }
+  if (countRows === 0) {
+    alert(ckan.i18n._('Please select at least one checkbox'));
+    return;
+  }
+  let message;
+  if (action.includes('approve')) {
+    message = ckan.i18n.translate('Is it okay to approve checked %d item(s)?').fetch(countRows);
+  } else  {
+    message = ckan.i18n.translate('Is it okay to delete checked %d item(s)?').fetch(countRows);
+  }
+  if (!confirm(message)) {
+    return;
+  }
   form.submit();
 }
 
