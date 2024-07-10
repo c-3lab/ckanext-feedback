@@ -329,7 +329,7 @@ class TestUtilizationDetailsService:
         approved = datetime.now()
         unapproved_comment_id = str(uuid.uuid4())
         approved_comment_id = str(uuid.uuid4())
-        category = UtilizationCommentCategory.ADVERTISE
+        category = UtilizationCommentCategory.QUESTION
         content = 'test content'
 
         register_utilization_comment(
@@ -388,7 +388,7 @@ class TestUtilizationDetailsService:
         approved = datetime.now()
         unapproved_comment_id = str(uuid.uuid4())
         approved_comment_id = str(uuid.uuid4())
-        category = UtilizationCommentCategory.ADVERTISE
+        category = UtilizationCommentCategory.QUESTION
         content = 'test content'
 
         register_utilization_comment(

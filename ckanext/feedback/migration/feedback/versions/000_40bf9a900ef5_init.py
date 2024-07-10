@@ -24,14 +24,12 @@ depends_on = None
 class ResourceCommentCategory(enum.Enum):
     REQUEST = _('Request')
     QUESTION = _('Question')
-    ADVERTISE = _('Advertise')
     THANK = _('Thank')
 
 
 class UtilizationCommentCategory(enum.Enum):
     REQUEST = _('Request')
     QUESTION = _('Question')
-    ADVERTISE = _('Advertise')
     THANK = _('Thank')
 
 
