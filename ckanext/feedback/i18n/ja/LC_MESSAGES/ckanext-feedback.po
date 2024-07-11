@@ -8,16 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.2.0\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2024-06-17 11:25+0900\n"
+"POT-Creation-Date: 2024-07-11 13:12+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
 "Language-Team: ja <info.c3lab@gmail.com>\n"
-"Plural-Forms: nplurals=1; plural=0\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.7.0\n"
+"Generated-By: Babel 2.10.3\n"
 
 #: ckanext/feedback/plugin.py:342 ckanext/feedback/plugin.py:383
 #: ckanext/feedback/templates/package/snippets/resource_item.html:14
@@ -69,32 +69,46 @@ msgstr "コメント数"
 msgid "Rating"
 msgstr "評価"
 
+#: ckanext/feedback/assets/js/management_comments.js:32
+msgid "Please select at least one checkbox"
+msgstr "少なくとも1つのチェックボックスを選択してください。"
+
+#: ckanext/feedback/assets/js/management_comments.js:37
+#, python-format
+msgid "Is it okay to approve checked %d item(s)?"
+msgstr "チェックした%d項目を承認してもよろしいですか？"
+
+#: ckanext/feedback/assets/js/management_comments.js:39
+#, python-format
+msgid "Is it okay to delete checked %d item(s)?"
+msgstr "チェックした%d項目を削除してもよろしいですか？"
+
 #: ckanext/feedback/controllers/management.py:67
 #: ckanext/feedback/controllers/management.py:88
-#: ckanext/feedback/tests/controllers/test_management.py:203
-#: ckanext/feedback/tests/controllers/test_management.py:285
+#: ckanext/feedback/tests/controllers/test_management.py:204
+#: ckanext/feedback/tests/controllers/test_management.py:286
 msgid "bulk approval completed."
 msgstr "一括承認完了"
 
 #: ckanext/feedback/controllers/management.py:108
 #: ckanext/feedback/controllers/management.py:130
-#: ckanext/feedback/tests/controllers/test_management.py:372
-#: ckanext/feedback/tests/controllers/test_management.py:466
+#: ckanext/feedback/tests/controllers/test_management.py:373
+#: ckanext/feedback/tests/controllers/test_management.py:467
 msgid "bulk delete completed."
 msgstr "一括削除完了"
 
 #: ckanext/feedback/controllers/management.py:144
 #: ckanext/feedback/controllers/management.py:161
 #: ckanext/feedback/controllers/resource.py:158
-#: ckanext/feedback/controllers/utilization.py:384
+#: ckanext/feedback/controllers/utilization.py:378
 #: ckanext/feedback/services/common/check.py:13
-#: ckanext/feedback/tests/controllers/test_management.py:574
-#: ckanext/feedback/tests/controllers/test_management.py:652
-#: ckanext/feedback/tests/controllers/test_resource.py:330
-#: ckanext/feedback/tests/controllers/test_resource.py:374
-#: ckanext/feedback/tests/controllers/test_resource.py:459
-#: ckanext/feedback/tests/controllers/test_resource.py:502
-#: ckanext/feedback/tests/controllers/test_utilization.py:1396
+#: ckanext/feedback/tests/controllers/test_management.py:575
+#: ckanext/feedback/tests/controllers/test_management.py:653
+#: ckanext/feedback/tests/controllers/test_resource.py:342
+#: ckanext/feedback/tests/controllers/test_resource.py:386
+#: ckanext/feedback/tests/controllers/test_resource.py:471
+#: ckanext/feedback/tests/controllers/test_resource.py:514
+#: ckanext/feedback/tests/controllers/test_utilization.py:1413
 #: ckanext/feedback/tests/services/common/test_check.py:110
 #: ckanext/feedback/tests/services/common/test_check.py:130
 msgid ""
@@ -103,52 +117,60 @@ msgid ""
 msgstr "要求された URL がサーバー上に見つかりませんでした。URL を手動で入力した場合は、綴りを確認してからもう一度お試しください。"
 
 #: ckanext/feedback/controllers/resource.py:77
-#: ckanext/feedback/controllers/utilization.py:129
-#: ckanext/feedback/controllers/utilization.py:234
+#: ckanext/feedback/controllers/utilization.py:127
+#: ckanext/feedback/controllers/utilization.py:230
 msgid "Bad Captcha. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
 #: ckanext/feedback/controllers/resource.py:105
-#: ckanext/feedback/controllers/utilization.py:263
+#: ckanext/feedback/controllers/utilization.py:259
 msgid ""
 "Your comment has been sent.<br>The comment will not be displayed until "
 "approved by an administrator."
 msgstr "コメント送信が完了しました。<br>管理者にコメントが承認されるまで表示されません。"
 
-#: ckanext/feedback/controllers/utilization.py:120
-#: ckanext/feedback/controllers/utilization.py:325
+#: ckanext/feedback/controllers/utilization.py:118
+#: ckanext/feedback/controllers/utilization.py:319
 msgid "Please provide a valid URL"
 msgstr "有効なURLを入力してください。"
 
-#: ckanext/feedback/controllers/utilization.py:159
+#: ckanext/feedback/controllers/utilization.py:157
 msgid ""
 "Your application is complete.<br>The utilization will not be displayed "
 "until approved by an administrator."
 msgstr "登録申請が完了しました。<br>管理者に申請が承認されるまで表示されません。"
 
-#: ckanext/feedback/controllers/utilization.py:334
+#: ckanext/feedback/controllers/utilization.py:328
 msgid "The utilization has been successfully updated."
 msgstr "利活用方法の更新に成功しました。"
 
-#: ckanext/feedback/controllers/utilization.py:352
+#: ckanext/feedback/controllers/utilization.py:346
 msgid "The utilization has been successfully deleted."
 msgstr "利活用方法の削除に成功しました。"
 
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:25
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:32
 #: ckanext/feedback/models/resource_comment.py:24
 #: ckanext/feedback/models/utilization.py:15
 msgid "Request"
 msgstr "要望"
 
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:26
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:33
 #: ckanext/feedback/models/resource_comment.py:25
 #: ckanext/feedback/models/utilization.py:16
 msgid "Question"
 msgstr "質問"
 
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:27
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:34
 #: ckanext/feedback/models/resource_comment.py:26
 #: ckanext/feedback/models/utilization.py:17
 msgid "Advertise"
 msgstr "宣伝"
 
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:28
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:35
 #: ckanext/feedback/models/resource_comment.py:27
 #: ckanext/feedback/models/utilization.py:18
 msgid "Thank"
