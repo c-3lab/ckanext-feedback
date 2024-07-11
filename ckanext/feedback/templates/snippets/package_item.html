@@ -15,7 +15,7 @@
   <li>
     {% if h.is_enabled_downloads_org(package.owner_org) %}
       <div class = "bubble">
-        <i class="fas fa-arrow-circle-down"></i>
+        <i class="fa-solid fa-arrow-circle-down"></i>
         {{ h.get_package_downloads(package.id) }}
         <div class="description">{{ _('Downloads') }}</div>
       </div>
@@ -24,7 +24,7 @@
   <li>
     {% if h.is_enabled_utilizations_org(package.owner_org) %}
       <div class="utilization-data bubble">
-        <i class="fas fa-pencil-alt"></i>
+        <i class="fa-solid fa-pencil-alt"></i>
         <a href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">{{ h.get_package_utilizations(package.id) }}</a>
         <div class="description">{{ _('Utilizations') }}</div>
       </div>
@@ -33,7 +33,7 @@
   <li>
     {% if h.is_enabled_resources_org(package.owner_org) %}
       <div class="utilization-data bubble">
-        <i class="fas fa-comment-dots"></i>
+        <i class="fa-solid fa-comment-dots"></i>
         {{ h.get_package_comments(package.id) }}
         <div class="description">{{ _('Comments') }}</div>
       </div>
@@ -43,7 +43,7 @@
     {% if h.is_enabled_resources_org(package.owner_org) %}
       {% if h.is_enabled_rating_org(package.owner_org) %}
         <div class="utilization-data bubble">
-          <i class="fas fa-star"></i>
+          <i class="fa-solid fa-star"></i>
           {{ h.get_package_rating(package.id)|round(1) }}
           <div class="description">{{ _('Rating') }}</div>
         </div>
