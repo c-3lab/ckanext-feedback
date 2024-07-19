@@ -252,6 +252,7 @@ class TestResourceController:
         mock_toolkit_abort,
     ):
         resource_id = 'resource id'
+        package_name = 'ota'
         mock_form.get.side_effect = [
             None,
             None,
@@ -273,7 +274,7 @@ class TestResourceController:
         resource_id = 'resource_id'
         comment_content = 'comment_content'
         category = 'category'
-
+        package_name = 'ota'
         mock_form.get.side_effect = [
             comment_content,
             comment_content,
