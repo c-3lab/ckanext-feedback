@@ -74,7 +74,7 @@ class TestResourceController:
             g.userobj = current_user
             ResourceController.comment(resource_id)
 
-        approval = True
+        approval = None
         resource = comment_service.get_resource(resource_id)
         comments = comment_service.get_resource_comments(resource_id, approval)
         categories = comment_service.get_resource_comment_categories()
@@ -198,7 +198,9 @@ class TestResourceController:
         category = 'category'
         comment_content = 'content'
         rating = '1'
+        package_name = 'ota'
         mock_form.get.side_effect = [
+            package_name,
             comment_content,
             comment_content,
             category,
@@ -223,7 +225,7 @@ class TestResourceController:
                 call(
                     'resource_comment.comment', resource_id=resource_id, _external=True
                 ),
-                call('resource_comment.comment', resource_id=resource_id),
+                call('resource.read', id=package_name, resource_id=resource_id),
             ]
         )
         mock_redirect.assert_called_once_with('resource comment')
@@ -252,7 +254,9 @@ class TestResourceController:
         mock_toolkit_abort,
     ):
         resource_id = 'resource id'
+        package_name = 'ota'
         mock_form.get.side_effect = [
+            package_name,
             None,
             None,
         ]
@@ -273,8 +277,9 @@ class TestResourceController:
         resource_id = 'resource_id'
         comment_content = 'comment_content'
         category = 'category'
-
+        package_name = 'ota'
         mock_form.get.side_effect = [
+            package_name,
             comment_content,
             comment_content,
             category,

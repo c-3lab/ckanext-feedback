@@ -62,6 +62,7 @@ class ResourceController:
     # resource_comment/<resource_id>/comment/new
     @staticmethod
     def create_comment(resource_id):
+        package_name = request.form.get('package_name', '')
         category = None
         content = None
         if request.form.get('comment_content'):
@@ -110,8 +111,9 @@ class ResourceController:
         )
 
         resp = make_response(
-            redirect(url_for('resource_comment.comment', resource_id=resource_id))
+            redirect(url_for('resource.read', id=package_name, resource_id=resource_id))
         )
+
         resp.set_cookie(resource_id, 'alreadyPosted')
 
         return resp
