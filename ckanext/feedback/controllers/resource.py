@@ -9,6 +9,7 @@ from flask import make_response, redirect, url_for
 
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.resource.summary as summary_service
+import ckanext.feedback.services.resource.validate as validate_service
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
@@ -76,6 +77,13 @@ class ResourceController:
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return ResourceController.comment(resource_id, category, content)
+
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
             return ResourceController.comment(resource_id, category, content)
 
         comment_service.create_resource_comment(resource_id, category, content, rating)

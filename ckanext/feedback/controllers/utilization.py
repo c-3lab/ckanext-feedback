@@ -99,8 +99,6 @@ class UtilizationController:
                 'pkg_dict': package,
                 'return_to_resource': return_to_resource,
                 'resource': resource.Resource,
-                'title': title,
-                'description': description,
             },
         )
 
@@ -113,12 +111,30 @@ class UtilizationController:
         url = request.form.get('url', '')
         description = request.form.get('description', '')
 
-        if url and validate_service.validate_url(url):
-            helpers.flash_error(
-                _('Please provide a valid URL'),
-                allow_html=True,
+        if (
+            (url and (message := validate_service.validate_url(url)))
+            or (message := validate_service.validate_title(title))
+            or (message := validate_service.validate_description(description))
+        ):
+            if message := validate_service.validate_title(title):
+                helpers.flash_error(
+                    _(message),
+                    allow_html=True,
+                )
+            if url and (message := validate_service.validate_url(url)):
+                helpers.flash_error(
+                    _(message),
+                    allow_html=True,
+                )
+            if message := validate_service.validate_description(description):
+                helpers.flash_error(
+                    _(message),
+                    allow_html=True,
+                )
+            return toolkit.redirect_to(
+                'utilization.new',
+                resource_id=resource_id,
             )
-            return UtilizationController.new(resource_id, title, description)
 
         if not (resource_id and title and description):
             toolkit.abort(400)
@@ -230,6 +246,17 @@ class UtilizationController:
             helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
             return UtilizationController.details(utilization_id, category, content)
 
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'utilization.details',
+                utilization_id=utilization_id,
+                category=category,
+            )
+
         detail_service.create_utilization_comment(utilization_id, category, content)
         session.commit()
 
@@ -314,12 +341,30 @@ class UtilizationController:
         if not (title and description):
             toolkit.abort(400)
 
-        if url and validate_service.validate_url(url):
-            helpers.flash_error(
-                _('Please provide a valid URL'),
-                allow_html=True,
+        if (
+            (url and (message := validate_service.validate_url(url)))
+            or (message := validate_service.validate_title(title))
+            or (message := validate_service.validate_description(description))
+        ):
+            if message := validate_service.validate_title(title):
+                helpers.flash_error(
+                    _(message),
+                    allow_html=True,
+                )
+            if url and (message := validate_service.validate_url(url)):
+                helpers.flash_error(
+                    _(message),
+                    allow_html=True,
+                )
+            if message := validate_service.validate_description(description):
+                helpers.flash_error(
+                    _(message),
+                    allow_html=True,
+                )
+            return toolkit.redirect_to(
+                'utilization.edit',
+                utilization_id=utilization_id,
             )
-            return UtilizationController.edit(utilization_id)
 
         edit_service.update_utilization(utilization_id, title, url, description)
         session.commit()
