@@ -28,7 +28,7 @@
           <a href="{{ h.url_for('resource.read', id=resource_details.package_name, resource_id=resource_details.resource_id) }}">{{ resource_details.resource_name }}</a>
           <hr>
         </div>
-        <form name="content_form" action="{{ url_for('utilization.update', utilization_id=utilization_details.id) }}" method="post">
+        <form name="content_form" action="{{ h.url_for('utilization.update', utilization_id=utilization_details.id) }}" method="post">
           <h4>{{ _('Title') }}</h4>
           <input type="text" class="form-control" id="title" name="title" value="{{ utilization_details.title }}"/>
           <div>

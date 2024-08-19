@@ -141,8 +141,12 @@ class UtilizationController:
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
-            return UtilizationController.new(resource_id, title, description)
-
+            return toolkit.redirect_to(
+                'utilization.new',
+                resource_id=resource_id,
+                title=title,
+                description=description,
+            )
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
         utilization = registration_service.create_utilization(
             resource_id, title, url, description
@@ -275,7 +279,7 @@ class UtilizationController:
                 target_name=utilization.title,
                 category=category,
                 content=content,
-                url=url_for(
+                url=toolkit.url_for(
                     'utilization.details', utilization_id=utilization_id, _external=True
                 ),
             )
@@ -290,7 +294,7 @@ class UtilizationController:
             allow_html=True,
         )
 
-        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/comment/<comment_id>/approve
     @staticmethod

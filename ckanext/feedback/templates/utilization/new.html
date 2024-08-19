@@ -28,7 +28,7 @@
           <a href="{{ h.url_for('resource.read', id=pkg_dict.name, resource_id=resource.id) }}">{{ resource.name }}</a>
           <hr>
         </div>
-        <form id="content_form" name="content_form" action="{{ url_for('utilization.create') }}" method="post">
+        <form id="content_form" name="content_form" action="{{ h.url_for('utilization.create') }}" method="post">
           <input type="hidden" id="return_to_resource" name="return_to_resource" value="{{ return_to_resource }}">
           <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
           <input type="hidden" id="resource_id" name="resource_id" value="{{ resource.id }}">
