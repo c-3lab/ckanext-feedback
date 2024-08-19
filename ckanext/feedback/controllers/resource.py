@@ -66,8 +66,8 @@ class ResourceController:
         package_name = request.form.get('package_name', '')
         category = None
         content = None
-        if request.form.get('comment_content'):
-            content = request.form.get('comment_content')
+        if request.form.get('comment-content'):
+            content = request.form.get('comment-content')
             category = request.form.get('category')
         rating = None
         if request.form.get('rating'):

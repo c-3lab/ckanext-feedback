@@ -1,19 +1,38 @@
 function checkTitleAndDescriptionExists() {
   const title = document.getElementById('title').value;
+  const url = document.getElementById('url').value;
   const description = document.getElementById('description').value;
-  const titleErrorElement = document.getElementById('title-error');
-  const descriptionErrorElement = document.getElementById('description-error');
+  const titleNoneErrorElement = document.getElementById('title-none-error');
+  const titleOverErrorElement = document.getElementById('title-over-error');
+  const urlOverErrorElement = document.getElementById('url-over-error');
+  const descriptionNoneErrorElement = document.getElementById('description-none-error');
+  const descriptionOverElement = document.getElementById('description-over-error');
 
   // Reset display settings
-  titleErrorElement.style.display = 'none';
-  descriptionErrorElement.style.display = 'none';
+  titleNoneErrorElement.style.display = 'none';
+  titleOverErrorElement.style.display = 'none';
+  urlOverErrorElement.style.display = 'none';
+  descriptionNoneErrorElement.style.display = 'none';
+  descriptionOverElement.style.display = 'none';
   
   if (!title) {
-    titleErrorElement.style.display = '';
+    titleNoneErrorElement.style.display = '';
+    return false;
+  }
+  if (title.length>50) {
+    titleOverErrorElement.style.display = '';
+    return false;
+  }
+  if (url.length != 0 && url.length>50) {
+    urlOverErrorElement.style.display = '';
     return false;
   }
   if (!description) {
-    descriptionErrorElement.style.display = '';
+    descriptionNoneErrorElement.style.display = '';
+    return false;
+  }
+  if (description.length>2000) {
+    descriptionOverElement.style.display = '';
     return false;
   }
   return true;

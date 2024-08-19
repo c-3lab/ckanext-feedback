@@ -1,18 +1,23 @@
 function checkCommentExists() {
-  const comment = document.getElementById('comment_content').value;
+  const comment = document.getElementById('comment-content').value;
   const rating = document.getElementById('rating').value;
-  const commentErrorElement = document.getElementById('comment-error');
+  const commentNoneErrorElement = document.getElementById('comment-none-error');
+  const commentOverErrorElement = document.getElementById('comment-over-error');
   const ratingErrorElement = document.getElementById('rating-error');
 
   // Reset display settings
-  commentErrorElement.style.display = 'none';
+  commentNoneErrorElement.style.display = 'none';
+  commentOverErrorElement.style.display = 'none';
 
   if (!comment) {
-    commentErrorElement.style.display = '';
+    commentNoneErrorElement.style.display = '';
     return false;
-  } else {
-    return true;
   }
+  if (comment.length>50) {
+    commentOverErrorElement.style.display = '';
+    return false;  
+  }
+  return true;
 }
 
 function checkReplyExists() {

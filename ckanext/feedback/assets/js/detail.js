@@ -1,14 +1,21 @@
 function checkCommentExists() {
-  errorElement  = document.getElementById('content-error');
-  content = document.getElementById('comment-content').value;
+  const comment = document.getElementById('comment-content').value;
+  const commentNoneErrorElement = document.getElementById('comment-none-error');
+  const commentOverErrorElement = document.getElementById('comment-over-error');
 
-  if (content) {
-    errorElement.style.display = 'none';
-    return true;
-  } else {
-    errorElement.style.display = '';
+  // Reset display settings
+  commentNoneErrorElement.style.display = 'none';
+  commentOverErrorElement.style.display = 'none';
+
+  if (!comment) {
+    commentNoneErrorElement.style.display = '';
     return false;
   }
+  if (comment.length>50) {
+    commentOverErrorElement.style.display = '';
+    return false;  
+  }
+  return true;
 }
 
 function checkDescriptionExists() {

@@ -60,9 +60,10 @@
               </select>
               <br>
               <br>
-              <textarea class="form-control" cols="20" rows="5" id="comment_content" name="comment_content">{{ content }}</textarea>
+              <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" placeholder="0/1000">{{ content }}</textarea>
               <div>
-                <p id="comment-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
+                <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
+                <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
               </div>
               {% if h.is_disabled_repeat_post_on_resource_org(pkg_dict.owner_org) %}
                 <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
