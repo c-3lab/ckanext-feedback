@@ -111,24 +111,23 @@ class UtilizationController:
         url = request.form.get('url', '')
         description = request.form.get('description', '')
 
-        if (
-            (url and (message := validate_service.validate_url(url)))
-            or (message := validate_service.validate_title(title))
-            or (message := validate_service.validate_description(description))
-        ):
-            if message := validate_service.validate_title(title):
+        url_err_msg = validate_service.validate_url(url)
+        title_err_msg = validate_service.validate_title(title)
+        dsc_err_msg = validate_service.validate_description(description)
+        if (url and url_err_msg) or title_err_msg or dsc_err_msg:
+            if title_err_msg:
                 helpers.flash_error(
-                    _(message),
+                    _(title_err_msg),
                     allow_html=True,
                 )
-            if url and (message := validate_service.validate_url(url)):
+            if url and url_err_msg:
                 helpers.flash_error(
-                    _(message),
+                    _(url_err_msg),
                     allow_html=True,
                 )
-            if message := validate_service.validate_description(description):
+            if dsc_err_msg:
                 helpers.flash_error(
-                    _(message),
+                    _(dsc_err_msg),
                     allow_html=True,
                 )
             return toolkit.redirect_to(
@@ -345,24 +344,23 @@ class UtilizationController:
         if not (title and description):
             toolkit.abort(400)
 
-        if (
-            (url and (message := validate_service.validate_url(url)))
-            or (message := validate_service.validate_title(title))
-            or (message := validate_service.validate_description(description))
-        ):
-            if message := validate_service.validate_title(title):
+        url_err_msg = validate_service.validate_url(url)
+        title_err_msg = validate_service.validate_title(title)
+        dsc_err_msg = validate_service.validate_description(description)
+        if (url and url_err_msg) or title_err_msg or dsc_err_msg:
+            if title_err_msg:
                 helpers.flash_error(
-                    _(message),
+                    _(title_err_msg),
                     allow_html=True,
                 )
-            if url and (message := validate_service.validate_url(url)):
+            if url and url_err_msg:
                 helpers.flash_error(
-                    _(message),
+                    _(url_err_msg),
                     allow_html=True,
                 )
-            if message := validate_service.validate_description(description):
+            if dsc_err_msg:
                 helpers.flash_error(
-                    _(message),
+                    _(dsc_err_msg),
                     allow_html=True,
                 )
             return toolkit.redirect_to(
