@@ -232,6 +232,7 @@ class TestResourceController:
         mock_make_response.assert_called_once_with(mock_redirect())
         resp.set_cookie.assert_called_once_with(resource_id, 'alreadyPosted')
 
+    @patch('ckanext.feedback.controllers.resource.validate_service.validate_comment')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.summary_service')
@@ -252,16 +253,48 @@ class TestResourceController:
         mock_summary_service,
         mock_form,
         mock_toolkit_abort,
+        mock_validate_comment,
     ):
         resource_id = 'resource id'
-        package_name = 'ota'
+        mock_form.get.return_value = None
+        mock_validate_comment.return_value = None
+
+        ResourceController.create_comment(resource_id)
+        mock_toolkit_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    def test_create_comment_without_comment_length(
+        self,
+        mock_flash_flash_error,
+        mock_redirect_to,
+        mock_comment,
+        mock_form,
+    ):
+        resource_id = 'resource id'
+        category = 'category'
+        content = 'ex'
+        while True:
+            content += content
+            if 1000 < len(content):
+                break
+
         mock_form.get.side_effect = [
-            package_name,
-            None,
+            '',
+            content,
+            content,
+            category,
             None,
         ]
         ResourceController.create_comment(resource_id)
-        mock_toolkit_abort.assert_called_once_with(400)
+
+        mock_flash_flash_error.assert_called_once_with(
+            'Please keep the comment length below 1000',
+            allow_html=True,
+        )
+        mock_comment.assert_called_once_with(resource_id, category, content)
 
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
