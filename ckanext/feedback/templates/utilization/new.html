@@ -33,7 +33,8 @@
           <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
           <input type="hidden" id="resource_id" name="resource_id" value="{{ resource.id }}">
           <h4>{{ _('Title') }}</h4>
-          <input type="text" class="form-control" id="title" name="title" value="{{ title }}"  placeholder="0/50"/>
+          <input type="text" class="form-control" id="title" name="title" value="{{ title }}" maxlength="50"/>
+          <div class="char-count text-end"><span id="title-count">0</span>/50</div>
           <div>
             <p id="title-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter a title') }}</p>
             <p id="title-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the title length below 50') }}</p>
@@ -42,14 +43,16 @@
           <hr>
           <small>{{ _('※ option') }}</small>
           <h4>{{ _('URL (Example : The URL for your Website or Service)') }}</h4>
-          <input type="url" class="form-control" id="url" name="url" value="{{ url }}" placeholder="https://example.com"/>
+          <input type="url" class="form-control" id="url" name="url" value="{{ url }}" placeholder="https://example.com" maxlength="2048"/>
+          <div class="char-count text-end"><span id="url-count">0</span>/2048</div>
           <div>
             <p id="url-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the URL length below 2048') }}</p>
           </div>
           <br>
           <hr>
           <h4>{{ _('Description') }}</h4>
-          <textarea class="form-control" cols="20" rows="5" id="description" name="description" limit="2000" placeholder="0/2000">{{ description }}</textarea>
+          <textarea class="form-control" cols="20" rows="5" id="description" name="description" maxlength="2000">{{ description }}</textarea>
+          <div class="char-count text-end"><span id="description-count">0</span>/2000</div>
           <div>
             <p id="description-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter a description') }}</p>
             <p id="description-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the description length below 2000') }}</p>

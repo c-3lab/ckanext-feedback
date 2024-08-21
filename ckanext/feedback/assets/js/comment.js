@@ -13,7 +13,7 @@ function checkCommentExists() {
     commentNoneErrorElement.style.display = '';
     return false;
   }
-  if (comment.length>50) {
+  if (comment.length>1000) {
     commentOverErrorElement.style.display = '';
     return false;  
   }
@@ -59,3 +59,14 @@ function setReplyFormContent(resourceCommentId) {
   document.getElementById('selected_comment').innerHTML = content;
   document.getElementById('selected_resource_comment_id').value = resourceCommentId;
 }
+
+//文字数カウント
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('comment-content');
+  const charCount = document.getElementById('comment-count');
+
+  textarea.addEventListener('input', function() {
+    const currentLength = textarea.value.length;
+    charCount.textContent = currentLength;
+  });
+});

@@ -81,7 +81,8 @@
             </select>
             <br>
             <br>
-            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content" placeholder="0/1000">{{ content }}</textarea>
+            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content" maxlength="1000">{{ content }}</textarea>
+            <div class="char-count text-end"><span id="comment-count">0</span>/1000</div>
             <div>
               <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>

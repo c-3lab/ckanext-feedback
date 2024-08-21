@@ -23,7 +23,7 @@ function checkTitleAndDescriptionExists() {
     titleOverErrorElement.style.display = '';
     return false;
   }
-  if (url.length != 0 && url.length>50) {
+  if (url.length != 0 && url.length>2048) {
     urlOverErrorElement.style.display = '';
     return false;
   }
@@ -37,3 +37,32 @@ function checkTitleAndDescriptionExists() {
   }
   return true;
 }
+
+//文字数カウント
+document.addEventListener('DOMContentLoaded', function() {
+  const titleArea = document.getElementById('title');
+  const titleCount = document.getElementById('title-count');
+
+  const urlArea = document.getElementById('url');
+  const urlCount = document.getElementById('url-count');
+
+  const descriptionArea = document.getElementById('description');
+  const descriptionCount = document.getElementById('description-count');
+
+  function updateCharCount(textarea, charCount) {
+    const currentLength = textarea.value.length;
+    charCount.textContent = currentLength;
+  }
+
+  titleArea.addEventListener('input', function() {
+    updateCharCount(titleArea, titleCount);
+  });
+
+  urlArea.addEventListener('input', function() {
+    updateCharCount(urlArea, urlCount);
+  });
+
+  descriptionArea.addEventListener('input', function() {
+    updateCharCount(descriptionArea, descriptionCount);
+  });
+});

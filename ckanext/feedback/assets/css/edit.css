@@ -1,3 +1,7 @@
 .wrap-text {
   word-wrap: break-word;
 }
+
+.char-count {
+  color: #808080;
+}
