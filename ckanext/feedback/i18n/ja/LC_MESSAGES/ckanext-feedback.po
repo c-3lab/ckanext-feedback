@@ -622,6 +622,18 @@ msgstr "データリソース"
 msgid "Registered"
 msgstr "登録日"
 
+msgid "Please keep the URL length below 2048"
+msgstr "URLは2048文字以下にしてください"
+
+msgid "Please keep the title length below 50"
+msgstr "タイトルは50文字以下にしてください"
+
+msgid "Please keep the description length below 2000"
+msgstr "利活用内容は2000文字以下にしてください"
+
+msgid "Please keep the comment length below 1000"
+msgstr "コメントは1000文字以下にしてください"
+
 #~ msgid "Dashboard (%(num)d new item)"
 #~ msgid_plural "Dashboard (%(num)d new items)"
 #~ msgstr[0] "ダッシュボード (%(num)d 件の新着アイテム)"

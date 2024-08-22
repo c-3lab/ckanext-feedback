@@ -28,26 +28,34 @@
           <a href="{{ h.url_for('resource.read', id=pkg_dict.name, resource_id=resource.id) }}">{{ resource.name }}</a>
           <hr>
         </div>
-        <form id="content_form" name="content_form" action="{{ url_for('utilization.create') }}" method="post">
+        <form id="content_form" name="content_form" action="{{ h.url_for('utilization.create') }}" method="post">
           <input type="hidden" id="return_to_resource" name="return_to_resource" value="{{ return_to_resource }}">
           <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
           <input type="hidden" id="resource_id" name="resource_id" value="{{ resource.id }}">
           <h4>{{ _('Title') }}</h4>
-          <input type="text" class="form-control" id="title" name="title" value="{{ title }}"/>
+          <input type="text" class="form-control" id="title" name="title" value="{{ title }}" maxlength="50"/>
+          <div class="char-count text-end"><span id="title-count">0</span>/50</div>
           <div>
-            <p id="title-error" class="alert alert-error" style="display: none;">{{ _('Please enter a title') }}</p>
+            <p id="title-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter a title') }}</p>
+            <p id="title-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the title length below 50') }}</p>
           </div>
           <br>
           <hr>
           <small>{{ _('※ option') }}</small>
           <h4>{{ _('URL (Example : The URL for your Website or Service)') }}</h4>
-          <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com"/>
+          <input type="url" class="form-control" id="url" name="url" value="{{ url }}" placeholder="https://example.com" maxlength="2048"/>
+          <div class="char-count text-end"><span id="url-count">0</span>/2048</div>
+          <div>
+            <p id="url-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the URL length below 2048') }}</p>
+          </div>
           <br>
           <hr>
           <h4>{{ _('Description') }}</h4>
-          <textarea class="form-control" cols="20" rows="5" id="description" name="description">{{ description }}</textarea>
+          <textarea class="form-control" cols="20" rows="5" id="description" name="description" maxlength="2000">{{ description }}</textarea>
+          <div class="char-count text-end"><span id="description-count">0</span>/2000</div>
           <div>
-            <p id="description-error" class="alert alert-error" style="display: none;">{{ _('Please enter a description') }}</p>
+            <p id="description-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter a description') }}</p>
+            <p id="description-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the description length below 2000') }}</p>
           </div>
           <br>
           <div class="form-actions">

@@ -46,7 +46,7 @@
               </div>
             {% endif %}
             <br>
-            <form id="comment_form" name="comment_form" action="{{ url_for('resource_comment.create_comment', resource_id=resource.id ) }}" method="post">
+            <form id="comment_form" name="comment_form" action="{{ h.url_for('resource_comment.create_comment', resource_id=resource.id ) }}" method="post">
               <input type="hidden" id="rating" name="rating" value=""/>
               <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
               <select name="category" id="category">
@@ -60,9 +60,11 @@
               </select>
               <br>
               <br>
-              <textarea class="form-control" cols="20" rows="5" id="comment_content" name="comment_content">{{ content }}</textarea>
+              <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
+              <div class="char-count text-end"><span id="comment-count">0</span>/1000</div>
               <div>
-                <p id="comment-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
+                <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
+                <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
               </div>
               {% if h.is_disabled_repeat_post_on_resource_org(pkg_dict.owner_org) %}
                 <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>

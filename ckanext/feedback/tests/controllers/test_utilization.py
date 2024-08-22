@@ -399,8 +399,6 @@ class TestUtilizationController:
                 'pkg_dict': package,
                 'return_to_resource': True,
                 'resource': mock_resource.Resource,
-                'title': '',
-                'description': '',
             },
         )
         assert g.pkg_dict['organization']['name'] == mock_organization['name']
@@ -408,7 +406,10 @@ class TestUtilizationController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    def test_new_with_resource_id(self, mock_get_resource, mock_render, current_user):
+    @patch('ckanext.feedback.controllers.utilization.request.args')
+    def test_new_with_resource_id(
+        self, mock_args, mock_get_resource, mock_render, current_user
+    ):
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
         user_dict = factories.User()
@@ -425,10 +426,14 @@ class TestUtilizationController:
         mock_resource.organization_name = mock_organization['name']
         mock_get_resource.return_value = mock_resource
 
+        mock_args.get.side_effect = lambda x, default: {
+            'title': 'title',
+            'url': '',
+            'description': 'description',
+        }.get(x, default)
+
         g.userobj = current_user
-        UtilizationController.new(
-            resource_id=resource['id'], title='title', description='description'
-        )
+        UtilizationController.new(resource_id=resource['id'])
 
         context = {'model': model, 'session': Session, 'for_view': True}
         package = get_action('package_show')(context, {'id': dataset['id']})
@@ -439,8 +444,6 @@ class TestUtilizationController:
                 'pkg_dict': package,
                 'return_to_resource': False,
                 'resource': mock_resource.Resource,
-                'title': 'title',
-                'description': 'description',
             },
         )
 
@@ -464,7 +467,7 @@ class TestUtilizationController:
         package_name = 'package'
         resource_id = 'resource id'
         title = 'title'
-        url = ''
+        url = 'https://example.com'
         description = 'description'
         return_to_resource = True
 
@@ -573,14 +576,14 @@ class TestUtilizationController:
         mock_toolkit_abort.assert_called_once_with(400)
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
-    @patch('ckanext.feedback.controllers.utilization.UtilizationController.new')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     def test_create_without_bad_recaptcha(
         self,
         mock_flash_error,
         mock_is_recaptcha_verified,
-        mock_new,
+        mock_redirect_to,
         mock_form,
     ):
         package_name = ''
@@ -601,68 +604,62 @@ class TestUtilizationController:
 
         mock_is_recaptcha_verified.return_value = False
         UtilizationController.create()
-        mock_new.assert_called_once_with(resource_id, title, description)
+        mock_redirect_to.assert_called_once_with(
+            'utilization.new',
+            resource_id=resource_id,
+            title=title,
+            description=description,
+        )
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
-    @patch('ckanext.feedback.controllers.utilization.validate_service')
-    @patch('ckanext.feedback.controllers.utilization.registration_service')
-    @patch('ckanext.feedback.controllers.utilization.summary_service')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
-    def test_create_with_valid_url(
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    def test_create_with_invalid_title_length(
         self,
-        mock_redirect,
-        mock_url_for,
-        mock_flash_success,
-        mock_session_commit,
-        mock_summary_service,
-        mock_registration_service,
-        mock_validate_service,
+        mock_flash_error,
+        mock_redirect_to,
         mock_form,
     ):
         package_name = 'package'
         resource_id = 'resource id'
-        title = 'title'
+        title = (
+            'over 50 title'
+            'example title'
+            'example title'
+            'example title'
+            'example title'
+        )
         valid_url = 'https://example.com'
         description = 'description'
         return_to_resource = True
 
-        mock_form.get.side_effect = [
-            package_name,
-            resource_id,
-            title,
-            valid_url,
-            description,
-            return_to_resource,
-        ]
-        mock_url_for.return_value = 'resource read url'
-        mock_validate_service.validate_url.return_value = []
+        mock_form.get.side_effect = lambda x, default: {
+            'package_name': package_name,
+            'resource_id': resource_id,
+            'title': title,
+            'url': valid_url,
+            'description': description,
+            'return_to_resource': return_to_resource,
+        }.get(x, default)
 
         UtilizationController.create()
 
-        mock_validate_service.validate_url.assert_called_once_with(valid_url)
-        mock_registration_service.create_utilization.assert_called_with(
-            resource_id, title, valid_url, description
+        mock_flash_error.assert_called_once_with(
+            'Please keep the title length below 50',
+            allow_html=True,
         )
-        mock_summary_service.create_utilization_summary.assert_called_with(resource_id)
-        mock_session_commit.assert_called_once()
-        mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with(
-            'resource.read', id=package_name, resource_id=resource_id
+        mock_redirect_to.assert_called_once_with(
+            'utilization.new',
+            resource_id=resource_id,
         )
-        mock_redirect.assert_called_with('resource read url')
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
-    @patch('ckanext.feedback.controllers.utilization.UtilizationController.new')
-    @patch('ckanext.feedback.controllers.utilization.validate_service')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     def test_create_with_invalid_url(
         self,
         mock_flash_error,
-        mock_validate_service,
-        mock_new,
+        mock_redirect_to,
         mock_form,
     ):
         package_name = 'package'
@@ -670,22 +667,65 @@ class TestUtilizationController:
         title = 'title'
         invalid_url = 'invalid_url'
         description = 'description'
-        return_to_resource = True
 
-        mock_form.get.side_effect = [
-            package_name,
-            resource_id,
-            title,
-            invalid_url,
-            description,
-            return_to_resource,
-        ]
-        mock_validate_service.validate_url.return_value = ['Please provide a valid URL']
+        mock_form.get.side_effect = lambda x, default: {
+            'package_name': package_name,
+            'resource_id': resource_id,
+            'title': title,
+            'url': invalid_url,
+            'description': description,
+        }.get(x, default)
 
         UtilizationController.create()
 
-        mock_flash_error.assert_called_once()
-        mock_new.assert_called_once_with(resource_id, title, description)
+        mock_flash_error.assert_called_once_with(
+            'Please provide a valid URL',
+            allow_html=True,
+        )
+        mock_redirect_to.assert_called_once_with(
+            'utilization.new',
+            resource_id=resource_id,
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    def test_create_without_invalid_description_length(
+        self,
+        mock_flash_error,
+        mock_redirect_to,
+        mock_form,
+    ):
+        package_name = 'package'
+        resource_id = 'resource id'
+        title = 'title'
+        valid_url = 'https://example.com'
+        description = 'ex'
+        while True:
+            description += description
+            if 2000 < len(description):
+                break
+        return_to_resource = True
+
+        mock_form.get.side_effect = lambda x, default: {
+            'package_name': package_name,
+            'resource_id': resource_id,
+            'title': title,
+            'url': valid_url,
+            'description': description,
+            'return_to_resource': return_to_resource,
+        }.get(x, default)
+
+        UtilizationController.create()
+
+        mock_flash_error.assert_called_once_with(
+            'Please keep the description length below 2000',
+            allow_html=True,
+        )
+        mock_redirect_to.assert_called_once_with(
+            'utilization.new',
+            resource_id=resource_id,
+        )
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -956,12 +996,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_create_comment(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_flash_success,
         mock_session_commit,
         mock_detail_service,
@@ -972,7 +1010,6 @@ class TestUtilizationController:
         content = 'content'
 
         mock_form.get.side_effect = [category, content]
-        mock_url_for.return_value = 'utilization details url'
 
         UtilizationController.create_comment(utilization_id)
 
@@ -981,10 +1018,9 @@ class TestUtilizationController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
-        mock_redirect.assert_called_once_with('utilization details url')
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -1009,6 +1045,37 @@ class TestUtilizationController:
         UtilizationController.create_comment(utilization_id)
 
         mock_toolkit_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    def test_create_comment_without_comment_length(
+        self,
+        mock_flash_flash_error,
+        mock_redirect_to,
+        mock_form,
+    ):
+        utilization_id = 'utilization id'
+        category = 'category'
+        content = 'ex'
+        while True:
+            content += content
+            if 1000 < len(content):
+                break
+
+        mock_form.get.side_effect = [category, content]
+
+        UtilizationController.create_comment(utilization_id)
+
+        mock_flash_flash_error.assert_called_once_with(
+            'Please keep the comment length below 1000',
+            allow_html=True,
+        )
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details',
+            utilization_id=utilization_id,
+            category=category,
+        )
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
@@ -1142,7 +1209,7 @@ class TestUtilizationController:
         current_user,
     ):
         utilization_id = 'utilization id'
-        url = ''
+        url = 'https://example.com'
         title = 'title'
         description = 'description'
 
@@ -1206,14 +1273,58 @@ class TestUtilizationController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.request.form')
-    @patch('ckanext.feedback.controllers.utilization.UtilizationController.edit')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_update_with_invalid_title_length(
+        self,
+        mock_detail_service,
+        mock_flash_error,
+        mock_redirect_to,
+        mock_form,
+        current_user,
+    ):
+        utilization_id = 'utilization id'
+        url = 'https://example.com'
+        title = (
+            'over 50 title'
+            'example title'
+            'example title'
+            'example title'
+            'example title'
+        )
+        description = 'description'
+
+        mock_form.get.side_effect = [title, url, description]
+
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+        UtilizationController.update(utilization_id)
+
+        mock_flash_error.assert_called_once_with(
+            'Please keep the title length below 50',
+            allow_html=True,
+        )
+        mock_redirect_to.assert_called_once_with(
+            'utilization.edit',
+            utilization_id=utilization_id,
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_update_without_url(
         self,
         mock_detail_service,
         mock_flash_error,
-        mock_edit,
+        mock_redirect_to,
         mock_form,
         current_user,
     ):
@@ -1233,8 +1344,53 @@ class TestUtilizationController:
         g.userobj = current_user
         UtilizationController.update(utilization_id)
 
-        mock_edit.assert_called_once_with(utilization_id)
         mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.edit',
+            utilization_id=utilization_id,
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_update_with_invalid_description_length(
+        self,
+        mock_detail_service,
+        mock_flash_error,
+        mock_redirect_to,
+        mock_form,
+        current_user,
+    ):
+        utilization_id = 'utilization id'
+        url = 'https://example.com'
+        title = 'title'
+        description = 'ex'
+        while True:
+            description += description
+            if 2000 < len(description):
+                break
+
+        mock_form.get.side_effect = [title, url, description]
+
+        organization = factories.Organization()
+        utilization = MagicMock()
+        utilization.owner_org = organization['id']
+        mock_detail_service.get_utilization.return_value = utilization
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+        UtilizationController.update(utilization_id)
+
+        mock_flash_error.assert_called_once_with(
+            'Please keep the description length below 2000',
+            allow_html=True,
+        )
+        mock_redirect_to.assert_called_once_with(
+            'utilization.edit',
+            utilization_id=utilization_id,
+        )
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')

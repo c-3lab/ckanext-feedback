@@ -99,8 +99,6 @@ class UtilizationController:
                 'pkg_dict': package,
                 'return_to_resource': return_to_resource,
                 'resource': resource.Resource,
-                'title': title,
-                'description': description,
             },
         )
 
@@ -113,20 +111,41 @@ class UtilizationController:
         url = request.form.get('url', '')
         description = request.form.get('description', '')
 
-        if url and validate_service.validate_url(url):
-            helpers.flash_error(
-                _('Please provide a valid URL'),
-                allow_html=True,
+        url_err_msg = validate_service.validate_url(url)
+        title_err_msg = validate_service.validate_title(title)
+        dsc_err_msg = validate_service.validate_description(description)
+        if (url and url_err_msg) or title_err_msg or dsc_err_msg:
+            if title_err_msg:
+                helpers.flash_error(
+                    _(title_err_msg),
+                    allow_html=True,
+                )
+            if url and url_err_msg:
+                helpers.flash_error(
+                    _(url_err_msg),
+                    allow_html=True,
+                )
+            if dsc_err_msg:
+                helpers.flash_error(
+                    _(dsc_err_msg),
+                    allow_html=True,
+                )
+            return toolkit.redirect_to(
+                'utilization.new',
+                resource_id=resource_id,
             )
-            return UtilizationController.new(resource_id, title, description)
 
         if not (resource_id and title and description):
             toolkit.abort(400)
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
-            return UtilizationController.new(resource_id, title, description)
-
+            return toolkit.redirect_to(
+                'utilization.new',
+                resource_id=resource_id,
+                title=title,
+                description=description,
+            )
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
         utilization = registration_service.create_utilization(
             resource_id, title, url, description
@@ -230,6 +249,17 @@ class UtilizationController:
             helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
             return UtilizationController.details(utilization_id, category, content)
 
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'utilization.details',
+                utilization_id=utilization_id,
+                category=category,
+            )
+
         detail_service.create_utilization_comment(utilization_id, category, content)
         session.commit()
 
@@ -248,7 +278,7 @@ class UtilizationController:
                 target_name=utilization.title,
                 category=category,
                 content=content,
-                url=url_for(
+                url=toolkit.url_for(
                     'utilization.details', utilization_id=utilization_id, _external=True
                 ),
             )
@@ -263,7 +293,7 @@ class UtilizationController:
             allow_html=True,
         )
 
-        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/comment/<comment_id>/approve
     @staticmethod
@@ -314,12 +344,29 @@ class UtilizationController:
         if not (title and description):
             toolkit.abort(400)
 
-        if url and validate_service.validate_url(url):
-            helpers.flash_error(
-                _('Please provide a valid URL'),
-                allow_html=True,
+        url_err_msg = validate_service.validate_url(url)
+        title_err_msg = validate_service.validate_title(title)
+        dsc_err_msg = validate_service.validate_description(description)
+        if (url and url_err_msg) or title_err_msg or dsc_err_msg:
+            if title_err_msg:
+                helpers.flash_error(
+                    _(title_err_msg),
+                    allow_html=True,
+                )
+            if url and url_err_msg:
+                helpers.flash_error(
+                    _(url_err_msg),
+                    allow_html=True,
+                )
+            if dsc_err_msg:
+                helpers.flash_error(
+                    _(dsc_err_msg),
+                    allow_html=True,
+                )
+            return toolkit.redirect_to(
+                'utilization.edit',
+                utilization_id=utilization_id,
             )
-            return UtilizationController.edit(utilization_id)
 
         edit_service.update_utilization(utilization_id, title, url, description)
         session.commit()
