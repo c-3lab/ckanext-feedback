@@ -70,6 +70,19 @@
                 <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
               {% endif %}
               <br>
+              <div class="notice-container">
+                <h3>
+                  <span><i class="fa-solid fa-triangle-exclamation"></i></span>
+                  <span>{{ _('Please check before sending') }}</span>
+                </h3>
+                <h4>{{ _('Comment Policy') }}</h4>
+                <ul>
+                  <li><strong>{{ _('Constructive criticism: ') }}</strong>{{ _('When seeking improvements, provide constructive and specific criticism. Including alternative suggestions or problem-solving proposals can lead to improvements that meet the needs.') }}</li>
+                  <li><strong>{{ _('Respect Privacy and Ethics: ') }}</strong>{{ _('When posting comments, remember to protect personal information and consider ethical implications.') }}</li>
+                  <li><strong>{{ _('Positive Feedback: ') }}</strong>{{ _('Positive comments contribute more to the motivation of data providers and provide valuable deta than aggressive negative comments.') }}</li>
+                </ul>
+              </div>
+              <br>
               <div class="form-actions">
                 <button class="btn btn-primary" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
               </div>

@@ -61,3 +61,18 @@
 .comment-count {
   color: #808080;
 }
+
+.char-count {
+  text-align: right;
+  color: #808080;
+}
+
+.comment-count {
+  color: #808080;
+}
+
+.notice-container{
+  background-color: blanchedalmond;
+  padding: 10px;
+  border-radius: 10px;
+}
