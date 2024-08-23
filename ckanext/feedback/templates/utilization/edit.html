@@ -31,7 +31,7 @@
         <form name="content_form" action="{{ h.url_for('utilization.update', utilization_id=utilization_details.id) }}" method="post">
           <h4>{{ _('Title') }}</h4>
           <input type="text" class="form-control" id="title" name="title" value="{{ utilization_details.title }}" maxlength="50"/>
-          <div class="char-count text-end"><span id="title-count">0</span>/50</div>
+          <div class="char-count"><span id="title-count" class="comment-count">0</span>/50</div>
           <div>
             <p id="title-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter a title') }}</p>
             <p id="title-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the title length below 50') }}</p>
@@ -41,7 +41,7 @@
           <small>{{ _('※ option') }}</small>
           <h4>{{ _('URL (Example : The URL for your Website or Service)') }}</h4>
           <input type="url" class="form-control" id="url" name="url" value="{{ utilization_details.url }}" placeholder="https://example.com" maxlength="2048"/>
-          <div class="char-count text-end"><span id="url-count">0</span>/2048</div>
+          <div class="char-count"><span id="url-count" class="comment-count">0</span>/2048</div>
           <div>
             <p id="url-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the URL length below 2048') }}</p>
           </div>
@@ -49,7 +49,7 @@
           <hr>
           <h4>{{ _('Description') }}</h4>
           <textarea class="form-control" cols="20" rows="5" id="description" name="description" maxlength="2000">{{ utilization_details.description }}</textarea>
-          <div class="char-count text-end"><span id="description-count">0</span>/2000</div>
+          <div class="char-count"><span id="description-count" class="comment-count">0</span>/2000</div>
           <div>
             <p id="description-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter a description') }}</p>
             <p id="description-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the description length below 2000') }}</p>
