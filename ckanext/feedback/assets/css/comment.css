@@ -53,5 +53,10 @@
 }
 
 .char-count {
+  text-align: right;
+  color: #808080;
+}
+
+.comment-count {
   color: #808080;
 }
