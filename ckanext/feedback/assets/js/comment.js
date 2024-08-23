@@ -1,18 +1,23 @@
 function checkCommentExists() {
-  const comment = document.getElementById('comment_content').value;
+  const comment = document.getElementById('comment-content').value;
   const rating = document.getElementById('rating').value;
-  const commentErrorElement = document.getElementById('comment-error');
+  const commentNoneErrorElement = document.getElementById('comment-none-error');
+  const commentOverErrorElement = document.getElementById('comment-over-error');
   const ratingErrorElement = document.getElementById('rating-error');
 
   // Reset display settings
-  commentErrorElement.style.display = 'none';
+  commentNoneErrorElement.style.display = 'none';
+  commentOverErrorElement.style.display = 'none';
 
   if (!comment) {
-    commentErrorElement.style.display = '';
+    commentNoneErrorElement.style.display = '';
     return false;
-  } else {
-    return true;
   }
+  if (comment.length>1000) {
+    commentOverErrorElement.style.display = '';
+    return false;  
+  }
+  return true;
 }
 
 function checkReplyExists() {
@@ -54,3 +59,14 @@ function setReplyFormContent(resourceCommentId) {
   document.getElementById('selected_comment').innerHTML = content;
   document.getElementById('selected_resource_comment_id').value = resourceCommentId;
 }
+
+//文字数カウント
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('comment-content');
+  const charCount = document.getElementById('comment-count');
+
+  textarea.addEventListener('input', function() {
+    const currentLength = textarea.value.length;
+    charCount.textContent = currentLength;
+  });
+});

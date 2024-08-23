@@ -68,7 +68,7 @@
           <h4>{{ _('Comments') }}</h4>
           <p>{{ row.comment }}</p>
           <hr>
-          <form id="comment_form" name="comment_form" action="{{ url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
+          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
             <h4>{{ _('Comment') }}</h4>
             <select name="category" id="category">
               {% for category in categories %}
@@ -81,9 +81,11 @@
             </select>
             <br>
             <br>
-            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content">{{ content }}</textarea>
+            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content" maxlength="1000">{{ content }}</textarea>
+            <div class="char-count text-end"><span id="comment-count">0</span>/1000</div>
             <div>
-              <p id="content-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
+              <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
+              <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
             <br>
             <button class="btn btn-primary right-aligned" onclick="return checkCommentExists();">{{ _('Send') }}</button>
