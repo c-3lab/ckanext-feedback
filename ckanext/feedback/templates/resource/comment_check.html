@@ -1,0 +1,59 @@
+{% if h.is_enabled_resources() %}
+
+  {% extends "package/base.html" %}
+
+  {% block styles %}
+    {{ super() }}
+    {% asset 'feedback/feedback-comment-css' %}
+  {% endblock %}
+
+  <!-- {% block breadcrumb_content_selected %} class="inactive"{% endblock %} -->
+
+  {% block title %}{{ _('Comment on Resource') }} - {{ pkg_dict.title }} - {{ resource.name }} - CKAN{% endblock %}
+
+  {% block primary %}
+    <div class="module-content">
+      <div class="centered-content">
+        <h2 class="bg-primary text-white p-2">{{ _('Check comment content') }}</h2>
+        <br>
+        <div class="wrap-text">
+          <a>{{ _('Would you like to post a comment with the following content?') }}</a><br>
+        </div>
+        <br>
+        <hr class="divider">
+        <h4>
+            <span>{{ _('Thanks') }}</span>
+              <span class="group-stars">
+                {% for i in range(2) %}
+                  <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
+                {% endfor %}
+                {% for i in range(3) %}
+                  <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
+                {% endfor %}
+              </span>
+        </h4>
+        <div class="content-align wrap-text">
+              <span class="comment-content" >The person in charge of providing this data is really incompetent. Can\'t they do something as simple as this?</span>
+        </div>
+        <hr class="divider">
+        <div class="button" style="display: flex; flex-direction: column; align-items: stretch;">
+          <div class="select-button ml-2" style="display: flex; justify-content: center;">
+            <button class="submit btn btn-primary" style="width: 50%; display: flex; align-items: center; justify-content: center; ">{{ _('Submit comment >') }}</button>
+          </div>
+          <br>
+          <div class="return-button ml-2" style="display: flex; justify-content: center;">
+            <button class="btn btn-light" style="width: 50%; display: flex; align-items: center; justify-content: center; margin-top: 20px;">{{ _('< Return') }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endblock -%}
+
+  {% block secondary %}{% endblock %}
+
+  {%- block scripts %}
+    {{ super() }}
+    {% asset 'feedback/feedback-comment-js' %}
+  {% endblock -%}
+
+{% endif %}
