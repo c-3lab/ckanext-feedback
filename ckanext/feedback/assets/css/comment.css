@@ -76,3 +76,18 @@
   padding: 10px;
   border-radius: 10px;
 }
+.char-count {
+  color: #808080;
+  text-align: right;
+  right: 10px;
+  bottom: 10px;
+  font-size: 0.9em;
+}
+
+.comment-contents {
+  position: relative;
+}
+
+textarea {
+  padding-bottom: 25px; /* Adjust padding to account for char-count */
+}

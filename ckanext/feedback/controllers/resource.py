@@ -175,6 +175,43 @@ class ResourceController:
             },
         )
 
+    # resource_comment/<resource_id>/comment/check
+    @staticmethod
+    def check_comment(resource_id, category='', content=''):
+        approval = True
+        resource = comment_service.get_resource(resource_id)
+        if not isinstance(current_user, model.User):
+            # if the user is not logged in, display only approved comments
+            approval = True
+        elif (
+            has_organization_admin_role(resource.Resource.package.owner_org)
+            or current_user.sysadmin
+        ):
+            # if the user is an organization admin or a sysadmin, display all comments
+            approval = None
+
+        comments = comment_service.get_resource_comments(resource_id, approval)
+        categories = comment_service.get_resource_comment_categories()
+        cookie = comment_service.get_cookie(resource_id)
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+
+        return toolkit.render(
+            'resource/comment_check.html',
+            {
+                'resource': resource.Resource,
+                'pkg_dict': package,
+                'comments': comments,
+                'categories': categories,
+                'cookie': cookie,
+                'selected_category': category,
+                'content': content,
+            },
+        )
+
     # resource_comment/<resource_id>/comment/approve
     @staticmethod
     @check_administrator

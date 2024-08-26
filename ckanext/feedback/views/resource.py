@@ -26,6 +26,12 @@ rules = [
         {'methods': ['POST']},
     ),
     (
+        '/<resource_id>/comment/check',
+        'check_comment',
+        resource.ResourceController.check_comment,
+        {'methods': ['POST']},
+    ),
+    (
         '/<resource_id>/comment/approve',
         'approve_comment',
         resource.ResourceController.approve_comment,

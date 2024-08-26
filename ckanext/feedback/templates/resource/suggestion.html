@@ -20,20 +20,27 @@
           <a>{{ _('Your input may be considered inappropriate.') }}</a><br>
           <a>{{ _('We will suggest a comment that relaxes the wording based on the input comments.') }}</a><br>
           <a>{{ _('Please select the comments you would like to submit.') }}</a><br>
+          <a>{{ _('You can also edit each comment.') }}</a><br>
           <a>{{ _('Potentially inappropriate wording: ') }}<span class="text-danger">{{ _('violent') }}</span></a><br>
         </div>
         <br>
-        <br>
+        <form id="comment_form" name="comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post">
+        
         <div class="comment" style="display: flex;">
           <h5 class="p-2" style="flex: 1;">{{ _('Input Comments') }}</h5>
           <h5 class="p-2" style="flex: 1;">{{ _('Proposal Comments') }}</h5>
         </div>
 
         <div class="comment-contents" style="display: flex; gap: 10px;">
-          <textarea class="p-2" style="flex: 1; height: 400px; width: 100%; resize: none; overflow: hidden; border-radius: 10px;">{{ _('The person in charge of providing this data is really incompetent. Can\'t they do something as simple as this?') }}</textarea>
-          <textarea class="p-2" style="flex: 1; height: 400px; width: 100%; resize: none; overflow: hidden; border-radius: 10px;">{{ _('Perhaps the person in charge of providing this data needs to be a little more creative. There may have been an easier way to handle this.') }}</textarea>
+          <div style="flex: 1;">
+            <textarea class="p-2" id="comment-content" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ _('The person in charge of providing this data is really incompetent. Can\'t they do something as simple as this?') }}</textarea>
+            <div class="char-count"><span  id="comment-count">0</span>/1000</div>
+          </div>
+          <div style="flex: 1;">
+            <textarea class="p-2" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ _('Perhaps the person in charge of providing this data needs to be a little more creative. There may have been an easier way to handle this.') }}</textarea>
+            <div class="char-count"><span id="proposal-comment-count">0</span>/1000</div>
+          </div>
         </div>
-        <br>
 
         <!-- </div>
         <div class="comment-contents" style="display: flex;">
@@ -62,14 +69,15 @@
 
         <div class="button" style="display: flex; flex-direction: column; align-items: stretch;">
           <div class="select-button ml-2" style="display: flex; gap: 10px; flex: 1;">
-            <button class="input-comment-select btn btn-primary" style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;">{{ _('Post input comments >') }}</button>
-            <button class="proposal-comment-select btn btn-primary" style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;">{{ _('Post proposal Comments >') }}</button>
+            <button class="input-comment-select btn btn-primary" style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;">{{ _('Select input Comment >') }}</button>
+            <button class="proposal-comment-select btn btn-primary" style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;">{{ _('Select proposal Comment >') }}</button>
           </div>
           <br>
           <div class="return-button ml-2" style="display: flex; justify-content: center;">
-            <button class="btn btn-light" style="width: 50%; display: flex; align-items: center; justify-content: center; text-align: center;">{{ _('< return') }}</button>
+            <button class="btn btn-light" style="width: 50%; display: flex; align-items: center; justify-content: center; text-align: center; margin-top: 20px;">{{ _('< Return') }}</button>
           </div>
         </div>
+      </form>
       </div>
     </div>
   {% endblock -%}
