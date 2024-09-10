@@ -81,10 +81,10 @@
             <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
           {% endif %}
           <br>
-          {% if comments|length %}
+          {% if page.collection|length %}
             <hr class="divider">
           {% endif %}
-          {% for comment in comments %}
+          {% for comment in page.collection %}
             {% set created = comment.created.strftime('%Y/%m/%d %H:%M') %}
             {% set reply = h.get_comment_reply(comment.id) %}
             {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
@@ -143,6 +143,9 @@
             </div>
             <hr class="divider">
           {% endfor %}
+          {% block page_pagination %}
+            {{ page.pager(resource_id=resource.id) }}
+          {% endblock %}
         </div>
       </div>
     </article>

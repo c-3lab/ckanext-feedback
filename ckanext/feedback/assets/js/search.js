@@ -1,22 +1,49 @@
 function refreshTable() {
   // Declare variables
-  const isWaiting = document.getElementById('waiting').checked;
-  const isApproval = document.getElementById('approval').checked;
+  let isWaiting = document.getElementById('waiting').checked;
+  let isApproval = document.getElementById('approval').checked;
   const rows = document.querySelectorAll('#results-table tbody tr')
-  let count = 0;
 
   // Loop through all table rows, and hide those who don't match the search query
   rows.forEach(row => {
     const statusCell = row.getElementsByTagName('td')[7]
     if (statusCell.dataset.waiting && isWaiting) {
       row.style.display = 'table-row';
-      ++count
     } else if (statusCell.dataset.approval && isApproval) {
       row.style.display = 'table-row';
-      ++count
     } else {
       row.style.display = 'none';
     }
   })
-  document.getElementById('utilization-results-count').innerText = count;
+
+  const pageLinks = document.querySelectorAll('.pagination .page-link');
+  pageLinks.forEach((pageLink) => {
+    let hrefValue = pageLink.getAttribute('href');
+
+    if(isWaiting) {
+      hrefValue = updateParam(hrefValue, 'waiting=off&', 'waiting=on&');
+    } else {
+      hrefValue = updateParam(hrefValue, 'waiting=on&', 'waiting=off&');
+    }
+
+    if(isApproval) {
+      hrefValue = updateParam(hrefValue, 'approval=off&', 'approval=on&');
+    } else {
+      hrefValue = updateParam(hrefValue, 'approval=on&', 'approval=off&');
+    }
+
+    pageLink.setAttribute('href', hrefValue);
+  });
+}
+
+function updateParam(href, deleteParam, additionalParam) {
+  if (href.includes(deleteParam)) {
+    href = href.replace(deleteParam, '');
+  }
+
+  if (!href.includes(additionalParam)) {
+    href = href.replace('page=', `${additionalParam}page=`);
+  }
+
+  return href
 }

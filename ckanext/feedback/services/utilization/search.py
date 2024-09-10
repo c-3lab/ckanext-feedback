@@ -10,7 +10,13 @@ from ckanext.feedback.models.utilization import Utilization
 
 # Get records from the Utilization table
 def get_utilizations(
-    id=None, keyword=None, approval=None, admin_owner_orgs=None, org_name=None
+    id=None,
+    keyword=None,
+    approval=None,
+    admin_owner_orgs=None,
+    org_name=None,
+    limit=None,
+    offset=None,
 ):
     query = (
         session.query(
@@ -56,7 +62,10 @@ def get_utilizations(
     if org_name:
         query = query.filter(Group.name == org_name)
 
-    return query.all()
+    results = query.limit(limit).offset(offset).all()
+    total_count = query.count()
+
+    return results, total_count
 
 
 def get_organization_name_from_pkg(id):
