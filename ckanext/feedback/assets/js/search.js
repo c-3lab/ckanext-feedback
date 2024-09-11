@@ -1,3 +1,8 @@
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('waiting').disabled = false;
+  document.getElementById('approval').disabled = false;
+});
+
 function refreshTable() {
   // Declare variables
   let isWaiting = document.getElementById('waiting').checked;

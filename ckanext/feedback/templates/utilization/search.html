@@ -34,9 +34,9 @@
       {% if c.userobj.sysadmin or h.is_organization_admin() %}
         {% block select_status %}
           <span><h4>{{ _('Status') }}</h4>
-          <input type="checkbox" id="waiting" name="waiting" onclick="refreshTable()" {% if unapproved_status == 'on' %}checked{% endif %}>
+          <input type="checkbox" id="waiting" name="waiting" onclick="refreshTable()" {% if unapproved_status == 'on' %}checked{% endif %} disabled>
           <label for="waiting" class="normal-font-weight middle-vertical-aligned">{{ _('Unapproved') }}</label>
-          <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="refreshTable()" {% if approval_status == 'on' %}checked{% endif %}>
+          <input class="spaced-left" type="checkbox" id="approval" name="approval" onclick="refreshTable()" {% if approval_status == 'on' %}checked{% endif %} disabled>
           <label for="approval" class="normal-font-weight middle-vertical-aligned">{{ _('Approved') }}</label>
           </span>
         {% endblock %}
