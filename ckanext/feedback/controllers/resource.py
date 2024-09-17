@@ -1,3 +1,4 @@
+import importlib
 import logging
 
 import ckan.model as model
@@ -140,23 +141,14 @@ class ResourceController:
 
     # resource_comment/<resource_id>/comment/suggested
     @staticmethod
-    def suggested_comment(resource_id, category='', content=''):
-        approval = True
-        resource = comment_service.get_resource(resource_id)
-        if not isinstance(current_user, model.User):
-            # if the user is not logged in, display only approved comments
-            approval = True
-        elif (
-            has_organization_admin_role(resource.Resource.package.owner_org)
-            or current_user.sysadmin
-        ):
-            # if the user is an organization admin or a sysadmin, display all comments
-            approval = None
+    def suggested_comment(resource_id, category='', content='', rating=''):
+        MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
+        ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
+        softened = ai.suggest(content)
 
-        comments = comment_service.get_resource_comments(resource_id, approval)
-        categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
+
+        resource = comment_service.get_resource(resource_id)
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
         )
@@ -167,11 +159,10 @@ class ResourceController:
             {
                 'resource': resource.Resource,
                 'pkg_dict': package,
-                'comments': comments,
-                'categories': categories,
-                'cookie': cookie,
                 'selected_category': category,
+                'rating': rating,
                 'content': content,
+                'softened': softened,
             },
         )
 
@@ -197,6 +188,24 @@ class ResourceController:
                 allow_html=True,
             )
             return ResourceController.comment(resource_id, category, content)
+
+        if not request.form.get('comment-suggested', False):
+            MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
+            ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
+            judgement, ng_reasons = ai.check(content)
+            if judgement:
+                pass
+            elif not set(ng_reasons).isdisjoint(
+                ['RateLimitError', 'APIConnectionError', 'APIAuthenticationError']
+            ):
+                log.exception('AI response failed. %s', ng_reasons)
+            else:
+                return ResourceController.suggested_comment(
+                    resource_id=resource_id,
+                    rating=rating,
+                    category=category,
+                    content=content,
+                )
 
         categories = comment_service.get_resource_comment_categories()
         resource = comment_service.get_resource(resource_id)
