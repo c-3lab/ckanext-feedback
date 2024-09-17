@@ -177,22 +177,29 @@ class ResourceController:
 
     # resource_comment/<resource_id>/comment/check
     @staticmethod
-    def check_comment(resource_id, category='', content=''):
-        approval = True
-        resource = comment_service.get_resource(resource_id)
-        if not isinstance(current_user, model.User):
-            # if the user is not logged in, display only approved comments
-            approval = True
-        elif (
-            has_organization_admin_role(resource.Resource.package.owner_org)
-            or current_user.sysadmin
-        ):
-            # if the user is an organization admin or a sysadmin, display all comments
-            approval = None
+    def check_comment(resource_id):
+        category = None
+        if content := request.form.get('comment-content', ''):
+            category = request.form.get('category', '')
+        rating = request.form.get('rating', '')
+        if not (category and content):
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
 
-        comments = comment_service.get_resource_comments(resource_id, approval)
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return ResourceController.comment(resource_id, category, content)
+
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return ResourceController.comment(resource_id, category, content)
+
         categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
+        resource = comment_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
@@ -204,10 +211,9 @@ class ResourceController:
             {
                 'resource': resource.Resource,
                 'pkg_dict': package,
-                'comments': comments,
                 'categories': categories,
-                'cookie': cookie,
                 'selected_category': category,
+                'rating': rating,
                 'content': content,
             },
         )
