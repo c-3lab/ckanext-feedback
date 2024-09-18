@@ -81,8 +81,8 @@
             </select>
             <br>
             <br>
-            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content" maxlength="1000">{{ content }}</textarea>
-            <div class="char-count text-end"><span id="comment-count">0</span>/1000</div>
+            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
+            <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
             <div>
               <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
@@ -101,8 +101,7 @@
               </ul>
             </div>
             <br>
-            <button class="btn btn-primary right-aligned" onclick="return checkCommentExists();">{{ _('Send') }}</button>
-            <br>
+            <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
             <br>
             <br>
           </form>
@@ -159,6 +158,7 @@
                 </div>
               </div>
             </div>
+            <br>
             <div class="modal-footer">
               <button class="btn btn-primary" onclick="return checkDescriptionExists()">{{ _('Certificate') }}</button>
             </div>
