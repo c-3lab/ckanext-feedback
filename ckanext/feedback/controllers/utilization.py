@@ -1,3 +1,4 @@
+import importlib
 import logging
 
 import ckan.model as model
@@ -269,7 +270,7 @@ class UtilizationController:
     @staticmethod
     def create_comment(utilization_id):
         category = request.form.get('category', '')
-        content = request.form.get('content', '')
+        content = request.form.get('comment-content', '')
         if not (category and content):
             toolkit.abort(400)
 
@@ -320,6 +321,98 @@ class UtilizationController:
         )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
+
+    # utilization/<utilization_id>/comment/suggested
+    @staticmethod
+    def suggested_comment(utilization_id, category, content):
+        MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
+        ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
+        softened = ai.suggest(content)
+
+        utilization = detail_service.get_utilization(utilization_id)
+        g.pkg_dict = {
+            'organization': {
+                'name': (
+                    comment_service.get_resource(
+                        utilization.resource_id
+                    ).organization_name
+                )
+            }
+        }
+
+        return toolkit.render(
+            'utilization/suggestion.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': utilization,
+                'selected_category': category,
+                'content': content,
+                'softened': softened,
+            },
+        )
+
+    # utilization/<utilization_id>/comment/check
+    @staticmethod
+    def check_comment(utilization_id):
+        category = request.form.get('category', '')
+        content = request.form.get('comment-content', '')
+        if not (category and content):
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
+
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            return UtilizationController.details(utilization_id, category, content)
+
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'utilization.details',
+                utilization_id=utilization_id,
+                category=category,
+            )
+
+        if not request.form.get('comment-suggested', False):
+            MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
+            ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
+            judgement, ng_reasons = ai.check(content)
+            if judgement:
+                pass
+            elif not set(ng_reasons).isdisjoint(
+                ['RateLimitError', 'APIConnectionError', 'APIAuthenticationError']
+            ):
+                log.exception('AI response failed. %s', ng_reasons)
+            else:
+                return UtilizationController.suggested_comment(
+                    utilization_id=utilization_id,
+                    category=category,
+                    content=content,
+                )
+
+        categories = detail_service.get_utilization_comment_categories()
+        utilization = detail_service.get_utilization(utilization_id)
+        resource = comment_service.get_resource(utilization.resource_id)
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
+        g.pkg_dict = {'organization': {'name': (resource.organization_name)}}
+
+        return toolkit.render(
+            'utilization/comment_check.html',
+            {
+                'pkg_dict': package,
+                'utilization_id': utilization_id,
+                'utilization': utilization,
+                'content': content,
+                'selected_category': category,
+                'categories': categories,
+            },
+        )
 
     # utilization/<utilization_id>/comment/<comment_id>/approve
     @staticmethod
