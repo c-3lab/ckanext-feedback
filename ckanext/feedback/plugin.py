@@ -151,6 +151,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 except AttributeError as e:
                     toolkit.error_shout(e)
 
+                # the settings related to moral keeper AI
+                try:
+                    config['ckan.feedback.moral_keeper_ai.enable'] = (
+                        feedback_config.moral_keeper_ai.enable
+                    )
+                except AttributeError as e:
+                    toolkit.error_shout(e)
+
         except FileNotFoundError:
             toolkit.error_shout('The feedback config file not found')
             self.is_feedback_config_file = False
