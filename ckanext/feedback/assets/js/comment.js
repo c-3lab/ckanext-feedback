@@ -20,9 +20,10 @@ function checkCommentExists() {
   return true;
 }
 
-function checkReplyExists() {
+function checkReplyExists(button) {
   const errorElement = document.getElementById('reply-error');
   const reply = document.getElementById('reply_content').value;
+  button.style.pointerEvents = "none"
 
   if (reply) {
     errorElement.style.display = 'none';

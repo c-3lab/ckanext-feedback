@@ -34,6 +34,8 @@ function checkTitleAndDescriptionExists() {
     descriptionOverElement.style.display = '';
     return false;
   }
+
+  button.style.pointerEvents = "none"
   return true;
 }
 
