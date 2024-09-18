@@ -37,13 +37,13 @@ rules = [
         '/<utilization_id>/comment/suggested',
         'suggested_comment',
         utilization.UtilizationController.suggested_comment,
-        {'methods': ['POST']},
+        {'methods': ['GET', 'POST']},
     ),
     (
         '/<utilization_id>/comment/check',
         'check_comment',
         utilization.UtilizationController.check_comment,
-        {'methods': ['POST']},
+        {'methods': ['GET', 'POST']},
     ),
     (
         '/<utilization_id>/comment/<comment_id>/approve',

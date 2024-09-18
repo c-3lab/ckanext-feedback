@@ -659,6 +659,68 @@ msgstr "データリソース"
 msgid "Registered"
 msgstr "登録日"
 
+msgid "Please check before sending"
+msgstr "送信前にご確認ください"
+
+msgid "Comment Policy"
+msgstr "コメントポリシー"
+
+msgid "Constructive criticism"
+msgstr "建設的な批判"
+
+msgid "When seeking improvements, provide constructive and specific criticism. Including alternative suggestions or problem-solving proposals can lead to improvements that meet the needs."
+msgstr "改善を求めるときは、建設的で具体的な批判をしてください。代替案や問題解決案を含めると、ニーズを満たす改善につながる可能性があります。"
+
+msgid "Respect Privacy and Ethics"
+msgstr "プライバシーと倫理を尊重する"
+
+msgid "When posting comments, remember to protect personal information and consider ethical implications."
+msgstr "コメントを投稿するときは、個人情報を保護し、倫理的な影響を考慮することを忘れないでください。"
+
+msgid "Positive Feedback"
+msgstr "肯定的なフィードバック"
+
+msgid "Positive comments contribute more to the motivation of data providers and provide valuable deta than aggressive negative comments."
+msgstr "肯定的なコメントは、攻撃的な否定的なコメントよりも、データ プロバイダーのモチベーションに大きく貢献し、貴重なデータを提供します。"
+
+msgid ""
+"Your input may be considered inappropriate.\n"
+"We will suggest a comment that relaxes the wording based on the input comments.\n"
+"Please select the comments you would like to submit.\n"
+"You can also edit each comment."
+msgstr ""
+"あなたの入力は不適切とみなされる可能性があります。\n"
+"入力されたコメントに基づいて、表現を緩和したコメントを提案します。\n"
+"送信するコメントを選択してください。\n"
+"各コメントを編集することもできます。\n"
+
+msgid "Input Comments"
+msgstr "入力コメント"
+
+msgid "Proposal Comments"
+msgstr "提案コメント"
+
+msgid "Select input Comment"
+msgstr "入力コメントを選択"
+
+msgid "Select proposal Comment"
+msgstr "提案コメントを選択"
+
+msgid "Previous"
+msgstr "戻る"
+
+msgid "Suggested comment content"
+msgstr "推奨コメント内容"
+
+msgid "Check comment content"
+msgstr "コメント内容確認"
+
+msgid "Would you like to post a comment with the following content?"
+msgstr "以下の内容のコメントを投稿しますか？"
+
+msgid "Submit comment"
+msgstr "コメントを送信"
+
 #~ msgid "Dashboard (%(num)d new item)"
 #~ msgid_plural "Dashboard (%(num)d new items)"
 #~ msgstr[0] "ダッシュボード (%(num)d 件の新着アイテム)"

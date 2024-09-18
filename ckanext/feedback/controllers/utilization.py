@@ -354,6 +354,11 @@ class UtilizationController:
     # utilization/<utilization_id>/comment/check
     @staticmethod
     def check_comment(utilization_id):
+        if request.method == u'GET':
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
+
         category = request.form.get('category', '')
         content = request.form.get('comment-content', '')
         if not (category and content):

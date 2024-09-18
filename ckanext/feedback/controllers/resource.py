@@ -169,6 +169,11 @@ class ResourceController:
     # resource_comment/<resource_id>/comment/check
     @staticmethod
     def check_comment(resource_id):
+        if request.method == u'GET':
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
         category = None
         if content := request.form.get('comment-content', ''):
             category = request.form.get('category', '')

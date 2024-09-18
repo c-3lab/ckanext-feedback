@@ -23,13 +23,13 @@ rules = [
         '/<resource_id>/comment/suggested',
         'suggested_comment',
         resource.ResourceController.suggested_comment,
-        {'methods': ['POST']},
+        {'methods': ['GET', 'POST']},
     ),
     (
         '/<resource_id>/comment/check',
         'check_comment',
         resource.ResourceController.check_comment,
-        {'methods': ['POST']},
+        {'methods': ['GET', 'POST']},
     ),
     (
         '/<resource_id>/comment/approve',
