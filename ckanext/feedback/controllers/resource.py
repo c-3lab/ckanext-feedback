@@ -78,13 +78,10 @@ class ResourceController:
     def create_comment(resource_id):
         package_name = request.form.get('package_name', '')
         category = None
-        content = None
-        if request.form.get('comment-content'):
-            content = request.form.get('comment-content')
-            category = request.form.get('category')
-        rating = None
-        if request.form.get('rating'):
-            rating = int(request.form.get('rating'))
+        if content := request.form.get('comment-content', ''):
+            category = request.form.get('category', '')
+        if rating := request.form.get('rating', ''):
+            rating = int(rating)
         if not (category and content):
             toolkit.abort(400)
 
@@ -98,6 +95,9 @@ class ResourceController:
                 allow_html=True,
             )
             return ResourceController.comment(resource_id, category, content)
+
+        if not rating:
+            rating = None
 
         comment_service.create_resource_comment(resource_id, category, content, rating)
         summary_service.create_resource_summary(resource_id)
@@ -177,7 +177,8 @@ class ResourceController:
         category = None
         if content := request.form.get('comment-content', ''):
             category = request.form.get('category', '')
-        rating = request.form.get('rating', '')
+        if rating := request.form.get('rating', ''):
+            rating = int(rating)
         if not (category and content):
             return toolkit.redirect_to(
                 'resource_comment.comment', resource_id=resource_id
