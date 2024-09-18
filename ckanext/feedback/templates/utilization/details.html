@@ -68,7 +68,7 @@
           <h4>{{ _('Comments') }}</h4>
           <p>{{ row.comment }}</p>
           <hr>
-          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
+          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post">
             <h4>{{ _('Comment') }}</h4>
             <select name="category" id="category">
               {% for category in categories %}
@@ -86,6 +86,32 @@
             <div>
               <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
+            </div>
+            <br>
+            <div class="notice-container">
+              <h3>
+                <span><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <span>{{ _('Please check before sending') }}</span>
+              </h3>
+              <h4>{{ _('Comment Policy') }}</h4>
+              <ul>
+                <li><strong>{{ _('Constructive criticism') }}: </strong>{{ _('When seeking improvements, provide constructive and specific criticism. Including alternative suggestions or problem-solving proposals can lead to improvements that meet the needs.') }}</li>
+                <li><strong>{{ _('Respect Privacy and Ethics') }}: </strong>{{ _('When posting comments, remember to protect personal information and consider ethical implications.') }}</li>
+                <li><strong>{{ _('Positive Feedback') }}: </strong>{{ _('Positive comments contribute more to the motivation of data providers and provide valuable deta than aggressive negative comments.') }}</li>
+              </ul>
+            </div>
+            <br>
+            <div class="notice-container">
+              <h3>
+                <span><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <span>{{ _('Please check before sending') }}</span>
+              </h3>
+              <h4>{{ _('Comment Policy') }}</h4>
+              <ul>
+                <li><strong>{{ _('Constructive criticism') }}: </strong>{{ _('When seeking improvements, provide constructive and specific criticism. Including alternative suggestions or problem-solving proposals can lead to improvements that meet the needs.') }}</li>
+                <li><strong>{{ _('Respect Privacy and Ethics') }}: </strong>{{ _('When posting comments, remember to protect personal information and consider ethical implications.') }}</li>
+                <li><strong>{{ _('Positive Feedback') }}: </strong>{{ _('Positive comments contribute more to the motivation of data providers and provide valuable deta than aggressive negative comments.') }}</li>
+              </ul>
             </div>
             <br>
             <button class="btn btn-primary right-aligned" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
@@ -109,6 +135,9 @@
                   {{ _(comment.category.value) }}
                 {% endif %}
               {% endfor %}
+              {% block page_pagination %}
+                {{ page.pager(utilization_id=utilization_id) }}
+              {% endblock %}
             </h4>
             <br>
             <p class="multiple-line wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
