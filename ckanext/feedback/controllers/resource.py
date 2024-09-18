@@ -195,22 +195,23 @@ class ResourceController:
             return ResourceController.comment(resource_id, category, content)
 
         if not request.form.get('comment-suggested', False):
-            MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
-            ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
-            judgement, ng_reasons = ai.check(content)
-            if judgement:
-                pass
-            elif not set(ng_reasons).isdisjoint(
-                ['RateLimitError', 'APIConnectionError', 'APIAuthenticationError']
-            ):
-                log.exception('AI response failed. %s', ng_reasons)
-            else:
-                return ResourceController.suggested_comment(
-                    resource_id=resource_id,
-                    rating=rating,
-                    category=category,
-                    content=content,
-                )
+            if toolkit.asbool(config.get('ckan.feedback.moral_keeper_ai.enable', True)):
+                MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
+                ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
+                judgement, ng_reasons = ai.check(content)
+                if judgement:
+                    pass
+                elif not set(ng_reasons).isdisjoint(
+                    ['RateLimitError', 'APIConnectionError', 'APIAuthenticationError']
+                ):
+                    log.exception('AI response failed. %s', ng_reasons)
+                else:
+                    return ResourceController.suggested_comment(
+                        resource_id=resource_id,
+                        rating=rating,
+                        category=category,
+                        content=content,
+                    )
 
         categories = comment_service.get_resource_comment_categories()
         resource = comment_service.get_resource(resource_id)
