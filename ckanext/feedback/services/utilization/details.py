@@ -42,7 +42,9 @@ def approve_utilization(utilization_id, approval_user_id):
 
 
 # Get comments related to the Utilization record
-def get_utilization_comments(utilization_id=None, approval=None, owner_orgs=None):
+def get_utilization_comments(
+    utilization_id=None, approval=None, owner_orgs=None, limit=None, offset=None
+):
     query = session.query(UtilizationComment).order_by(
         UtilizationComment.created.desc()
     )
@@ -57,7 +59,12 @@ def get_utilization_comments(utilization_id=None, approval=None, owner_orgs=None
             .join(Package)
             .filter(Package.owner_org.in_(owner_orgs))
         )
-    return query.all()
+
+    results = query.limit(limit).offset(offset).all()
+    if limit is not None or offset is not None:
+        total_count = query.count()
+        return results, total_count
+    return results
 
 
 # Create comment for currently displayed utilization
