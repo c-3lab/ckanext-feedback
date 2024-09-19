@@ -29,7 +29,9 @@ def get_resource(resource_id):
 
 
 # Get comments related to the dataset or resource
-def get_resource_comments(resource_id=None, approval=None, owner_orgs=None):
+def get_resource_comments(
+    resource_id=None, approval=None, owner_orgs=None, limit=None, offset=None
+):
     query = session.query(ResourceComment).order_by(ResourceComment.created.desc())
     if resource_id is not None:
         query = query.filter(ResourceComment.resource_id == resource_id)
@@ -40,7 +42,11 @@ def get_resource_comments(resource_id=None, approval=None, owner_orgs=None):
             query.join(Resource).join(Package).filter(Package.owner_org.in_(owner_orgs))
         )
 
-    return query.all()
+    results = query.limit(limit).offset(offset).all()
+    if limit is not None or offset is not None:
+        total_count = query.count()
+        return results, total_count
+    return results
 
 
 # Get category enum names and values

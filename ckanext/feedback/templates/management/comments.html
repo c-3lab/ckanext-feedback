@@ -47,7 +47,9 @@
             {% block result_utilization_comments_table %}
               <h4 class="bottom-centered-content" id="data-count">
                 {{ _('Results: ') }}
-                <span id="utilization-comments-results-count">{{ utilization_comments|length }}</span>
+                <span id="utilization-comments-results-count">{{ utilization_comments | length }}</span>
+                <span>/</span>
+                <span id="utilization-comments-max-results-count">{{ max_utilization_count }}</span>
               </h4>
               <span class="bottom-centered-content right-text">
                 <button class="btn btn-primary" type="button" onclick="runBulkAction('/management/approve_bulk_utilization_comments')">{{ _('Bulk Approval')}}</button>
@@ -69,7 +71,7 @@
                     <th class="medium-column">{{ _('Status') }}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="utilization-comments-table-body">
                   {% for row in utilization_comments %}
                     <tr>
                       <td class="small-column">
@@ -99,6 +101,18 @@
                       {% endif %}
                     </tr>
                   {% endfor %}
+                  {% if max_utilization_count >= limit %}
+                    <tr id="utilization-comments-toggle-separator" class="toggle-seperator">
+                      <td colspan="9"> </td>
+                    </tr>
+                    <tr id="utilization-comments-toggle-show" class="toggle-show toggle-show-more">
+                      <td colspan="9">
+                        <small>
+                          <span class="show-more text-primary" onclick="leadMoreUtilizationData()">{{ _('Show more') }}</span>
+                        </small>
+                      </td>
+                    </tr>
+                  {% endif %}
                 </tbody>
               </table>
             {% endblock %}
@@ -107,7 +121,9 @@
             {% block result_resource_comments_table %}
               <h4 class="bottom-centered-content" id="data-count">
                 {{ _('Results: ') }}
-                <span id="resource-comments-results-count">{{ resource_comments|length }}</span>
+                <span id="resource-comments-results-count">{{ resource_comments | length }}</span>
+                <span>/</span>
+                <span id="resource-comments-max-results-count">{{ max_resource_count }}</span>
               </h4>
               <span class="bottom-centered-content right-text">
                 <button class="btn btn-primary" type="button" onclick="runBulkAction('/management/approve_bulk_resource_comments')">{{ _('Bulk Approval')}}</button>
@@ -131,7 +147,7 @@
                     <th class="medium-column">{{ _('Status') }}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="resource-comments-table-body">
                   {% for row in resource_comments %}
                     <tr>
                       <td class="small-column">
@@ -163,6 +179,18 @@
                       {% endif %}
                     </tr>
                   {% endfor %}
+                  {% if max_utilization_count >= limit %}
+                    <tr id="resource-comments-toggle-separator" class="toggle-seperator">
+                      <td colspan="9"> </td>
+                    </tr>
+                    <tr id="resource-comments-toggle-show" class="toggle-show toggle-show-more">
+                      <td colspan="9">
+                        <small>
+                          <span class="show-more text-primary" onclick="leadMoreResourceData()">{{ _('Show more') }}</span>
+                        </small>
+                      </td>
+                    </tr>
+                  {% endif %}
                 </tbody>
               </table>
             {% endblock %}

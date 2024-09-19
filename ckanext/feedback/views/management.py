@@ -37,6 +37,12 @@ rules = [
         management.ManagementController.delete_bulk_resource_comments,
         {'methods': ['POST']},
     ),
+    (
+        '/get_lead_more_data_comments',
+        'get_lead_more_data_comments',
+        management.ManagementController.get_lead_more_data_comments,
+        {'methods': ['POST']},
+    ),
 ]
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})
