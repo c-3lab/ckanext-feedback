@@ -1,8 +1,8 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 
 import pytest
 from ckan import model
-from ckan.common import _
+from ckan.common import _, config
 from ckan.logic import get_action
 from ckan.model import User
 from ckan.tests import factories
@@ -301,14 +301,15 @@ class TestResourceController:
         comment_content = 'content'
         rating = '1'
         package_name = 'ota'
-        mock_form.get.side_effect = [
-            package_name,
-            comment_content,
-            comment_content,
-            category,
-            rating,
-            rating,
-        ]
+        mock_form.get.side_effect = lambda x, default: {
+            'package_name': package_name,
+            'comment-content': comment_content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': True,
+            'comment-checked': True,
+        }.get(x, default)
+
         mock_send_email.side_effect = Exception("Mock Exception")
         mock_url_for.return_value = 'resource comment'
         resp = ResourceController.create_comment(resource_id)
@@ -352,7 +353,10 @@ class TestResourceController:
         mock_validate_comment,
     ):
         resource_id = 'resource id'
-        mock_form.get.return_value = None
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-suggested': True,
+            'comment-checked': True,
+        }.get(x, default)
         mock_validate_comment.return_value = None
 
         ResourceController.create_comment(resource_id)
@@ -377,13 +381,13 @@ class TestResourceController:
             if 1000 < len(content):
                 break
 
-        mock_form.get.side_effect = [
-            '',
-            content,
-            content,
-            category,
-            None,
-        ]
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'comment-suggested': True,
+            'comment-checked': True,
+        }.get(x, default)
+
         ResourceController.create_comment(resource_id)
 
         mock_flash_flash_error.assert_called_once_with(
@@ -407,17 +411,630 @@ class TestResourceController:
         comment_content = 'comment_content'
         category = 'category'
         package_name = 'ota'
-        mock_form.get.side_effect = [
-            package_name,
-            comment_content,
-            comment_content,
-            category,
-            None,
-        ]
+        mock_form.get.side_effect = lambda x, default: {
+            'package_name': package_name,
+            'comment-content': comment_content,
+            'category': category,
+            'comment-suggested': True,
+            'comment-checked': True,
+        }.get(x, default)
 
         mock_is_recaptcha_verified.return_value = False
         ResourceController.create_comment(resource_id)
         mock_comment.assert_called_once_with(resource_id, category, comment_content)
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.importlib.import_module')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    def test_suggested_comment(
+        self,
+        mock_get_resource,
+        mock_import_module,
+        mock_get_action,
+        mock_render,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        softened = 'mock_softened'
+
+        mock_ai = MagicMock()
+        mock_ai.suggest.return_value = softened
+        mock_MoralKeeperAI = MagicMock()
+        mock_MoralKeeperAI.MoralKeeperAI.return_value = mock_ai
+        mock_import_module.return_value = mock_MoralKeeperAI
+
+        mock_get_resource.return_value = MagicMock()
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_resource.organization_name = 'mock_organization_name'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        ResourceController.suggested_comment(resource_id, category, content, rating)
+        mock_render.assert_called_once_with(
+            'resource/suggestion.html',
+            {
+                'resource': mock_resource.Resource,
+                'pkg_dict': mock_package,
+                'selected_category': category,
+                'rating': rating,
+                'content': content,
+                'softened': softened,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_check_comment_GET(
+        self,
+        mock_redirect_to,
+        mock_form,
+    ):
+        resource_id = 'resource_id'
+
+        mock_form.return_value = u'GET'
+
+        ResourceController.check_comment(resource_id)
+        mock_redirect_to.assert_called_once_with(
+            'resource_comment.comment', resource_id=resource_id
+        )
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    def test_check_comment_POST_moral_keeper_ai_disable(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_resource_comment_categories,
+        mock_is_recaptcha_verified,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = False
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_resource_comment_categories.return_value = 'mock_categories'
+
+        ResourceController.check_comment(resource_id)
+        mock_render.assert_called_once_with(
+            'resource/comment_check.html',
+            {
+                'resource': mock_resource.Resource,
+                'pkg_dict': mock_package,
+                'categories': 'mock_categories',
+                'selected_category': category,
+                'rating': int(rating),
+                'content': content,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.importlib.import_module')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.suggested_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    def test_check_comment_POST_judgement_True(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_resource_comment_categories,
+        mock_suggested_comment,
+        mock_import_module,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        judgement = True
+        ng_reasons = []
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_ai = MagicMock()
+        mock_ai.check.return_value = (judgement, ng_reasons)
+        mock_MoralKeeperAI = MagicMock()
+        mock_MoralKeeperAI.MoralKeeperAI.return_value = mock_ai
+        mock_import_module.return_value = mock_MoralKeeperAI
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_resource_comment_categories.return_value = 'mock_categories'
+
+        ResourceController.check_comment(resource_id)
+        mock_render.assert_called_once_with(
+            'resource/comment_check.html',
+            {
+                'resource': mock_resource.Resource,
+                'pkg_dict': mock_package,
+                'categories': 'mock_categories',
+                'selected_category': category,
+                'rating': int(rating),
+                'content': content,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.importlib.import_module')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.suggested_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    def test_check_comment_POST_judgement_False(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_resource_comment_categories,
+        mock_suggested_comment,
+        mock_import_module,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        judgement = False
+        ng_reasons = ['mock_ng_reason1', 'mock_ng_reason2']
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_MoralKeeperAI = MagicMock()
+        mock_ai = MagicMock()
+        mock_ai.check.return_value = (judgement, ng_reasons)
+        mock_MoralKeeperAI.MoralKeeperAI.return_value = mock_ai
+        mock_import_module.return_value = mock_MoralKeeperAI
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_resource_comment_categories.return_value = 'mock_categories'
+
+        ResourceController.check_comment(resource_id)
+        mock_suggested_comment.assert_called_once_with(
+            resource_id=resource_id,
+            rating=int(rating),
+            category=category,
+            content=content,
+        )
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.importlib.import_module')
+    @patch('ckanext.feedback.controllers.resource.log.exception')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    def test_check_comment_POST_RateLimitError(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_resource_comment_categories,
+        mock_log_exception,
+        mock_import_module,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        judgement = False
+        ng_reasons = ['RateLimitError']
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_MoralKeeperAI = MagicMock()
+        mock_ai = MagicMock()
+        mock_ai.check.return_value = (judgement, ng_reasons)
+        mock_MoralKeeperAI.MoralKeeperAI.return_value = mock_ai
+        mock_import_module.return_value = mock_MoralKeeperAI
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_resource_comment_categories.return_value = 'mock_categories'
+
+        ResourceController.check_comment(resource_id)
+        mock_log_exception.assert_called_once_with('AI response failed. %s', ng_reasons)
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.importlib.import_module')
+    @patch('ckanext.feedback.controllers.resource.log.exception')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    def test_check_comment_POST_APIConnectionError(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_resource_comment_categories,
+        mock_log_exception,
+        mock_import_module,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        judgement = False
+        ng_reasons = ['APIConnectionError']
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_MoralKeeperAI = MagicMock()
+        mock_ai = MagicMock()
+        mock_ai.check.return_value = (judgement, ng_reasons)
+        mock_MoralKeeperAI.MoralKeeperAI.return_value = mock_ai
+
+        mock_import_module.return_value = mock_MoralKeeperAI
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_resource_comment_categories.return_value = 'mock_categories'
+
+        ResourceController.check_comment(resource_id)
+        mock_log_exception.assert_called_once_with('AI response failed. %s', ng_reasons)
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.importlib.import_module')
+    @patch('ckanext.feedback.controllers.resource.log.exception')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    def test_check_comment_POST_APIAuthenticationError(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_resource_comment_categories,
+        mock_log_exception,
+        mock_import_module,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        judgement = False
+        ng_reasons = ['APIAuthenticationError']
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_MoralKeeperAI = MagicMock()
+        mock_ai = MagicMock()
+        mock_ai.check.return_value = (judgement, ng_reasons)
+        mock_MoralKeeperAI.MoralKeeperAI.return_value = mock_ai
+
+        mock_import_module.return_value = mock_MoralKeeperAI
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_resource_comment_categories.return_value = 'mock_categories'
+
+        ResourceController.check_comment(resource_id)
+        mock_log_exception.assert_called_once_with('AI response failed. %s', ng_reasons)
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    def test_check_comment_POST_suggested(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_resource_comment_categories,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': True,
+        }.get(x, default)
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_resource_comment_categories.return_value = 'mock_categories'
+
+        ResourceController.check_comment(resource_id)
+        mock_render.assert_called_once_with(
+            'resource/comment_check.html',
+            {
+                'resource': mock_resource.Resource,
+                'pkg_dict': mock_package,
+                'categories': 'mock_categories',
+                'selected_category': category,
+                'rating': int(rating),
+                'content': content,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_check_comment_without_no_comment_and_category(
+        self,
+        mock_redirect_to,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        mock_method.return_value = 'POST'
+
+        mock_MoralKeeperAI = MagicMock()
+        mock_MoralKeeperAI.return_value = None
+
+        ResourceController.check_comment(resource_id)
+        mock_redirect_to.assert_called_once_with(
+            'resource_comment.comment', resource_id=resource_id
+        )
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    def test_check_comment_without_bad_recaptcha(
+        self,
+        mock_comment,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': True,
+        }.get(x, default)
+
+        mock_is_recaptcha_verified.return_value = False
+
+        ResourceController.check_comment(resource_id)
+        mock_flash_error.assert_called_once_with(
+            u'Bad Captcha. Please try again.', allow_html=True
+        )
+        mock_comment.assert_called_once_with(resource_id, category, content)
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    def test_check_comment_without_comment_validation(
+        self,
+        mock_comment,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_redirect_to,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        while len(content) < 1000:
+            content += content
+        rating = '3'
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'comment-suggested': True,
+        }.get(x, default)
+
+        mock_is_recaptcha_verified.return_value = True
+
+        ResourceController.check_comment(resource_id)
+        mock_flash_error.assert_called_once_with(
+            'Please keep the comment length below 1000',
+            allow_html=True,
+        )
+        mock_comment.assert_called_once_with(resource_id, category, content)
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.request.form')
