@@ -29,7 +29,6 @@ class ManagementController:
         categories = utilization_detail_service.get_utilization_comment_categories()
 
         limit = config.get('ckan.datasets_per_page')
-        limit = 3
         offset = 0
 
         # If user is organization admin
@@ -92,7 +91,6 @@ class ManagementController:
         row_count = data.get('rowCount')
 
         limit = config.get('ckan.datasets_per_page')
-        limit = 3
         offset = row_count
 
         if not current_user.sysadmin:
@@ -100,11 +98,13 @@ class ManagementController:
                 group_type='organization', capacity='admin'
             )
             if tbody_id == 'resource-comments-table-body':
-                resource_comments, _ = resource_comment_service.get_resource_comments(
-                    owner_orgs=ids, limit=limit, offset=offset
+                resource_comments, total_count = (
+                    resource_comment_service.get_resource_comments(
+                        owner_orgs=ids, limit=limit, offset=offset
+                    )
                 )
             else:
-                utilization_comments, _ = (
+                utilization_comments, total_count = (
                     utilization_detail_service.get_utilization_comments(
                         owner_orgs=ids, limit=limit, offset=offset
                     )
@@ -116,11 +116,13 @@ class ManagementController:
             }
         else:
             if tbody_id == 'resource-comments-table-body':
-                resource_comments, _ = resource_comment_service.get_resource_comments(
-                    limit=limit, offset=offset
+                resource_comments, total_count = (
+                    resource_comment_service.get_resource_comments(
+                        limit=limit, offset=offset
+                    )
                 )
             else:
-                utilization_comments, _ = (
+                utilization_comments, total_count = (
                     utilization_detail_service.get_utilization_comments(
                         limit=limit, offset=offset
                     )
