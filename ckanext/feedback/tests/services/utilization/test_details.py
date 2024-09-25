@@ -427,6 +427,57 @@ class TestUtilizationDetailsService:
         )
         assert approved_comment == fake_utilization_comment_approved
 
+    @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
+    def test_get_utilization_comments_limit_offset(self):
+        dataset = factories.Dataset()
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        title = 'test title'
+        url = 'test url'
+        description = 'test description'
+        register_utilization(
+            utilization_id, resource['id'], title, url, description, False
+        )
+        utilization = get_registered_utilization(resource['id'])
+        limit = 20
+        offset = 0
+
+        created = datetime.now()
+        unapproved_comment_id = str(uuid.uuid4())
+        category_request = UtilizationCommentCategory.REQUEST
+        unapproved_content = 'unapproved content'
+        register_utilization_comment(
+            unapproved_comment_id,
+            utilization.id,
+            category_request,
+            unapproved_content,
+            created,
+            False,
+            None,
+            None,
+        )
+        comments, total_count = get_utilization_comments(
+            utilization.id,
+            None,
+            limit=limit,
+            offset=offset,
+        )
+
+        assert len(comments) == 1
+        comment = convert_utilization_comment_to_tuple(comments[0])
+        unapproved_comment = (
+            unapproved_comment_id,
+            utilization.id,
+            category_request,
+            unapproved_content,
+            created,
+            False,
+            None,
+            None,
+        )
+        assert comment == unapproved_comment
+
     def test_create_utilization_comment(self):
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
