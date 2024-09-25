@@ -49,13 +49,8 @@ function updateHTML(responseData, tbody, tbodyId, rowCount) {
         </td>
       `;
       if ( row.rating.is_enabled_rating ) {
-        if (row.rating.rating) {
-          htmlContent += `
-            <td>${ row.rating.rating }</td>
-          `;
-        }
         htmlContent += `
-          <td></td>
+          <td>${ row.rating.rating ? row.rating.rating : '' }</td>
         `;
       }
       htmlContent += `
