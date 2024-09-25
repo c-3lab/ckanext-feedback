@@ -109,3 +109,10 @@ input[name="tab-menu"] {
   background-color: #1f71b5;
   color: #fff;
 }
+
+.show-more {
+  cursor: pointer;
+}
+.show-more:hover {
+  text-decoration: underline;
+}
