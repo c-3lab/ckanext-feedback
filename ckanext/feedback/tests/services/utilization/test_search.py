@@ -65,6 +65,9 @@ class TestUtilizationDetailsService:
 
         description = 'test description'
 
+        limit = 20
+        offset = 0
+
         register_utilization(
             unapproved_id,
             unapproved_resource['id'],
@@ -113,32 +116,52 @@ class TestUtilizationDetailsService:
         )
 
         # with no argument
-        assert get_utilizations() == [approved_utilization, unapproved_utilization]
+        assert get_utilizations() == ([approved_utilization, unapproved_utilization], 2)
 
         # with package_id
-        assert get_utilizations(id=unapproved_dataset['id']) == [unapproved_utilization]
+        assert get_utilizations(id=unapproved_dataset['id']) == (
+            [unapproved_utilization],
+            1,
+        )
 
         # with resource_id
-        assert get_utilizations(id=approved_resource['id']) == [approved_utilization]
+        assert get_utilizations(id=approved_resource['id']) == (
+            [approved_utilization],
+            1,
+        )
 
         # with keyword
-        assert get_utilizations(keyword='unapproved') == [unapproved_utilization]
+        assert get_utilizations(keyword='unapproved') == ([unapproved_utilization], 1)
 
         # with approval
-        assert get_utilizations(approval=True) == [approved_utilization]
+        assert get_utilizations(approval=True) == ([approved_utilization], 1)
 
         # with org_name
-        assert get_utilizations(org_name=unapproved_org['name']) == [
-            unapproved_utilization
-        ]
+        assert get_utilizations(org_name=unapproved_org['name']) == (
+            [unapproved_utilization],
+            1,
+        )
 
         # with organization_id
-        assert get_utilizations(admin_owner_orgs=[approved_org['id']]) == [
-            approved_utilization
-        ]
+        assert get_utilizations(admin_owner_orgs=[approved_org['id']]) == (
+            [approved_utilization],
+            1,
+        )
 
         # with organization_id
-        assert get_utilizations(admin_owner_orgs=[unapproved_org['id']]) == [
-            approved_utilization,
-            unapproved_utilization,
-        ]
+        assert get_utilizations(admin_owner_orgs=[unapproved_org['id']]) == (
+            [
+                approved_utilization,
+                unapproved_utilization,
+            ],
+            2,
+        )
+
+        # with limit offset
+        assert get_utilizations(limit=limit, offset=offset) == (
+            [
+                approved_utilization,
+                unapproved_utilization,
+            ],
+            2,
+        )

@@ -10,6 +10,7 @@ from flask import make_response, redirect, url_for
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.resource.summary as summary_service
 import ckanext.feedback.services.resource.validate as validate_service
+from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
@@ -38,7 +39,11 @@ class ResourceController:
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
 
-        comments = comment_service.get_resource_comments(resource_id, approval)
+        page, limit, offset, _ = get_pagination_value('resource_comment.comment')
+
+        comments, total_count = comment_service.get_resource_comments(
+            resource_id, approval, limit=limit, offset=offset
+        )
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
@@ -52,11 +57,16 @@ class ResourceController:
             {
                 'resource': resource.Resource,
                 'pkg_dict': package,
-                'comments': comments,
                 'categories': categories,
                 'cookie': cookie,
                 'selected_category': category,
                 'content': content,
+                'page': helpers.Page(
+                    collection=comments,
+                    page=page,
+                    item_count=total_count,
+                    items_per_page=limit,
+                ),
             },
         )
 

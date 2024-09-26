@@ -53,6 +53,8 @@ class TestUtilizationController:
         Babel(self.app)
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
@@ -63,6 +65,8 @@ class TestUtilizationController:
         mock_get_utilizations,
         mock_get_resource,
         mock_render,
+        mock_page,
+        mock_pagination,
         current_user,
         app,
         sysadmin_env,
@@ -81,29 +85,67 @@ class TestUtilizationController:
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
 
+        unapproved_status = 'on'
+        approval_status = 'on'
+
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            pager_url,
+        ]
+
         mock_args.get.side_effect = lambda x, default: {
             'id': resource['id'],
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
 
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+
+        mock_page.return_value = 'mock_page'
+
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, None, None, ''
+            resource['id'],
+            keyword,
+            None,
+            None,
+            '',
+            limit,
+            offset,
         )
+
+        mock_page.assert_called_once_with(
+            collection='mock_utilizations',
+            page=page,
+            url=pager_url,
+            item_count='mock_total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': mock_get_utilizations.return_value,
+                'approval_status': approval_status,
+                'unapproved_status': unapproved_status,
+                'page': 'mock_page',
             },
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
@@ -114,6 +156,8 @@ class TestUtilizationController:
         mock_get_utilizations,
         mock_get_resource,
         mock_render,
+        mock_page,
+        mock_pagination,
         current_user,
         app,
         user_env,
@@ -146,6 +190,21 @@ class TestUtilizationController:
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
 
+        unapproved_status = 'on'
+        approval_status = 'on'
+
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            pager_url,
+        ]
+
         mock_args.get.side_effect = lambda x, default: {
             'id': dataset['id'],
             'keyword': keyword,
@@ -153,24 +212,47 @@ class TestUtilizationController:
             'organization': organization.name,
         }.get(x, default)
 
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+
+        mock_page.return_value = 'mock_page'
+
         with app.get(url='/', environ_base=user_env):
             g.userobj = current_user
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            dataset['id'], keyword, None, [organization_dict['id']], 'test organization'
+            dataset['id'],
+            keyword,
+            None,
+            [organization_dict['id']],
+            'test organization',
+            limit,
+            offset,
         )
+
+        mock_page.assert_called_once_with(
+            collection='mock_utilizations',
+            page=page,
+            url=pager_url,
+            item_count='mock_total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': mock_get_utilizations.return_value,
+                'approval_status': approval_status,
+                'unapproved_status': unapproved_status,
+                'page': 'mock_page',
             },
         )
         assert g.pkg_dict['organization']['name'] == organization.name
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
@@ -181,6 +263,8 @@ class TestUtilizationController:
         mock_get_utilizations,
         mock_get_resource,
         mock_render,
+        mock_page,
+        mock_pagination,
         current_user,
         app,
         user_env,
@@ -198,34 +282,79 @@ class TestUtilizationController:
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
 
+        unapproved_status = 'on'
+        approval_status = 'on'
+
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            pager_url,
+        ]
+
         mock_args.get.side_effect = lambda x, default: {
             'id': dataset['id'],
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
 
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+
+        mock_page.return_value = 'mock_page'
+
         with app.get(url='/', environ_base=user_env):
             g.userobj = current_user
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            dataset['id'], keyword, True, None, ''
+            dataset['id'],
+            keyword,
+            True,
+            None,
+            '',
+            limit,
+            offset,
         )
+
+        mock_page.assert_called_once_with(
+            collection='mock_utilizations',
+            page=page,
+            url=pager_url,
+            item_count='mock_total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': mock_get_utilizations.return_value,
+                'approval_status': approval_status,
+                'unapproved_status': unapproved_status,
+                'page': 'mock_page',
             },
         )
 
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search_without_user(
-        self, mock_args, mock_get_utilizations, mock_get_resource, mock_render, app
+        self,
+        mock_args,
+        mock_get_utilizations,
+        mock_get_resource,
+        mock_render,
+        mock_page,
+        mock_pagination,
+        app,
     ):
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
@@ -240,29 +369,67 @@ class TestUtilizationController:
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
 
+        unapproved_status = 'on'
+        approval_status = 'on'
+
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            pager_url,
+        ]
+
         mock_args.get.side_effect = lambda x, default: {
             'id': resource['id'],
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
 
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+
+        mock_page.return_value = 'mock_page'
+
         with app.get(url='/'):
             g.userobj = None
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            resource['id'], keyword, True, None, ''
+            resource['id'],
+            keyword,
+            True,
+            None,
+            '',
+            limit,
+            offset,
         )
+
+        mock_page.assert_called_once_with(
+            collection='mock_utilizations',
+            page=page,
+            url=pager_url,
+            item_count='mock_total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': mock_get_utilizations.return_value,
+                'approval_status': approval_status,
+                'unapproved_status': unapproved_status,
+                'page': 'mock_page',
             },
         )
         assert g.pkg_dict['organization']['name'] == 'test_organization'
 
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.model.Group.get')
     @patch('ckanext.feedback.controllers.utilization.model.Package.get')
@@ -277,6 +444,8 @@ class TestUtilizationController:
         mock_package_get,
         mock_group_get,
         mock_render,
+        mock_page,
+        mock_pagination,
         app,
     ):
         mock_organization = MagicMock()
@@ -293,29 +462,67 @@ class TestUtilizationController:
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
 
+        unapproved_status = 'on'
+        approval_status = 'on'
+
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            pager_url,
+        ]
+
         mock_args.get.side_effect = lambda x, default: {
             'id': mock_dataset.id,
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
 
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+
+        mock_page.return_value = 'mock_page'
+
         with app.get(url='/'):
             g.userobj = None
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            mock_dataset.id, keyword, True, None, ''
+            mock_dataset.id,
+            keyword,
+            True,
+            None,
+            '',
+            limit,
+            offset,
         )
+
+        mock_page.assert_called_once_with(
+            collection='mock_utilizations',
+            page=page,
+            url=pager_url,
+            item_count='mock_total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': mock_get_utilizations.return_value,
+                'approval_status': approval_status,
+                'unapproved_status': unapproved_status,
+                'page': 'mock_page',
             },
         )
         assert g.pkg_dict['organization']['name'] == mock_organization.name
 
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.model.Package.get')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -328,6 +535,8 @@ class TestUtilizationController:
         mock_get_resource,
         mock_package_get,
         mock_render,
+        mock_page,
+        mock_pagination,
         app,
     ):
         mock_get_resource.return_value = None
@@ -336,25 +545,61 @@ class TestUtilizationController:
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
 
+        unapproved_status = 'on'
+        approval_status = 'on'
+
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            pager_url,
+        ]
+
         mock_args.get.side_effect = lambda x, default: {
             'id': 'test_id',
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
 
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+
+        mock_page.return_value = 'mock_page'
+
         with app.get(url='/'):
             g.userobj = None
             UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            'test_id', keyword, True, None, ''
+            'test_id',
+            keyword,
+            True,
+            None,
+            '',
+            limit,
+            offset,
         )
+
+        mock_page.assert_called_once_with(
+            collection='mock_utilizations',
+            page=page,
+            url=pager_url,
+            item_count='mock_total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/search.html',
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': mock_get_utilizations.return_value,
+                'approval_status': approval_status,
+                'unapproved_status': unapproved_status,
+                'page': 'mock_page',
             },
         )
 
@@ -728,11 +973,19 @@ class TestUtilizationController:
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_approval_with_sysadmin(
-        self, mock_render, mock_detail_service, mock_get_resource, current_user
+        self,
+        mock_render,
+        mock_detail_service,
+        mock_get_resource,
+        mock_page,
+        mock_pagination,
+        current_user,
     ):
         utilization_id = 'utilization id'
         user_dict = factories.Sysadmin()
@@ -741,10 +994,25 @@ class TestUtilizationController:
 
         organization_dict = factories.Organization()
 
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            _,
+        ]
+
         mock_utilization = MagicMock()
         mock_utilization.owner_org = organization_dict['id']
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_detail_service.get_utilization_comments.return_value = 'comments'
+        mock_detail_service.get_utilization_comments.return_value = [
+            'comments',
+            'total_count',
+        ]
         mock_detail_service.get_utilization_comment_categories.return_value = (
             'categories'
         )
@@ -758,35 +1026,56 @@ class TestUtilizationController:
         mock_resource.organization_name = organization_dict['name']
         mock_get_resource.return_value = mock_resource
 
+        mock_page.return_value = 'mock_page'
+
         UtilizationController.details(utilization_id)
 
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
         mock_detail_service.get_utilization_comments.assert_called_once_with(
-            utilization_id, None
+            utilization_id,
+            None,
+            limit=limit,
+            offset=offset,
         )
         mock_detail_service.get_utilization_comment_categories.assert_called_once()
         mock_detail_service.get_issue_resolutions.assert_called_once_with(
             utilization_id
         )
+
+        mock_page.assert_called_once_with(
+            collection='comments',
+            page=page,
+            item_count='total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/details.html',
             {
                 'utilization_id': utilization_id,
                 'utilization': mock_utilization,
-                'comments': 'comments',
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': '',
                 'content': '',
+                'page': 'mock_page',
             },
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_approval_with_org_admin(
-        self, mock_render, mock_detail_service, mock_get_resource, current_user
+        self,
+        mock_render,
+        mock_detail_service,
+        mock_get_resource,
+        mock_page,
+        mock_pagination,
+        current_user,
     ):
         utilization_id = 'utilization id'
         user_dict = factories.User()
@@ -807,10 +1096,25 @@ class TestUtilizationController:
         model.Session.add(member)
         model.Session.commit()
 
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            _,
+        ]
+
         mock_utilization = MagicMock()
         mock_utilization.owner_org = organization_dict['id']
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_detail_service.get_utilization_comments.return_value = 'comments'
+        mock_detail_service.get_utilization_comments.return_value = [
+            'comments',
+            'total_count',
+        ]
         mock_detail_service.get_utilization_comment_categories.return_value = (
             'categories'
         )
@@ -824,42 +1128,77 @@ class TestUtilizationController:
         mock_resource.organization_name = organization_dict['name']
         mock_get_resource.return_value = mock_resource
 
+        mock_page.return_value = 'mock_page'
+
         UtilizationController.details(utilization_id)
 
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
         mock_detail_service.get_utilization_comments.assert_called_once_with(
-            utilization_id, None
+            utilization_id,
+            None,
+            limit=limit,
+            offset=offset,
         )
         mock_detail_service.get_utilization_comment_categories.assert_called_once()
         mock_detail_service.get_issue_resolutions.assert_called_once_with(
             utilization_id
         )
+
+        mock_page.assert_called_once_with(
+            collection='comments',
+            page=page,
+            item_count='total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/details.html',
             {
                 'utilization_id': utilization_id,
                 'utilization': mock_utilization,
-                'comments': 'comments',
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': '',
                 'content': '',
+                'page': 'mock_page',
             },
         )
 
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_details_approval_without_user(
-        self, mock_render, mock_detail_service, mock_get_resource
+        self,
+        mock_render,
+        mock_detail_service,
+        mock_get_resource,
+        mock_page,
+        mock_pagination,
     ):
         utilization_id = 'utilization id'
         g.userobj = None
 
-        utilization = MagicMock()
-        utilization.resource_id = 'resource id'
-        mock_detail_service.get_utilization.return_value = utilization
-        mock_detail_service.get_utilization_comments.return_value = 'comments'
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            _,
+        ]
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'resource id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        mock_detail_service.get_utilization_comments.return_value = [
+            'comments',
+            'total_count',
+        ]
         mock_detail_service.get_utilization_comment_categories.return_value = (
             'categories'
         )
@@ -871,30 +1210,45 @@ class TestUtilizationController:
         mock_resource.package = mock_dataset
         mock_get_resource.return_value = mock_resource
 
+        mock_page.return_value = 'mock_page'
+
         UtilizationController.details(utilization_id)
 
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
         mock_detail_service.get_utilization_comments.assert_called_once_with(
-            utilization_id, True
+            utilization_id,
+            True,
+            limit=limit,
+            offset=offset,
         )
         mock_detail_service.get_utilization_comment_categories.assert_called_once()
         mock_detail_service.get_issue_resolutions.assert_called_once_with(
             utilization_id
         )
+
+        mock_page.assert_called_once_with(
+            collection='comments',
+            page=page,
+            item_count='total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/details.html',
             {
                 'utilization_id': utilization_id,
-                'utilization': utilization,
-                'comments': 'comments',
+                'utilization': mock_utilization,
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': '',
                 'content': '',
+                'page': 'mock_page',
             },
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -903,6 +1257,8 @@ class TestUtilizationController:
         mock_render,
         mock_detail_service,
         mock_get_resource,
+        mock_page,
+        mock_pagination,
         current_user,
     ):
         utilization_id = 'utilization id'
@@ -910,10 +1266,25 @@ class TestUtilizationController:
         mock_current_user(current_user, user_dict)
         g.userobj = current_user
 
-        utilization = MagicMock()
-        utilization.owner_org = 'organization id'
-        mock_detail_service.get_utilization.return_value = utilization
-        mock_detail_service.get_utilization_comments.return_value = 'comments'
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            _,
+        ]
+
+        mock_utilization = MagicMock()
+        mock_utilization.owner_org = 'organization id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        mock_detail_service.get_utilization_comments.return_value = [
+            'comments',
+            'total_count',
+        ]
         mock_detail_service.get_utilization_comment_categories.return_value = (
             'categories'
         )
@@ -927,6 +1298,8 @@ class TestUtilizationController:
         mock_resource.organization_name = 'test_organization'
         mock_get_resource.return_value = mock_resource
 
+        mock_page.return_value = 'mock_page'
+
         UtilizationController.details(utilization_id)
 
         mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
@@ -935,18 +1308,29 @@ class TestUtilizationController:
             utilization_id
         )
         mock_detail_service.get_utilization_comments.assert_called_once_with(
-            utilization_id, True
+            utilization_id,
+            True,
+            limit=limit,
+            offset=offset,
         )
+
+        mock_page.assert_called_once_with(
+            collection='comments',
+            page=page,
+            item_count='total_count',
+            items_per_page=limit,
+        )
+
         mock_render.assert_called_once_with(
             'utilization/details.html',
             {
                 'utilization_id': utilization_id,
-                'utilization': utilization,
-                'comments': 'comments',
+                'utilization': mock_utilization,
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': '',
                 'content': '',
+                'page': 'mock_page',
             },
         )
         assert g.pkg_dict['organization']['name'] == 'test_organization'

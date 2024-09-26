@@ -51,6 +51,8 @@ class TestComments:
         organization = factories.Organization()
         package = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=package['id'])
+        limit = 20
+        offset = 0
 
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
@@ -60,6 +62,10 @@ class TestComments:
         assert get_resource_comments(resource['id'], None, [organization['id']])
         assert not get_resource_comments('test')
         assert not get_resource_comments(resource['id'], True)
+        assert get_resource_comments(
+            limit=limit,
+            offset=offset,
+        )
 
     def test_create_resource_comment(self):
         pass

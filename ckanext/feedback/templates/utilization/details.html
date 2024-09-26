@@ -93,10 +93,10 @@
             <br>
             <br>
           </form>
-          {% if comments|length %}
+          {% if page.collection|length %}
             <hr class="divider">
           {% endif %}
-          {% for comment in comments %}
+          {% for comment in page.collection %}
             {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
               <form name="approval_form" action="{{ url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
                 <button class="btn btn-primary right-aligned">{{ _('Approve') }}</button>
@@ -114,6 +114,9 @@
             <p class="multiple-line wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
             <hr class="divider">
           {% endfor %}
+          {% block page_pagination %}
+            {{ page.pager(utilization_id=utilization_id) }}
+          {% endblock %}
         </div>
       </div>
     </article>

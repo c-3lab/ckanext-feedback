@@ -14,6 +14,7 @@ import ckanext.feedback.services.utilization.registration as registration_servic
 import ckanext.feedback.services.utilization.search as search_service
 import ckanext.feedback.services.utilization.summary as summary_service
 import ckanext.feedback.services.utilization.validate as validate_service
+from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
@@ -35,6 +36,11 @@ class UtilizationController:
         keyword = request.args.get('keyword', '')
         org_name = request.args.get('organization', '')
 
+        unapproved_status = request.args.get('waiting', 'on')
+        approval_status = request.args.get('approval', 'on')
+
+        page, limit, offset, pager_url = get_pagination_value('utilization.search')
+
         # If the login user is not an admin, display only approved utilizations
         approval = True
         admin_owner_orgs = None
@@ -52,8 +58,14 @@ class UtilizationController:
             )
 
         disable_keyword = request.args.get('disable_keyword', '')
-        utilizations = search_service.get_utilizations(
-            id, keyword, approval, admin_owner_orgs, org_name
+        utilizations, total_count = search_service.get_utilizations(
+            id,
+            keyword,
+            approval,
+            admin_owner_orgs,
+            org_name,
+            limit,
+            offset,
         )
 
         # If the organization name can be identified,
@@ -76,7 +88,15 @@ class UtilizationController:
             {
                 'keyword': keyword,
                 'disable_keyword': disable_keyword,
-                'utilizations': utilizations,
+                'unapproved_status': unapproved_status,
+                'approval_status': approval_status,
+                'page': helpers.Page(
+                    collection=utilizations,
+                    page=page,
+                    url=pager_url,
+                    item_count=total_count,
+                    items_per_page=limit,
+                ),
             },
         )
 
@@ -199,7 +219,12 @@ class UtilizationController:
         ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
-        comments = detail_service.get_utilization_comments(utilization_id, approval)
+
+        page, limit, offset, _ = get_pagination_value('utilization.details')
+
+        comments, total_count = detail_service.get_utilization_comments(
+            utilization_id, approval, limit=limit, offset=offset
+        )
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
         g.pkg_dict = {
@@ -217,11 +242,16 @@ class UtilizationController:
             {
                 'utilization_id': utilization_id,
                 'utilization': utilization,
-                'comments': comments,
                 'categories': categories,
                 'issue_resolutions': issue_resolutions,
                 'selected_category': category,
                 'content': content,
+                'page': helpers.Page(
+                    collection=comments,
+                    page=page,
+                    item_count=total_count,
+                    items_per_page=limit,
+                ),
             },
         )
 
