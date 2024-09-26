@@ -23,7 +23,7 @@
             <form name="admin_form" action="{{ url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
               <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">{{ _('Edit') }}</a>
               {% if row.approval == false %}
-                <button class="btn btn-primary right-aligned">{{ _('Approve') }}</button>
+                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
               {% endif %}
               <br>
             </form>
@@ -88,7 +88,7 @@
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
             <br>
-            <button class="btn btn-primary right-aligned" onclick="return checkCommentExists();">{{ _('Send') }}</button>
+            <button class="btn btn-primary right-aligned" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
             <br>
             <br>
             <br>
@@ -99,7 +99,7 @@
           {% for comment in page.collection %}
             {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
               <form name="approval_form" action="{{ url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
-                <button class="btn btn-primary right-aligned">{{ _('Approve') }}</button>
+                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
               </form>
             {% endif %}
             <h4>
@@ -150,7 +150,7 @@
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-primary" onclick="return checkDescriptionExists()">{{ _('Certificate') }}</button>
+              <button class="btn btn-primary" onclick="return checkDescriptionExists(this)">{{ _('Certificate') }}</button>
             </div>
           </form>
         </div>

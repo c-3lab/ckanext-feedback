@@ -110,7 +110,7 @@
                 <span id="resource-comments-results-count">{{ resource_comments|length }}</span>
               </h4>
               <span class="bottom-centered-content right-text">
-                <button class="btn btn-primary" type="button" onclick="runBulkAction('/management/approve_bulk_resource_comments')">{{ _('Bulk Approval')}}</button>
+                <button class="btn btn-primary" id="bulk-approval-button" type="button" onclick="runBulkAction('/management/approve_bulk_resource_comments')">{{ _('Bulk Approval')}}</button>
                 <button class="btn btn-primary" type="button" onclick="runBulkAction('/management/delete_bulk_resource_comments')">{{ _('Bulk Delete')}}</button>
               </span>
               <table class="table table-striped table-bordered table-condensed table-toggle-more bottom-centered-content" id="resource-comments-table">

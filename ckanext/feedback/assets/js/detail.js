@@ -1,4 +1,4 @@
-function checkCommentExists() {
+function checkCommentExists(button) {
   const comment = document.getElementById('comment-content').value;
   const commentNoneErrorElement = document.getElementById('comment-none-error');
   const commentOverErrorElement = document.getElementById('comment-over-error');
@@ -15,20 +15,27 @@ function checkCommentExists() {
     commentOverErrorElement.style.display = '';
     return false;  
   }
+
+  button.style.pointerEvents = "none"
   return true;
 }
 
-function checkDescriptionExists() {
+function checkDescriptionExists(button) {
   errorElement = document.getElementById('description-error');
   description = document.getElementById('description').value;
 
   if (description) {
+    button.style.pointerEvents = "none"
     errorElement.style.display = 'none';
     return true;
   } else {
     errorElement.style.display = '';
     return false;
   }
+}
+
+function setButtonDisable(button) {
+  button.style.pointerEvents = "none"
 }
 
 //文字数カウント

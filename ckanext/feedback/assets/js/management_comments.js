@@ -34,6 +34,7 @@ function runBulkAction(action) {
   }
   let message;
   if (action.includes('approve')) {
+    document.getElementById('bulk-approval-button').style.pointerEvents = "none";
     message = ckan.i18n.translate('Is it okay to approve checked %d item(s)?').fetch(countRows);
   } else  {
     message = ckan.i18n.translate('Is it okay to delete checked %d item(s)?').fetch(countRows);
