@@ -69,10 +69,15 @@ function refreshTable() {
 
 
 function isVisible(row){
-  const statusCell = row.getElementsByTagName('td')[8];
+  var cells = row.getElementsByTagName('td');
+  if (cells.length == 1) {
+    return false
+  }
+
+  const statusCell = cells[cells.length - 1];
   const isWaiting = document.getElementById('waiting').checked && statusCell.dataset.waiting;
   const isApproval = document.getElementById('approval').checked && statusCell.dataset.approval;
-  const categoryCell = row.getElementsByTagName('td')[6];
+  const categoryCell = row.getElementsByClassName('category-column')[0];
   const categories = Array.from(document.querySelectorAll('.category-checkbox'));
   const isMatchedCategory = categories.filter(element => element.checked)
                                       .some(element => element.getAttribute('name') === categoryCell.dataset.category);

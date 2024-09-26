@@ -90,7 +90,7 @@
                       <td>
                         <a href="{{ h.url_for('dataset.search') }}{{ row.utilization.resource.package.name }}/resource/{{ row.utilization.resource.id }}">{{ row.utilization.resource.name|truncate(20) }}</a>
                       </td>
-                      <td data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
+                      <td class="category-column" data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
                       <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
                       {% if row.approval == True %}
                         <td data-approval="true">{{ _('Approved') }}</td>
@@ -154,7 +154,7 @@
                       <td>
                         <a href="{{ h.url_for('dataset.search') }}{{ row.resource.package.name }}/resource/{{ row.resource.id }}">{{ row.resource.name|truncate(20) }}</a>
                       </td>
-                      <td data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
+                      <td class="category-column" data-category="{{ row.category.value}}">{{ _(row.category.value) }}</td>
                       <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
                       {% if row.approval == True %}
                         <td data-approval="true">{{ _('Approved') }}</td>
