@@ -1,4 +1,4 @@
-function checkCommentExists() {
+function checkCommentExists(button) {
   const comment = document.getElementById('comment-content').value;
   const rating = document.getElementById('rating').value;
   const commentNoneErrorElement = document.getElementById('comment-none-error');
@@ -17,6 +17,7 @@ function checkCommentExists() {
     commentOverErrorElement.style.display = '';
     return false;  
   }
+  button.style.pointerEvents = "none"
   return true;
 }
 
@@ -59,6 +60,10 @@ function setReplyFormContent(resourceCommentId) {
   document.getElementById('selected_comment_header').innerHTML = approved + ' ' + category;
   document.getElementById('selected_comment').innerHTML = content;
   document.getElementById('selected_resource_comment_id').value = resourceCommentId;
+}
+
+function setButtonDisable(button) {
+  button.style.pointerEvents = "none"
 }
 
 //文字数カウント

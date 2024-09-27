@@ -1,4 +1,4 @@
-function checkTitleAndDescriptionExists() {
+function checkTitleAndDescriptionExists(button) {
   const title = document.getElementById('title').value;
   const url = document.getElementById('url').value;
   const description = document.getElementById('description').value;

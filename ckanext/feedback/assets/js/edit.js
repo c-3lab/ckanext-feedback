@@ -1,4 +1,4 @@
-function checkTitleAndDescriptionExists() {
+function checkTitleAndDescriptionExists(button) {
   const title = document.getElementById('title').value;
   const description = document.getElementById('description').value;
   const titleNoneErrorElement = document.getElementById('title-none-error');
