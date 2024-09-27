@@ -1,7 +1,7 @@
 import logging
 
 import ckan.views.resource as resource
-from flask import request
+from flask import Response, request
 
 from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download.summary import increment_resource_downloads
@@ -30,3 +30,12 @@ class DownloadController:
             resource_id=resource_id,
             filename=filename,
         )
+
+    # count-up API
+    @staticmethod
+    def download_countup(package_type, id, resource_id, filename=None):
+        if resource_id:
+            increment_resource_downloads(resource_id)
+            return Response("OK", status=200, mimetype='text/plain')
+        else:
+            return Response("NG", status=400, mimetype='text/plain')

@@ -7,6 +7,12 @@
 #     preload:
 #       - base/main
 
+feedback-download-count-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-download_count.js
+  contents:
+    - js/download_count.js
+
 feedback-search-js:
   filter: rjsmin
   output: ckanext-feedback/%(version)s-search.js

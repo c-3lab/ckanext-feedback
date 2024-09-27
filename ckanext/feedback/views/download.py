@@ -19,11 +19,17 @@ blueprint = Blueprint(
 )
 
 # Add target page URLs to rules and add each URL to the blueprint
+# blueprint.add_url_rule(
+#     '/<resource_id>/download/<filename>',
+#     view_func=DownloadController.extended_download
+# )
+# blueprint.add_url_rule(
+#     '/<resource_id>/download', view_func=DownloadController.extended_download
+# )
 blueprint.add_url_rule(
-    '/<resource_id>/download/<filename>', view_func=DownloadController.extended_download
-)
-blueprint.add_url_rule(
-    '/<resource_id>/download', view_func=DownloadController.extended_download
+    '/<resource_id>/download-countup',
+    view_func=DownloadController.download_countup,
+    methods=['POST'],
 )
 
 
