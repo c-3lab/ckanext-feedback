@@ -7,7 +7,9 @@
     {% endif %}
   {% endblock action_manage %}
   <li>
-    <div class="btn-group">
+    {% if res.datastore_active %}
+      <div class="btn-group">
+    {% endif %}
       {% if res.url and h.is_url(res.url) %}
         <a class="btn btn-primary resource-url-analytics" href="javascript:window.location.href += '/download';">
           {% if res.resource_type in ('listing', 'service') %}
@@ -49,7 +51,9 @@
           </ul>
         {% endif %}
       {% endblock %}
-    </div>
+    {% if res.datastore_active %}
+      </div>
+    {% endif %}
   </li>
   {% if h.is_enabled_utilizations_org(pkg.owner_org) %}
     <li>
