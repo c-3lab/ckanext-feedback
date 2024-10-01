@@ -1520,7 +1520,7 @@ class TestUtilizationController:
     ):
         utilization_id = 'utilization_id'
 
-        mock_form.return_value = u'GET'
+        mock_form.return_value = 'GET'
 
         UtilizationController.check_comment(utilization_id)
         mock_redirect_to.assert_called_once_with(
@@ -2005,7 +2005,7 @@ class TestUtilizationController:
 
         UtilizationController.check_comment(utilization_id)
         mock_flash_error.assert_called_once_with(
-            u'Bad Captcha. Please try again.', allow_html=True
+            'Bad Captcha. Please try again.', allow_html=True
         )
         mock_details.assert_called_once_with(utilization_id, category, content)
 

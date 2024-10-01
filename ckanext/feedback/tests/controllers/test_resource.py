@@ -480,7 +480,7 @@ class TestResourceController:
     ):
         resource_id = 'resource_id'
 
-        mock_form.return_value = u'GET'
+        mock_form.return_value = 'GET'
 
         ResourceController.check_comment(resource_id)
         mock_redirect_to.assert_called_once_with(
@@ -991,7 +991,7 @@ class TestResourceController:
 
         ResourceController.check_comment(resource_id)
         mock_flash_error.assert_called_once_with(
-            u'Bad Captcha. Please try again.', allow_html=True
+            'Bad Captcha. Please try again.', allow_html=True
         )
         mock_comment.assert_called_once_with(resource_id, category, content)
 

@@ -1,4 +1,3 @@
-import importlib
 import logging
 
 import ckan.model as model
@@ -16,6 +15,11 @@ import ckanext.feedback.services.utilization.summary as summary_service
 import ckanext.feedback.services.utilization.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
+from ckanext.feedback.services.common.ai_functions import (
+    check_ai_comment,
+    is_enabled_moral_keeper_ai,
+    suggest_ai_comment,
+)
 from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
@@ -160,7 +164,7 @@ class UtilizationController:
             toolkit.abort(400)
 
         if not is_recaptcha_verified(request):
-            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return toolkit.redirect_to(
                 'utilization.new',
                 resource_id=resource_id,
@@ -275,7 +279,7 @@ class UtilizationController:
             toolkit.abort(400)
 
         if not is_recaptcha_verified(request):
-            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return UtilizationController.details(utilization_id, category, content)
 
         if message := validate_service.validate_comment(content):
@@ -325,9 +329,7 @@ class UtilizationController:
     # utilization/<utilization_id>/comment/suggested
     @staticmethod
     def suggested_comment(utilization_id, category, content):
-        MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
-        ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
-        softened = ai.suggest(content)
+        softened = suggest_ai_comment(comment=content)
 
         utilization = detail_service.get_utilization(utilization_id)
         g.pkg_dict = {
@@ -354,7 +356,7 @@ class UtilizationController:
     # utilization/<utilization_id>/comment/check
     @staticmethod
     def check_comment(utilization_id):
-        if request.method == u'GET':
+        if request.method == 'GET':
             return toolkit.redirect_to(
                 'utilization.details', utilization_id=utilization_id
             )
@@ -367,7 +369,7 @@ class UtilizationController:
             )
 
         if not is_recaptcha_verified(request):
-            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return UtilizationController.details(utilization_id, category, content)
 
         if message := validate_service.validate_comment(content):
@@ -381,23 +383,16 @@ class UtilizationController:
                 category=category,
             )
 
-        if not request.form.get('comment-suggested', False):
-            if toolkit.asbool(config.get('ckan.feedback.moral_keeper_ai.enable', True)):
-                MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
-                ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
-                judgement, ng_reasons = ai.check(content)
-                if judgement:
-                    pass
-                elif not set(ng_reasons).isdisjoint(
-                    ['RateLimitError', 'APIConnectionError', 'APIAuthenticationError']
-                ):
-                    log.exception('AI response failed. %s', ng_reasons)
-                else:
-                    return UtilizationController.suggested_comment(
-                        utilization_id=utilization_id,
-                        category=category,
-                        content=content,
-                    )
+        if (
+            not request.form.get('comment-suggested', False)
+            and is_enabled_moral_keeper_ai()
+        ):
+            if check_ai_comment(comment=content) is False:
+                return UtilizationController.suggested_comment(
+                    utilization_id=utilization_id,
+                    category=category,
+                    content=content,
+                )
 
         categories = detail_service.get_utilization_comment_categories()
         utilization = detail_service.get_utilization(utilization_id)
