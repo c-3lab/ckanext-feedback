@@ -380,23 +380,33 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
         resource_id = resource_dict['id']
         if self.is_enabled_downloads_org(owner_org):
+            if _('Downloads') != 'Downloads':
+                resource_dict.pop('Downloads', None)
             resource_dict[_('Downloads')] = (
                 download_summary_service.get_resource_downloads(resource_id)
             )
 
         if self.is_enabled_utilizations_org(owner_org):
+            if _('Utilizations') != 'Utilizations':
+                resource_dict.pop('Utilizations', None)
             resource_dict[_('Utilizations')] = (
                 utilization_summary_service.get_resource_utilizations(resource_id)
             )
+            if _('Issue Resolutions') != 'Issue Resolutions':
+                resource_dict.pop('Issue Resolutions', None)
             resource_dict[_('Issue Resolutions')] = (
                 utilization_summary_service.get_resource_issue_resolutions(resource_id)
             )
 
         if self.is_enabled_resources_org(owner_org):
+            if _('Comments') != 'Comments':
+                resource_dict.pop('Comments', None)
             resource_dict[_('Comments')] = (
                 resource_summary_service.get_resource_comments(resource_id)
             )
             if self.is_enabled_rating_org(owner_org):
+                if _('Rating') != 'Rating':
+                    resource_dict.pop('Rating', None)
                 resource_dict[_('Rating')] = round(
                     resource_summary_service.get_resource_rating(resource_id), 1
                 )
