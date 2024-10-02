@@ -17,7 +17,10 @@ class DownloadController:
         if filename is None:
             filename = get_resource(resource_id).Resource.url
 
-        if request.headers.get('Sec-Fetch-Dest') == 'empty':
+        if (
+            request.headers.get('Sec-Fetch-Dest') == 'document'
+            or request.args.get('user-download') == 'true'
+        ):
             increment_resource_downloads(resource_id)
 
         handler = feedback_config.download_handler()

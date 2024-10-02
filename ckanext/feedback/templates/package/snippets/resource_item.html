@@ -70,7 +70,7 @@
 
         	{% if res.url and h.is_url(res.url) %}
       			<li>
-        			<a class="dropdown-item resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" target="_blank" rel="noreferrer" download>
+        			<a class="dropdown-item resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" target="_blank" rel="noreferrer" download>
           			{% if res.has_views or res.url_type == 'upload' %}
             			<i class="fa fa-arrow-circle-down"></i>
             			{{ _('Download') }}
