@@ -11,7 +11,7 @@
       <div class="btn-group">
     {% endif %}
       {% if res.url and h.is_url(res.url) %}
-        <a class="btn btn-primary resource-url-analytics" href="javascript:window.location.href += '/download';">
+        <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" download>
           {% if res.resource_type in ('listing', 'service') %}
             <i class="fa fa-eye"></i> {{ _('View') }}
           {% elif  res.resource_type == 'api' %}
@@ -73,7 +73,7 @@
 
 {% block resource_read_url %}
   {% if res.url and h.is_url(res.url) %}
-    <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="javascript:window.location.href += '/download';" title="{{ res.url }}">{{ res.url }}</a></p>
+    <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" title="{{ res.url }}" download>{{ res.url }}</a></p>
   {% elif res.url %}
     <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
   {% endif %}
