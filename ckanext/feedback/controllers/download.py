@@ -27,9 +27,20 @@ class DownloadController:
         if not handler:
             log.debug('Use default CKAN callback for resource.download')
             handler = resource.download
-        return handler(
+        response = handler(
             package_type=package_type,
             id=id,
             resource_id=resource_id,
             filename=filename,
         )
+
+        c_d_value = response.headers.get('Content-Disposition')
+        if c_d_value:
+            c_d_value = c_d_value.replace('inline', 'attachment')
+        else:
+            c_d_value = 'attachment'
+        if 'filename' not in c_d_value:
+            c_d_value = f'{c_d_value}; filename="{filename}"'
+        response.headers.set('Content-Disposition', c_d_value)
+
+        return response
