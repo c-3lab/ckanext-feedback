@@ -86,10 +86,17 @@
       {% endblock %}
 
        </hgroup>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation-toggle"
-        aria-controls="main-navigation-toggle" aria-expanded="false" aria-label="{{ _('Toggle navigation') }}">
-        <span class="fa fa-bars text-white"></span>
-      </button>
+      {% if h.is_base_public_folder_bs3() %}
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navigation-toggle"
+          aria-controls="main-navigation-toggle" aria-expanded="false" aria-label="{{ _('Toggle navigation') }}">
+          <span class="fa fa-bars text-white"></span>
+        </button>
+      {% else %}
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation-toggle"
+          aria-controls="main-navigation-toggle" aria-expanded="false" aria-label="{{ _('Toggle navigation') }}">
+          <span class="fa fa-bars text-white"></span>
+        </button>
+      {% endif %}
 
       <div class="main-navbar collapse navbar-collapse" id="main-navigation-toggle">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
