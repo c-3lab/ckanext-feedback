@@ -316,6 +316,17 @@ class UtilizationController:
             }
         }
 
+        if softened is None:
+            return toolkit.render(
+                'utilization/expect_suggestion.html',
+                {
+                    'utilization_id': utilization_id,
+                    'utilization': utilization,
+                    'selected_category': category,
+                    'content': content,
+                },
+            )
+
         return toolkit.render(
             'utilization/suggestion.html',
             {
