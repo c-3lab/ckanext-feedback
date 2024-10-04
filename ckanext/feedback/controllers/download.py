@@ -1,7 +1,10 @@
 import logging
+import os
+from urllib.parse import urlparse
 
 import ckan.views.resource as resource
-from flask import request
+import requests
+from flask import Response, request
 
 from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download.summary import increment_resource_downloads
@@ -33,6 +36,18 @@ class DownloadController:
             resource_id=resource_id,
             filename=filename,
         )
+
+        if response._status_code == 302:
+            url = response.headers.get('Location')
+            log.debug(f"download to redirect URL.[{url}]")
+            filename = os.path.basename(urlparse(url).path)
+
+            redirect_response = requests.get(url, allow_redirects=True)
+            response = Response(
+                redirect_response.content,
+                headers=redirect_response.headers.__dict__,
+                content_type=redirect_response.headers['Content-Type'],
+            )
 
         c_d_value = response.headers.get('Content-Disposition')
         if c_d_value:
