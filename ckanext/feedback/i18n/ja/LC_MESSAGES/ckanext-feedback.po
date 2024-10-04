@@ -694,6 +694,19 @@ msgstr ""
 "送信するコメントを選択してください。\n"
 "各コメントを編集することもできます。\n"
 
+msgid "Please confirm"
+msgstr "確認してください"
+
+msgid ""
+"Please note that if your comment is intended to hurt anyone or contains "
+"discriminatory, violent, sexual, or self-harming content, you may cause negative "
+"effects on yourself or others by posting your comment.<br>"
+"If your comment contains such content, you can edit it here."
+msgstr ""
+"コメント内に誰かを傷つける目的の発言や、差別的・暴力的・性的・自傷的な内容が含まれる場合、"
+"コメント投稿により自他への悪影響が発生する可能性がある事に注意してください。<br>"
+"もし入力済みのコメント内にその様な内容がある場合、この画面で編集する事が出来ます。"
+
 msgid "Input Comments"
 msgstr "入力コメント"
 

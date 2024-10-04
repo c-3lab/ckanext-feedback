@@ -156,6 +156,18 @@ class ResourceController:
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
+        if softened is None:
+            return toolkit.render(
+                'resource/expect_suggestion.html',
+                {
+                    'resource': resource.Resource,
+                    'pkg_dict': package,
+                    'selected_category': category,
+                    'rating': rating,
+                    'content': content,
+                },
+            )
+
         return toolkit.render(
             'resource/suggestion.html',
             {

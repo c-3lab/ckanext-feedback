@@ -1507,6 +1507,43 @@ class TestUtilizationController:
             },
         )
 
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.suggest_ai_comment')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    def test_suggested_comment_is_None(
+        self,
+        mock_get_resource,
+        mock_suggest_ai_comment,
+        mock_get_utilization,
+        mock_render,
+    ):
+        utilization_id = 'utilization_id'
+        category = 'category'
+        content = 'comment_content'
+        softened = None
+
+        mock_suggest_ai_comment.return_value = softened
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_resource.organization_name = 'mock_organization_name'
+        mock_get_resource.return_value = mock_resource
+
+        UtilizationController.suggested_comment(utilization_id, category, content)
+        mock_render.assert_called_once_with(
+            'utilization/expect_suggestion.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'selected_category': category,
+                'content': content,
+            },
+        )
+
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_check_comment_GET(

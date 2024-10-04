@@ -467,6 +467,49 @@ class TestResourceController:
             },
         )
 
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.suggest_ai_comment')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    def test_suggested_comment_is_None(
+        self,
+        mock_get_resource,
+        mock_suggest_ai_comment,
+        mock_get_action,
+        mock_render,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        softened = None
+
+        mock_suggest_ai_comment.return_value = softened
+
+        mock_get_resource.return_value = MagicMock()
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_resource.organization_name = 'mock_organization_name'
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        ResourceController.suggested_comment(resource_id, category, content, rating)
+        mock_render.assert_called_once_with(
+            'resource/expect_suggestion.html',
+            {
+                'resource': mock_resource.Resource,
+                'pkg_dict': mock_package,
+                'selected_category': category,
+                'rating': rating,
+                'content': content,
+            },
+        )
+
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_check_comment_GET(
