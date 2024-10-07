@@ -41,13 +41,20 @@ class DownloadController:
             url = response.headers.get('Location')
             log.debug(f"download to redirect URL.[{url}]")
             filename = os.path.basename(urlparse(url).path)
-
-            redirect_response = requests.get(url, allow_redirects=True)
-            response = Response(
-                redirect_response.content,
-                headers=redirect_response.headers.__dict__,
-                content_type=redirect_response.headers['Content-Type'],
-            )
+            try:
+                redirect_response = requests.get(url, allow_redirects=True)
+                external_response = Response(
+                    redirect_response.content,
+                    headers=redirect_response.headers.__dict__,
+                    content_type=redirect_response.headers['Content-Type'],
+                )
+            except requests.exceptions.ConnectionError:
+                log.exception(f'Can not connect to external resource. URL[{url}]')
+                return response
+            if external_response._status_code != 200:
+                log.exception(f'Failure to acquire external resource. URL[{url}]')
+                return response
+            response = external_response
 
         c_d_value = response.headers.get('Content-Disposition')
         if c_d_value:
