@@ -25,12 +25,21 @@
       {% endif %}
       {% block download_resource_button %}
         {% if res.datastore_active %}
-          <button class="btn btn-primary dropdown-toggle" role="button" id="dropdownDownloadFormat" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ _('List of downloadable formats') }}">
-            {% if not res.url or not h.is_url(res.url) %}
-              {{ _('Download') }}&nbsp;
-            {% endif %}
-            <span class="caret"></span>
-          </button>
+          {% if h.is_base_public_folder_bs3() %}
+            <button class="btn btn-primary dropdown-toggle" role="button" id="dropdownDownloadFormat" data-toggle="dropdown" aria-expanded="false" aria-label="{{ _('List of downloadable formats') }}">
+              {% if not res.url or not h.is_url(res.url) %}
+                {{ _('Download') }}&nbsp;
+              {% endif %}
+              <span class="caret"></span>
+            </button>
+          {% else %}
+            <button class="btn btn-primary dropdown-toggle" role="button" id="dropdownDownloadFormat" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ _('List of downloadable formats') }}">
+              {% if not res.url or not h.is_url(res.url) %}
+                {{ _('Download') }}&nbsp;
+              {% endif %}
+              <span class="caret"></span>
+            </button>
+          {% endif %}
           <ul class="dropdown-menu" aria-labelledby="dropdownDownloadFormat">
             <li>
               <a class="dropdown-item" href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}"

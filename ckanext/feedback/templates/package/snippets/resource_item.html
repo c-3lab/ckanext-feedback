@@ -47,11 +47,19 @@
 {% block resource_item_explore %}
   {% if not url_is_edit %}
   	<div class="dropdown btn-group">
-    	<a href="#" class="btn btn-primary dropdown-toggle" type="button" id="dropdownExplorer" data-bs-toggle="dropdown" aria-expanded="false">
-      	<i class="fa fa-share"></i>
-      	{{ _('Explore') }}
-      	<span class="caret"></span>
-    	</a>
+      {% if h.is_base_public_folder_bs3() %}
+        <a href="#" class="btn btn-primary dropdown-toggle" type="button" id="dropdownExplorer" data-toggle="dropdown" aria-expanded="false">
+          <i class="fa fa-share"></i>
+          {{ _('Explore') }}
+          <span class="caret"></span>
+        </a>
+      {% else %}
+        <a href="#" class="btn btn-primary dropdown-toggle" type="button" id="dropdownExplorer" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fa fa-share"></i>
+          {{ _('Explore') }}
+          <span class="caret"></span>
+        </a>
+      {% endif %}
     	<ul class="dropdown-menu" aria-labelledby="dropdownExplorer">
       	{% block resource_item_explore_links %}
         	{% block explore_view %}
