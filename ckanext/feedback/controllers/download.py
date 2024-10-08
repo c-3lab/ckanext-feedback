@@ -37,7 +37,7 @@ class DownloadController:
             filename=filename,
         )
 
-        if response._status_code == 302:
+        if response.status_code == 302:
             url = response.headers.get('Location')
             log.debug(f"download to redirect URL.[{url}]")
             filename = os.path.basename(urlparse(url).path)
@@ -51,7 +51,7 @@ class DownloadController:
             except requests.exceptions.ConnectionError:
                 log.exception(f'Can not connect to external resource. URL[{url}]')
                 return response
-            if external_response._status_code != 200:
+            if external_response.status_code != 200:
                 log.exception(f'Failure to acquire external resource. URL[{url}]')
                 return response
             response = external_response
