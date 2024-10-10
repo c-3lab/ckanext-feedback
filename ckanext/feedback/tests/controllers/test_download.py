@@ -1,6 +1,7 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 from ckan import model
 from ckan.tests import factories
 from flask import Flask
@@ -79,6 +80,150 @@ class TestDownloadController:
                 'package_type', resource['package_id'], resource['id'], resource['url']
             )
             handler.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=resource['url'],
+            )
+
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    @patch('ckanext.feedback.controllers.download.requests.get')
+    @patch('ckanext.feedback.controllers.download.Response')
+    def test_extended_download_get_redirect_resource(
+        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+    ):
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        mock_download_handler.return_value = None
+
+        mock_responce = MagicMock()
+        mock_responce.status_code = 302
+        mock_responce.headers.get.return_value = 'http://mock_url.com/mock.txt'
+        mock_download.return_value = mock_responce
+
+        mock_requests_get.return_value = MagicMock()
+
+        mock_external_response = MagicMock()
+        mock_external_response.status_code = 200
+        mock_external_response.headers.get.return_value = 'filename="mock.txt"'
+        mock_Response.return_value = mock_external_response
+
+        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+            assert get_downloads(resource['id']) == 1
+            mock_download.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=resource['url'],
+            )
+
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    @patch('ckanext.feedback.controllers.download.requests.get')
+    @patch('ckanext.feedback.controllers.download.Response')
+    def test_extended_download_get_redirect_resource_non_filename(
+        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+    ):
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        mock_download_handler.return_value = None
+
+        mock_responce = MagicMock()
+        mock_responce.status_code = 302
+        mock_responce.headers.get.return_value = 'http://mock_url.com/mock.txt'
+        mock_download.return_value = mock_responce
+
+        mock_requests_get.return_value = MagicMock()
+
+        mock_external_response = MagicMock()
+        mock_external_response.status_code = 200
+        mock_external_response.headers.get.return_value = ''
+        mock_Response.return_value = mock_external_response
+
+        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+            assert get_downloads(resource['id']) == 1
+            mock_download.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=resource['url'],
+            )
+
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    @patch('ckanext.feedback.controllers.download.requests.get')
+    @patch('ckanext.feedback.controllers.download.Response')
+    def test_extended_download_redirect_resource_ConnectionError(
+        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+    ):
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        mock_download_handler.return_value = None
+
+        mock_responce = MagicMock()
+        mock_responce.status_code = 302
+        mock_responce.headers.get.return_value = 'http://mock_url.com/mock.txt'
+        mock_download.return_value = mock_responce
+
+        mock_requests_get.side_effect = requests.exceptions.ConnectionError()
+
+        mock_external_response = MagicMock()
+        mock_external_response.status_code = 200
+        mock_external_response.headers.get.return_value = ''
+        mock_Response.return_value = mock_external_response
+
+        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+            assert get_downloads(resource['id']) == 1
+            mock_download.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=resource['url'],
+            )
+
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    @patch('ckanext.feedback.controllers.download.requests.get')
+    @patch('ckanext.feedback.controllers.download.Response')
+    def test_extended_download_without_redirect_resource(
+        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+    ):
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+        mock_download_handler.return_value = None
+
+        mock_responce = MagicMock()
+        mock_responce.status_code = 302
+        mock_responce.headers.get.return_value = 'http://mock_url.com/mock.txt'
+        mock_download.return_value = mock_responce
+
+        mock_requests_get.return_value = MagicMock()
+
+        mock_external_response = MagicMock()
+        mock_external_response.status_code = 500
+        mock_external_response.headers.get.return_value = ''
+        mock_Response.return_value = mock_external_response
+
+        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+            assert get_downloads(resource['id']) == 1
+            mock_download.assert_called_once_with(
                 package_type='package_type',
                 id=resource['package_id'],
                 resource_id=resource['id'],
