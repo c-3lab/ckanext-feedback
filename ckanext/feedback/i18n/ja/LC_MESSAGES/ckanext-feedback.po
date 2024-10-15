@@ -6,9 +6,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ckanext-feedback 1.3.4\n"
+"Project-Id-Version: ckanext-feedback 1.3.5\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2024-09-27 13:35+0900\n"
+"POT-Creation-Date: 2024-10-15 10:07+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -20,26 +20,29 @@ msgstr ""
 "Generated-By: Babel 2.10.3\n"
 
 #: ckanext/feedback/plugin.py:342 ckanext/feedback/plugin.py:383
-#: ckanext/feedback/templates/package/snippets/resource_item.html:14
-#: ckanext/feedback/templates/snippets/package_item.html:20
+#: ckanext/feedback/plugin.py:385
+#: ckanext/feedback/templates/package/snippets/resource_item.html:15
+#: ckanext/feedback/templates/snippets/package_item.html:21
 #: ckanext/feedback/tests/test_plugin.py:892
 #: ckanext/feedback/tests/test_plugin.py:903
 #: ckanext/feedback/tests/test_plugin.py:968
 msgid "Downloads"
 msgstr "ダウンロード数"
 
-#: ckanext/feedback/plugin.py:348 ckanext/feedback/plugin.py:388
-#: ckanext/feedback/templates/package/snippets/resource_item.html:21
-#: ckanext/feedback/templates/snippets/package_item.html:29
+#: ckanext/feedback/plugin.py:348 ckanext/feedback/plugin.py:390
+#: ckanext/feedback/plugin.py:392
+#: ckanext/feedback/templates/package/snippets/resource_item.html:24
+#: ckanext/feedback/templates/snippets/package_item.html:30
 #: ckanext/feedback/tests/test_plugin.py:893
 #: ckanext/feedback/tests/test_plugin.py:904
 #: ckanext/feedback/tests/test_plugin.py:969
 msgid "Utilizations"
 msgstr "利活用数"
 
-#: ckanext/feedback/plugin.py:354 ckanext/feedback/plugin.py:391
-#: ckanext/feedback/templates/package/snippets/resource_item.html:42
-#: ckanext/feedback/templates/snippets/package_item.html:58
+#: ckanext/feedback/plugin.py:354 ckanext/feedback/plugin.py:395
+#: ckanext/feedback/plugin.py:397
+#: ckanext/feedback/templates/package/snippets/resource_item.html:51
+#: ckanext/feedback/templates/snippets/package_item.html:59
 #: ckanext/feedback/templates/utilization/details.html:48
 #: ckanext/feedback/tests/test_plugin.py:894
 #: ckanext/feedback/tests/test_plugin.py:905
@@ -47,10 +50,11 @@ msgstr "利活用数"
 msgid "Issue Resolutions"
 msgstr "課題解決数"
 
-#: ckanext/feedback/plugin.py:364 ckanext/feedback/plugin.py:396
-#: ckanext/feedback/templates/package/snippets/resource_item.html:28
+#: ckanext/feedback/plugin.py:364 ckanext/feedback/plugin.py:402
+#: ckanext/feedback/plugin.py:404
+#: ckanext/feedback/templates/package/snippets/resource_item.html:33
 #: ckanext/feedback/templates/resource/comment.html:32
-#: ckanext/feedback/templates/snippets/package_item.html:38
+#: ckanext/feedback/templates/snippets/package_item.html:39
 #: ckanext/feedback/templates/utilization/details.html:68
 #: ckanext/feedback/templates/utilization/search.html:61
 #: ckanext/feedback/tests/test_plugin.py:895
@@ -59,11 +63,12 @@ msgstr "課題解決数"
 msgid "Comments"
 msgstr "コメント数"
 
-#: ckanext/feedback/plugin.py:369 ckanext/feedback/plugin.py:400
+#: ckanext/feedback/plugin.py:369 ckanext/feedback/plugin.py:408
+#: ckanext/feedback/plugin.py:410
 #: ckanext/feedback/templates/management/comments.html:124
-#: ckanext/feedback/templates/package/snippets/resource_item.html:34
+#: ckanext/feedback/templates/package/snippets/resource_item.html:41
 #: ckanext/feedback/templates/resource/comment.html:38
-#: ckanext/feedback/templates/snippets/package_item.html:48
+#: ckanext/feedback/templates/snippets/package_item.html:49
 #: ckanext/feedback/tests/test_plugin.py:907
 #: ckanext/feedback/tests/test_plugin.py:975
 msgid "Rating"
@@ -206,52 +211,53 @@ msgstr "ログイン"
 msgid "Register"
 msgstr "保存"
 
-#: ckanext/feedback/templates/header.html:90
+#: ckanext/feedback/templates/header.html:91
+#: ckanext/feedback/templates/header.html:96
 msgid "Toggle navigation"
 msgstr "トグル ナビゲーション"
 
-#: ckanext/feedback/templates/header.html:102
+#: ckanext/feedback/templates/header.html:109
 msgid "Datasets"
 msgstr "データセット"
 
-#: ckanext/feedback/templates/header.html:104
+#: ckanext/feedback/templates/header.html:111
 msgid "Organizations"
 msgstr "組織"
 
-#: ckanext/feedback/templates/header.html:106
+#: ckanext/feedback/templates/header.html:113
 msgid "Groups"
 msgstr "グループ"
 
-#: ckanext/feedback/templates/header.html:108
+#: ckanext/feedback/templates/header.html:115
 #: ckanext/feedback/templates/utilization/details.html:11
 #: ckanext/feedback/templates/utilization/edit.html:11
 #: ckanext/feedback/templates/utilization/search.html:12
 msgid "Utilization"
 msgstr "利活用方法"
 
-#: ckanext/feedback/templates/header.html:111
+#: ckanext/feedback/templates/header.html:118
 #: ckanext/feedback/templates/management/comments.html:10
 #: ckanext/feedback/templates/management/comments.html:13
 msgid "Management Comments"
 msgstr "コメント管理"
 
-#: ckanext/feedback/templates/header.html:113
+#: ckanext/feedback/templates/header.html:120
 msgid "About"
 msgstr "About"
 
-#: ckanext/feedback/templates/header.html:120
+#: ckanext/feedback/templates/header.html:127
 msgid "Search Datasets..."
 msgstr "データセット検索"
 
-#: ckanext/feedback/templates/header.html:121
+#: ckanext/feedback/templates/header.html:128
 msgid "Search"
 msgstr "検索"
 
-#: ckanext/feedback/templates/header.html:121
+#: ckanext/feedback/templates/header.html:128
 msgid "Search datasets..."
 msgstr "データセット検索"
 
-#: ckanext/feedback/templates/header.html:122
+#: ckanext/feedback/templates/header.html:129
 #: ckanext/feedback/templates/utilization/search.html:29
 msgid "Submit"
 msgstr "検索"
@@ -352,61 +358,64 @@ msgstr "作成日"
 msgid "Manage"
 msgstr "管理"
 
-#: ckanext/feedback/templates/package/resource_read.html:14
+#: ckanext/feedback/templates/package/resource_read.html:16
 msgid "View"
 msgstr "ビュー"
 
-#: ckanext/feedback/templates/package/resource_read.html:16
+#: ckanext/feedback/templates/package/resource_read.html:18
 msgid "API Endpoint"
 msgstr "API エンドポイント"
 
-#: ckanext/feedback/templates/package/resource_read.html:18
-#: ckanext/feedback/templates/package/snippets/resource_item.html:79
+#: ckanext/feedback/templates/package/resource_read.html:20
+#: ckanext/feedback/templates/package/snippets/resource_item.html:97
 msgid "Go to resource"
 msgstr "リソースへ行く"
 
-#: ckanext/feedback/templates/package/resource_read.html:20
-#: ckanext/feedback/templates/package/resource_read.html:28
-#: ckanext/feedback/templates/package/snippets/resource_item.html:76
+#: ckanext/feedback/templates/package/resource_read.html:22
+#: ckanext/feedback/templates/package/resource_read.html:31
+#: ckanext/feedback/templates/package/resource_read.html:38
+#: ckanext/feedback/templates/package/snippets/resource_item.html:94
 msgid "Download"
 msgstr "ダウンロード"
 
-#: ckanext/feedback/templates/package/resource_read.html:26
+#: ckanext/feedback/templates/package/resource_read.html:29
+#: ckanext/feedback/templates/package/resource_read.html:36
 msgid "List of downloadable formats"
 msgstr "ダウンロード可能フォーマット一覧"
 
-#: ckanext/feedback/templates/package/resource_read.html:57
-#: ckanext/feedback/templates/package/snippets/resource_item.html:96
+#: ckanext/feedback/templates/package/resource_read.html:70
+#: ckanext/feedback/templates/package/snippets/resource_item.html:114
 #: ckanext/feedback/templates/utilization/new.html:15
 msgid "Create utilization application"
 msgstr "利活用方法登録申請"
 
-#: ckanext/feedback/templates/package/resource_read.html:64
-#: ckanext/feedback/templates/package/snippets/resource_item.html:104
+#: ckanext/feedback/templates/package/resource_read.html:77
+#: ckanext/feedback/templates/package/snippets/resource_item.html:122
 #: ckanext/feedback/templates/resource/comment.html:15
 #: ckanext/feedback/templates/resource/comment.html:35
 #: ckanext/feedback/templates/utilization/details.html:72
 msgid "Comment"
 msgstr "コメント"
 
-#: ckanext/feedback/templates/package/resource_read.html:72
-#: ckanext/feedback/templates/package/resource_read.html:74
+#: ckanext/feedback/templates/package/resource_read.html:85
+#: ckanext/feedback/templates/package/resource_read.html:87
 msgid "URL:"
 msgstr "URL:"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:52
+#: ckanext/feedback/templates/package/snippets/resource_item.html:63
+#: ckanext/feedback/templates/package/snippets/resource_item.html:69
 msgid "Explore"
 msgstr "探索"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:62
+#: ckanext/feedback/templates/package/snippets/resource_item.html:80
 msgid "Preview"
 msgstr "プレビュー"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:65
+#: ckanext/feedback/templates/package/snippets/resource_item.html:83
 msgid "More information"
 msgstr "詳細情報の表示"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:88
+#: ckanext/feedback/templates/package/snippets/resource_item.html:106
 #: ckanext/feedback/templates/utilization/details.html:24
 #: ckanext/feedback/templates/utilization/edit.html:13
 msgid "Edit"
