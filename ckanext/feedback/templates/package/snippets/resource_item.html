@@ -14,6 +14,15 @@
       {{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=80) }}
     {% endif %}
   </p>
+  {% if h.is_enabled_liked() %}
+    <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('resource.read', id=pkg.id, resource_id=res.id, package_type='dataset') }}">
+      <div class="utilization-data bubble">
+        <i class="fa-solid fa-thumbs-up" style="vertical-align: middle;"></i>
+        {{ h.get_resource_like_count(res.id) }}
+        <div class="bubbleText">{{ _('Number of Likes') }}</div>
+      </div>
+    </a>
+  {% endif %}
   {% if h.is_enabled_downloads(pkg.owner_org) %}
     <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('resource.read', id=pkg.id, resource_id=res.id, package_type='dataset') }}">
       <div class = "bubble">
@@ -92,7 +101,15 @@
               </a>
             </li>
           {% endblock explore_view %}
-
+          
+          {% if h.is_enabled_liked() %}
+            <li>
+              <a class="dropdown-item" href="{{ url }}">
+                <i class="fa-solid fa-thumbs-up"></i>
+								{{ _('liked') }}
+              </a>
+            </li>
+          {% endif %}
           {% if res.url and h.is_url(res.url) %}
             <li>
               {% if res.has_views or res.url_type == 'upload' %}

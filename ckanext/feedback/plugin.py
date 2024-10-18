@@ -8,14 +8,16 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
+from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.download import summary as download_summary_service
 from ckanext.feedback.services.management import comments as management_comments_service
 from ckanext.feedback.services.resource import comment as comment_service
+from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
-from ckanext.feedback.views import download, management, resource, utilization
+from ckanext.feedback.views import download, likes, management, resource, utilization
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +62,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             blueprints.append(resource.get_resource_comment_blueprint())
         if FeedbackConfig().utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
+        if config.get('ckan.feedback.liked.enable', True):
+            blueprints.append(likes.get_likes_blueprint())
         blueprints.append(management.get_management_blueprint())
         return blueprints
 
@@ -101,11 +105,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_comments': resource_summary_service.get_package_comments,
             'get_resource_rating': resource_summary_service.get_resource_rating,
             'get_package_rating': resource_summary_service.get_package_rating,
+            'get_resource_like_count': resource_likes_service.get_resource_like_count,
+            'get_package_like_count': resource_likes_service.get_package_like_count,
             'get_organization': management_comments_service.get_organization,
             'is_enabled_feedback_recaptcha': (FeedbackConfig().recaptcha.is_enable),
             'get_feedback_recaptcha_publickey': (
                 FeedbackConfig().recaptcha.publickey.get
             ),
+            'like_status': ResourceController.like_status,
         }
 
     # IPackageController
@@ -155,6 +162,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     ),
                 )
 
+        if self.is_enabled_liked():
+            add_pkg_dict_extras(
+                key=_('Number of Likes'),
+                value=resource_likes_service.get_package_like_count(package_id),
+            )
+
         return pkg_dict
 
     # IResourceController
@@ -193,5 +206,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 resource_dict[_('Rating')] = round(
                     resource_summary_service.get_resource_rating(resource_id), 1
                 )
+
+        if self.is_enabled_liked():
+            if _('Number of Likes') != 'Number of Likes':
+                resource_dict.pop('Number of Likes', None)
+            resource_dict[_('Number of Likes')] = (
+                resource_likes_service.get_resource_like_count(resource_id)
+            )
 
         return resource_dict
