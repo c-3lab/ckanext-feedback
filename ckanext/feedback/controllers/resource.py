@@ -5,9 +5,10 @@ from ckan.common import _, config, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
-from flask import make_response, redirect, url_for
+from flask import Response, make_response, redirect, url_for
 
 import ckanext.feedback.services.resource.comment as comment_service
+import ckanext.feedback.services.resource.likes as likes_service
 import ckanext.feedback.services.resource.summary as summary_service
 import ckanext.feedback.services.resource.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
@@ -129,7 +130,13 @@ class ResourceController:
         )
 
         resp = make_response(
-            redirect(url_for('resource.read', id=package_name, resource_id=resource_id))
+            redirect(
+                url_for(
+                    'resource.read',
+                    id=package_name,
+                    resource_id=resource_id,
+                )
+            )
         )
 
         resp.set_cookie(resource_id, 'alreadyPosted')
@@ -180,3 +187,30 @@ class ResourceController:
                     ' URL manually please check your spelling and try again.'
                 ),
             )
+
+    def like_status(resource_id):
+        status = comment_service.get_cookie(resource_id)
+        if status:
+            return status
+        return 'off'
+
+    @staticmethod
+    def like_toggle(package_name, resource_id):
+        data = request.get_json()
+        like_status = data.get('likeStatus')
+
+        resource_id_list = likes_service.get_all_resource_ids()
+
+        if resource_id not in resource_id_list:
+            likes_service.create_resource_like(resource_id)
+
+        if like_status == 'on':
+            likes_service.increment_resource_like_count(resource_id)
+        else:
+            likes_service.decrement_resource_like_count(resource_id)
+
+        session.commit()
+
+        resp = Response("OK", status=200, mimetype='text/plain')
+        resp.set_cookie(resource_id, like_status, max_age=43200)
+        return resp

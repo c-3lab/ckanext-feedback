@@ -9,15 +9,17 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
+from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download import summary as download_summary_service
 from ckanext.feedback.services.management import comments as management_comments_service
 from ckanext.feedback.services.recaptcha import check as recaptcha_check_service
 from ckanext.feedback.services.resource import comment as comment_service
+from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
-from ckanext.feedback.views import download, management, resource, utilization
+from ckanext.feedback.views import download, likes, management, resource, utilization
 
 
 class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
@@ -173,6 +175,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             blueprints.append(resource.get_resource_comment_blueprint())
         if config.get('ckan.feedback.utilizations.enable', True):
             blueprints.append(utilization.get_utilization_blueprint())
+        if config.get('ckan.feedback.liked.enable', True):
+            blueprints.append(likes.get_likes_blueprint())
         blueprints.append(management.get_management_blueprint())
         return blueprints
 
@@ -229,6 +233,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     def is_enabled_utilizations(self):
         enable = config.get('ckan.feedback.utilizations.enable', True)
+        return toolkit.asbool(enable)
+
+    def is_enabled_liked(self):
+        enable = config.get('ckan.feedback.liked.enable', True)
         return toolkit.asbool(enable)
 
     # Enable/disable repeat posting on a single resource
@@ -294,6 +302,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             ),
             'is_enabled_rating': self.is_enabled_rating,
             'is_enabled_rating_org': self.is_enabled_rating_org,
+            'is_enabled_liked': self.is_enabled_liked,
             'is_organization_admin': check.is_organization_admin,
             'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
@@ -316,6 +325,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_comments': resource_summary_service.get_package_comments,
             'get_resource_rating': resource_summary_service.get_resource_rating,
             'get_package_rating': resource_summary_service.get_package_rating,
+            'get_resource_like_count': resource_likes_service.get_resource_like_count,
+            'get_package_like_count': resource_likes_service.get_package_like_count,
             'get_organization': management_comments_service.get_organization,
             'is_enabled_feedback_recaptcha': (
                 recaptcha_check_service.is_enabled_recaptcha
@@ -323,6 +334,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_feedback_recaptcha_publickey': (
                 recaptcha_check_service.get_feedback_recaptcha_publickey
             ),
+            'like_status': ResourceController.like_status,
         }
 
     # IPackageController
@@ -372,6 +384,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     ),
                 )
 
+        if self.is_enabled_liked():
+            add_pkg_dict_extras(
+                key=_('Number of Likes'),
+                value=resource_likes_service.get_package_like_count(package_id),
+            )
+
         return pkg_dict
 
     # IResourceController
@@ -410,5 +428,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 resource_dict[_('Rating')] = round(
                     resource_summary_service.get_resource_rating(resource_id), 1
                 )
+
+        if self.is_enabled_liked():
+            if _('Number of Likes') != 'Number of Likes':
+                resource_dict.pop('Number of Likes', None)
+            resource_dict[_('Number of Likes')] = (
+                resource_likes_service.get_resource_like_count(resource_id)
+            )
 
         return resource_dict

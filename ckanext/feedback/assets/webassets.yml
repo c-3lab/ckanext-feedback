@@ -43,6 +43,12 @@ feedback-recaptcha-js:
   contents:
     - js/recaptcha.js
 
+feedback-resource_read-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-resource_read.js
+  contents:
+    - js/resource_read.js
+
 feedback-search-css:
   filter: cssrewrite
   output: feedback/%(version)s-search.css
@@ -96,3 +102,9 @@ feedback-registration-css:
   output: feedback/%(version)s-registration.css
   contents:
     - css/registration.css
+
+feedback-resource-read-css:
+  filter: cssrewrite
+  output: feedback/%(version)s-resource_read.css
+  contents:
+    - css/resource_read.css
