@@ -11,6 +11,7 @@ from ckan.tests import factories
 from ckanext.feedback.command import feedback
 from ckanext.feedback.command.feedback import (
     create_download_tables,
+    create_resource_like_tables,
     create_resource_tables,
     create_utilization_tables,
 )
@@ -23,6 +24,7 @@ engine = model.repo.session.get_bind()
 class TestPlugin:
     def setup_class(cls):
         model.repo.init_db()
+        create_resource_like_tables(engine)
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -234,20 +236,24 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.download')
     @patch('ckanext.feedback.plugin.resource')
     @patch('ckanext.feedback.plugin.utilization')
+    @patch('ckanext.feedback.plugin.likes')
     @patch('ckanext.feedback.plugin.management')
     def test_get_blueprint(
         self,
         mock_management,
+        mock_likes,
         mock_utilization,
         mock_resource,
         mock_download,
     ):
         instance = FeedbackPlugin()
 
+        config['ckan.feedback.liked.enable'] = True
         config['ckan.feedback.utilizations.enable'] = True
         config['ckan.feedback.resources.enable'] = True
         config['ckan.feedback.downloads.enable'] = True
         mock_management.get_management_blueprint.return_value = 'management_bp'
+        mock_likes.get_likes_blueprint.return_value = 'likes_bp'
         mock_download.get_download_blueprint.return_value = 'download_bp'
         mock_resource.get_resource_comment_blueprint.return_value = 'resource_bp'
         mock_utilization.get_utilization_blueprint.return_value = 'utilization_bp'
@@ -256,6 +262,7 @@ class TestPlugin:
             'download_bp',
             'resource_bp',
             'utilization_bp',
+            'likes_bp',
             'management_bp',
         ]
 
@@ -266,6 +273,7 @@ class TestPlugin:
         config['ckan.feedback.utilizations.enable'] = False
         config['ckan.feedback.resources.enable'] = False
         config['ckan.feedback.downloads.enable'] = False
+        config['ckan.feedback.liked.enable'] = False
         expected_blueprints = ['management_bp']
         actual_blueprints = instance.get_blueprint()
 
@@ -578,6 +586,23 @@ class TestPlugin:
         instance.update_config(config)
         assert instance.is_enabled_utilizations() is True
 
+    def test_is_enabled_liked(self):
+        instance = FeedbackPlugin()
+
+        # without feedback_config_file and .ini file
+        instance.update_config(config)
+        assert instance.is_enabled_liked() is True
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.liked.enable'] = True
+        instance.update_config(config)
+        assert instance.is_enabled_liked() is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.liked.enable'] = False
+        instance.update_config(config)
+        assert instance.is_enabled_liked() is False
+
     @patch('ckanext.feedback.plugin.feedback_config')
     def test_is_disabled_repeat_post_on_resource_org(self, mock_feedback_config):
         instance = FeedbackPlugin()
@@ -857,14 +882,18 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_rating_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_liked')
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
     def test_before_dataset_view_with_True(
         self,
+        mock_resource_likes_service,
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
+        mock_is_enabled_liked,
         mock_is_enabled_rating_org,
         mock_is_enabled_resources_org,
         mock_is_enabled_utilizations_org,
@@ -872,11 +901,13 @@ class TestPlugin:
     ):
         instance = FeedbackPlugin()
 
+        mock_is_enabled_liked.return_value = True
         mock_is_enabled_rating_org.return_value = False
         mock_is_enabled_resources_org.return_value = True
         mock_is_enabled_utilizations_org.return_value = True
         mock_is_enabled_downloads_org.return_value = True
 
+        mock_resource_likes_service.get_package_like_count.return_value = 9999
         mock_resource_summary_service.get_package_comments.return_value = 9999
         mock_resource_summary_service.get_package_rating.return_value = 23.333
         mock_utilization_summary_service.get_package_utilizations.return_value = 9999
@@ -893,6 +924,7 @@ class TestPlugin:
             {'key': _('Utilizations'), 'value': 9999},
             {'key': _('Issue Resolutions'), 'value': 9999},
             {'key': _('Comments'), 'value': 9999},
+            {'key': _('Number of Likes'), 'value': 9999},
         ]
 
         mock_is_enabled_rating_org.return_value = True
@@ -905,19 +937,23 @@ class TestPlugin:
             {'key': _('Issue Resolutions'), 'value': 9999},
             {'key': _('Comments'), 'value': 9999},
             {'key': _('Rating'), 'value': 23.3},
+            {'key': _('Number of Likes'), 'value': 9999},
         ]
 
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_liked')
     def test_before_dataset_view_with_False(
         self,
+        mock_is_enabled_liked,
         mock_is_enabled_resources_org,
         mock_is_enabled_utilizations_org,
         mock_is_enabled_downloads_org,
     ):
         instance = FeedbackPlugin()
 
+        mock_is_enabled_liked.return_value = False
         mock_is_enabled_resources_org.return_value = False
         mock_is_enabled_utilizations_org.return_value = False
         mock_is_enabled_downloads_org.return_value = False
@@ -934,14 +970,18 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_rating_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_liked')
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
     def test_before_resource_show_with_True(
         self,
+        mock_resource_likes_service,
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
+        mock_is_enabled_liked,
         mock_is_enabled_rating_org,
         mock_is_enabled_resources_org,
         mock_is_enabled_utilizations_org,
@@ -949,11 +989,13 @@ class TestPlugin:
     ):
         instance = FeedbackPlugin()
 
+        mock_is_enabled_liked.return_value = True
         mock_is_enabled_rating_org.return_value = False
         mock_is_enabled_resources_org.return_value = True
         mock_is_enabled_utilizations_org.return_value = True
         mock_is_enabled_downloads_org.return_value = True
 
+        mock_resource_likes_service.get_resource_like_count.return_value = 9999
         mock_resource_summary_service.get_resource_comments.return_value = 9999
         mock_resource_summary_service.get_resource_rating.return_value = 23.333
         mock_utilization_summary_service.get_resource_utilizations.return_value = 9999
@@ -969,6 +1011,7 @@ class TestPlugin:
         assert resource[_('Utilizations')] == 9999
         assert resource[_('Issue Resolutions')] == 9999
         assert resource[_('Comments')] == 9999
+        assert resource[_('Number of Likes')] == 9999
 
         mock_is_enabled_rating_org.return_value = True
         instance.before_resource_show(resource)
@@ -977,14 +1020,17 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
     @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
+    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_liked')
     def test_before_resource_show_with_False(
         self,
+        mock_is_enabled_liked,
         mock_is_enabled_resources_org,
         mock_is_enabled_utilizations_org,
         mock_is_enabled_downloads_org,
     ):
         instance = FeedbackPlugin()
 
+        mock_is_enabled_liked.return_value = False
         mock_is_enabled_resources_org.return_value = False
         mock_is_enabled_utilizations_org.return_value = False
         mock_is_enabled_downloads_org.return_value = False
