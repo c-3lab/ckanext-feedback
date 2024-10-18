@@ -7,6 +7,13 @@
     {{ h.popular('views', res.tracking_summary.total, min=10) if res.tracking_summary }}
   </a>
 	<br>
+  {% if h.is_enabled_liked() %}
+    <div class="utilization-data bubble">
+      <i class="fa-solid fa-thumbs-up"></i>
+      {{ h.get_resource_like_count(res.id) }}
+      <div class="description">{{ _('Number of Likes') }}</div>
+    </div>
+  {% endif %}
   {% if h.is_enabled_downloads_org(pkg.owner_org) %}
     <div class = "bubble">
       <i class="fa-solid fa-arrow-circle-down"></i>
@@ -67,7 +74,15 @@
             	</a>
           	</li>
         	{% endblock explore_view %}
-
+          
+          {% if h.is_enabled_liked() %}
+            <li>
+              <a class="dropdown-item" href="{{ url }}">
+                <i class="fa-solid fa-thumbs-up"></i>
+								{{ _('liked') }}
+              </a>
+            </li>
+          {% endif %}
         	{% if res.url and h.is_url(res.url) %}
       			<li>
         			<a class="dropdown-item resource-url-analytics" href="{{ res.url }}" target="_blank" rel="noreferrer">
