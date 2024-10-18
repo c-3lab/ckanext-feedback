@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 from ckan import model
@@ -11,6 +11,7 @@ from flask import Flask, g
 import ckanext.feedback.services.resource.comment as comment_service
 from ckanext.feedback.command.feedback import (
     create_download_tables,
+    create_resource_like_tables,
     create_resource_tables,
     create_utilization_tables,
 )
@@ -45,6 +46,7 @@ class TestResourceController:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
+        create_resource_like_tables(engine)
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -681,3 +683,142 @@ class TestResourceController:
 
         ResourceController.reply(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
+    def test_like_status_return_on(self, mock_get_cookie):
+        mock_get_cookie.return_value = 'on'
+        resource_id = 'resource id'
+
+        result = ResourceController.like_status(resource_id)
+        assert result == 'on'
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
+    def test_like_status_return_off(self, mock_get_cookie):
+        mock_get_cookie.return_value = 'off'
+        resource_id = 'resource id'
+
+        result = ResourceController.like_status(resource_id)
+        assert result == 'off'
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
+    def test_like_status_none(self, mock_get_cookie):
+        mock_get_cookie.return_value = None
+        resource_id = 'resource id'
+
+        result = ResourceController.like_status(resource_id)
+        assert result == 'off'
+
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch('ckanext.feedback.controllers.resource.likes_service')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.Response')
+    def test_like_toggle_on_with_new_resource(
+        self,
+        mock_response,
+        mock_session_commit,
+        mock_likes_service,
+        mock_get_json,
+    ):
+        mock_get_json.return_value = {'likeStatus': 'on'}
+        resource_id = 'resource id'
+
+        mock_likes_service.get_all_resource_ids.return_value = []
+
+        mock_resp = Mock()
+        mock_resp.data = b"OK"
+        mock_resp.status_code = 200
+        mock_resp.mimetype = 'text/plain'
+        mock_response.return_value = mock_resp
+
+        resp = ResourceController.like_toggle('package_name', resource_id)
+
+        mock_likes_service.create_resource_like.assert_called_once_with(resource_id)
+        mock_likes_service.increment_resource_like_count.assert_called_once_with(
+            resource_id
+        )
+        mock_likes_service.decrement_resource_like_count.assert_not_called()
+        mock_session_commit.assert_called_once()
+        mock_resp.set_cookie.assert_called_once_with(resource_id, 'on', max_age=43200)
+
+        assert resp.data.decode() == "OK"
+        assert resp.status_code == 200
+        assert resp.mimetype == 'text/plain'
+        assert resp == mock_resp
+
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch('ckanext.feedback.controllers.resource.likes_service')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.Response')
+    def test_like_toggle_on_with_existing_resource(
+        self,
+        mock_response,
+        mock_session_commit,
+        mock_likes_service,
+        mock_get_json,
+    ):
+        mock_get_json.return_value = {'likeStatus': 'on'}
+        resource_id = 'resource id'
+
+        mock_likes_service.get_all_resource_ids.return_value = [
+            'resource id',
+        ]
+
+        mock_resp = Mock()
+        mock_resp.data = b"OK"
+        mock_resp.status_code = 200
+        mock_resp.mimetype = 'text/plain'
+        mock_response.return_value = mock_resp
+
+        resp = ResourceController.like_toggle('package_name', resource_id)
+
+        mock_likes_service.create_resource_like.assert_not_called()
+        mock_likes_service.increment_resource_like_count.assert_called_once_with(
+            resource_id
+        )
+        mock_likes_service.decrement_resource_like_count.assert_not_called()
+        mock_session_commit.assert_called_once()
+        mock_resp.set_cookie.assert_called_once_with(resource_id, 'on', max_age=43200)
+
+        assert resp.data.decode() == "OK"
+        assert resp.status_code == 200
+        assert resp.mimetype == 'text/plain'
+        assert resp == mock_resp
+
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch('ckanext.feedback.controllers.resource.likes_service')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.Response')
+    def test_like_toggle_off(
+        self,
+        mock_response,
+        mock_session_commit,
+        mock_likes_service,
+        mock_get_json,
+    ):
+        mock_get_json.return_value = {'likeStatus': 'off'}
+        resource_id = 'resource id'
+
+        mock_likes_service.get_all_resource_ids.return_value = [
+            'resource id',
+        ]
+
+        mock_resp = Mock()
+        mock_resp.data = b"OK"
+        mock_resp.status_code = 200
+        mock_resp.mimetype = 'text/plain'
+        mock_response.return_value = mock_resp
+
+        resp = ResourceController.like_toggle('package_name', resource_id)
+
+        mock_likes_service.create_resource_like.assert_not_called()
+        mock_likes_service.increment_resource_like_count.assert_not_called()
+        mock_likes_service.decrement_resource_like_count.assert_called_once_with(
+            resource_id
+        )
+        mock_session_commit.assert_called_once()
+        mock_resp.set_cookie.assert_called_once_with(resource_id, 'off', max_age=43200)
+
+        assert resp.data.decode() == "OK"
+        assert resp.status_code == 200
+        assert resp.mimetype == 'text/plain'
+        assert resp == mock_resp
