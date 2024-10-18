@@ -1,11 +1,21 @@
 {% ckan_extends %}
 
 {% block resource_actions_inner %}
+  {% asset 'feedback/feedback-resource-read-css' %}
   {% block action_manage %}
     {% if h.check_access('package_update', {'id':pkg.id }) %}
       <li>{% link_for _('Manage'), named_route=pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
     {% endif %}
   {% endblock action_manage %}
+  {% if h.is_enabled_liked() %}
+  <li>
+    <a id="like_button" class="btn btn-primary" onclick="like_toggle()">
+      <i id="like-icon" class="fa-solid fa-thumbs-up {% if h.like_status(res.id)=='True' %}liked{% endif %}"></i>
+      {{ h.get_resource_like_count(res.id) }}
+    </a>
+    <input type="hidden" id="resource-id" value="{{ res.id }}">
+  </li>
+  {% endif %}
   <li>
     {% if res.datastore_active %}
       <div class="btn-group">
@@ -105,3 +115,8 @@
     <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
   {% endif %}
 {% endblock %}
+
+{%- block scripts %}
+  {{ super() }}
+  {% asset 'feedback/feedback-resource_read-js' %}
+{% endblock -%}
