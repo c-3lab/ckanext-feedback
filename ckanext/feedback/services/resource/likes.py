@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 def get_all_resource_ids():
     resource_ids = session.query(ResourceLike.resource_id).with_for_update().all()
 
-    resource_id_list = [r[0] for r in resource_ids]
+    resource_id_list = [r.resource_id for r in resource_ids]
 
     return resource_id_list
 
