@@ -54,7 +54,7 @@ class TestDownloadController:
             filename=resource['url'],
         )
 
-    @patch('ckanext.feedback.views.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.views.download.download_handler')
     @patch('ckanext.feedback.views.download.resource.download')
     def test_download_false_with_not_set_download_handler(
         self, mock_download, mock_download_handler
@@ -73,7 +73,7 @@ class TestDownloadController:
             filename=resource['url'],
         )
 
-    @patch('ckanext.feedback.views.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.views.download.download_handler')
     @patch('ckanext.feedback.views.download.DownloadController.extended_download')
     def test_download_false_with_set_download_handler(
         self, mock_extended_download, mock_download_handler

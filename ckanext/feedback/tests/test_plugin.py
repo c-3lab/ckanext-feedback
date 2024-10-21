@@ -15,6 +15,7 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
 )
 from ckanext.feedback.plugin import FeedbackPlugin
+from ckanext.feedback.services.common.config import FeedbackConfig
 
 engine = model.repo.session.get_bind()
 
@@ -36,7 +37,7 @@ class TestPlugin:
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_feedback_config_file is False
+        assert FeedbackConfig().is_feedback_config_file is False
 
         # without .ini file
         feedback_config = {
@@ -79,7 +80,7 @@ class TestPlugin:
             json.dump(feedback_config, f, indent=2)
 
         instance.update_config(config)
-        assert instance.is_feedback_config_file is True
+        assert FeedbackConfig().is_feedback_config_file is True
         assert config.get('ckan.feedback.utilizations.enable') is True
         assert config.get('ckan.feedback.utilizations.enable_orgs') == []
         assert config.get('ckan.feedback.resources.enable') is True
@@ -143,7 +144,7 @@ class TestPlugin:
         config['ckan.feedback.downloads.enable'] = False
         config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
         config['ckan.feedback.resources.comment.rating.enable'] = True
-        config['ckan.feedback.notice.email.enable'] = True
+        config['ckan.feedback.notice.email.enable'] = False
         config['ckan.feedback.notice.email.template_directory'] = ''
         config['ckan.feedback.notice.email.template_utilization'] = ''
         config['ckan.feedback.notice.email.template_utilization_comment'] = ''
@@ -151,12 +152,12 @@ class TestPlugin:
         config['ckan.feedback.notice.email.subject_utilization'] = ''
         config['ckan.feedback.notice.email.subject_utilization_comment'] = ''
         config['ckan.feedback.notice.email.subject_resource_comment'] = ''
-        config['ckan.feedback.recaptcha.enable'] = True
+        config['ckan.feedback.recaptcha.enable'] = False
         config['ckan.feedback.recaptcha.publickey'] = ''
         config['ckan.feedback.recaptcha.privatekey'] = ''
         config['ckan.feedback.recaptcha.score_threshold'] = ''
         instance.update_config(config)
-        assert instance.is_feedback_config_file is True
+        assert FeedbackConfig().is_feedback_config_file is True
         assert config.get('ckan.feedback.utilizations.enable') is True
         assert config.get('ckan.feedback.resources.enable') is True
         assert (
@@ -216,7 +217,7 @@ class TestPlugin:
         instance.update_config(config)
         mock_toolkit.error_shout.call_count == 4
 
-    @patch('ckanext.feedback.plugin.toolkit')
+    @patch('ckanext.feedback.services.common.config.toolkit')
     def test_update_config_json_decode_error(self, mock_toolkit):
         instance = FeedbackPlugin()
         with open('/srv/app/feedback_config.json', 'w') as f:
@@ -271,24 +272,24 @@ class TestPlugin:
 
         assert actual_blueprints == expected_blueprints
 
-    @patch('ckanext.feedback.plugin.feedback_config')
-    def test_is_enabled_downloads_org(self, mock_feedback_config):
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_is_enabled_downloads_org(self, mock_get_organization):
         instance = FeedbackPlugin()
         org_name = 'example_org_name'
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_downloads_org(org_name) is True
+        assert instance.get_helpers().get('is_enabled_downloads')(org_name) is True
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.downloads.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_downloads_org(org_name) is True
+        assert instance.get_helpers().get('is_enabled_downloads')(org_name) is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.downloads.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_downloads_org(org_name) is False
+        assert instance.get_helpers().get('is_enabled_downloads')(org_name) is False
 
         # with feedback_config_file enable is False and org_name is not in enable_orgs
         feedback_config = {
@@ -297,8 +298,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_downloads_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_downloads')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is False and org_name is in enable_orgs
@@ -308,10 +309,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_downloads_org(org_name) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_downloads')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is not in enable_orgs
@@ -321,8 +320,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_downloads_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_downloads')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is in enable_orgs
@@ -332,10 +331,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_downloads_org(org_name) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_downloads')(org_name) is True
         os.remove('/srv/app/feedback_config.json')
 
     def test_is_enabled_downloads(self):
@@ -343,17 +340,17 @@ class TestPlugin:
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_downloads() is True
+        assert instance.get_helpers().get('is_enabled_downloads')() is True
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.downloads.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_downloads() is True
+        assert instance.get_helpers().get('is_enabled_downloads')() is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.downloads.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_downloads() is False
+        assert instance.get_helpers().get('is_enabled_downloads')() is False
 
         # with feedback_config_file enable is False
         feedback_config = {
@@ -362,7 +359,7 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_downloads() is False
+        assert instance.get_helpers().get('is_enabled_downloads')() is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True
@@ -372,26 +369,26 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_downloads() is True
+        assert instance.get_helpers().get('is_enabled_downloads')() is True
 
-    @patch('ckanext.feedback.plugin.feedback_config')
-    def test_is_enabled_resources_org(self, mock_feedback_config):
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_is_enabled_resources_org(self, mock_get_organization):
         instance = FeedbackPlugin()
         org_name = 'example_org_name'
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_resources_org(org_name) is True
+        assert instance.get_helpers().get('is_enabled_resources')(org_name) is True
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.resources.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_resources_org(org_name) is True
+        assert instance.get_helpers().get('is_enabled_resources')(org_name) is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.resources.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_resources_org(org_name) is False
+        assert instance.get_helpers().get('is_enabled_resources')(org_name) is False
 
         # with feedback_config_file enable is False and org_name is not in enable_orgs
         feedback_config = {
@@ -400,8 +397,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_resources_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_resources')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is False and org_name is in enable_orgs
@@ -411,10 +408,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_resources_org(org_name) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_resources')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is not in enable_orgs
@@ -424,8 +419,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_resources_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_resources')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org
@@ -435,27 +430,25 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_resources_org(org_name) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_resources')(org_name) is True
 
     def test_is_enabled_resources(self):
         instance = FeedbackPlugin()
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_resources() is True
+        assert instance.get_helpers().get('is_enabled_resources')() is True
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.resources.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_resources() is True
+        assert instance.get_helpers().get('is_enabled_resources')() is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.resources.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_resources() is False
+        assert instance.get_helpers().get('is_enabled_resources')() is False
 
         # with feedback_config_file enable is False
         feedback_config = {
@@ -464,7 +457,7 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_resources() is False
+        assert instance.get_helpers().get('is_enabled_resources')() is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True
@@ -474,26 +467,26 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_resources() is True
+        assert instance.get_helpers().get('is_enabled_resources')() is True
 
-    @patch('ckanext.feedback.plugin.feedback_config')
-    def test_is_enabled_utilizations_org(self, mock_feedback_config):
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_is_enabled_utilizations_org(self, mock_get_organization):
         instance = FeedbackPlugin()
         org_name = 'example_org_name'
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_utilizations_org(org_name) is True
+        assert instance.get_helpers().get('is_enabled_utilizations')(org_name) is True
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.utilizations.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_utilizations_org(org_name) is True
+        assert instance.get_helpers().get('is_enabled_utilizations')(org_name) is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.utilizations.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_utilizations_org(org_name) is False
+        assert instance.get_helpers().get('is_enabled_utilizations')(org_name) is False
 
         # with feedback_config_file enable is False and org_name is not in enable_orgs
         feedback_config = {
@@ -502,8 +495,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_utilizations_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_utilizations')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is False and org_name is in enable_orgs
@@ -513,10 +506,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_utilizations_org(org_name) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_utilizations')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is not in enable_orgs
@@ -526,8 +517,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_utilizations_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_utilizations')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is in enable_orgs
@@ -537,27 +528,25 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_utilizations_org(org_name) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_utilizations')(org_name) is True
 
     def test_is_enabled_utilizations(self):
         instance = FeedbackPlugin()
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_utilizations() is True
+        assert instance.get_helpers().get('is_enabled_utilizations')() is True
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.utilizations.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_utilizations() is True
+        assert instance.get_helpers().get('is_enabled_utilizations')() is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.utilizations.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_utilizations() is False
+        assert instance.get_helpers().get('is_enabled_utilizations')() is False
 
         # with feedback_config_file enable is False
         feedback_config = {
@@ -566,7 +555,7 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_utilizations() is False
+        assert instance.get_helpers().get('is_enabled_utilizations')() is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True
@@ -576,26 +565,35 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_utilizations() is True
+        assert instance.get_helpers().get('is_enabled_utilizations')() is True
 
-    @patch('ckanext.feedback.plugin.feedback_config')
-    def test_is_disabled_repeat_post_on_resource_org(self, mock_feedback_config):
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_is_disabled_repeat_post_on_resource_org(self, mock_get_organization):
         instance = FeedbackPlugin()
         org_name = 'example_org_name'
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource_org(org_name) is False
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')(org_name)
+            is False
+        )
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource_org(org_name) is True
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')(org_name)
+            is True
+        )
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = False
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource_org(org_name) is False
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')(org_name)
+            is False
+        )
 
         # with feedback_config_file enable is False and org_name is not in enable_orgs
         feedback_config = {
@@ -610,8 +608,11 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_disabled_repeat_post_on_resource_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')(org_name)
+            is False
+        )
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is False and org_name is in enable_orgs
@@ -630,10 +631,11 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')(org_name)
+            is False
         )
-        assert instance.is_disabled_repeat_post_on_resource_org(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is not in enable_orgs
@@ -649,8 +651,11 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_disabled_repeat_post_on_resource_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')(org_name)
+            is False
+        )
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is in enable_orgs
@@ -666,27 +671,34 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')(org_name)
+            is True
         )
-        assert instance.is_disabled_repeat_post_on_resource_org(org_name) is True
 
     def test_is_disabled_repeat_post_on_resource(self):
         instance = FeedbackPlugin()
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource() is False
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')() is False
+        )
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource() is True
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')() is True
+        )
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = False
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource() is False
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')() is False
+        )
 
         # with feedback_config_file enable is False
         feedback_config = {
@@ -701,7 +713,9 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource() is False
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')() is False
+        )
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True
@@ -717,26 +731,28 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_disabled_repeat_post_on_resource() is True
+        assert (
+            instance.get_helpers().get('is_disabled_repeat_post_on_resource')() is True
+        )
 
-    @patch('ckanext.feedback.plugin.feedback_config')
-    def test_is_enabled_rating_org(self, mock_feedback_config):
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_is_enabled_rating_org(self, mock_get_organization):
         instance = FeedbackPlugin()
         org_name = 'example_org_name'
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_rating_org(org_name) is False
+        assert instance.get_helpers().get('is_enabled_rating')(org_name) is False
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.resources.comment.rating.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_rating_org(org_name) is True
+        assert instance.get_helpers().get('is_enabled_rating')(org_name) is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.resources.comment.rating.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_rating_org(org_name) is False
+        assert instance.get_helpers().get('is_enabled_rating')(org_name) is False
 
         # with feedback_config_file enable is False and org_name is not in enable_orgs
         feedback_config = {
@@ -749,8 +765,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_rating_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_rating')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is False and org_name is in enable_orgs
@@ -764,10 +780,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_rating_org(org_name) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_rating')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is not in enable_orgs
@@ -781,8 +795,8 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = None
-        assert instance.is_enabled_rating_org(org_name) is False
+        mock_get_organization.return_value = None
+        assert instance.get_helpers().get('is_enabled_rating')(org_name) is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is in enable_orgs
@@ -796,27 +810,25 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        mock_feedback_config.get_organization.return_value = SimpleNamespace(
-            **{'name': org_name}
-        )
-        assert instance.is_enabled_rating_org(org_name) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert instance.get_helpers().get('is_enabled_rating')(org_name) is True
 
     def test_is_enabled_rating(self):
         instance = FeedbackPlugin()
 
         # without feedback_config_file and .ini file
         instance.update_config(config)
-        assert instance.is_enabled_rating() is False
+        assert instance.get_helpers().get('is_enabled_rating')() is False
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.resources.comment.rating.enable'] = True
         instance.update_config(config)
-        assert instance.is_enabled_rating() is True
+        assert instance.get_helpers().get('is_enabled_rating')() is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.resources.comment.rating.enable'] = False
         instance.update_config(config)
-        assert instance.is_enabled_rating() is False
+        assert instance.get_helpers().get('is_enabled_rating')() is False
 
         # with feedback_config_file enable is False
         feedback_config = {
@@ -829,7 +841,7 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_rating() is False
+        assert instance.get_helpers().get('is_enabled_rating')() is False
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True
@@ -843,7 +855,7 @@ class TestPlugin:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
         instance.update_config(config)
-        assert instance.is_enabled_rating() is True
+        assert instance.get_helpers().get('is_enabled_rating')() is True
 
     def test_is_base_public_folder_bs3(self):
         instance = FeedbackPlugin()
@@ -853,10 +865,6 @@ class TestPlugin:
         instance.update_config(config)
         assert instance.is_base_public_folder_bs3() is True
 
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_rating_org')
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
@@ -865,17 +873,15 @@ class TestPlugin:
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
-        mock_is_enabled_rating_org,
-        mock_is_enabled_resources_org,
-        mock_is_enabled_utilizations_org,
-        mock_is_enabled_downloads_org,
     ):
         instance = FeedbackPlugin()
 
-        mock_is_enabled_rating_org.return_value = False
-        mock_is_enabled_resources_org.return_value = True
-        mock_is_enabled_utilizations_org.return_value = True
-        mock_is_enabled_downloads_org.return_value = True
+        config[
+            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
+        ] = False
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
 
         mock_resource_summary_service.get_package_comments.return_value = 9999
         mock_resource_summary_service.get_package_rating.return_value = 23.333
@@ -895,7 +901,9 @@ class TestPlugin:
             {'key': _('Comments'), 'value': 9999},
         ]
 
-        mock_is_enabled_rating_org.return_value = True
+        config[
+            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
+        ] = True
 
         dataset['extras'] = []
         instance.before_dataset_view(dataset)
@@ -907,20 +915,16 @@ class TestPlugin:
             {'key': _('Rating'), 'value': 23.3},
         ]
 
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
     def test_before_dataset_view_with_False(
         self,
-        mock_is_enabled_resources_org,
-        mock_is_enabled_utilizations_org,
-        mock_is_enabled_downloads_org,
     ):
         instance = FeedbackPlugin()
 
-        mock_is_enabled_resources_org.return_value = False
-        mock_is_enabled_utilizations_org.return_value = False
-        mock_is_enabled_downloads_org.return_value = False
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
+            False
+        )
+        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
         dataset = factories.Dataset()
         dataset['extras'] = [
             'test',
@@ -930,10 +934,6 @@ class TestPlugin:
         instance.before_dataset_view(dataset)
         assert before_dataset == dataset
 
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_rating_org')
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
@@ -942,17 +942,15 @@ class TestPlugin:
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
-        mock_is_enabled_rating_org,
-        mock_is_enabled_resources_org,
-        mock_is_enabled_utilizations_org,
-        mock_is_enabled_downloads_org,
     ):
         instance = FeedbackPlugin()
 
-        mock_is_enabled_rating_org.return_value = False
-        mock_is_enabled_resources_org.return_value = True
-        mock_is_enabled_utilizations_org.return_value = True
-        mock_is_enabled_downloads_org.return_value = True
+        config[
+            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
+        ] = False
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
 
         mock_resource_summary_service.get_resource_comments.return_value = 9999
         mock_resource_summary_service.get_resource_rating.return_value = 23.333
@@ -970,24 +968,22 @@ class TestPlugin:
         assert resource[_('Issue Resolutions')] == 9999
         assert resource[_('Comments')] == 9999
 
-        mock_is_enabled_rating_org.return_value = True
+        config[
+            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
+        ] = True
         instance.before_resource_show(resource)
         assert resource[_('Rating')] == 23.3
 
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_downloads_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_utilizations_org')
-    @patch('ckanext.feedback.plugin.FeedbackPlugin.is_enabled_resources_org')
     def test_before_resource_show_with_False(
         self,
-        mock_is_enabled_resources_org,
-        mock_is_enabled_utilizations_org,
-        mock_is_enabled_downloads_org,
     ):
         instance = FeedbackPlugin()
 
-        mock_is_enabled_resources_org.return_value = False
-        mock_is_enabled_utilizations_org.return_value = False
-        mock_is_enabled_downloads_org.return_value = False
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
+            False
+        )
+        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
         resource = factories.Resource()
         resource['extras'] = [
             'test',

@@ -2,23 +2,15 @@ import logging
 
 import requests
 from ckan.common import config
-from ckan.plugins import toolkit
 from ckan.types import Request
+
+from ckanext.feedback.services.common.config import FeedbackConfig
 
 logger = logging.getLogger(__name__)
 
 
 class CaptchaError(ValueError):
     pass
-
-
-def is_enabled_recaptcha():
-    enable = config.get('ckan.feedback.recaptcha.enable', False)
-    return toolkit.asbool(enable)
-
-
-def get_feedback_recaptcha_publickey() -> str:
-    return config.get('ckan.feedback.recaptcha.publickey')
 
 
 def _check_recaptcha_v3_base(request: Request) -> None:
@@ -30,7 +22,7 @@ def _check_recaptcha_v3_base(request: Request) -> None:
         logger.warning('not recaptcha_response')
         raise CaptchaError()
 
-    recaptcha_private_key = config.get('ckan.feedback.recaptcha.privatekey')
+    recaptcha_private_key = FeedbackConfig().recaptcha.privatekey.get()
     if not recaptcha_private_key:
         logger.warning('not recaptcha_private_key')
         raise CaptchaError()
@@ -50,7 +42,7 @@ def _check_recaptcha_v3_base(request: Request) -> None:
     timeout = config.get('ckan.requests.timeout')
 
     data = requests.get(recaptcha_server_name, params, timeout=timeout).json()
-    score_threshold = float(config.get('ckan.feedback.recaptcha.score_threshold', 0.5))
+    score_threshold = float(FeedbackConfig().recaptcha.score_threshold.get())
 
     try:
         if not data['success']:
@@ -70,7 +62,7 @@ def _check_recaptcha_v3_base(request: Request) -> None:
 
 
 def is_recaptcha_verified(request: Request):
-    if is_enabled_recaptcha():
+    if FeedbackConfig().recaptcha.is_enable():
         try:
             _check_recaptcha_v3_base(request)
         except CaptchaError:

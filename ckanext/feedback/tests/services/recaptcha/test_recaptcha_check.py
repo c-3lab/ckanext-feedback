@@ -4,6 +4,7 @@ import pytest
 from ckan import model
 from ckan.common import config
 
+from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.recaptcha import check
 
 engine = model.repo.session.get_bind()
@@ -105,5 +106,5 @@ class TestCheck:
 
     def test_get_feedback_recaptcha_publickey(self):
         config['ckan.feedback.recaptcha.publickey'] = 'test_publick_key'
-        ret_value = check.get_feedback_recaptcha_publickey()
+        ret_value = FeedbackConfig().recaptcha.publickey.get()
         assert ret_value == 'test_publick_key'

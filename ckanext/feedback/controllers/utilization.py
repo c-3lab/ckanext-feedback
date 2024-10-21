@@ -1,7 +1,7 @@
 import logging
 
 import ckan.model as model
-from ckan.common import _, config, current_user, g, request
+from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -21,6 +21,7 @@ from ckanext.feedback.services.common.check import (
     has_organization_admin_role,
     is_organization_admin,
 )
+from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
@@ -177,11 +178,9 @@ class UtilizationController:
         try:
             resource = comment_service.get_resource(resource_id)
             send_email(
-                template_name=config.get(
-                    'ckan.feedback.notice.email.template_utilization'
-                ),
+                template_name=FeedbackConfig().notice_email.template_utilization.get(),
                 organization_id=resource.package.owner_org,
-                subject=config.get('ckan.feedback.notice.email.subject_utilization'),
+                subject=FeedbackConfig().notice_email.subject_utilization.get(),
                 target_name=resource.name,
                 content_title=title,
                 content=description,
@@ -296,15 +295,13 @@ class UtilizationController:
         try:
             utilization = detail_service.get_utilization(utilization_id)
             send_email(
-                template_name=config.get(
-                    'ckan.feedback.notice.email.template_utilization_comment'
+                template_name=(
+                    FeedbackConfig().notice_email.template_utilization_comment.get()
                 ),
                 organization_id=comment_service.get_resource(
                     utilization.resource_id
                 ).package.owner_org,
-                subject=config.get(
-                    'ckan.feedback.notice.email.subject_utilization_comment'
-                ),
+                subject=FeedbackConfig().notice_email.subject_utilization_comment.get(),
                 target_name=utilization.title,
                 category=category,
                 content=content,
