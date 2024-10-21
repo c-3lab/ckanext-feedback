@@ -187,7 +187,7 @@ class ResourceController:
         status = comment_service.get_cookie(resource_id)
         if status:
             return status
-        return 'off'
+        return 'False'
 
     @staticmethod
     def like_toggle(package_name, resource_id):
@@ -199,7 +199,7 @@ class ResourceController:
         if resource_id not in resource_id_list:
             likes_service.create_resource_like(resource_id)
 
-        if like_status == 'on':
+        if like_status:
             likes_service.increment_resource_like_count(resource_id)
         else:
             likes_service.decrement_resource_like_count(resource_id)
@@ -207,5 +207,5 @@ class ResourceController:
         session.commit()
 
         resp = Response("OK", status=200, mimetype='text/plain')
-        resp.set_cookie(resource_id, like_status, max_age=43200)
+        resp.set_cookie(resource_id, f'{like_status}', max_age=2147483647)
         return resp
