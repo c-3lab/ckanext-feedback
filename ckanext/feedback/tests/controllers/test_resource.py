@@ -685,20 +685,20 @@ class TestResourceController:
         mock_toolkit_abort.assert_called_once_with(400)
 
     @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
-    def test_like_status_return_on(self, mock_get_cookie):
-        mock_get_cookie.return_value = 'on'
+    def test_like_status_return_True(self, mock_get_cookie):
+        mock_get_cookie.return_value = 'True'
         resource_id = 'resource id'
 
         result = ResourceController.like_status(resource_id)
-        assert result == 'on'
+        assert result == 'True'
 
     @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
-    def test_like_status_return_off(self, mock_get_cookie):
-        mock_get_cookie.return_value = 'off'
+    def test_like_status_return_False(self, mock_get_cookie):
+        mock_get_cookie.return_value = 'False'
         resource_id = 'resource id'
 
         result = ResourceController.like_status(resource_id)
-        assert result == 'off'
+        assert result == 'False'
 
     @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
     def test_like_status_none(self, mock_get_cookie):
@@ -706,20 +706,20 @@ class TestResourceController:
         resource_id = 'resource id'
 
         result = ResourceController.like_status(resource_id)
-        assert result == 'off'
+        assert result == 'False'
 
     @patch('ckanext.feedback.controllers.resource.request.get_json')
     @patch('ckanext.feedback.controllers.resource.likes_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.Response')
-    def test_like_toggle_on_with_new_resource(
+    def test_like_toggle_True_with_new_resource(
         self,
         mock_response,
         mock_session_commit,
         mock_likes_service,
         mock_get_json,
     ):
-        mock_get_json.return_value = {'likeStatus': 'on'}
+        mock_get_json.return_value = {'likeStatus': True}
         resource_id = 'resource id'
 
         mock_likes_service.get_all_resource_ids.return_value = []
@@ -738,7 +738,7 @@ class TestResourceController:
         )
         mock_likes_service.decrement_resource_like_count.assert_not_called()
         mock_session_commit.assert_called_once()
-        mock_resp.set_cookie.assert_called_once_with(resource_id, 'on', max_age=43200)
+        mock_resp.set_cookie.assert_called_once_with(resource_id, 'True', max_age=43200)
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
@@ -749,14 +749,14 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.likes_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.Response')
-    def test_like_toggle_on_with_existing_resource(
+    def test_like_toggle_True_with_existing_resource(
         self,
         mock_response,
         mock_session_commit,
         mock_likes_service,
         mock_get_json,
     ):
-        mock_get_json.return_value = {'likeStatus': 'on'}
+        mock_get_json.return_value = {'likeStatus': True}
         resource_id = 'resource id'
 
         mock_likes_service.get_all_resource_ids.return_value = [
@@ -777,7 +777,7 @@ class TestResourceController:
         )
         mock_likes_service.decrement_resource_like_count.assert_not_called()
         mock_session_commit.assert_called_once()
-        mock_resp.set_cookie.assert_called_once_with(resource_id, 'on', max_age=43200)
+        mock_resp.set_cookie.assert_called_once_with(resource_id, 'True', max_age=43200)
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
@@ -788,14 +788,14 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.likes_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.Response')
-    def test_like_toggle_off(
+    def test_like_toggle_False(
         self,
         mock_response,
         mock_session_commit,
         mock_likes_service,
         mock_get_json,
     ):
-        mock_get_json.return_value = {'likeStatus': 'off'}
+        mock_get_json.return_value = {'likeStatus': False}
         resource_id = 'resource id'
 
         mock_likes_service.get_all_resource_ids.return_value = [
@@ -816,7 +816,9 @@ class TestResourceController:
             resource_id
         )
         mock_session_commit.assert_called_once()
-        mock_resp.set_cookie.assert_called_once_with(resource_id, 'off', max_age=43200)
+        mock_resp.set_cookie.assert_called_once_with(
+            resource_id, 'False', max_age=43200
+        )
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
