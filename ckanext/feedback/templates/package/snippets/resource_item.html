@@ -2,10 +2,12 @@
 
 {% block resource_item_title %}
   {% asset 'feedback/feedback-tooltip-css' %}
+  {% asset 'feedback/feedback-tooltip-css' %}
   <a class="heading" href="{{ url }}" title="{{ res.name or res.description }}">
     {{ h.resource_display_name(res) | truncate(50) }}<span class="format-label" property="dc:format" data-format="{{ res.format.lower() or 'data' }}">{{ h.get_translated(res, 'format') }}</span>
     {{ h.popular('views', res.tracking_summary.total, min=10) if res.tracking_summary }}
   </a>
+  <br>
   <br>
   {% if h.is_enabled_liked() %}
     <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('resource.read', id=pkg.id, resource_id=res.id, package_type='dataset') }}">
@@ -99,7 +101,7 @@
             <li>
               <a class="dropdown-item" href="{{ url }}">
                 <i class="fa-solid fa-thumbs-up"></i>
-								{{ _('liked') }}
+                {{ _('liked') }}
               </a>
             </li>
           {% endif %}
