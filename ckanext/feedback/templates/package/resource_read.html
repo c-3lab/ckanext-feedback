@@ -11,16 +11,19 @@
       <div class="btn-group">
     {% endif %}
       {% if res.url and h.is_url(res.url) %}
-        <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" download>
-          {% if res.resource_type in ('listing', 'service') %}
-            <i class="fa fa-eye"></i> {{ _('View') }}
-          {% elif  res.resource_type == 'api' %}
-            <i class="fa fa-key"></i> {{ _('API Endpoint') }}
-          {% elif not res.has_views and not res.url_type == 'upload' %}
-            <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
-          {% else %}
-            <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
-          {% endif %}
+        {% if res.resource_type in ('listing', 'service') %}
+        <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
+          <i class="fa fa-eye"></i> {{ _('View') }}
+        {% elif  res.resource_type == 'api' %}
+        <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
+          <i class="fa fa-key"></i> {{ _('API Endpoint') }}
+        {% elif not res.has_views and not res.url_type == 'upload' %}
+        <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}">
+          <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
+        {% else %}
+        <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" titel="{{ res.url }}" download>
+          <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
+        {% endif %}
         </a>
       {% endif %}
       {% block download_resource_button %}
@@ -82,7 +85,7 @@
 
 {% block resource_read_url %}
   {% if res.url and h.is_url(res.url) %}
-    <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" title="{{ res.url }}" download>{{ res.url }}</a></p>
+    <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" title="{{ res.url }}">{{ res.url }}</a></p>
   {% elif res.url %}
     <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
   {% endif %}

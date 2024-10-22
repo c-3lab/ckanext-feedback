@@ -88,14 +88,15 @@
 
         	{% if res.url and h.is_url(res.url) %}
       			<li>
-        			<a class="dropdown-item resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" target="_blank" rel="noreferrer" download>
-          			{% if res.has_views or res.url_type == 'upload' %}
-            			<i class="fa fa-arrow-circle-down"></i>
-            			{{ _('Download') }}
-          			{% else %}
-            			<i class="fa fa-external-link"></i>
-            			{{ _('Go to resource') }}
-          			{% endif %}
+              {% if res.has_views or res.url_type == 'upload' %}
+              <a class="dropdown-item resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" target="_blank" rel="noreferrer" download>
+                <i class="fa fa-arrow-circle-down"></i>
+                {{ _('Download') }}
+              {% else %}
+              <a class="dropdown-item resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" target="_blank" rel="noreferrer">
+                <i class="fa fa-external-link"></i>
+                {{ _('Go to resource') }}
+              {% endif %}
         			</a>
       			</li>
       		{% endif %}
