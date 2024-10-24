@@ -131,9 +131,9 @@ class downloadsConfig(BaseConfig, feedbackConfigInterface):
 class resourceCommentConfig(BaseConfig, feedbackConfigInterface):
     def __init__(self):
         super().__init__('resources')
-        pearents = self.conf_path + ['comment']
-        self.repeat_post_limit = BaseConfig('repeat_post_limit', pearents)
-        self.rating = BaseConfig('rating', pearents)
+        parents = self.conf_path + ['comment']
+        self.repeat_post_limit = BaseConfig('repeat_post_limit', parents)
+        self.rating = BaseConfig('rating', parents)
 
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs(feedback_config, True)
