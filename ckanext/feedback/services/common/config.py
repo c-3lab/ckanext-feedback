@@ -31,19 +31,11 @@ def download_handler():
 
 class Singleton(object):
     _instance = None
-    _initialized = False
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Singleton, cls).__new__(cls)
         return cls._instance
-
-    def __init__(self):
-        if not self.__class__._initialized:
-            self.__class__._initialized = True
-            return True
-        else:
-            return False
 
 
 class feedbackConfigInterface(ABC):
@@ -240,9 +232,11 @@ class noticeEmailConfig(BaseConfig, feedbackConfigInterface):
 
 class FeedbackConfig(Singleton):
     is_feedback_config_file = None
+    _initialized = False
 
     def __init__(self):
-        if super().__init__():
+        if not self.__class__._initialized:
+            self.__class__._initialized = True
             self.config_default_dir = '/srv/app'
             self.config_file_name = 'feedback_config.json'
             self.feedback_config_path = config.get(
