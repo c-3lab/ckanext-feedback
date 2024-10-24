@@ -46,7 +46,9 @@ class TestDownloadController:
         resource = factories.Resource(package_id=dataset['id'])
         mock_download_handler.return_value = None
 
-        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'document'}
+        ):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
@@ -75,7 +77,9 @@ class TestDownloadController:
     ):
         resource = factories.Resource()
         mock_download_handler.return_value = handler
-        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'image'}
+        ):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], resource['url']
             )
@@ -110,7 +114,9 @@ class TestDownloadController:
         mock_external_response.headers.get.return_value = 'filename="mock.txt"'
         mock_Response.return_value = mock_external_response
 
-        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'document'}
+        ):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
@@ -146,7 +152,9 @@ class TestDownloadController:
         mock_external_response.headers.get.return_value = ''
         mock_Response.return_value = mock_external_response
 
-        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'document'}
+        ):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
@@ -182,7 +190,9 @@ class TestDownloadController:
         mock_external_response.headers.get.return_value = ''
         mock_Response.return_value = mock_external_response
 
-        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'document'}
+        ):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
@@ -218,7 +228,9 @@ class TestDownloadController:
         mock_external_response.headers.get.return_value = ''
         mock_Response.return_value = mock_external_response
 
-        with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'document'}):
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'document'}
+        ):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
