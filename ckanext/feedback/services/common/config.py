@@ -53,22 +53,21 @@ class feedbackConfigInterface(ABC):
 
 
 class BaseConfig:
-    def __init__(self, name: str, parent: list = []):
+    def __init__(self, name: str, parent: list = None):
         self.default = None
         self.name = name
         self.ckan_conf_prefix = ['ckan', 'feedback']
         self.fb_conf_prefix = ['modules']
-        self.conf_path = parent + [name]
+        self.conf_path = (parent or []) + [name]
 
     def get_ckan_conf_str(self):
         return '.'.join(self.ckan_conf_prefix + self.conf_path)
 
     def set_enable_and_enable_orgs(
-        self, feedback_config: dict, default, fb_conf_path: list = []
+        self, feedback_config: dict, default, fb_conf_path: list = None
     ):
         self.default = default
-        if not fb_conf_path:
-            fb_conf_path = self.conf_path
+        fb_conf_path = fb_conf_path or self.conf_path
 
         conf_tree = feedback_config
         try:
@@ -89,14 +88,12 @@ class BaseConfig:
         self,
         feedback_config: dict,
         default,
-        ckan_conf_path: list = [],
-        fb_conf_path: list = [],
+        ckan_conf_path: list = None,
+        fb_conf_path: list = None,
     ):
         self.default = default
-        if not ckan_conf_path:
-            ckan_conf_path = self.conf_path
-        if not fb_conf_path:
-            fb_conf_path = self.conf_path
+        ckan_conf_path = ckan_conf_path or self.conf_path
+        fb_conf_path = fb_conf_path or self.conf_path
 
         ckan_conf_path_str = '.'.join(self.ckan_conf_prefix + ckan_conf_path)
         value = feedback_config
