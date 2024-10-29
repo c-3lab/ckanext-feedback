@@ -100,7 +100,8 @@ class BaseConfig:
                     f" feedback_conf_path:{self.fb_conf_prefix + fb_conf_path} "
                     "target-key:'{key}'"
                 )
-        config[ckan_conf_path_str] = value
+        if value is not None:
+            config[ckan_conf_path_str] = value
 
     def get(self):
         ck_conf_str = self.get_ckan_conf_str()
