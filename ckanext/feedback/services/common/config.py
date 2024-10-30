@@ -56,9 +56,8 @@ class BaseConfig:
         return '.'.join(self.ckan_conf_prefix + self.conf_path)
 
     def set_enable_and_enable_orgs(
-        self, feedback_config: dict, default, fb_conf_path: list = None
+        self, feedback_config: dict, fb_conf_path: list = None
     ):
-        self.default = default
         fb_conf_path = fb_conf_path or self.conf_path
 
         conf_tree = feedback_config
@@ -79,11 +78,9 @@ class BaseConfig:
     def set_config(
         self,
         feedback_config: dict,
-        default,
         ckan_conf_path: list = None,
         fb_conf_path: list = None,
     ):
-        self.default = default
         ckan_conf_path = ckan_conf_path or self.conf_path
         fb_conf_path = fb_conf_path or self.conf_path
 
@@ -124,111 +121,123 @@ class BaseConfig:
 class downloadsConfig(BaseConfig, feedbackConfigInterface):
     def __init__(self):
         super().__init__('downloads')
+        self.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config, True)
+        self.set_enable_and_enable_orgs(feedback_config)
 
 
 class resourceCommentConfig(BaseConfig, feedbackConfigInterface):
     def __init__(self):
         super().__init__('resources')
+        self.default = True
+
         parents = self.conf_path + ['comment']
         self.repeat_post_limit = BaseConfig('repeat_post_limit', parents)
+        self.repeat_post_limit.default = False
+
         self.rating = BaseConfig('rating', parents)
+        self.rating.default = False
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config, True)
+        self.set_enable_and_enable_orgs(feedback_config)
 
         fb_comments_conf_path = self.conf_path + ['comments']
         self.repeat_post_limit.set_enable_and_enable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.repeat_post_limit.name],
-            default=False,
         )
 
         self.rating.set_enable_and_enable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.rating.name],
-            default=False,
         )
 
 
 class utilizationConfig(BaseConfig, feedbackConfigInterface):
     def __init__(self):
         super().__init__('utilizations')
+        self.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config, True)
+        self.set_enable_and_enable_orgs(feedback_config)
 
 
 class reCaptchaConfig(BaseConfig, feedbackConfigInterface):
     def __init__(self):
         super().__init__('recaptcha')
+        self.default = False
 
         parents = self.conf_path
         self.privatekey = BaseConfig('privatekey', parents)
+        self.privatekey.default = ''
         self.publickey = BaseConfig('publickey', parents)
+        self.publickey.default = ''
         self.score_threshold = BaseConfig('score_threshold', parents)
+        self.score_threshold.default = 0.5
 
     def load_config(self, feedback_config):
         self.set_config(
             feedback_config=feedback_config,
             fb_conf_path=self.conf_path + ['enable'],
             ckan_conf_path=self.conf_path + ['enable'],
-            default=False,
         )
 
-        self.privatekey.set_config(feedback_config, default='')
-        self.publickey.set_config(feedback_config, default='')
-        self.score_threshold.set_config(feedback_config, default=0.5)
+        self.privatekey.set_config(feedback_config)
+        self.publickey.set_config(feedback_config)
+        self.score_threshold.set_config(feedback_config)
 
 
 class noticeEmailConfig(BaseConfig, feedbackConfigInterface):
     def __init__(self):
         super().__init__('email', ['notice'])
+        self.default = False
 
         parents = self.conf_path
         self.template_directory = BaseConfig('template_directory', parents)
+        self.template_directory.default = (
+            '/srv/app/src_extensions/ckanext-feedback/'
+            'ckanext/feedback/templates/email_notificatio'
+        )
+
         self.template_utilization = BaseConfig('template_utilization', parents)
+        self.template_utilization.default = 'utilization.text'
+
         self.template_utilization_comment = BaseConfig(
             'template_utilization_comment', parents
         )
+        self.template_utilization_comment.default = 'utilization_comment.text'
+
         self.template_resource_comment = BaseConfig(
             'template_resource_comment', parents
         )
+        self.template_resource_comment.default = 'resource_comment.text'
+
         self.subject_utilization = BaseConfig('subject_utilization', parents)
+        self.subject_utilization.default = 'Post a Utilization'
+
         self.subject_utilization_comment = BaseConfig(
             'subject_utilization_comment', parents
         )
+        self.subject_utilization_comment.default = 'Post a Utilization comment'
+
         self.subject_resource_comment = BaseConfig('subject_resource_comment', parents)
+        self.subject_resource_comment.default = 'Post a Resource comment'
 
     def load_config(self, feedback_config):
         self.set_config(
             feedback_config=feedback_config,
             fb_conf_path=self.conf_path + ['enable'],
             ckan_conf_path=self.conf_path + ['enable'],
-            default=False,
         )
 
-        self.template_directory.set_config(
-            feedback_config=feedback_config,
-            default='/srv/app/src_extensions/ckanext-feedback/'
-            'ckanext/feedback/templates/email_notificatio',
-        )
-        self.template_utilization.set_config(feedback_config, 'utilization.text')
-        self.template_utilization_comment.set_config(
-            feedback_config=feedback_config, default='utilization_comment.text'
-        )
-        self.template_resource_comment.set_config(
-            feedback_config=feedback_config, default='resource_comment.text'
-        )
-        self.subject_utilization.set_config(feedback_config, 'Post a Utilization')
-        self.subject_utilization_comment.set_config(
-            feedback_config=feedback_config, default='Post a Utilization comment'
-        )
-        self.subject_resource_comment.set_config(
-            feedback_config, 'Post a Resource comment'
-        )
+        self.template_directory.set_config(feedback_config=feedback_config)
+        self.template_utilization.set_config(feedback_config)
+        self.template_utilization_comment.set_config(feedback_config=feedback_config)
+        self.template_resource_comment.set_config(feedback_config=feedback_config)
+        self.subject_utilization.set_config(feedback_config)
+        self.subject_utilization_comment.set_config(feedback_config=feedback_config)
+        self.subject_resource_comment.set_config(feedback_config)
 
 
 class FeedbackConfig(Singleton):
