@@ -5,7 +5,6 @@ from ckan.common import _, config, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
-from flask import redirect, url_for
 
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.utilization.details as detail_service
@@ -185,7 +184,7 @@ class UtilizationController:
                 target_name=resource.name,
                 content_title=title,
                 content=description,
-                url=url_for(
+                url=toolkit.url_for(
                     'utilization.details', utilization_id=utilization_id, _external=True
                 ),
             )
@@ -201,11 +200,11 @@ class UtilizationController:
         )
 
         if return_to_resource:
-            return redirect(
-                url_for('resource.read', id=package_name, resource_id=resource_id)
+            return toolkit.redirect_to(
+                'resource.read', id=package_name, resource_id=resource_id
             )
         else:
-            return redirect(url_for('dataset.read', id=package_name))
+            return toolkit.redirect_to('dataset.read', id=package_name)
 
     # utilization/<utilization_id>
     @staticmethod
@@ -265,7 +264,7 @@ class UtilizationController:
         summary_service.refresh_utilization_summary(resource_id)
         session.commit()
 
-        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/comment/new
     @staticmethod
@@ -334,7 +333,7 @@ class UtilizationController:
         detail_service.refresh_utilization_comments(utilization_id)
         session.commit()
 
-        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/edit
     @staticmethod
@@ -406,7 +405,7 @@ class UtilizationController:
             allow_html=True,
         )
 
-        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/delete
     @staticmethod
@@ -424,7 +423,7 @@ class UtilizationController:
             allow_html=True,
         )
 
-        return redirect(url_for('utilization.search'))
+        return toolkit.redirect_to('utilization.search')
 
     # utilization/<utilization_id>/issue_resolution/new
     @staticmethod
@@ -441,7 +440,7 @@ class UtilizationController:
         summary_service.increment_issue_resolution_summary(utilization_id)
         session.commit()
 
-        return redirect(url_for('utilization.details', utilization_id=utilization_id))
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     @staticmethod
     def _check_organization_admin_role(utilization_id):
