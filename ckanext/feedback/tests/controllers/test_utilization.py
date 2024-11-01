@@ -697,12 +697,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_create_return_to_resource_true(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_flash_success,
         mock_session_commit,
         mock_summary_service,
@@ -724,7 +722,6 @@ class TestUtilizationController:
             description,
             return_to_resource,
         ]
-        mock_url_for.return_value = 'resource read url'
 
         UtilizationController.create()
 
@@ -734,22 +731,19 @@ class TestUtilizationController:
         mock_summary_service.create_utilization_summary.assert_called_with(resource_id)
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'resource.read', id=package_name, resource_id=resource_id
         )
-        mock_redirect.assert_called_with('resource read url')
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.registration_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_create_return_to_resource_false(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_flash_success,
         mock_session_commit,
         mock_summary_service,
@@ -771,7 +765,6 @@ class TestUtilizationController:
             description,
             return_to_resource,
         ]
-        mock_url_for.return_value = 'dataset read url'
 
         UtilizationController.create()
 
@@ -781,18 +774,15 @@ class TestUtilizationController:
         mock_summary_service.create_utilization_summary.assert_called_with(resource_id)
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with('dataset.read', id=package_name)
-        mock_redirect.assert_called_with('dataset read url')
+        mock_redirect_to.assert_called_once_with('dataset.read', id=package_name)
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.registration_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
     def test_create_without_resource_id_title_description(
         self,
-        mock_url_for,
         mock_flash_success,
         mock_summary_service,
         mock_registration_service,
@@ -814,7 +804,6 @@ class TestUtilizationController:
             description,
             return_to_resource,
         ]
-        mock_url_for.return_value = 'resource read url'
 
         UtilizationController.create()
 
@@ -1339,12 +1328,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_approve(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_session_commit,
         mock_summary_service,
         mock_detail_service,
@@ -1359,7 +1346,6 @@ class TestUtilizationController:
         mock_detail_service.get_utilization.return_value = MagicMock(
             resource_id=resource_id
         )
-        mock_url_for.return_value = 'utilization details url'
 
         UtilizationController.approve(utilization_id)
 
@@ -1371,10 +1357,9 @@ class TestUtilizationController:
             resource_id
         )
         mock_session_commit.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
-        mock_redirect.assert_called_once_with('utilization details url')
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
@@ -1410,10 +1395,8 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
     def test_create_comment_without_category_content(
         self,
-        mock_url_for,
         mock_flash_success,
         mock_detail_service,
         mock_form,
@@ -1424,7 +1407,6 @@ class TestUtilizationController:
         content = ''
 
         mock_form.get.side_effect = [category, content]
-        mock_url_for.return_value = 'utilization details url'
 
         UtilizationController.create_comment(utilization_id)
 
@@ -1488,12 +1470,10 @@ class TestUtilizationController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_approve_comment(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_session_commit,
         mock_detail_service,
         current_user,
@@ -1502,8 +1482,6 @@ class TestUtilizationController:
         comment_id = 'comment id'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
-
-        mock_url_for.return_value = 'utilization details url'
 
         g.userobj = current_user
         UtilizationController.approve_comment(utilization_id, comment_id)
@@ -1515,10 +1493,9 @@ class TestUtilizationController:
             utilization_id
         )
         mock_session_commit.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
-        mock_redirect.assert_called_once_with('utilization details url')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -1578,14 +1555,12 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_update(
         self,
         mock_detail_service,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_flash_success,
         mock_session_commit,
         mock_edit_service,
@@ -1598,7 +1573,6 @@ class TestUtilizationController:
         description = 'description'
 
         mock_form.get.side_effect = [title, url, description]
-        mock_url_for.return_value = 'utilization details url'
 
         organization = factories.Organization()
         utilization = MagicMock()
@@ -1614,22 +1588,19 @@ class TestUtilizationController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
-        mock_redirect.assert_called_once_with('utilization details url')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_update_without_title_description(
         self,
         mock_detail_service,
-        mock_url_for,
         mock_flash_success,
         mock_edit_service,
         mock_form,
@@ -1642,7 +1613,6 @@ class TestUtilizationController:
         description = ''
 
         mock_form.get.side_effect = [title, url, description]
-        mock_url_for.return_value = 'utilization_details_url'
 
         organization = factories.Organization()
         utilization = MagicMock()
@@ -1782,12 +1752,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_delete(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_flash_success,
         mock_session_commit,
         mock_summary_service,
@@ -1802,8 +1770,6 @@ class TestUtilizationController:
         utilization.resource_id = resource_id
         mock_detail_service.get_utilization.return_value = utilization
 
-        mock_url_for.return_value = 'utilization search url'
-
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
         g.userobj = current_user
@@ -1816,20 +1782,17 @@ class TestUtilizationController:
         )
         assert mock_session_commit.call_count == 2
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_called_once_with('utilization.search')
-        mock_redirect.assert_called_once_with('utilization search url')
+        mock_redirect_to.assert_called_once_with('utilization.search')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
-    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_create_issue_resolution(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_session_commit,
         mock_summary_service,
         mock_detail_service,
@@ -1840,7 +1803,6 @@ class TestUtilizationController:
         description = 'description'
 
         mock_form.get.return_value = description
-        mock_url_for.return_value = 'utilization details url'
 
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -1854,20 +1816,19 @@ class TestUtilizationController:
             utilization_id
         )
         mock_session_commit.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
-        mock_redirect.assert_called_once_with('utilization details url')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
-    @patch('ckanext.feedback.controllers.utilization.url_for')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     def test_create_issue_resolution_without_description(
         self,
-        mock_url_for,
+        mock_redirect_to,
         mock_summary_service,
         mock_detail_service,
         mock_form,
@@ -1879,7 +1840,7 @@ class TestUtilizationController:
         description = ''
 
         mock_form.get.return_value = description
-        mock_url_for.return_value = 'utilization details url'
+        mock_redirect_to.return_value = ''
 
         with self.app.test_request_context():
             user_dict = factories.Sysadmin()

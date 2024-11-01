@@ -156,8 +156,7 @@ class TestManagementController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management._')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.helpers.flash_success')
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
@@ -168,8 +167,7 @@ class TestManagementController:
         mock_comments_service,
         mock_session_commit,
         mock_flash_success,
-        mock_url_for,
-        mock_redirect,
+        mock_redirect_to,
         _,
         current_user,
         app,
@@ -182,8 +180,7 @@ class TestManagementController:
 
         mock_form.getlist.return_value = comments
         mock_comments_service.get_utilizations.return_value = utilizations
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -204,23 +201,20 @@ class TestManagementController:
             f'{len(comments)} ' + _('bulk approval completed.'),
             allow_html=True,
         )
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'management.comments', tab='utilization-comments'
         )
-        mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
     def test_approve_bulk_utilization_comments_without_comment(
-        self, mock_form, mock_url_for, mock_redirect, current_user, app, sysadmin_env
+        self, mock_form, mock_redirect_to, current_user, app, sysadmin_env
     ):
         mock_form.getlist.return_value = None
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -228,14 +222,11 @@ class TestManagementController:
             g.userobj = current_user
             response = ManagementController.approve_bulk_utilization_comments()
 
-        mock_redirect.assert_called_once_with('url')
-
         assert response == 'redirect_response'
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management._')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.helpers.flash_success')
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
@@ -246,8 +237,7 @@ class TestManagementController:
         mock_comments_service,
         mock_session_commit,
         mock_flash_success,
-        mock_url_for,
-        mock_redirect,
+        mock_redirect_to,
         _,
         current_user,
         app,
@@ -262,8 +252,7 @@ class TestManagementController:
         mock_comments_service.get_resource_comment_summaries.return_value = (
             resource_comment_summaries
         )
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -286,29 +275,25 @@ class TestManagementController:
             f'{len(comments)} ' + _('bulk approval completed.'),
             allow_html=True,
         )
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'management.comments', tab='resource-comments'
         )
-        mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
     def test_approve_bulk_resource_comments_without_comment(
         self,
         mock_form,
-        mock_url_for,
-        mock_redirect,
+        mock_redirect_to,
         current_user,
         app,
         sysadmin_env,
     ):
         mock_form.getlist.return_value = None
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -316,17 +301,15 @@ class TestManagementController:
             g.userobj = current_user
             response = ManagementController.approve_bulk_resource_comments()
 
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'management.comments', tab='resource-comments'
         )
-        mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management._')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.helpers.flash_success')
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
@@ -337,8 +320,7 @@ class TestManagementController:
         mock_comments_service,
         mock_session_commit,
         mock_flash_success,
-        mock_url_for,
-        mock_redirect,
+        mock_redirect_to,
         _,
         current_user,
         app,
@@ -351,8 +333,7 @@ class TestManagementController:
 
         mock_form.getlist.return_value = comments
         mock_comments_service.get_utilizations.return_value = utilizations
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -373,29 +354,25 @@ class TestManagementController:
             f'{len(comments)} ' + _('bulk delete completed.'),
             allow_html=True,
         )
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'management.comments', tab='utilization-comments'
         )
-        mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
     def test_delete_bulk_utilization_comments_without_comment(
         self,
         mock_form,
-        mock_url_for,
-        mock_redirect,
+        mock_redirect_to,
         current_user,
         app,
         sysadmin_env,
     ):
         mock_form.getlist.return_value = None
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -403,17 +380,15 @@ class TestManagementController:
             g.userobj = current_user
             response = ManagementController.delete_bulk_utilization_comments()
 
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'management.comments', tab='utilization-comments'
         )
-        mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management._')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.helpers.flash_success')
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
@@ -424,8 +399,7 @@ class TestManagementController:
         mock_comments_service,
         mock_session_commit,
         mock_flash_success,
-        mock_url_for,
-        mock_redirect,
+        mock_redirect_to,
         _,
         current_user,
         app,
@@ -445,8 +419,7 @@ class TestManagementController:
         mock_comments_service.get_resource_comment_summaries.return_value = (
             resource_comment_summaries
         )
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -467,29 +440,25 @@ class TestManagementController:
             f'{len(comments)} ' + _('bulk delete completed.'),
             allow_html=True,
         )
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'management.comments', tab='resource-comments'
         )
-        mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.redirect')
-    @patch('ckanext.feedback.controllers.management.url_for')
+    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
     def test_delete_bulk_resource_comments_without_comment(
         self,
         mock_form,
-        mock_url_for,
-        mock_redirect,
+        mock_redirect_to,
         current_user,
         app,
         sysadmin_env,
     ):
         mock_form.getlist.return_value = None
-        mock_url_for.return_value = 'url'
-        mock_redirect.return_value = 'redirect_response'
+        mock_redirect_to.return_value = 'redirect_response'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -497,10 +466,9 @@ class TestManagementController:
             g.userobj = current_user
             response = ManagementController.delete_bulk_resource_comments()
 
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'management.comments', tab='resource-comments'
         )
-        mock_redirect.assert_called_once_with('url')
 
         assert response == 'redirect_response'
 

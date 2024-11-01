@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import pytest
 from ckan import model
@@ -278,16 +278,16 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     @patch('ckanext.feedback.controllers.resource.session.commit')
-    @patch('ckanext.feedback.controllers.resource.url_for')
-    @patch('ckanext.feedback.controllers.resource.redirect')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.toolkit.url_for')
     @patch('ckanext.feedback.controllers.resource.make_response')
     @patch('ckanext.feedback.controllers.resource.send_email')
     def test_create_comment(
         self,
         mock_send_email,
         mock_make_response,
-        mock_redirect,
         mock_url_for,
+        mock_redirect_to,
         mock_session_commit,
         mock_flash_success,
         mock_comment_service,
@@ -308,7 +308,6 @@ class TestResourceController:
             rating,
         ]
         mock_send_email.side_effect = Exception("Mock Exception")
-
         mock_url_for.return_value = 'resource comment'
         resp = ResourceController.create_comment(resource_id)
 
@@ -320,16 +319,13 @@ class TestResourceController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
-        mock_url_for.assert_has_calls(
-            [
-                call(
-                    'resource_comment.comment', resource_id=resource_id, _external=True
-                ),
-                call('resource.read', id=package_name, resource_id=resource_id),
-            ]
+        mock_url_for.assert_called_once_with(
+            'resource_comment.comment', resource_id=resource_id, _external=True
         )
-        mock_redirect.assert_called_once_with('resource comment')
-        mock_make_response.assert_called_once_with(mock_redirect())
+        mock_redirect_to.assert_called_once_with(
+            'resource.read', id=package_name, resource_id=resource_id
+        )
+        mock_make_response.assert_called_once_with(mock_redirect_to())
         resp.set_cookie.assert_called_once_with(resource_id, 'alreadyPosted')
 
     @patch('ckanext.feedback.controllers.resource.validate_service.validate_comment')
@@ -339,14 +335,12 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     @patch('ckanext.feedback.controllers.resource.session.commit')
-    @patch('ckanext.feedback.controllers.resource.url_for')
-    @patch('ckanext.feedback.controllers.resource.redirect')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.make_response')
     def test_create_comment_without_category_content(
         self,
         mock_make_response,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_session_commit,
         mock_flash_success,
         mock_comment_service,
@@ -428,12 +422,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
-    @patch('ckanext.feedback.controllers.resource.url_for')
-    @patch('ckanext.feedback.controllers.resource.redirect')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_approve_comment_with_sysadmin(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_session_commit,
         mock_comment_service,
         mock_summary_service,
@@ -449,7 +441,7 @@ class TestResourceController:
 
         mock_form.get.side_effect = [resource_comment_id]
 
-        mock_url_for.return_value = 'resource comment url'
+        mock_redirect_to.return_value = 'resource comment url'
         ResourceController.approve_comment(resource_id)
 
         mock_comment_service.approve_resource_comment.assert_called_once_with(
@@ -459,11 +451,9 @@ class TestResourceController:
             resource_id
         )
         mock_session_commit.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'resource_comment.comment', resource_id=resource_id
         )
-
-        mock_redirect.assert_called_once_with('resource comment url')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
@@ -486,12 +476,10 @@ class TestResourceController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
-    @patch('ckanext.feedback.controllers.resource.url_for')
-    @patch('ckanext.feedback.controllers.resource.redirect')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_approve_comment_with_other_organization_admin_user(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_comment_service,
         mock_toolkit_abort,
         current_user,
@@ -556,12 +544,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
-    @patch('ckanext.feedback.controllers.resource.url_for')
-    @patch('ckanext.feedback.controllers.resource.redirect')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_reply_with_sysadmin(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_session_commit,
         mock_comment_service,
         mock_summary_service,
@@ -581,18 +567,16 @@ class TestResourceController:
             reply_content,
         ]
 
-        mock_url_for.return_value = 'resource comment url'
+        mock_redirect_to.return_value = 'resource comment url'
         ResourceController.reply(resource_id)
 
         mock_comment_service.create_reply.assert_called_once_with(
             resource_comment_id, reply_content, user_dict['id']
         )
         mock_session_commit.assert_called_once()
-        mock_url_for.assert_called_once_with(
+        mock_redirect_to.assert_called_once_with(
             'resource_comment.comment', resource_id=resource_id
         )
-
-        mock_redirect.assert_called_once_with('resource comment url')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
@@ -615,12 +599,10 @@ class TestResourceController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
-    @patch('ckanext.feedback.controllers.resource.url_for')
-    @patch('ckanext.feedback.controllers.resource.redirect')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_reply_with_other_organization_admin_user(
         self,
-        mock_redirect,
-        mock_url_for,
+        mock_redirect_to,
         mock_comment_service,
         mock_toolkit_abort,
         current_user,
