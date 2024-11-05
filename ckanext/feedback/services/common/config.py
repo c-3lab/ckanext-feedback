@@ -38,7 +38,7 @@ class Singleton(object):
         return cls._instance
 
 
-class feedbackConfigInterface(ABC):
+class FeedbackConfigInterface(ABC):
     @abstractmethod
     def load_config(self, feedback_config):
         pass
@@ -118,7 +118,7 @@ class BaseConfig:
         return toolkit.asbool(enable)
 
 
-class downloadsConfig(BaseConfig, feedbackConfigInterface):
+class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
         super().__init__('downloads')
         self.default = True
@@ -127,7 +127,7 @@ class downloadsConfig(BaseConfig, feedbackConfigInterface):
         self.set_enable_and_enable_orgs(feedback_config)
 
 
-class resourceCommentConfig(BaseConfig, feedbackConfigInterface):
+class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
         super().__init__('resources')
         self.default = True
@@ -154,7 +154,7 @@ class resourceCommentConfig(BaseConfig, feedbackConfigInterface):
         )
 
 
-class utilizationConfig(BaseConfig, feedbackConfigInterface):
+class UtilizationConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
         super().__init__('utilizations')
         self.default = True
@@ -163,7 +163,7 @@ class utilizationConfig(BaseConfig, feedbackConfigInterface):
         self.set_enable_and_enable_orgs(feedback_config)
 
 
-class reCaptchaConfig(BaseConfig, feedbackConfigInterface):
+class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
         super().__init__('recaptcha')
         self.default = False
@@ -188,7 +188,7 @@ class reCaptchaConfig(BaseConfig, feedbackConfigInterface):
         self.score_threshold.set_config(feedback_config)
 
 
-class noticeEmailConfig(BaseConfig, feedbackConfigInterface):
+class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
         super().__init__('email', ['notice'])
         self.default = False
@@ -254,11 +254,11 @@ class FeedbackConfig(Singleton):
             )
             self.is_feedback_config_file = False
 
-            self.download = downloadsConfig()
-            self.resource_comment = resourceCommentConfig()
-            self.utilization = utilizationConfig()
-            self.recaptcha = reCaptchaConfig()
-            self.notice_email = noticeEmailConfig()
+            self.download = DownloadsConfig()
+            self.resource_comment = ResourceCommentConfig()
+            self.utilization = UtilizationConfig()
+            self.recaptcha = ReCaptchaConfig()
+            self.notice_email = NoticeEmailConfig()
 
     def load_feedback_config(self):
         try:

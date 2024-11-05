@@ -48,18 +48,18 @@ class TestCheck:
         toolkit.config.pop('ckan.feedback.download_handler', '')
         assert download_handler() is None
 
-    @patch('ckanext.feedback.services.common.config.downloadsConfig.load_config')
-    @patch('ckanext.feedback.services.common.config.resourceCommentConfig.load_config')
-    @patch('ckanext.feedback.services.common.config.utilizationConfig.load_config')
-    @patch('ckanext.feedback.services.common.config.reCaptchaConfig.load_config')
-    @patch('ckanext.feedback.services.common.config.noticeEmailConfig.load_config')
+    @patch('ckanext.feedback.services.common.config.DownloadsConfig.load_config')
+    @patch('ckanext.feedback.services.common.config.ResourceCommentConfig.load_config')
+    @patch('ckanext.feedback.services.common.config.UtilizationConfig.load_config')
+    @patch('ckanext.feedback.services.common.config.ReCaptchaConfig.load_config')
+    @patch('ckanext.feedback.services.common.config.NoticeEmailConfig.load_config')
     def test_load_feedback_config_with_feedback_config_file(
         self,
-        mock_downloadsConfig_load_config,
-        mock_resourceCommentConfig_load_config,
-        mock_utilizationConfig_load_config,
-        mock_reCaptchaConfig_load_config,
-        mock_noticeEmailConfig_load_config,
+        mock_DownloadsConfig_load_config,
+        mock_ResourceCommentConfig_load_config,
+        mock_UtilizationConfig_load_config,
+        mock_ReCaptchaConfig_load_config,
+        mock_NoticeEmailConfig_load_config,
     ):
         # without feedback_config_file and .ini file
         try:
@@ -77,11 +77,11 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
         assert FeedbackConfig().is_feedback_config_file is True
-        mock_downloadsConfig_load_config.assert_called_once()
-        mock_resourceCommentConfig_load_config.assert_called_once()
-        mock_utilizationConfig_load_config.assert_called_once()
-        mock_reCaptchaConfig_load_config.assert_called_once()
-        mock_noticeEmailConfig_load_config.assert_called_once()
+        mock_DownloadsConfig_load_config.assert_called_once()
+        mock_ResourceCommentConfig_load_config.assert_called_once()
+        mock_UtilizationConfig_load_config.assert_called_once()
+        mock_ReCaptchaConfig_load_config.assert_called_once()
+        mock_NoticeEmailConfig_load_config.assert_called_once()
         os.remove('/srv/app/feedback_config.json')
 
     @patch('ckanext.feedback.plugin.toolkit')
