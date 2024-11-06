@@ -33,8 +33,8 @@
           <p>{{ h.get_resource_comments(resource.id) }}</p>
           <hr>
           <h4>{{ _('Comment') }}</h4>
-          {% if not cookie or not (h.is_disabled_repeat_post_on_resource_org(pkg_dict.owner_org)) %}
-            {% if h.is_enabled_rating_org(pkg_dict.owner_org) %}
+          {% if not cookie or not (h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org)) %}
+            {% if h.is_enabled_rating(pkg_dict.owner_org) %}
               {{ _('Rating') }}
               <span class="group-stars" id="rateable" name="rateable">
                 {% for i in range(5) %}
@@ -66,7 +66,7 @@
                 <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
                 <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
               </div>
-              {% if h.is_disabled_repeat_post_on_resource_org(pkg_dict.owner_org) %}
+              {% if h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org) %}
                 <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
               {% endif %}
               <br>
@@ -113,7 +113,7 @@
               {% if comment.category %}
                 <span id="comment-category-{{ comment.id }}">{{ _(comment.category.value) }}</span>
               {% endif %}
-              {% if h.is_enabled_rating_org(pkg_dict.owner_org) %}
+              {% if h.is_enabled_rating(pkg_dict.owner_org) %}
                 {% if comment.rating %}
                   <span class="group-stars">
                     {% for i in range(comment.rating) %}

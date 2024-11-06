@@ -3,8 +3,9 @@ import os
 
 import ckan.lib.mailer
 import ckan.plugins.toolkit as toolkit
-from ckan.common import config
 from jinja2 import Environment, FileSystemLoader
+
+from ckanext.feedback.services.common.config import FeedbackConfig
 
 log = logging.getLogger(__name__)
 DEFAULT_TEMPLATE_DIR = (
@@ -14,12 +15,12 @@ DEFAULT_TEMPLATE_DIR = (
 
 
 def send_email(template_name, organization_id, subject, **kwargs):
-    if not toolkit.asbool(config.get('ckan.feedback.notice.email.enable', False)):
+    if not FeedbackConfig().notice_email.is_enable():
         log.info('email notification is disabled.')
         return
 
     # settings email_template and subject from [feedback_config.json > ckan.ini]
-    template_dir = config.get('ckan.feedback.notice.email.template_directory')
+    template_dir = FeedbackConfig().notice_email.template_directory.get()
     if not os.path.isfile(f'{template_dir}/{template_name}'):
         template_dir = DEFAULT_TEMPLATE_DIR
 

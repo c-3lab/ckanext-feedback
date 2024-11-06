@@ -1,11 +1,10 @@
 import logging
 
 import ckan.views.resource as resource
-from ckan.common import config
 from flask import Blueprint
 
 from ckanext.feedback.controllers.download import DownloadController
-from ckanext.feedback.services.common import config as feedback_config
+from ckanext.feedback.services.common.config import FeedbackConfig, download_handler
 from ckanext.feedback.services.resource.comment import get_resource
 from ckanext.feedback.views.error_handler import add_error_handler
 
@@ -39,10 +38,10 @@ def download(package_type, id, resource_id, filename=None):
     if filename is None:
         filename = get_resource(resource_id).Resource.url
 
-    if config.get('ckan.feedback.downloads.enable', True):
+    if FeedbackConfig().download.is_enable():
         handler = DownloadController.extended_download
     else:
-        handler = feedback_config.download_handler()
+        handler = download_handler()
         if not handler:
             log.debug('Use default CKAN callback for resource.download')
             handler = resource.download

@@ -1,7 +1,7 @@
 import logging
 
 import ckan.model as model
-from ckan.common import _, config, current_user, g, request
+from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
@@ -16,6 +16,7 @@ from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
 )
+from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
@@ -103,13 +104,11 @@ class ResourceController:
         try:
             resource = comment_service.get_resource(resource_id)
             send_email(
-                template_name=config.get(
-                    'ckan.feedback.notice.email.template_resource_comment'
+                template_name=(
+                    FeedbackConfig().notice_email.template_resource_comment.get()
                 ),
                 organization_id=resource.Resource.package.owner_org,
-                subject=config.get(
-                    'ckan.feedback.notice.email.subject_resource_comment'
-                ),
+                subject=FeedbackConfig().notice_email.subject_resource_comment.get(),
                 target_name=resource.Resource.name,
                 category=category,
                 content=content,
