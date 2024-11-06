@@ -89,7 +89,11 @@
           {% if res.url and h.is_url(res.url) %}
             <li>
               {% if res.has_views or res.url_type == 'upload' %}
+              {% if h.is_enabled_downloads() %}
               <a class="dropdown-item resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" target="_blank" rel="noreferrer" download>
+              {% else %}
+              <a class="dropdown-item resource-url-analytics" href="{{ res.url }}" target="_blank" rel="noreferrer">
+              {% endif %}
                 <i class="fa fa-arrow-circle-down"></i>
                 {{ _('Download') }}
               {% else %}
