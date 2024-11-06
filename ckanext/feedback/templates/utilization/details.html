@@ -20,7 +20,7 @@
         {% set row = utilization %}
         <div class="centered-content">
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
-            <form name="admin_form" action="{{ url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
+            <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
               <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">{{ _('Edit') }}</a>
               {% if row.approval == false %}
                 <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
@@ -98,7 +98,7 @@
           {% endif %}
           {% for comment in page.collection %}
             {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
-              <form name="approval_form" action="{{ url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
+              <form name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
                 <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
               </form>
             {% endif %}
@@ -124,7 +124,7 @@
     <div id="issue-resolution-form" class="modal fade" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
-          <form name="issue_resolution_form" class="top-centered-content" action="{{ url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
+          <form name="issue_resolution_form" class="top-centered-content" action="{{h.url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
             <div class="modal-header">
               {% if h.is_base_public_folder_bs3() %}
                 <button type="button" class="close" data-dismiss="modal">&times;</button>

@@ -5,7 +5,7 @@ from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.logic import get_action
 from ckan.plugins import toolkit
-from flask import make_response, redirect, url_for
+from flask import make_response
 
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.resource.summary as summary_service
@@ -112,7 +112,7 @@ class ResourceController:
                 target_name=resource.Resource.name,
                 category=category,
                 content=content,
-                url=url_for(
+                url=toolkit.url_for(
                     'resource_comment.comment', resource_id=resource_id, _external=True
                 ),
             )
@@ -128,7 +128,9 @@ class ResourceController:
         )
 
         resp = make_response(
-            redirect(url_for('resource.read', id=package_name, resource_id=resource_id))
+            toolkit.redirect_to(
+                'resource.read', id=package_name, resource_id=resource_id
+            )
         )
 
         resp.set_cookie(resource_id, 'alreadyPosted')
@@ -148,7 +150,7 @@ class ResourceController:
         summary_service.refresh_resource_summary(resource_id)
         session.commit()
 
-        return redirect(url_for('resource_comment.comment', resource_id=resource_id))
+        return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
     # resource_comment/<resource_id>/comment/reply
     @staticmethod
@@ -163,7 +165,7 @@ class ResourceController:
         comment_service.create_reply(resource_comment_id, content, current_user.id)
         session.commit()
 
-        return redirect(url_for('resource_comment.comment', resource_id=resource_id))
+        return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
     @staticmethod
     def _check_organization_admin_role(resource_id):

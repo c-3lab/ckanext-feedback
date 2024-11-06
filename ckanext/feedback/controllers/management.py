@@ -1,7 +1,6 @@
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
-from flask import redirect, url_for
 
 import ckanext.feedback.services.management.comments as comments_service
 import ckanext.feedback.services.resource.comment as resource_comment_service
@@ -67,7 +66,7 @@ class ManagementController:
                 f'{len(comments)} ' + _('bulk approval completed.'),
                 allow_html=True,
             )
-        return redirect(url_for('management.comments', tab='utilization-comments'))
+        return toolkit.redirect_to('management.comments', tab='utilization-comments')
 
     # management/approve_bulk_resource_comments
     @staticmethod
@@ -88,7 +87,7 @@ class ManagementController:
                 f'{len(comments)} ' + _('bulk approval completed.'),
                 allow_html=True,
             )
-        return redirect(url_for('management.comments', tab='resource-comments'))
+        return toolkit.redirect_to('management.comments', tab='resource-comments')
 
     # management/delete_bulk_utilization_comments
     @staticmethod
@@ -108,7 +107,7 @@ class ManagementController:
                 f'{len(comments)} ' + _('bulk delete completed.'),
                 allow_html=True,
             )
-        return redirect(url_for('management.comments', tab='utilization-comments'))
+        return toolkit.redirect_to('management.comments', tab='utilization-comments')
 
     # management/delete_bulk_resource_comments
     @staticmethod
@@ -130,7 +129,7 @@ class ManagementController:
                 f'{len(comments)} ' + _('bulk delete completed.'),
                 allow_html=True,
             )
-        return redirect(url_for('management.comments', tab='resource-comments'))
+        return toolkit.redirect_to('management.comments', tab='resource-comments')
 
     @staticmethod
     def _check_organization_admin_role_with_utilization(utilizations):

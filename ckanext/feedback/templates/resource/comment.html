@@ -99,7 +99,7 @@
                   <input type="button" class="btn btn-primary float-end" value="{{ _('Reply') }}" disabled/>
                 {% endif %}
               {% else %}
-                <form name="approval_form" action="{{ url_for('resource_comment.approve_comment', resource_id=resource.id ) }}" method="post">
+                <form name="approval_form" action="{{h.url_for('resource_comment.approve_comment', resource_id=resource.id ) }}" method="post">
                   {% if h.is_base_public_folder_bs3() %}
                     <button class="btn btn-primary pull-right" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
                   {% else %}
@@ -153,7 +153,7 @@
     <div id="reply-form-window" class="modal fade" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
-          <form id="reply-form" class="top-centered-content" action="{{ url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
+          <form id="reply-form" class="top-centered-content" action="{{h.url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
             <input type="hidden" id="selected_resource_comment_id" name="resource_comment_id">
             <div class="modal-header">
               {% if h.is_base_public_folder_bs3() %}
