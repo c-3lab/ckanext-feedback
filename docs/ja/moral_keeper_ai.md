@@ -46,3 +46,16 @@ AZURE_OPENAI_ENDPOINT='https://your-endpoint-url.com/'
 ```ini
 ckan.feedback.moral_keeper_ai.enable = True
 ```
+
+又は [switch_function.md](./switch_function.md) を参考に、以下の設定を追記する
+
+```json
+{   
+    "modules": {
+        "moral_keeper_ai": {
+            "enable": true,
+            "enable_orgs": ["{organizaiton1のname}", "{organizaiton2のname}"]
+        }
+    }
+}
+```
