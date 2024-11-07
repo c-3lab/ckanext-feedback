@@ -10,7 +10,7 @@
     width: 15px;
     height: 15px
 }
-.description {
+.bubbleText {
     display: none;
     position: absolute;
     bottom: 100%;  
@@ -22,7 +22,7 @@
     background: #000;
     width: 125px;
 }
-.description:before {
+.bubbleText:before {
     content: "";
     position: absolute;
     top: 100%;
@@ -31,7 +31,7 @@
     border-top: 5px solid #000;
     margin-left: -15px;
 }
-.bubble:hover .description{
+.bubble:hover .bubbleText{
     display: inline-block;
     top: -25px;
     left: -40px;
