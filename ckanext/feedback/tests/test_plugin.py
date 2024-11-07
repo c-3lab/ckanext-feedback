@@ -69,6 +69,7 @@ class TestPlugin:
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
         mock_management.get_management_blueprint.return_value = 'management_bp'
         mock_likes.get_likes_blueprint.return_value = 'likes_bp'
         mock_download.get_download_blueprint.return_value = 'download_bp'
@@ -92,6 +93,7 @@ class TestPlugin:
             False
         )
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
         expected_blueprints = ['management_bp']
         actual_blueprints = instance.get_blueprint()
 
@@ -124,8 +126,8 @@ class TestPlugin:
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
-        mock_resource_likes_service.get_package_like_count.return_value = 9999
         mock_resource_summary_service.get_package_comments.return_value = 9999
         mock_resource_summary_service.get_package_rating.return_value = 23.333
         mock_utilization_summary_service.get_package_utilizations.return_value = 9999
@@ -133,6 +135,7 @@ class TestPlugin:
             9999
         )
         mock_download_summary_service.get_package_downloads.return_value = 9999
+        mock_resource_likes_service.get_package_like_count.return_value = 9999
 
         dataset = factories.Dataset()
 
@@ -170,6 +173,7 @@ class TestPlugin:
         )
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
         dataset = factories.Dataset()
         dataset['extras'] = [
             'test',
@@ -198,8 +202,8 @@ class TestPlugin:
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
-        mock_resource_likes_service.get_resource_like_count.return_value = 9999
         mock_resource_summary_service.get_resource_comments.return_value = 9999
         mock_resource_summary_service.get_resource_rating.return_value = 23.333
         mock_utilization_summary_service.get_resource_utilizations.return_value = 9999
@@ -207,6 +211,7 @@ class TestPlugin:
             9999
         )
         mock_download_summary_service.get_resource_downloads.return_value = 9999
+        mock_resource_likes_service.get_resource_like_count.return_value = 9999
 
         resource = factories.Resource()
 
@@ -233,6 +238,7 @@ class TestPlugin:
         )
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
         resource = factories.Resource()
         resource['extras'] = [
             'test',
