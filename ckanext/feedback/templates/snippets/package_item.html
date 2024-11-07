@@ -14,6 +14,15 @@
   {% endfor %}
   <br>
   <li>
+    {% if h.is_enabled_likes(package.owner_org) %}
+      <div class="bubble">
+        <i class="fa-solid fa-thumbs-up" style="vertical-align: middle;"></i>
+        {{ h.get_package_likes(package.id) }}
+        <div class="description">{{ _('Number of Likes') }}</div>
+      </div>
+    {% endif %}
+  </li>
+  <li>
     {% if h.is_enabled_downloads(package.owner_org) %}
       <div class = "bubble">
         <i class="fa-solid fa-arrow-circle-down" style="vertical-align: middle;"></i>

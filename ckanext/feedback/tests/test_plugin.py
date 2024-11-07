@@ -9,6 +9,7 @@ from ckan.tests import factories
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
+    create_resource_like_tables,
     create_resource_tables,
     create_utilization_tables,
 )
@@ -22,6 +23,7 @@ engine = model.repo.session.get_bind()
 class TestPlugin:
     def setup_class(cls):
         model.repo.init_db()
+        create_resource_like_tables(engine)
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -52,10 +54,12 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.download')
     @patch('ckanext.feedback.plugin.resource')
     @patch('ckanext.feedback.plugin.utilization')
+    @patch('ckanext.feedback.plugin.likes')
     @patch('ckanext.feedback.plugin.management')
     def test_get_blueprint(
         self,
         mock_management,
+        mock_likes,
         mock_utilization,
         mock_resource,
         mock_download,
@@ -66,6 +70,7 @@ class TestPlugin:
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         mock_management.get_management_blueprint.return_value = 'management_bp'
+        mock_likes.get_likes_blueprint.return_value = 'likes_bp'
         mock_download.get_download_blueprint.return_value = 'download_bp'
         mock_resource.get_resource_comment_blueprint.return_value = 'resource_bp'
         mock_utilization.get_utilization_blueprint.return_value = 'utilization_bp'
@@ -74,6 +79,7 @@ class TestPlugin:
             'download_bp',
             'resource_bp',
             'utilization_bp',
+            'likes_bp',
             'management_bp',
         ]
 
@@ -86,6 +92,7 @@ class TestPlugin:
             False
         )
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
         expected_blueprints = ['management_bp']
         actual_blueprints = instance.get_blueprint()
 
@@ -102,8 +109,10 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
     def test_before_dataset_view_with_True(
         self,
+        mock_resource_likes_service,
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
@@ -116,6 +125,7 @@ class TestPlugin:
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
         mock_resource_summary_service.get_package_comments.return_value = 9999
         mock_resource_summary_service.get_package_rating.return_value = 23.333
@@ -124,6 +134,7 @@ class TestPlugin:
             9999
         )
         mock_download_summary_service.get_package_downloads.return_value = 9999
+        mock_resource_likes_service.get_package_like_count.return_value = 9999
 
         dataset = factories.Dataset()
 
@@ -133,6 +144,7 @@ class TestPlugin:
             {'key': _('Utilizations'), 'value': 9999},
             {'key': _('Issue Resolutions'), 'value': 9999},
             {'key': _('Comments'), 'value': 9999},
+            {'key': _('Number of Likes'), 'value': 9999},
         ]
 
         config[
@@ -147,6 +159,7 @@ class TestPlugin:
             {'key': _('Issue Resolutions'), 'value': 9999},
             {'key': _('Comments'), 'value': 9999},
             {'key': _('Rating'), 'value': 23.3},
+            {'key': _('Number of Likes'), 'value': 9999},
         ]
 
     def test_before_dataset_view_with_False(
@@ -159,6 +172,7 @@ class TestPlugin:
         )
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
         dataset = factories.Dataset()
         dataset['extras'] = [
             'test',
@@ -171,8 +185,10 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
     def test_before_resource_show_with_True(
         self,
+        mock_resource_likes_service,
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
@@ -185,6 +201,7 @@ class TestPlugin:
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
         mock_resource_summary_service.get_resource_comments.return_value = 9999
         mock_resource_summary_service.get_resource_rating.return_value = 23.333
@@ -193,6 +210,7 @@ class TestPlugin:
             9999
         )
         mock_download_summary_service.get_resource_downloads.return_value = 9999
+        mock_resource_likes_service.get_resource_like_count.return_value = 9999
 
         resource = factories.Resource()
 
@@ -201,6 +219,7 @@ class TestPlugin:
         assert resource[_('Utilizations')] == 9999
         assert resource[_('Issue Resolutions')] == 9999
         assert resource[_('Comments')] == 9999
+        assert resource[_('Number of Likes')] == 9999
 
         config[
             f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
@@ -218,6 +237,7 @@ class TestPlugin:
         )
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
         resource = factories.Resource()
         resource['extras'] = [
             'test',

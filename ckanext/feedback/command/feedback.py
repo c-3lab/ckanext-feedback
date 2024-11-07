@@ -6,6 +6,7 @@ from ckan.plugins import toolkit
 
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
+from ckanext.feedback.models.likes import ResourceLike
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentReply,
@@ -55,6 +56,8 @@ def init(modules):
             create_resource_tables(engine)
             drop_download_tables(engine)
             create_download_tables(engine)
+            drop_resource_like_tables(engine)
+            create_resource_like_tables(engine)
             click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
     except Exception as e:
         toolkit.error_shout(e)
@@ -95,3 +98,11 @@ def drop_download_tables(engine):
 
 def create_download_tables(engine):
     DownloadSummary.__table__.create(engine, checkfirst=True)
+
+
+def drop_resource_like_tables(engine):
+    ResourceLike.__table__.drop(engine, checkfirst=True)
+
+
+def create_resource_like_tables(engine):
+    ResourceLike.__table__.create(engine, checkfirst=True)
