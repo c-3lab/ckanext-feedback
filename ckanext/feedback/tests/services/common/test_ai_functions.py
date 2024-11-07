@@ -3,15 +3,16 @@ from unittest.mock import MagicMock, patch
 from ckan.common import config
 
 from ckanext.feedback.services.common import ai_functions
+from ckanext.feedback.services.common.config import FeedbackConfig
 
 
 class TestAIFunctions:
-    def test_is_enabled_moral_keeper_ai_default_false(self):
-        assert ai_functions.is_enabled_moral_keeper_ai() is False
+    def test_moral_keeper_ai_is_enabled_default_false(self):
+        assert FeedbackConfig().moral_keeper_ai.is_enable() is False
 
-    def test_is_enabled_moral_keeper_ai_true(self):
+    def test_moral_keeper_ai_is_enabled_true(self):
         config['ckan.feedback.moral_keeper_ai.enable'] = True
-        assert ai_functions.is_enabled_moral_keeper_ai() is True
+        assert FeedbackConfig().moral_keeper_ai.is_enable() is True
 
     @patch('ckanext.feedback.services.common.ai_functions.importlib.import_module')
     def test_check_ai_comment_true(self, mock_import_module):

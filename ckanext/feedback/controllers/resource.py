@@ -15,7 +15,6 @@ from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.ai_functions import (
     check_ai_comment,
-    is_enabled_moral_keeper_ai,
     suggest_ai_comment,
 )
 from ckanext.feedback.services.common.check import (
@@ -209,18 +208,6 @@ class ResourceController:
             )
             return ResourceController.comment(resource_id, category, content)
 
-        if (
-            not request.form.get('comment-suggested', False)
-            and is_enabled_moral_keeper_ai()
-        ):
-            if check_ai_comment(comment=content) is False:
-                return ResourceController.suggested_comment(
-                    resource_id=resource_id,
-                    rating=rating,
-                    category=category,
-                    content=content,
-                )
-
         categories = comment_service.get_resource_comment_categories()
         resource = comment_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
@@ -228,6 +215,17 @@ class ResourceController:
             context, {'id': resource.Resource.package_id}
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
+
+        if not request.form.get(
+            'comment-suggested', False
+        ) and FeedbackConfig().moral_keeper_ai.is_enable(resource.package.owner_org):
+            if check_ai_comment(comment=content) is False:
+                return ResourceController.suggested_comment(
+                    resource_id=resource_id,
+                    rating=rating,
+                    category=category,
+                    content=content,
+                )
 
         return toolkit.render(
             'resource/comment_check.html',

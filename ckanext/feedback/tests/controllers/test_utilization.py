@@ -1697,8 +1697,19 @@ class TestUtilizationController:
         'ckanext.feedback.controllers.utilization.'
         'UtilizationController.suggested_comment'
     )
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_utilization_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
     def test_check_comment_POST_judgement_False(
         self,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_utilization,
+        mock_get_utilization_comment_categories,
         mock_suggested_comment,
         mock_check_ai_comment,
         mock_is_recaptcha_verified,
@@ -1720,6 +1731,20 @@ class TestUtilizationController:
         }.get(x, default)
 
         mock_check_ai_comment.return_value = judgement
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
         UtilizationController.check_comment(utilization_id)
         mock_suggested_comment.assert_called_once_with(
