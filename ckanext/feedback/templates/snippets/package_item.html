@@ -14,7 +14,7 @@
   {% endfor %}
   <br>
   <li>
-    {% if h.is_enabled_liked() %}
+    {% if h.is_enabled_likes(package.owner_org) %}
       <div class="bubble">
         <i class="fa-solid fa-thumbs-up" style="vertical-align: middle;"></i>
         {{ h.get_package_like_count(package.id) }}

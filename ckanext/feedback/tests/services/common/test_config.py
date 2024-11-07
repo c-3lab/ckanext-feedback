@@ -474,6 +474,122 @@ class TestCheck:
         os.remove('/srv/app/feedback_config.json')
 
     @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_like_is_enable(self, mock_get_organization):
+        org_name = 'example_org_name'
+
+        # without feedback_config_file and .ini file
+        config.pop('ckan.feedback.likes.enable', None)
+        config.pop('ckan.feedback.likes.enable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.likes.enable', 'None') == 'None'
+        assert config.get('ckan.feedback.likes.enable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().like.is_enable() is True
+        assert FeedbackConfig().like.is_enable(org_name) is True
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.likes.enable'] = True
+        config.pop('ckan.feedback.likes.enable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.likes.enable', 'None') is True
+        assert config.get('ckan.feedback.likes.enable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().like.is_enable() is True
+        assert FeedbackConfig().like.is_enable(org_name) is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.likes.enable'] = False
+        config.pop('ckan.feedback.likes.enable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.likes.enable', 'None') is False
+        assert config.get('ckan.feedback.likes.enable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().like.is_enable() is False
+        assert FeedbackConfig().like.is_enable(org_name) is False
+
+        # with feedback_config_file enable is False and org_name is not in enable_orgs
+        config.pop('ckan.feedback.likes.enable', None)
+        config.pop('ckan.feedback.likes.enable_orgs', None)
+
+        feedback_config = {'modules': {'likes': {'enable': False, 'enable_orgs': []}}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_get_organization.return_value = None
+        assert config.get('ckan.feedback.likes.enable', 'None') is False
+        assert config.get('ckan.feedback.likes.enable_orgs', 'None') == []
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().like.is_enable() is False
+        assert FeedbackConfig().like.is_enable(org_name) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is False and org_name is in enable_orgs
+        config.pop('ckan.feedback.likes.enable', None)
+        config.pop('ckan.feedback.likes.enable_orgs', None)
+
+        feedback_config = {
+            'modules': {'likes': {'enable': False, 'enable_orgs': [org_name]}}
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert config.get('ckan.feedback.likes.enable', 'None') is False
+        assert config.get('ckan.feedback.likes.enable_orgs', 'None') == [org_name]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().like.is_enable() is False
+        assert FeedbackConfig().like.is_enable(org_name) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name is not in enable_orgs
+        config.pop('ckan.feedback.likes.enable', None)
+        config.pop('ckan.feedback.likes.enable_orgs', None)
+
+        feedback_config = {'modules': {'likes': {'enable': True, 'enable_orgs': []}}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_get_organization.return_value = None
+        assert config.get('ckan.feedback.likes.enable', 'None') is True
+        assert config.get('ckan.feedback.likes.enable_orgs', 'None') == []
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().like.is_enable() is True
+        assert FeedbackConfig().like.is_enable(org_name) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name is in enable_orgs
+        config['ckan.feedback.likes.enable'] = False
+        config.pop('ckan.feedback.likes.enable_orgs', None)
+
+        feedback_config = {
+            'modules': {'likes': {'enable': True, 'enable_orgs': [org_name]}}
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
+        assert config.get('ckan.feedback.likes.enable', 'None') is True
+        assert config.get('ckan.feedback.likes.enable_orgs', 'None') == [org_name]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().like.is_enable() is True
+        assert FeedbackConfig().like.is_enable(org_name) is True
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.get_organization')
     def test_repeat_post_on_resource_is_enable(self, mock_get_organization):
         org_name = 'example_org_name'
 

@@ -62,7 +62,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             blueprints.append(resource.get_resource_comment_blueprint())
         if FeedbackConfig().utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
-        if config.get('ckan.feedback.liked.enable', True):
+        if FeedbackConfig().like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
         blueprints.append(management.get_management_blueprint())
         return blueprints
@@ -79,6 +79,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_enabled_downloads': FeedbackConfig().download.is_enable,
             'is_enabled_resources': FeedbackConfig().resource_comment.is_enable,
             'is_enabled_utilizations': FeedbackConfig().utilization.is_enable,
+            'is_enabled_likes': FeedbackConfig().like.is_enable,
             'is_disabled_repeat_post_on_resource': (
                 FeedbackConfig().resource_comment.repeat_post_limit.is_enable
             ),
@@ -162,7 +163,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     ),
                 )
 
-        if self.is_enabled_liked():
+        if FeedbackConfig().like.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Number of Likes'),
                 value=resource_likes_service.get_package_like_count(package_id),
@@ -207,7 +208,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     resource_summary_service.get_resource_rating(resource_id), 1
                 )
 
-        if self.is_enabled_liked():
+        if FeedbackConfig().like.is_enable(owner_org):
             if _('Number of Likes') != 'Number of Likes':
                 resource_dict.pop('Number of Likes', None)
             resource_dict[_('Number of Likes')] = (
