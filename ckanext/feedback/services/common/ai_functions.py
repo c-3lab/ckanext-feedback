@@ -1,15 +1,7 @@
 import importlib
 import logging
 
-from ckan.common import config
-from ckan.plugins import toolkit
-
 log = logging.getLogger(__name__)
-
-
-def is_enabled_moral_keeper_ai():
-    enable = config.get('ckan.feedback.moral_keeper_ai.enable', False)
-    return toolkit.asbool(enable)
 
 
 def is_api_error(ng_reasons):
