@@ -478,22 +478,23 @@ class TestCheck:
         org_name = 'example_org_name'
 
         # without feedback_config_file and .ini file
-        config.pop('ckan.feedback.resources.comment.repeat_post_limit.enable', None)
+        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
         config.pop(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', None
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
         )
 
         FeedbackConfig().load_feedback_config()
 
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             == 'None'
         )
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
             )
             == 'None'
         )
@@ -505,22 +506,23 @@ class TestCheck:
         )
 
         # without feedback_config_file, .ini file enable is True
-        config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = True
+        config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = True
         config.pop(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', None
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
         )
 
         FeedbackConfig().load_feedback_config()
 
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             is True
         )
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
             )
             == 'None'
         )
@@ -532,22 +534,23 @@ class TestCheck:
         )
 
         # without feedback_config_file, .ini file enable is False
-        config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = False
+        config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = False
         config.pop(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', None
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
         )
 
         FeedbackConfig().load_feedback_config()
 
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             is False
         )
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
             )
             == 'None'
         )
@@ -559,9 +562,9 @@ class TestCheck:
         )
 
         # with feedback_config_file enable is False and org_name is not in enable_orgs
-        config.pop('ckan.feedback.resources.comment.repeat_post_limit.enable', None)
+        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
         config.pop(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', None
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
         )
 
         feedback_config = {
@@ -581,13 +584,14 @@ class TestCheck:
         mock_get_organization.return_value = None
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             is False
         )
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
             )
             == []
         )
@@ -600,9 +604,9 @@ class TestCheck:
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is False and org_name is in enable_orgs
-        config.pop('ckan.feedback.resources.comment.repeat_post_limit.enable', None)
+        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
         config.pop(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', None
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
         )
 
         feedback_config = {
@@ -625,12 +629,12 @@ class TestCheck:
         mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             is False
         )
         assert config.get(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', 'None'
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', 'None'
         ) == [org_name]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
@@ -641,9 +645,9 @@ class TestCheck:
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is not in enable_orgs
-        config.pop('ckan.feedback.resources.comment.repeat_post_limit.enable', None)
+        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
         config.pop(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', None
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
         )
 
         feedback_config = {
@@ -663,13 +667,14 @@ class TestCheck:
         mock_get_organization.return_value = None
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             is True
         )
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
             )
             == []
         )
@@ -682,9 +687,9 @@ class TestCheck:
         os.remove('/srv/app/feedback_config.json')
 
         # with feedback_config_file enable is True and org_name is in enable_orgs
-        config['ckan.feedback.resources.comment.repeat_post_limit.enable'] = False
+        config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = False
         config.pop(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', None
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
         )
 
         feedback_config = {
@@ -704,12 +709,12 @@ class TestCheck:
         mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
         assert (
             config.get(
-                'ckan.feedback.resources.comment.repeat_post_limit.enable', 'None'
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             is True
         )
         assert config.get(
-            'ckan.feedback.resources.comment.repeat_post_limit.enable_orgs', 'None'
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', 'None'
         ) == [org_name]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is True
