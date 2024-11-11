@@ -18,7 +18,7 @@
       <div class = "bubble">
         <i class="fa-solid fa-arrow-circle-down" style="vertical-align: middle;"></i>
         {{ h.get_package_downloads(package.id) }}
-        <div class="description">{{ _('Downloads') }}</div>
+        <div class="bubbleText">{{ _('Downloads') }}</div>
       </div>
     {% endif %}
   </li>
@@ -27,7 +27,7 @@
       <div class="utilization-data bubble">
         <i class="fa-solid fa-seedling" style="vertical-align: middle;"></i>
         <a href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">{{ h.get_package_utilizations(package.id) }}</a>
-        <div class="description">{{ _('Utilizations') }}</div>
+        <div class="bubbleText">{{ _('Utilizations') }}</div>
       </div>
     {% endif %}
   </li>
@@ -37,7 +37,7 @@
         <div class="utilization-data bubble">
           <i class="fa-solid fa-comment-dots" style="vertical-align: middle;"></i>
           {{ h.get_package_comments(package.id) }}
-          <div class="description">{{ _('Comments') }}</div>
+          <div class="bubbleText">{{ _('Comments') }}</div>
         </div>
       </a>
     {% endif %}
@@ -48,7 +48,7 @@
         <div class="utilization-data bubble">
           <i class="fa-solid fa-star" style="vertical-align: middle;"></i>
           {{ h.get_package_rating(package.id)|round(1) }}
-          <div class="description">{{ _('Rating') }}</div>
+          <div class="bubbleText">{{ _('Rating') }}</div>
         </div>
       {% endif %}
     {% endif %}
@@ -58,7 +58,7 @@
       <div class="bubble">
         <img id="issue-resolution" style="vertical-align: middle;" src="/images/issue_resolution_badge.png">
         {{ h.get_package_issue_resolutions(package.id) }}
-        <div class="description">{{ _('Issue Resolutions') }}</div>
+        <div class="bubbleText">{{ _('Issue Resolutions') }}</div>
       </div>
     {% endif %}
   </li>
