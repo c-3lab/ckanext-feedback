@@ -133,7 +133,7 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
         parents = self.conf_path + ['comment']
-        self.repeat_post_limit = BaseConfig('repeat_post_limit', parents)
+        self.repeat_post_limit = BaseConfig('repeated_post_limit', parents)
         self.repeat_post_limit.default = False
 
         self.rating = BaseConfig('rating', parents)
@@ -145,7 +145,7 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         fb_comments_conf_path = self.conf_path + ['comments']
         self.repeat_post_limit.set_enable_and_enable_orgs(
             feedback_config=feedback_config,
-            fb_conf_path=fb_comments_conf_path + [self.repeat_post_limit.name],
+            fb_conf_path=fb_comments_conf_path + ['repeat_post_limit'],
         )
 
         self.rating.set_enable_and_enable_orgs(
