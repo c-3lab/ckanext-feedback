@@ -218,7 +218,9 @@ class ResourceController:
 
         if not request.form.get(
             'comment-suggested', False
-        ) and FeedbackConfig().moral_keeper_ai.is_enable(resource.package.owner_org):
+        ) and FeedbackConfig().moral_keeper_ai.is_enable(
+            resource.Resource.package.owner_org
+        ):
             if check_ai_comment(comment=content) is False:
                 return ResourceController.suggested_comment(
                     resource_id=resource_id,
