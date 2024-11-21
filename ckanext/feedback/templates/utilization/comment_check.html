@@ -57,7 +57,11 @@
             </div>
             <div class="d-flex justify-content-between">
               <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+              {% if h.is_base_public_folder_bs3() %}
+              <button class="btn btn-primary ms-2 right-aligned" id="comment-button">{{ _('Submit comment') }}</button>
+              {% else%}
               <button class="btn btn-primary ms-2" id="comment-button">{{ _('Submit comment') }}</button>
+              {% endif%}
             </div>
           </div>
         </form>
