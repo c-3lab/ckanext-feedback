@@ -37,7 +37,11 @@
               <br>
               <div class="d-flex justify-content-between">
                 <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
+                {% else %}
                 <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+                {% endif %}
               </div>
             </div>
           </form>

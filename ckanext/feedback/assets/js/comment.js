@@ -1,6 +1,7 @@
 const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
+const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
 
-function checkCommentExists(button) {
+function checkCommentExists(button, bs3=false) {
   let comment
   if ( button.id === "comment-button" ) {
     comment = document.getElementById('comment-content').value;
@@ -30,7 +31,11 @@ function checkCommentExists(button) {
   sendButtons.forEach(button => {
     button.style.pointerEvents = "none";
     button.style.background = "#333333";
-    button.innerHTML = spinner + button.innerHTML;
+    if (!bs3) {
+      button.innerHTML = spinner + button.innerHTML;
+    }else{
+      button.innerHTML = spinner_bs3 + button.innerHTML;
+    }
   });
 
   return true;
@@ -106,5 +111,6 @@ window.addEventListener('pageshow', () => {
     sendButton.style.pointerEvents = "auto";
     sendButton.style.background = "#206b82";
     sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
   });
 });
