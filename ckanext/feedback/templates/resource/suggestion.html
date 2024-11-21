@@ -53,7 +53,7 @@
             </div>
           </form>
 
-          <form name="proposal_comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post" style="flex: 1;">
+          <form name="input_comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post" style="flex: 1;">
             <input type="hidden" name="package_name" value="{{ pkg_dict.name }}">
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" id="rating" value="{{ rating }}">
@@ -83,8 +83,8 @@
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
-        const feedbackRecaptchaTargetForm = 'comment_form'
-        const feedbackRecaptchaAction = 'resource_comment'
+        const feedbackRecaptchaTargetForm = 'input_comment_form'
+        const feedbackRecaptchaAction = 'resource_comment_suggestion'
         const feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
       </script>
       {% asset 'feedback/feedback-recaptcha-js'%}
