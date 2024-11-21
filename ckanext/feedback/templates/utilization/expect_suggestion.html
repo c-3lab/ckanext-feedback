@@ -53,6 +53,15 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
+    {% if h.is_enabled_feedback_recaptcha() %}
+      <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
+      <script>
+        const feedbackRecaptchaTargetForm = 'input_comment_form'
+        const feedbackRecaptchaAction = 'utilization_comment_expect_suggestion'
+        const feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
+      </script>
+      {% asset 'feedback/feedback-recaptcha-js'%}
+    {% endif %}
   {% endblock -%}
 
 {% endif %}
