@@ -38,7 +38,7 @@
               {{ _('Rating') }}
               <span class="group-stars" id="rateable" name="rateable">
                 {% for i in range(5) %}
-                  <img class="rating-star" src="/images/empty_rating_star.png" alt="rating star" data-rating="{{ i + 1 }}" onclick="selectRating(this);"/>
+                  <img class="rating-star" src="/images/empty_rating_star_small.png" alt="rating star" data-rating="{{ i + 1 }}" onclick="selectRating(this);"/>
                 {% endfor %}
               </span>
               <div>
@@ -117,10 +117,10 @@
                 {% if comment.rating %}
                   <span class="group-stars">
                     {% for i in range(comment.rating) %}
-                      <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
+                      <img class="rating-star" src="/images/rating_star_small.png" alt="rating star"/>
                     {% endfor %}
                     {% for i in range(5 - comment.rating) %}
-                      <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
+                      <img class="rating-star" src="/images/empty_rating_star_small.png" alt="empty rating star"/>
                     {% endfor %}
                   </span>
                 {% endif %}

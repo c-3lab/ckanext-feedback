@@ -44,9 +44,9 @@ function selectRating(selectedStar) {
   // Loop through each star and set the appropriate star icon
   stars.forEach(star => {
     if(star.dataset.rating <= selectedStar.dataset.rating) {
-      star.src = '/images/rating_star.png';
+      star.src = '/images/rating_star_small.png';
     } else {
-      star.src = '/images/empty_rating_star.png';
+      star.src = '/images/empty_rating_star_small.png';
     }
   });
 }
