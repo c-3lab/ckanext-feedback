@@ -1,0 +1,122 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+  {% asset 'feedback/feedback-management-comments-css' %}
+{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="{{ h.url_for('management.comments') }}">{{ _('Feedback Management') }}</a></li>
+{% endblock %}
+
+{% block title %}{{ _('Feedback Management') }} - CKAN{% endblock %}
+
+{% block primary_content %}
+  {% asset 'feedback/feedback-tooltip-css' %}
+
+  <article class="module">
+    <div class="module-content">
+      <div class="">
+        <div class="row">
+          <h2 class="col-6" id="data-count">
+            申請承認
+          </h2>
+          <div class="col-6 right-text">
+            <button class="btn btn-primary" type="button" onclick="">一括承認</button>
+            <button class="btn btn-primary" type="button" onclick="">一括削除</button>
+          </div>
+        </div>
+        <select class="mb-2" name="sort">
+          <option value="" selected>新着順</option>
+          <option value="">内容 昇順</option>
+        </select>
+
+        <div class="container">
+          <div class="org">
+            <h2 class="mt-3">札幌市</h2>
+            {% if data_list %}
+            <div class="border-bottom fw-bold mb-2">
+              <div style="float:left;"><input class="checkbox-inline" type="checkbox"></div>
+              <div class="row form-check-label fs-6">
+                <div class="col-2">データセット</div>
+                <div class="col-2">リソース</div>
+                <div class="col-2">申請種類</div>
+                <div class="col-6">内容</div>
+              </div>
+            </div>
+            <div>
+              {% for data in data_list %}
+              <div style="float:left;"><input class="checkbox-inline" type="checkbox" id="{{ data.id }}"></div>
+              <div class="row form-check-label fs-6">
+                <a class="col-2 text-truncate" href="{{ data.dataset_url }}">{{ data.dataset_title }}</a>
+                <a class="col-2 text-truncate" href="{{ data.resource_url }}">{{ data.resource_title }}</a>
+                <a class="col-2 text-truncate" href="{{ data.target_url }}">{{ data.target_type }}</a>
+                <div class="col-6 text-truncate" >{{ data.content }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            {% block page_pagination %}
+              {{ page.pager() }}
+            {% endblock %}
+            {% else %}
+            <p>未承認の申請はありません。</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-info-circle"></i>
+      {{ _('What are Feedback Management') }}
+    </h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+          組織へのリソースコメントや利活用申請、又は登録した利活用へのコメントの承認状態を変更できます。
+        {% endtrans %}
+      </p>
+    </div>
+  </div>
+  <div class="filters">
+    {% for _filter in filters %}
+      <section class="module module-narrow module-shallow">
+        <h2 class="module-heading">
+          <i class="fa fa-filter"></i>
+          {{ _(_filter.type) }}
+        </h2>
+
+        <nav aria-label="{{ _filter['name'] }}">
+          <ul class="list-unstyled nav nav-simple nav-facet">
+          {% for filter_item in _filter.list %}
+            {% set href = filter_item.href %}
+            {% set label = filter_item.label %}
+            {% set href = filter_item.href %}
+            {% set count = filter_item.count %}
+            <li class="nav-item {% if filter_item.active %} active{% endif %}">
+              <a href="{{ href }}" title="{{ label }}">
+                <span class="item-label">{{ label }}</span>
+                <span class="hidden separator"> - </span>
+                <span class="item-count badge">{{ count }}</span>
+                {% if filter_item.active %}<span class="facet-close">x</span>{% endif %}
+              </a>
+            </li>
+          {% endfor %}
+          </ul>
+        </nav>
+      </section>
+    {% endfor %}
+  </div>
+  <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span class="text">close</span></a>
+{% endblock %}
+
+
+{%- block scripts %}
+  {{ super() }}
+  {% asset 'feedback/feedback-management-comments-js' %}
+{% endblock %}
