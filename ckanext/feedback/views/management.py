@@ -10,9 +10,15 @@ rules = [
     (
         '/comments',
         'comments',
-        management.ManagementController.comments,
+        management.ManagementController.admin,
         {'methods': ['GET']},
     ),
+    # (
+    #     '/comments',
+    #     'comments',
+    #     management.ManagementController.comments,
+    #     {'methods': ['GET']},
+    # ),
     (
         '/approve_bulk_utilization_comments',
         'approve_bulk_utilization_comments',
