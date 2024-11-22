@@ -82,6 +82,7 @@ def get_resource_comment_summaries(comment_id_list):
     return resource_comment_summaries
 
 
+<<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 # Approve selected resource comments
 def approve_resource_comments(comment_id_list, approval_user_id):
     session.bulk_update_mappings(
@@ -105,6 +106,57 @@ def delete_resource_comments(comment_id_list):
         .filter(ResourceComment.id.in_(comment_id_list))
         .delete(synchronize_session='fetch')
     )
+=======
+def get_non_approve_contests(owner_orgs=None, limit=None, offset=None):
+    resource_comments = session.query(
+        ResourceComment.id,
+        ResourceComment.resource.package.name.label('dataset_title'),
+        ResourceComment.resource.name.label('resource_title'),
+        ResourceComment.content.label('content'),
+        ResourceComment.approval,
+    ).filter(ResourceComment.approval is False)
+    if owner_orgs is not None:
+        resource_comments = (
+            resource_comments.join(Resource)
+            .join(Package)
+            .filter(Package.owner_org.in_(owner_orgs))
+        )
+
+    utilizations = session.query(
+        Utilization.id,
+        Utilization.resource.package.name.label('dataset_title'),
+        Utilization.resource.resource.name.label('resource_title'),
+        Utilization.title.label('content'),
+        Utilization.approval,
+    ).filter(Utilization.approval is False)
+    if owner_orgs is not None:
+        utilizations = utilizations.join(Package).filter(
+            Package.owner_org.in_(owner_orgs)
+        )
+
+    utilization_comments = session.query(
+        UtilizationComment.id,
+        UtilizationComment.utilization.resource.package.name.label('dataset_title'),
+        UtilizationComment.utilization.resource.resource.name.label('resource_title'),
+        UtilizationComment.utilization.title.label('content'),
+        UtilizationComment.approval,
+    ).filter(UtilizationComment.approval is False)
+    if owner_orgs is not None:
+        utilization_comments = (
+            utilization_comments.join(Utilization)
+            .join(Resource)
+            .join(Package)
+            .filter(Package.owner_org.in_(owner_orgs))
+        )
+
+    union_query = resource_comments.union_all(utilizations)
+    union_query = union_query.union_all(utilization_comments)
+    results = union_query.limit(limit).offset(offset).all()
+    if limit is not None or offset is not None:
+        total_count = union_query.count()
+        return results, total_count
+    return results
+>>>>>>> 61f0718 (ページネーションバックエンド（検討・実装中）):ckanext/feedback/services/management/comments.py
 
 
 # Recalculate total approved bulk resources comments
