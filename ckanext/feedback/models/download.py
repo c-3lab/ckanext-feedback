@@ -18,3 +18,18 @@ class DownloadSummary(Base):
     updated = Column(TIMESTAMP)
 
     resource = relationship(Resource)
+
+
+class DownloadMonthly(Base):
+    __tablename__ = 'download_monthly'
+    id = Column(Text, primary_key=True, nullable=False)
+    resource_id = Column(
+        Text,
+        ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    )
+    download_count = Column(Integer)
+    created = Column(TIMESTAMP)
+    updated = Column(TIMESTAMP)
+
+    resource = relationship(Resource)
