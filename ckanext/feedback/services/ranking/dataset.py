@@ -16,21 +16,15 @@ def get_download_ranking(
     start_year_month=None,
     end_year_month=None,
 ):
-    if period_months_ago == 'all':
-        download_count_by_period = get_total_download_count()
-    else:
-        download_count_by_period = get_download_count_by_period(
-            start_year_month, end_year_month
-        )
+    download_count_by_period = get_download_count_by_period(
+        start_year_month, end_year_month
+    )
     total_download_count = get_total_download_count()
-
-    log.error(f'期間カウント：{download_count_by_period}')
-    log.error(f'総カウント：{total_download_count}')
-    log.error(f'{enable_org}')
 
     query = (
         (
             session.query(
+                Group.name,
                 Group.title,
                 Package.name,
                 Package.title,
@@ -51,17 +45,12 @@ def get_download_ranking(
         .all()
     )
 
-    log.error(f'リターン：{query}')
-
     return query
 
 
 def get_download_count_by_period(start_year_month, end_year_month):
     start_year, start_month = map(int, start_year_month.split('-'))
     end_year, end_month = map(int, end_year_month.split('-'))
-
-    log.error(f'開始年月{start_year} {start_month}')
-    log.error(f'終了年月{end_year} {end_month}')
 
     query = (
         session.query(
