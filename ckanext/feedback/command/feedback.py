@@ -4,7 +4,7 @@ import click
 from ckan.model import meta
 from ckan.plugins import toolkit
 
-from ckanext.feedback.models.download import DownloadSummary
+from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
 from ckanext.feedback.models.likes import ResourceLike
 from ckanext.feedback.models.resource_comment import (
@@ -48,6 +48,8 @@ def init(modules):
         elif 'download' in modules:
             drop_download_tables(engine)
             create_download_tables(engine)
+            drop_download_monthly_tables(engine)
+            create_download_monthly_tables(engine)
             click.secho('Initialize download: SUCCESS', fg='green', bold=True)
         else:
             drop_utilization_tables(engine)
@@ -58,6 +60,8 @@ def init(modules):
             create_download_tables(engine)
             drop_resource_like_tables(engine)
             create_resource_like_tables(engine)
+            drop_download_monthly_tables(engine)
+            create_download_monthly_tables(engine)
             click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
     except Exception as e:
         toolkit.error_shout(e)
@@ -106,3 +110,11 @@ def drop_resource_like_tables(engine):
 
 def create_resource_like_tables(engine):
     ResourceLike.__table__.create(engine, checkfirst=True)
+
+
+def drop_download_monthly_tables(engine):
+    DownloadMonthly.__table__.drop(engine, checkfirst=True)
+
+
+def create_download_monthly_tables(engine):
+    DownloadMonthly.__table__.create(engine, checkfirst=True)
