@@ -7,6 +7,7 @@ from ckan.tests import factories
 from flask import Flask
 
 from ckanext.feedback.command.feedback import (
+    create_download_monthly_tables,
     create_download_tables,
     create_resource_like_tables,
     create_resource_tables,
@@ -36,6 +37,7 @@ class TestDownloadController:
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
+        create_download_monthly_tables(engine)
 
     def setup_method(self, method):
         self.app = Flask(__name__)

@@ -5,7 +5,7 @@ from ckan import model
 from click.testing import CliRunner
 
 from ckanext.feedback.command.feedback import feedback
-from ckanext.feedback.models.download import DownloadSummary
+from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
 from ckanext.feedback.models.likes import ResourceLike
 from ckanext.feedback.models.resource_comment import (
@@ -49,6 +49,7 @@ class TestFeedbackCommand:
                 ResourceCommentSummary.__table__,
                 DownloadSummary.__table__,
                 ResourceLike.__table__,
+                DownloadMonthly.__table__,
             ],
             checkfirst=True,
         )
@@ -66,6 +67,7 @@ class TestFeedbackCommand:
         assert engine.has_table(ResourceCommentSummary.__table__)
         assert engine.has_table(DownloadSummary.__table__)
         assert engine.has_table(ResourceLike.__table__)
+        assert engine.has_table(DownloadMonthly.__table__)
 
     def test_feedback_utilization(self):
         result = self.runner.invoke(
@@ -83,6 +85,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentSummary.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(ResourceLike.__table__)
+        assert not engine.has_table(DownloadMonthly.__table__)
 
     def test_feedback_resource(self):
         result = self.runner.invoke(feedback, ['init', '--modules', 'resource'])
@@ -97,6 +100,7 @@ class TestFeedbackCommand:
         assert engine.has_table(ResourceCommentSummary.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(ResourceLike.__table__)
+        assert not engine.has_table(DownloadMonthly.__table__)
 
     def test_feedback_download(self):
         result = self.runner.invoke(feedback, ['init', '--modules', 'download'])
@@ -111,6 +115,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentSummary.__table__)
         assert engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(ResourceLike.__table__)
+        assert engine.has_table(DownloadMonthly.__table__)
 
     def test_feedback_session_error(self):
         with patch(
@@ -130,3 +135,4 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentSummary.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(ResourceLike.__table__)
+        assert not engine.has_table(DownloadMonthly.__table__)
