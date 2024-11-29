@@ -178,9 +178,9 @@ class UtilizationController:
             resource = comment_service.get_resource(resource_id)
             send_email(
                 template_name=FeedbackConfig().notice_email.template_utilization.get(),
-                organization_id=resource.package.owner_org,
+                organization_id=resource.Resource.package.owner_org,
                 subject=FeedbackConfig().notice_email.subject_utilization.get(),
-                target_name=resource.name,
+                target_name=resource.Resource.name,
                 content_title=title,
                 content=description,
                 url=toolkit.url_for(
@@ -299,7 +299,7 @@ class UtilizationController:
                 ),
                 organization_id=comment_service.get_resource(
                     utilization.resource_id
-                ).package.owner_org,
+                ).Resource.package.owner_org,
                 subject=FeedbackConfig().notice_email.subject_utilization_comment.get(),
                 target_name=utilization.title,
                 category=category,
