@@ -1,9 +1,10 @@
 # オンオフ機能
 
-* ckanext-feedbackには以下の3つのモジュールがあり、各モジュールのオンオフを切り替えることが出来ます。
+* ckanext-feedbackには以下の4つのモジュールがあり、各モジュールのオンオフを切り替えることが出来ます。
   * [Utilization](./utilization.md) (データの利活用方法に関するモジュール)
   * [Resource](./resource.md) (リソースへのコメントに関するモジュール)
   * [Download](./download.md) (ダウンロードに関するモジュール)
+  * [Likes](./likes.md) (いいね機能に関するモジュール)
 
 ※ デフォルトでは全てのモジュールがオン(`True`)になっています
 
@@ -87,6 +88,12 @@
         ckan.feedback.downloads.enable = False
         ```
 
+    * likesモジュールをオフにする場合
+
+        ```bash
+        ckan.feedback.likes.enable = False
+        ```
+
 2. テーブル作成(まだの方のみ)
     * [feedbackコマンド](./feedback_command.md)の```-modules```オプションを参考に**オンにするモジュール**のテーブル作成を行なってください
 
@@ -129,6 +136,19 @@
                     }
                 }
             }
+        }
+    }
+    ```
+
+    * (例3) likesをオフにする場合
+
+    ```json
+    {
+        "modules": {
+            "likes": {
+                "enable": false,
+                "enable_orgs": []
+            },
         }
     }
     ```

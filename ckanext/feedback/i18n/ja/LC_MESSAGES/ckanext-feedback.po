@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2024-10-21 10:41+0900\n"
+"POT-Creation-Date: 2024-11-01 11:29+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -19,60 +19,69 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: ckanext/feedback/plugin.py:342 ckanext/feedback/plugin.py:383
-#: ckanext/feedback/plugin.py:385
-#: ckanext/feedback/templates/package/snippets/resource_item.html:15
-#: ckanext/feedback/templates/snippets/package_item.html:21
-#: ckanext/feedback/tests/test_plugin.py:892
-#: ckanext/feedback/tests/test_plugin.py:903
-#: ckanext/feedback/tests/test_plugin.py:968
+#: ckanext/feedback/plugin.py:354 ckanext/feedback/plugin.py:401
+#: ckanext/feedback/plugin.py:403
+#: ckanext/feedback/templates/package/snippets/resource_item.html:26
+#: ckanext/feedback/templates/snippets/package_item.html:30
+#: ckanext/feedback/tests/test_plugin.py:923
+#: ckanext/feedback/tests/test_plugin.py:935
+#: ckanext/feedback/tests/test_plugin.py:1010
 msgid "Downloads"
 msgstr "ダウンロード数"
 
-#: ckanext/feedback/plugin.py:348 ckanext/feedback/plugin.py:390
-#: ckanext/feedback/plugin.py:392
-#: ckanext/feedback/templates/package/snippets/resource_item.html:24
-#: ckanext/feedback/templates/snippets/package_item.html:30
-#: ckanext/feedback/tests/test_plugin.py:893
-#: ckanext/feedback/tests/test_plugin.py:904
-#: ckanext/feedback/tests/test_plugin.py:969
+#: ckanext/feedback/plugin.py:360 ckanext/feedback/plugin.py:408
+#: ckanext/feedback/plugin.py:410
+#: ckanext/feedback/templates/package/snippets/resource_item.html:35
+#: ckanext/feedback/templates/snippets/package_item.html:39
+#: ckanext/feedback/tests/test_plugin.py:924
+#: ckanext/feedback/tests/test_plugin.py:936
+#: ckanext/feedback/tests/test_plugin.py:1011
 msgid "Utilizations"
 msgstr "利活用数"
 
-#: ckanext/feedback/plugin.py:354 ckanext/feedback/plugin.py:395
-#: ckanext/feedback/plugin.py:397
-#: ckanext/feedback/templates/package/snippets/resource_item.html:51
-#: ckanext/feedback/templates/snippets/package_item.html:61
+#: ckanext/feedback/plugin.py:366 ckanext/feedback/plugin.py:413
+#: ckanext/feedback/plugin.py:415
+#: ckanext/feedback/templates/package/snippets/resource_item.html:62
+#: ckanext/feedback/templates/snippets/package_item.html:70
 #: ckanext/feedback/templates/utilization/details.html:48
-#: ckanext/feedback/tests/test_plugin.py:894
-#: ckanext/feedback/tests/test_plugin.py:905
-#: ckanext/feedback/tests/test_plugin.py:970
+#: ckanext/feedback/tests/test_plugin.py:925
+#: ckanext/feedback/tests/test_plugin.py:937
+#: ckanext/feedback/tests/test_plugin.py:1012
 msgid "Issue Resolutions"
 msgstr "課題解決数"
 
-#: ckanext/feedback/plugin.py:364 ckanext/feedback/plugin.py:402
-#: ckanext/feedback/plugin.py:404
-#: ckanext/feedback/templates/package/snippets/resource_item.html:33
+#: ckanext/feedback/plugin.py:376 ckanext/feedback/plugin.py:420
+#: ckanext/feedback/plugin.py:422
+#: ckanext/feedback/templates/package/snippets/resource_item.html:44
 #: ckanext/feedback/templates/resource/comment.html:32
-#: ckanext/feedback/templates/snippets/package_item.html:40
+#: ckanext/feedback/templates/snippets/package_item.html:49
 #: ckanext/feedback/templates/utilization/details.html:68
 #: ckanext/feedback/templates/utilization/search.html:61
-#: ckanext/feedback/tests/test_plugin.py:895
-#: ckanext/feedback/tests/test_plugin.py:906
-#: ckanext/feedback/tests/test_plugin.py:971
+#: ckanext/feedback/tests/test_plugin.py:926
+#: ckanext/feedback/tests/test_plugin.py:938
+#: ckanext/feedback/tests/test_plugin.py:1013
 msgid "Comments"
 msgstr "コメント数"
 
-#: ckanext/feedback/plugin.py:369 ckanext/feedback/plugin.py:408
-#: ckanext/feedback/plugin.py:410
+#: ckanext/feedback/plugin.py:381 ckanext/feedback/plugin.py:426
+#: ckanext/feedback/plugin.py:428
 #: ckanext/feedback/templates/management/comments.html:124
-#: ckanext/feedback/templates/package/snippets/resource_item.html:41
+#: ckanext/feedback/templates/package/snippets/resource_item.html:52
 #: ckanext/feedback/templates/resource/comment.html:38
-#: ckanext/feedback/templates/snippets/package_item.html:51
-#: ckanext/feedback/tests/test_plugin.py:907
-#: ckanext/feedback/tests/test_plugin.py:975
+#: ckanext/feedback/templates/snippets/package_item.html:60
+#: ckanext/feedback/tests/test_plugin.py:939
+#: ckanext/feedback/tests/test_plugin.py:1018
 msgid "Rating"
 msgstr "評価"
+
+#: ckanext/feedback/plugin.py:389 ckanext/feedback/plugin.py:433
+#: ckanext/feedback/templates/package/snippets/resource_item.html:17
+#: ckanext/feedback/templates/snippets/package_item.html:21
+#: ckanext/feedback/tests/test_plugin.py:927
+#: ckanext/feedback/tests/test_plugin.py:940
+#: ckanext/feedback/tests/test_plugin.py:1014
+msgid "Number of Likes"
+msgstr "いいね数"
 
 #: ckanext/feedback/assets/js/management_comments.js:32
 msgid "Please select at least one checkbox"
@@ -90,44 +99,44 @@ msgstr "チェックした%d項目を削除してもよろしいですか？"
 
 #: ckanext/feedback/controllers/management.py:67
 #: ckanext/feedback/controllers/management.py:88
-#: ckanext/feedback/tests/controllers/test_management.py:204
-#: ckanext/feedback/tests/controllers/test_management.py:286
+#: ckanext/feedback/tests/controllers/test_management.py:206
+#: ckanext/feedback/tests/controllers/test_management.py:288
 msgid "bulk approval completed."
 msgstr "一括承認完了"
 
 #: ckanext/feedback/controllers/management.py:108
 #: ckanext/feedback/controllers/management.py:130
-#: ckanext/feedback/tests/controllers/test_management.py:373
-#: ckanext/feedback/tests/controllers/test_management.py:467
+#: ckanext/feedback/tests/controllers/test_management.py:375
+#: ckanext/feedback/tests/controllers/test_management.py:469
 msgid "bulk delete completed."
 msgstr "一括削除完了"
 
 #: ckanext/feedback/controllers/management.py:144
 #: ckanext/feedback/controllers/management.py:161
-#: ckanext/feedback/controllers/resource.py:178
+#: ckanext/feedback/controllers/resource.py:185
 #: ckanext/feedback/controllers/utilization.py:455
 #: ckanext/feedback/services/common/check.py:13
-#: ckanext/feedback/tests/controllers/test_management.py:575
-#: ckanext/feedback/tests/controllers/test_management.py:653
-#: ckanext/feedback/tests/controllers/test_resource.py:480
-#: ckanext/feedback/tests/controllers/test_resource.py:524
-#: ckanext/feedback/tests/controllers/test_resource.py:609
-#: ckanext/feedback/tests/controllers/test_resource.py:652
-#: ckanext/feedback/tests/controllers/test_utilization.py:1953
-#: ckanext/feedback/tests/services/common/test_check.py:110
-#: ckanext/feedback/tests/services/common/test_check.py:130
+#: ckanext/feedback/tests/controllers/test_management.py:577
+#: ckanext/feedback/tests/controllers/test_management.py:655
+#: ckanext/feedback/tests/controllers/test_resource.py:482
+#: ckanext/feedback/tests/controllers/test_resource.py:526
+#: ckanext/feedback/tests/controllers/test_resource.py:611
+#: ckanext/feedback/tests/controllers/test_resource.py:654
+#: ckanext/feedback/tests/controllers/test_utilization.py:1955
+#: ckanext/feedback/tests/services/common/test_check.py:112
+#: ckanext/feedback/tests/services/common/test_check.py:132
 msgid ""
 "The requested URL was not found on the server. If you entered the URL "
 "manually please check your spelling and try again."
 msgstr "要求された URL がサーバー上に見つかりませんでした。URL を手動で入力した場合は、綴りを確認してからもう一度お試しください。"
 
-#: ckanext/feedback/controllers/resource.py:89
+#: ckanext/feedback/controllers/resource.py:90
 #: ckanext/feedback/controllers/utilization.py:162
 #: ckanext/feedback/controllers/utilization.py:279
 msgid "Bad Captcha. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
-#: ckanext/feedback/controllers/resource.py:124
+#: ckanext/feedback/controllers/resource.py:125
 #: ckanext/feedback/controllers/utilization.py:319
 msgid ""
 "Your comment has been sent.<br>The comment will not be displayed until "
@@ -354,68 +363,72 @@ msgstr "データリソース"
 msgid "Created"
 msgstr "作成日"
 
-#: ckanext/feedback/templates/package/resource_read.html:6
+#: ckanext/feedback/templates/package/resource_read.html:7
 msgid "Manage"
 msgstr "管理"
 
-#: ckanext/feedback/templates/package/resource_read.html:16
+#: ckanext/feedback/templates/package/resource_read.html:26
 msgid "View"
 msgstr "ビュー"
 
-#: ckanext/feedback/templates/package/resource_read.html:18
+#: ckanext/feedback/templates/package/resource_read.html:29
 msgid "API Endpoint"
 msgstr "API エンドポイント"
 
-#: ckanext/feedback/templates/package/resource_read.html:20
-#: ckanext/feedback/templates/package/snippets/resource_item.html:97
+#: ckanext/feedback/templates/package/resource_read.html:32
+#: ckanext/feedback/templates/package/snippets/resource_item.html:117
 msgid "Go to resource"
 msgstr "リソースへ行く"
 
-#: ckanext/feedback/templates/package/resource_read.html:22
-#: ckanext/feedback/templates/package/resource_read.html:31
-#: ckanext/feedback/templates/package/resource_read.html:38
-#: ckanext/feedback/templates/package/snippets/resource_item.html:94
+#: ckanext/feedback/templates/package/resource_read.html:35
+#: ckanext/feedback/templates/package/resource_read.html:44
+#: ckanext/feedback/templates/package/resource_read.html:51
+#: ckanext/feedback/templates/package/snippets/resource_item.html:113
 msgid "Download"
 msgstr "ダウンロード"
 
-#: ckanext/feedback/templates/package/resource_read.html:29
-#: ckanext/feedback/templates/package/resource_read.html:36
+#: ckanext/feedback/templates/package/resource_read.html:42
+#: ckanext/feedback/templates/package/resource_read.html:49
 msgid "List of downloadable formats"
 msgstr "ダウンロード可能フォーマット一覧"
 
-#: ckanext/feedback/templates/package/resource_read.html:70
-#: ckanext/feedback/templates/package/snippets/resource_item.html:114
+#: ckanext/feedback/templates/package/resource_read.html:83
+#: ckanext/feedback/templates/package/snippets/resource_item.html:134
 #: ckanext/feedback/templates/utilization/new.html:15
 msgid "Create utilization application"
 msgstr "利活用方法登録申請"
 
-#: ckanext/feedback/templates/package/resource_read.html:77
-#: ckanext/feedback/templates/package/snippets/resource_item.html:122
+#: ckanext/feedback/templates/package/resource_read.html:90
+#: ckanext/feedback/templates/package/snippets/resource_item.html:142
 #: ckanext/feedback/templates/resource/comment.html:15
 #: ckanext/feedback/templates/resource/comment.html:35
 #: ckanext/feedback/templates/utilization/details.html:72
 msgid "Comment"
 msgstr "コメント"
 
-#: ckanext/feedback/templates/package/resource_read.html:85
-#: ckanext/feedback/templates/package/resource_read.html:87
+#: ckanext/feedback/templates/package/resource_read.html:98
+#: ckanext/feedback/templates/package/resource_read.html:100
 msgid "URL:"
 msgstr "URL:"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:63
-#: ckanext/feedback/templates/package/snippets/resource_item.html:69
+#: ckanext/feedback/templates/package/snippets/resource_item.html:74
+#: ckanext/feedback/templates/package/snippets/resource_item.html:80
 msgid "Explore"
 msgstr "探索"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:80
+#: ckanext/feedback/templates/package/snippets/resource_item.html:91
 msgid "Preview"
 msgstr "プレビュー"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:83
+#: ckanext/feedback/templates/package/snippets/resource_item.html:94
 msgid "More information"
 msgstr "詳細情報の表示"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:106
+#: ckanext/feedback/templates/package/snippets/resource_item.html:104
+msgid "liked"
+msgstr "いいね"
+
+#: ckanext/feedback/templates/package/snippets/resource_item.html:126
 #: ckanext/feedback/templates/utilization/details.html:24
 #: ckanext/feedback/templates/utilization/edit.html:13
 msgid "Edit"
