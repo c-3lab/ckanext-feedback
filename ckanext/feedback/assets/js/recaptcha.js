@@ -1,3 +1,10 @@
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+    const existingTokenInput = document.querySelector('input[name="g-recaptcha-response"]');
+    if (existingTokenInput) existingTokenInput.remove();
+  }
+});
+
 const contentForms = document.getElementsByName(feedbackRecaptchaTargetForm);
 contentForms.forEach(contentForm => {
   contentForm.onsubmit = function(event) {
