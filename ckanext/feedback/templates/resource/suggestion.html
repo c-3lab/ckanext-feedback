@@ -1,0 +1,94 @@
+{% if h.is_enabled_resources() %}
+
+  {% extends "package/base.html" %}
+
+  {% block styles %}
+    {{ super() }}
+    {% asset 'feedback/feedback-comment-css' %}
+  {% endblock %}
+
+  {% block breadcrumb_content_selected %} class="inactive"{% endblock %}
+
+  {% block title %}{{ _('Comment on Resource') }} - {{ pkg_dict.title }} - {{ resource.name }} - CKAN{% endblock %}
+
+  {% block primary %}
+    <div class="module-content">
+      <div class="centered-content">
+        <h1 class="p-2">{{ _('Suggested comment content') }}</h1>
+        <br>
+        <div>
+          <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
+          <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
+        </div>  
+        <br>
+        <p class="wrap-text" style="white-space: pre-line;">
+          {{ _("Your input may be considered inappropriate.\n"
+          "We will suggest a comment that relaxes the wording based on the input comments.\n"
+          "Please select the comments you would like to submit.\n"
+          "You can also edit each comment.") }}
+        </p>
+        <br>
+        <div class="comment" style="display: flex;">
+          <h5 class="p-2" style="flex: 1;">{{ _('Input Comments') }}</h5>
+          <h5 class="p-2" style="flex: 1;">{{ _('Proposal Comments') }}</h5>
+        </div>
+        
+        <div class="comment-contents" style="display: flex; gap: 10px;">
+          <form name="input_comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post" style="flex: 1;">
+            <input type="hidden" name="package_name" value="{{ pkg_dict.name }}">
+            <input type="hidden" name="category" value="{{ selected_category }}">
+            <input type="hidden" name="rating" value="{{ rating }}">
+            <input type="hidden" name="comment-suggested" value="True">
+            <div style="flex: 1;">
+              <textarea class="p-2" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
+              <div class="char-count"><span name="comment-count">0</span>/1000</div>
+              <div class="d-flex justify-content-between">
+                <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary pull-right" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select input Comment') }}</button>
+                {% else %}
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Select input Comment') }}</button>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+
+          <form name="input_comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post" style="flex: 1;">
+            <input type="hidden" name="package_name" value="{{ pkg_dict.name }}">
+            <input type="hidden" name="category" value="{{ selected_category }}">
+            <input type="hidden" name="rating" id="rating" value="{{ rating }}">
+            <input type="hidden" name="comment-suggested" value="True">
+            <div style="flex: 1;">
+              <textarea class="p-2" id="proposal-comment-content" name="comment-content" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ softened }}</textarea>
+              <div class="char-count"><span name="comment-count">0</span>/1000</div>
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary pull-right" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select proposal Comment') }}</button>
+                {% else %}
+                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">{{ _('Select proposal Comment') }}</button>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endblock -%}
+
+  {% block secondary %}{% endblock %}
+
+  {%- block scripts %}
+    {{ super() }}
+    {% asset 'feedback/feedback-comment-js' %}
+    {% if h.is_enabled_feedback_recaptcha() %}
+      <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
+      <script>
+        const feedbackRecaptchaTargetForm = 'input_comment_form'
+        const feedbackRecaptchaAction = 'resource_comment_suggestion'
+        const feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
+      </script>
+      {% asset 'feedback/feedback-recaptcha-js'%}
+    {% endif %}
+  {% endblock -%}
+
+{% endif %}

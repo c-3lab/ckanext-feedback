@@ -1,0 +1,67 @@
+{% if h.is_enabled_utilizations() %}
+
+  {% extends "page.html" %}
+
+  {% block styles %}
+    {{ super() }}
+    {% asset 'feedback/feedback-details-css' %}
+  {% endblock %}
+
+  <!-- {% block breadcrumb_content_selected %} class="inactive"{% endblock %} -->
+
+  {% block title %}{{ _('Comment on Utilization') }} - {{ utilization.title }} - {{ utilization.package_name }} - {{ utilization.resource_name }} - CKAN{% endblock %}
+
+  {% block primary %}
+    <div class="module-content">
+      <div class="centered-content">
+        <h1 class="p-2">{{ _('Please confirm') }}</h1>
+        <br>
+        <p class="wrap-text">
+          {{ _(
+            "Please note that if your comment is intended to hurt anyone or contains "
+            "discriminatory, violent, sexual, or self-harming content, you may cause negative "
+            "effects on yourself or others by posting your comment.<br>"
+            "If your comment contains such content, you can edit it here."
+          ) }}
+        </p>
+        <br>
+        <div class="comment-contents" style="display: flex; gap: 10px;">
+          <form name="input_comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post" style="flex: 1;">
+            <input type="hidden" name="category" value="{{ selected_category }}">
+            <input type="hidden" name="comment-suggested" value="True">
+            <div style="flex: 1;">
+              <textarea class="p-2" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
+              <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
+              <br>
+              <div class="d-flex justify-content-between">
+                <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
+                {% else %}
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endblock -%}
+
+  {% block secondary %}{% endblock %}
+
+  {%- block scripts %}
+    {{ super() }}
+    {% asset 'feedback/feedback-comment-js' %}
+    {% if h.is_enabled_feedback_recaptcha() %}
+      <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
+      <script>
+        const feedbackRecaptchaTargetForm = 'input_comment_form'
+        const feedbackRecaptchaAction = 'utilization_comment_expect_suggestion'
+        const feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
+      </script>
+      {% asset 'feedback/feedback-recaptcha-js'%}
+    {% endif %}
+  {% endblock -%}
+
+{% endif %}
