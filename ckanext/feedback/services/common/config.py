@@ -117,6 +117,13 @@ class BaseConfig:
                 enable = False
         return toolkit.asbool(enable)
 
+    def get_enable_orgs(self):
+        ck_conf_str = self.get_ckan_conf_str()
+        enable = config.get(f"{ck_conf_str}.enable", self.default)
+        if enable:
+            enable = config.get(f"{ck_conf_str}.enable_orgs", [])
+        return enable
+
 
 class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
