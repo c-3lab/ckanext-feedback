@@ -18,7 +18,7 @@ GET /api/3/action/datasets_ranking
 | start_year_month     | 固定期間の開始年月          | string| 任意[^1] | なし                    | 例: `2024-01` で2024年1月が開始。  
 | end_year_month       | 固定期間の終了年月          | string| 任意[^1] | なし                    | 例: `2024-03` で2024年3月が終了。開始・終了ともに指定した場合、その期間で集計します。 |
 | aggregation_metric   | 集計指標                     | string| 任意 | "download"              |  |
-| municipality_name    | 自治体名による絞り込み       | string| 任意 | なし  |   |
+| organization_name    | 自治体名による絞り込み       | string| 任意 | なし  |   |
 
 [^1]: period_months_ago, start_year_month, end_year_month のいずれかの指定が必須
 
