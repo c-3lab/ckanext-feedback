@@ -8,6 +8,9 @@ from ckan.plugins import toolkit
 from flask import Response, request
 
 from ckanext.feedback.services.common import config as feedback_config
+from ckanext.feedback.services.download.monthly import (
+    increment_resource_downloads_monthly,
+)
 from ckanext.feedback.services.download.summary import increment_resource_downloads
 from ckanext.feedback.services.resource.comment import get_resource
 
@@ -24,6 +27,7 @@ class DownloadController:
         user_download = toolkit.asbool(request.args.get('user-download'))
         if request.headers.get('Sec-Fetch-Dest') == 'document' or user_download:
             increment_resource_downloads(resource_id)
+            increment_resource_downloads_monthly(resource_id)
 
         handler = feedback_config.download_handler()
         if not handler:
