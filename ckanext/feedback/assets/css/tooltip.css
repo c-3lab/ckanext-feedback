@@ -22,7 +22,7 @@
     background: #000;
     width: 125px;
 }
-.description:before {
+.description.position-left:before {
     content: "";
     position: absolute;
     top: 100%;
@@ -31,8 +31,24 @@
     border-top: 5px solid #000;
     margin-left: -15px;
 }
-.bubble:hover .description{
+.description.position-right:before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 58%;
+    border: 5px solid transparent;
+    border-top: 5px solid #000;
+    margin-left: -15px;
+}
+/* original */
+.bubble:hover .description.position-left{
     display: inline-block;
     top: -25px;
     left: -40px;
+}
+/* approval */
+.bubble:hover .description.position-right {
+    display: inline-block;
+    top: -25px;
+    left: -43px;
 }

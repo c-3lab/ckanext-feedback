@@ -20,6 +20,18 @@ rules = [
     #     {'methods': ['GET']},
     # ),
     (
+        '/approve_bulk_target',
+        'approve_bulk_target',
+        management.ManagementController.approve_bulk_target,
+        {'methods': ['POST']},
+    ),
+    (
+        '/delete_bulk_target',
+        'delete_bulk_target',
+        management.ManagementController.delete_bulk_target,
+        {'methods': ['POST']},
+    ),
+    (
         '/approve_bulk_utilization_comments',
         'approve_bulk_utilization_comments',
         management.ManagementController.approve_bulk_utilization_comments,

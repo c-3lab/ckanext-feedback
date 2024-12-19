@@ -103,12 +103,13 @@
               </form>
             {% endif %}
             <h4>
-              {{ comment.created.strftime('%Y/%m/%d %H:%M') }}
-              {% for category in categories %}
-                {% if comment.category.name in category.name %}
-                  {{ _(comment.category.value) }}
-                {% endif %}
-              {% endfor %}
+              <span id="comment-created-{{ comment.id }}">{{ comment.created.strftime('%Y/%m/%d %H:%M') }}</span>
+              {% if comment.category %}
+                <span id="comment-category-{{ comment.id }}">{{ _(comment.category.value) }}</span>
+              {% endif %}
+              {% if not comment.approval %}
+                {{ _('Unapproved') }}
+              {% endif %}
             </h4>
             <br>
             <p class="multiple-line wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
