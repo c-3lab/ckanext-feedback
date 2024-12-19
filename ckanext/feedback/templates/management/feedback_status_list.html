@@ -1,0 +1,169 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+  {% asset 'feedback/feedback-management-comments-css' %}
+  {% asset 'feedback/feedback-tooltip-css' %}
+{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="{{ h.url_for('management.comments') }}">{{ _('Feedback Management') }}</a></li>
+{% endblock %}
+
+{% block title %}{{ _('Feedback Management') }} - CKAN{% endblock %}
+
+{% block primary_content %}
+  {% asset 'feedback/feedback-tooltip-css' %}
+
+  <article class="module">
+    <div class="module-content">
+      <form>
+        <div class="row" style="display: flex; justify-content: space-between;">
+          <h2 class="bubble" id="data-count" style="width: auto;">フィードバック承認管理</h2>
+          <div style="width: auto;">
+            <span>並び順：</span>
+            <select class="mb-2" name="sort">
+              <option value="" selected>新着順</option>
+              <option value="">投稿順</option>
+              <option value="">データセット名 昇順</option>
+              <option value="">データセット名 降順</option>
+              <option value="">リソース名 昇順</option>
+              <option value="">リソース名 降順</option>
+            </select>
+            <button class="btn btn-default js-hide" type="submit">Go</button>
+          </div>
+        </div>
+      </form>
+      <div class="">
+        <form id="comments-form" method="post">
+          <div class="right-text mb-2">
+            {% set approval_action=h.url_for( "management.approve_bulk_target" ) %}
+            {% set delete_action=h.url_for( "management.delete_bulk_target" ) %}
+            <button class="btn btn-primary bulk-button" type="button" onclick="runBulkAction('{{ approval_action }}')">一括承認</button>
+            <button class="btn btn-primary bulk-button" type="button" onclick="runBulkAction('{{ delete_action }}')">一括削除</button>
+          </div>
+          <div class="container">
+            {% if data_list %}
+              <div class="org">
+                <div class="border-bottom fw-bold mb-2">
+                  <div style="float:left;"><input class="checkbox-inline" type="checkbox" id="target-checkbox-all"></div>
+                  <div class="row form-check-label fs-6">
+                    <div class="col-2">データセット</div>
+                    <div class="col-2">リソース</div>
+                    <div class="col-1">種類</div>
+                    <div class="col">投稿内容</div>
+                    <div class="col-2">ステータス</div>
+                  </div>
+                </div>
+                {% for data in data_list %}
+                  <div class="target">
+                    <div style="float:left;">
+                      {% if data.target_type == 'リソースコメント' %}
+                        <input class="checkbox-inline" type="checkbox" name="resource-comments-checkbox" id="{{ data.id }}" value="{{ data.id }}">
+                      {% elif data.target_type == '利活用申請' %}
+                        <input class="checkbox-inline" type="checkbox" name="utilization-checkbox" id="{{ data.id }}" value="{{ data.id }}">
+                      {% elif data.target_type == '利活用コメント' %}
+                        <input class="checkbox-inline" type="checkbox" name="utilization-comments-checkbox" id="{{ data.id }}" value="{{ data.id }}">
+                      {% endif %}
+                    </div>
+                    <div class="row form-check-label fs-6">
+                      <a class="col-2 text-truncate" href="{{ data.dataset_url }}">{{ data.dataset_title }}</a>
+                      <a class="col-2 text-truncate" href="{{ data.resource_url }}">{{ data.resource_title }}</a>
+                      {% if data.target_type == 'リソースコメント' %}
+                        <div class="col-1 bubble" style="margin-right: 0;">
+                          <i class="fa-solid fa-comment-dots"></i>
+                          <div class="description position-right">リソースコメント</div>
+                        </div>
+                        <a class="col text-truncate" href="{{ data.target_url }}#comment-created-{{ data.id }}">{{ data.content }}</a>
+                      {% elif data.target_type == '利活用申請' %}
+                        <div class="col-1 bubble" style="margin-right: 0;">
+                          <i class="fa-solid fa-seedling"></i>
+                          <div class="description position-right">利活用申請</div>
+                        </div>
+                        <a class="col text-truncate" href="{{ data.target_url }}">{{ data.content }}</a>
+                      {% elif data.target_type == '利活用コメント' %}
+                        <div class="col-1 bubble" style="margin-right: 0;">
+                          <span class="fa-stack" style="font-size: 7px;">
+                            <i class="fa fa-comment fa-stack-2x" style="vertical-align: middle;"></i>
+                            <i class="fa-solid fa-seedling fa-stack-1x" style="color: #ffffff; vertical-align: middle;"></i>
+                          </span>
+                          <div class="description position-right">利活用コメント</div>
+                        </div>
+                        <a class="col text-truncate" href="{{ data.target_url }}#comment-created-{{ data.id }}">{{ data.content }}</a>
+                      {% endif %}
+                      <div class="col-2 text-truncate">
+                        {% if data.approval %}
+                          承認済
+                        {% else %}
+                          承認待ち
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+              <!-- {% block page_pagination %}
+                {{ page.pager() }}
+              {% endblock %} -->
+            {% else %}
+              <p>申請はありません。</p>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-info-circle"></i>
+      {{ _('What are Feedback Management') }}
+    </h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+          組織へのリソースコメントや利活用申請、又は登録した利活用へのコメントの承認状態を変更できます。
+        {% endtrans %}
+      </p>
+    </div>
+  </div>
+  <div class="filters">
+    {% for _filter in filters %}
+      <section class="module module-narrow module-shallow">
+        <h2 class="module-heading">
+          <i class="fa fa-filter"></i>
+          {{ _(_filter.type) }}
+        </h2>
+
+        <nav aria-label="{{ _filter['name'] }}">
+          <ul class="list-unstyled nav nav-simple nav-facet">
+          {% for filter_item in _filter.list %}
+            {% set href = filter_item.href %}
+            {% set label = filter_item.label %}
+            {% set href = filter_item.href %}
+            {% set count = filter_item.count %}
+            <li class="nav-item {% if filter_item.active %} active{% endif %}">
+              <a href="{{ href }}" title="{{ label }}">
+                <span class="item-label">{{ label }}</span>
+                <span class="hidden separator"> - </span>
+                <span class="item-count badge">{{ count }}</span>
+                {% if filter_item.active %}<span class="facet-close">x</span>{% endif %}
+              </a>
+            </li>
+          {% endfor %}
+          </ul>
+        </nav>
+      </section>
+    {% endfor %}
+  </div>
+  <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span class="text">close</span></a>
+{% endblock %}
+
+
+{%- block scripts %}
+  {{ super() }}
+  {% asset 'feedback/feedback-feedback-status-list-js' %}
+{% endblock %}
