@@ -204,7 +204,7 @@ class TestManagementController:
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
-            'management.comments', tab='utilization-comments'
+            'management.feedback-approval', tab='utilization-comments'
         )
 
         assert response == 'redirect_response'
@@ -278,7 +278,7 @@ class TestManagementController:
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
-            'management.comments', tab='resource-comments'
+            'management.feedback-approval', tab='resource-comments'
         )
 
         assert response == 'redirect_response'
@@ -304,7 +304,7 @@ class TestManagementController:
             response = ManagementController.approve_bulk_resource_comments()
 
         mock_redirect_to.assert_called_once_with(
-            'management.comments', tab='resource-comments'
+            'management.feedback-approval', tab='resource-comments'
         )
 
         assert response == 'redirect_response'
@@ -357,7 +357,7 @@ class TestManagementController:
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
-            'management.comments', tab='utilization-comments'
+            'management.feedback-approval', tab='utilization-comments'
         )
 
         assert response == 'redirect_response'
@@ -383,7 +383,7 @@ class TestManagementController:
             response = ManagementController.delete_bulk_utilization_comments()
 
         mock_redirect_to.assert_called_once_with(
-            'management.comments', tab='utilization-comments'
+            'management.feedback-approval', tab='utilization-comments'
         )
 
         assert response == 'redirect_response'
@@ -443,7 +443,7 @@ class TestManagementController:
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
-            'management.comments', tab='resource-comments'
+            'management.feedback-approval', tab='resource-comments'
         )
 
         assert response == 'redirect_response'
@@ -469,7 +469,7 @@ class TestManagementController:
             response = ManagementController.delete_bulk_resource_comments()
 
         mock_redirect_to.assert_called_once_with(
-            'management.comments', tab='resource-comments'
+            'management.feedback-approval', tab='resource-comments'
         )
 
         assert response == 'redirect_response'

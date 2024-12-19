@@ -37,6 +37,12 @@ feedback-management-comments-js:
   contents:
     - js/management_comments.js
 
+feedback-feedback-status-list-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-feedback_status_list.js
+  contents:
+    - js/feedback_status_list.js
+
 feedback-recaptcha-js:
   filter: rjsmin
   output: ckanext-feedback/%(version)s-recaptch.js
