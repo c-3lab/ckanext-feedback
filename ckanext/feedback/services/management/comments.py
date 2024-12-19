@@ -1,9 +1,10 @@
 from datetime import datetime
 
+from ckan.common import config
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
-from sqlalchemy import func
+from sqlalchemy import desc, func
 
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
@@ -199,3 +200,60 @@ def delete_resource_comments(comment_id_list):
         .filter(ResourceComment.id.in_(comment_id_list))
         .delete(synchronize_session='fetch')
     )
+
+
+# Get the number of pages of selected resource comments
+def get_page_for_resource_comment(resource_id, resource_comment_id):
+    comments_per_page = config.get('ckan.datasets_per_page')
+
+    #
+    # Note: Ensure that the `order_by` used in this query is consistent
+    # with the `order_by` in the get_resource_comments function.
+    # The ordering must be the same for both functions.
+    #
+    query = (
+        session.query(
+            ResourceComment.id,
+            func.row_number()
+            .over(order_by=desc(ResourceComment.created))
+            .label('row_num'),
+        )
+        .filter(ResourceComment.resource_id == resource_id)
+        .subquery()
+    )
+
+    row_number = (
+        session.query(query.c.row_num)
+        .filter(query.c.id == resource_comment_id)
+        .scalar()
+    )
+
+    page_number = (row_number - 1) // comments_per_page + 1
+
+    return page_number
+
+
+# Get the number of pages of selected utilization comments
+def get_page_for_utilization_comment(utilization_id, utilization_comment_id):
+    comments_per_page = config.get('ckan.datasets_per_page')
+
+    query = (
+        session.query(
+            UtilizationComment.id,
+            func.row_number()
+            .over(order_by=desc(UtilizationComment.created))
+            .label('row_num'),
+        )
+        .filter(UtilizationComment.utilization_id == utilization_id)
+        .subquery()
+    )
+
+    row_number = (
+        session.query(query.c.row_num)
+        .filter(query.c.id == utilization_comment_id)
+        .scalar()
+    )
+
+    page_number = (row_number - 1) // comments_per_page + 1
+
+    return page_number

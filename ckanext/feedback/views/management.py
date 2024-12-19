@@ -8,8 +8,8 @@ blueprint = Blueprint('management', __name__, url_prefix='/management')
 # Add target page URLs to rules and add each URL to the blueprint
 rules = [
     (
-        '/comments',
-        'comments',
+        '/feedback-approval',
+        'feedback-approval',
         management.ManagementController.admin,
         {'methods': ['GET']},
     ),
@@ -19,6 +19,18 @@ rules = [
     #     management.ManagementController.comments,
     #     {'methods': ['GET']},
     # ),
+    (
+        '/approve_bulk_target',
+        'approve_bulk_target',
+        management.ManagementController.approve_bulk_target,
+        {'methods': ['POST']},
+    ),
+    (
+        '/delete_bulk_target',
+        'delete_bulk_target',
+        management.ManagementController.delete_bulk_target,
+        {'methods': ['POST']},
+    ),
     (
         '/approve_bulk_utilization_comments',
         'approve_bulk_utilization_comments',
