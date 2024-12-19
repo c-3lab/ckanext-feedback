@@ -4,6 +4,11 @@ from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
 
+import ckanext.feedback.services.management.comments as comments_service
+import ckanext.feedback.services.management.feedbacks as feedback_service
+import ckanext.feedback.services.management.utilization as utilization_service
+import ckanext.feedback.services.resource.comment as resource_comment_service
+import ckanext.feedback.services.utilization.details as utilization_detail_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.admin import feedbacks as feedback_service

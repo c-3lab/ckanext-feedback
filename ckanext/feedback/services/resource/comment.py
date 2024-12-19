@@ -32,6 +32,11 @@ def get_resource(resource_id):
 def get_resource_comments(
     resource_id=None, approval=None, owner_orgs=None, limit=None, offset=None
 ):
+    #
+    # Note: Ensure that the `order_by` used in this query is consistent
+    # with the `order_by` in the get_page_for_resource_comment function.
+    # The ordering must be the same for both functions.
+    #
     query = session.query(ResourceComment).order_by(ResourceComment.created.desc())
     if resource_id is not None:
         query = query.filter(ResourceComment.resource_id == resource_id)
