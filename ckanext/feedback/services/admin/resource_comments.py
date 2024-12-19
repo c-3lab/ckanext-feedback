@@ -1,9 +1,14 @@
 from datetime import datetime
 
+from ckan.common import config
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
+<<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 from sqlalchemy import func, literal
+=======
+from sqlalchemy import desc, func
+>>>>>>> 30b8a75 (Implement basic features for the admin panel):ckanext/feedback/services/management/comments.py
 
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
@@ -189,3 +194,113 @@ def refresh_resources_comments(resource_comment_summaries):
             }
         )
     session.bulk_update_mappings(ResourceCommentSummary, mappings)
+<<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
+=======
+
+
+# Approve selected utilization comments
+def approve_utilization_comments(comment_id_list, approval_user_id):
+    session.bulk_update_mappings(
+        UtilizationComment,
+        [
+            {
+                'id': comment_id,
+                'approval': True,
+                'approved': datetime.now(),
+                'approval_user_id': approval_user_id,
+            }
+            for comment_id in comment_id_list
+        ],
+    )
+
+
+# Delete selected utilization comments
+def delete_utilization_comments(comment_id_list):
+    (
+        session.query(UtilizationComment)
+        .filter(UtilizationComment.id.in_(comment_id_list))
+        .delete(synchronize_session='fetch')
+    )
+
+
+# Approve selected resource comments
+def approve_resource_comments(comment_id_list, approval_user_id):
+    session.bulk_update_mappings(
+        ResourceComment,
+        [
+            {
+                'id': comment_id,
+                'approval': True,
+                'approved': datetime.now(),
+                'approval_user_id': approval_user_id,
+            }
+            for comment_id in comment_id_list
+        ],
+    )
+
+
+# Delete selected resource comments
+def delete_resource_comments(comment_id_list):
+    (
+        session.query(ResourceComment)
+        .filter(ResourceComment.id.in_(comment_id_list))
+        .delete(synchronize_session='fetch')
+    )
+
+
+# Get the number of pages of selected resource comments
+def get_page_for_resource_comment(resource_id, resource_comment_id):
+    comments_per_page = config.get('ckan.datasets_per_page')
+
+    #
+    # Note: Ensure that the `order_by` used in this query is consistent
+    # with the `order_by` in the get_resource_comments function.
+    # The ordering must be the same for both functions.
+    #
+    query = (
+        session.query(
+            ResourceComment.id,
+            func.row_number()
+            .over(order_by=desc(ResourceComment.created))
+            .label('row_num'),
+        )
+        .filter(ResourceComment.resource_id == resource_id)
+        .subquery()
+    )
+
+    row_number = (
+        session.query(query.c.row_num)
+        .filter(query.c.id == resource_comment_id)
+        .scalar()
+    )
+
+    page_number = (row_number - 1) // comments_per_page + 1
+
+    return page_number
+
+
+# Get the number of pages of selected utilization comments
+def get_page_for_utilization_comment(utilization_id, utilization_comment_id):
+    comments_per_page = config.get('ckan.datasets_per_page')
+
+    query = (
+        session.query(
+            UtilizationComment.id,
+            func.row_number()
+            .over(order_by=desc(UtilizationComment.created))
+            .label('row_num'),
+        )
+        .filter(UtilizationComment.utilization_id == utilization_id)
+        .subquery()
+    )
+
+    row_number = (
+        session.query(query.c.row_num)
+        .filter(query.c.id == utilization_comment_id)
+        .scalar()
+    )
+
+    page_number = (row_number - 1) // comments_per_page + 1
+
+    return page_number
+>>>>>>> 30b8a75 (Implement basic features for the admin panel):ckanext/feedback/services/management/comments.py

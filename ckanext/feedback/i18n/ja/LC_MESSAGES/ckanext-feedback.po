@@ -423,7 +423,54 @@ msgstr "チェックしたCHECKED_ROWS項目を完全に削除します。この
 msgid "What are Approval and Delete"
 msgstr "承認・削除について"
 
-#: ckanext/feedback/templates/package/resource_read.html:7
+#: ckanext/feedback/templates/management/feedback_status_list.html:21
+msgid "Order by"
+msgstr "並び順"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:24
+msgid "Newest"
+msgstr "新着順"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:24
+msgid "Oldest"
+msgstr "古い順"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:24
+msgid "Dataset Name Ascending"
+msgstr "データセット名　昇順"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:25
+msgid "Dataset Name Descending"
+msgstr "データセット名　降順"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:25
+msgid "Resource Name Ascending"
+msgstr "リソース名　昇順"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:26
+msgid "Resource Name Descending"
+msgstr "リソース名　降順"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:52
+msgid "Post Content"
+msgstr "投稿内容"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:107
+msgid "There are no applications."
+msgstr "申請はありません。"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:120
+msgid "What are Feedback Approval・Remove"
+msgstr "フィードバック 承認・削除について"
+
+#: ckanext/feedback/templates/management/feedback_status_list.html:124
+msgid ""
+"You can change the approval status of resource comments to the "
+"organization, utilization requests, or comments on registered "
+"utilizations."
+msgstr "組織へのリソースコメントや利活用申請、又は登録した利活用へのコメントの承認状態を変更できます。"
+
+#: ckanext/feedback/templates/package/resource_read.html:6
 msgid "Manage"
 msgstr "管理"
 
@@ -431,7 +478,7 @@ msgstr "管理"
 msgid "View"
 msgstr "ビュー"
 
-#: ckanext/feedback/templates/package/resource_read.html:29
+#: ckanext/feedback/templates/package/resource_read.html:19
 msgid "API Endpoint"
 msgstr "API エンドポイント"
 
