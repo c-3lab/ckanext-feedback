@@ -27,7 +27,7 @@ Feedback enables an ecosystem between users and providers that continually impro
 ### 前提
 
 * 以下の環境にインストールされている CKAN 2.10.4 に本Extensionを追加することを想定しています。
-  * Linux、Ubuntu 22.04  
+  * Linux、Ubuntu 22.04
   * Python 3.10.13
 
 ### 手順
@@ -47,7 +47,7 @@ Feedback enables an ecosystem between users and providers that continually impro
 
     ```bash
     vim /etc/ckan/ckan.ini
-    ```    
+    ```
 
 3. 以下の行に`feedback`を追加
 
