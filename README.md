@@ -24,35 +24,43 @@ Feedback enables an ecosystem between users and providers that continually impro
 
 ## Quick Start
 
-1. CKANの仮想環境をアクティブにする(CKANコンテナ等の環境内で実行してください)
+### 前提
 
-    ```bash
-    . /usr/lib/ckan/venv/bin/activate
-    ```
+* 以下の環境にインストールされている CKAN 2.10.4 に本Extensionを追加することを想定しています。
+  * Linux、Ubuntu 22.04
+  * Python 3.10.13
 
-2. 仮想環境にckanext-feedbackをインストールする
+### 手順
+
+1. ckan環境にckanext-feedbackをインストールする
+
+    * venvなどの仮想環境でCKANを実行している場合は、仮想環境をアクティブにしてから実行してください。
 
     ```bash
     pip install ckanext-feedback
     ```
 
-3. 以下のコマンドで設定を行うファイルを開く
+2. 以下のコマンドでCKANの設定を行うファイル(`ckan.ini`)を開く
+
+    * `ckan.ini` が存在しているパスを指定してください。
+    * パスが不明な場合、 `find / -name ckan.ini` などを実行して検索してください
 
     ```bash
-    vim /etc/ckan/production.ini
+    vim /etc/ckan/ckan.ini
     ```
 
-4. 以下の行に`feedback`を追加
+3. 以下の行に`feedback`を追加
 
     ```bash
     ckan.plugins = stats ・・・ recline_view feedback
     ```
 
-5. フィードバック機能に必要なテーブルを作成する
+4. フィードバック機能に必要なテーブルを作成する
 
     ```bash
     ckan db upgrade -p feedback
     ```
+    * ckan.ini が見つからないなどのエラーが出る場合、 `ckan -c <ckan.iniのパス> db upgrade -p feedback` としてください。
 
 ## 構成
 
@@ -83,9 +91,12 @@ Feedback enables an ecosystem between users and providers that continually impro
     git clone https://github.com/c-3lab/ckanext-feedback.git
     ```
 
-2. `ckanext-feedback/development`下にある`container_setup.sh`を実行し、コンテナを起動
+2. `ckanext-feedback/development` ディレクトリに移動し、そのディレクトリにある`container_setup.sh`を実行し、コンテナを起動
 
-3. ckanext-feedbackをインストールして必要なテーブルを作成するために、`ckanext-feedback/development`下にある`feedback_setup.sh`を実行する
+3. 同じく、`ckanext-feedback/development` ディレクトリにいる状態で `feedback_setup.sh` を実行し、ckanext-feedbackをインストールして必要なテーブルを作成する。
+
+    * `feedback_setup.sh` の実行中に `The feedback config file not found` と表示される場合がありますが、問題はありません。
+    * `The feedback config file` とは、 `feedback_config.json` が該当し、[オンオフ機能の詳細ドキュメント](./docs/ja/switch_function.md)で解説しています。
 
 4. `http://localhost:5000`にアクセスする
 
