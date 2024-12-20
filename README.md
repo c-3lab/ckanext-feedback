@@ -60,7 +60,7 @@ Feedback enables an ecosystem between users and providers that continually impro
     ```bash
     ckan db upgrade -p feedback
     ```
-    * ckan.ini が見つからないなどのエラーが出る場合、  `ckan -c <ckan.iniのパス> db upgrade -p feedback` としてください。
+    * ckan.ini が見つからないなどのエラーが出る場合、 `ckan -c <ckan.iniのパス> db upgrade -p feedback` としてください。
 
 ## 構成
 
@@ -91,9 +91,12 @@ Feedback enables an ecosystem between users and providers that continually impro
     git clone https://github.com/c-3lab/ckanext-feedback.git
     ```
 
-2. `ckanext-feedback/development`下にある`container_setup.sh`を実行し、コンテナを起動
+2. `ckanext-feedback/development` ディレクトリに移動し、そのディレクトリにある`container_setup.sh`を実行し、コンテナを起動
 
-3. ckanext-feedbackをインストールして必要なテーブルを作成するために、`ckanext-feedback/development`下にある`feedback_setup.sh`を実行する
+3. 同じく、`ckanext-feedback/development` ディレクトリにいる状態で `feedback_setup.sh` を実行し、ckanext-feedbackをインストールして必要なテーブルを作成する。
+
+    * `feedback_setup.sh` の実行中に `The feedback config file not found` と表示される場合がありますが、問題はありません。
+    * `The feedback config file` とは、 `feedback_config.json` が該当し、[オンオフ機能の詳細ドキュメント](./docs/ja/switch_function.md)で解説しています。
 
 4. `http://localhost:5000`にアクセスする
 
