@@ -39,7 +39,7 @@ Feedback enables an ecosystem between users and providers that continually impro
 3. 以下のコマンドで設定を行うファイルを開く
 
     ```bash
-    vim /etc/ckan/production.ini
+    vim /etc/ckan/ckan.ini
     ```
 
 4. 以下の行に`feedback`を追加
