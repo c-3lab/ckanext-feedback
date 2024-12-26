@@ -84,6 +84,13 @@ Feedback enables an ecosystem between users and providers that continually impro
 
 ## 開発者向け
 
+### 前提
+
+* 以下のDocker環境で CKAN 本体と本Extensionを実行することを想定しています。
+  * OS: Linux
+  * ディストリビューション: Ubuntu 22.04
+  * Docker 27.4.0
+
 ### ビルド方法
 
 1. `ckanext-feedback`をローカル環境にGitHub上からクローンする
