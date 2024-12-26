@@ -80,6 +80,10 @@ td, th {
   margin-left: 1px;
 }
 
+.issue-resolution {
+  font-size: 1.75em;
+}
+
 #issue-resolution {
   width: 28px !important;
   height: 28px !important;
