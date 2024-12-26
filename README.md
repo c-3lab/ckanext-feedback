@@ -33,7 +33,7 @@ Feedback enables an ecosystem between users and providers that continually impro
 
 ### 手順
 
-1. ckan環境にckanext-feedbackをインストールする
+1. CKAN環境にckanext-feedbackをインストールする
 
     * venvなどの仮想環境でCKANを実行している場合は、仮想環境をアクティブにしてから実行してください。
 
