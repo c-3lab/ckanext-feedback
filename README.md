@@ -24,6 +24,8 @@ Feedback enables an ecosystem between users and providers that continually impro
 
 ## Quick Start
 
+CKANの環境に本Extensionを適用する手順を示します。
+
 ### 前提
 
 * 以下の環境にインストールされている CKAN 2.10.4 に本Extensionを追加することを想定しています。
@@ -83,6 +85,8 @@ Feedback enables an ecosystem between users and providers that continually impro
   * 権限に関する詳細は[管理者権限の詳細ドキュメント](./docs/ja/authority.md)をご覧ください
 
 ## 開発者向け
+
+Docker環境で本Extensionの開発を行う手順を示します。
 
 ### 前提
 
