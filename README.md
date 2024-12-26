@@ -131,7 +131,7 @@ Feedback enables an ecosystem between users and providers that continually impro
 * [feedbackコマンド 詳細ドキュメント](./docs/ja/feedback_command.md)
 * [言語対応(i18n) 詳細ドキュメント](./docs/ja/i18n.md)
 
-## テスト
+### テスト
 
 1. 上記のビルド方法に従い、ビルドを行う
 
