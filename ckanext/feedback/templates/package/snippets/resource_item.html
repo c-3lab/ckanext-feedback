@@ -52,7 +52,7 @@
 	{% if h.is_enabled_utilizations(pkg.owner_org) %}
     <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('utilization.search', id=res.id, disable_keyword=true) }}">
       <div class="bubble">
-        <img id="issue-resolution" style="vertical-align: middle;" src="/images/issue_resolution_badge_small.png">
+        <i class="fa-solid fa-award" style="vertical-align: middle;"></i>
         {{ h.get_resource_issue_resolutions(res.id) }}
         <div class="bubbleText">{{ _('Issue Resolutions') }}</div>
       </div>
