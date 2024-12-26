@@ -67,7 +67,7 @@ CKANの環境に本Extensionを適用する手順を示します。
 
 ## 構成
 
-### 本Extensionは3つのモジュールで構成されています
+### 本Extensionを構成する3つのモジュール
 
 * [utilization](./docs/ja/utilization.md)
 * [resource](./docs/ja/resource.md)
