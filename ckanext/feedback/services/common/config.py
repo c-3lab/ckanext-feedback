@@ -40,7 +40,9 @@ class Singleton(object):
 
 class FeedbackConfigInterface(ABC):
     @abstractmethod
-    def load_config(self, feedback_config):
+    def load_config(self, feedback_config):  # pragma: no cover
+        # Excluded from coverage because it cannot be directly tested and
+        # must be implemented in subclasses.
         pass
 
 
