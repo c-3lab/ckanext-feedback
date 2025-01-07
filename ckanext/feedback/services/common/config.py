@@ -68,6 +68,7 @@ class BaseConfig:
             ckan_conf_str = self.get_ckan_conf_str()
             config[f"{ckan_conf_str}.enable"] = conf_tree.get("enable")
             config[f"{ckan_conf_str}.enable_orgs"] = conf_tree.get("enable_orgs")
+            config[f"{ckan_conf_str}.disable_orgs"] = conf_tree.get("disable_orgs")
         except AttributeError as e:
             toolkit.error_shout(
                 f"{e}.  module[{self.name}]\nfeedback_config:{feedback_config}"
@@ -107,14 +108,26 @@ class BaseConfig:
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
         enable = config.get(f"{ck_conf_str}.enable", self.default)
-        if enable and FeedbackConfig().is_feedback_config_file and org_id:
-            organization = get_organization(org_id)
-            if organization is not None:
-                enable = organization.name in config.get(
-                    f"{ck_conf_str}.enable_orgs", []
-                )
-            else:
-                enable = False
+        if not enable or not FeedbackConfig().is_feedback_config_file or not org_id:
+            return toolkit.asbool(enable)
+
+        organization = get_organization(org_id)
+        if organization is None:
+            enable = False
+            return toolkit.asbool(enable)
+
+        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs", []) or []
+        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs", []) or []
+
+        duplication = set(enable_orgs) & set(disable_orgs)
+        if organization.name in duplication:
+            enable = False
+            toolkit.error_shout('Conflict in organization enable/disable lists.')
+        elif organization.name in enable_orgs:
+            enable = True
+        elif organization.name in disable_orgs:
+            enable = False
+
         return toolkit.asbool(enable)
 
 
@@ -271,7 +284,10 @@ class FeedbackConfig(Singleton):
                     if isinstance(value, BaseConfig):
                         value.load_config(feedback_config)
         except FileNotFoundError:
-            toolkit.error_shout('The feedback config file not found')
+            toolkit.error_shout(
+                'The feedback config file not found. '
+                f'{self.feedback_config_path}/feedback_config.json'
+            )
             self.is_feedback_config_file = False
         except json.JSONDecodeError:
             toolkit.error_shout('The feedback config file not decoded correctly')
