@@ -163,7 +163,7 @@ class TestCheck:
         assert FeedbackConfig().download.is_enable(org_name2) is False
         assert FeedbackConfig().download.is_enable(org_name3) is False
 
-        # with feedback_config_file enable is False
+        # with feedback_config_file enable is False and org_name1 is in enable_orgs
         config.pop('ckan.feedback.downloads.enable', None)
         config.pop('ckan.feedback.downloads.enable_orgs', None)
         config.pop('ckan.feedback.downloads.disable_orgs', None)
@@ -195,7 +195,7 @@ class TestCheck:
         assert FeedbackConfig().download.is_enable(org_name3) is False
         os.remove('/srv/app/feedback_config.json')
 
-        # with feedback_config_file enable is False and org_name1 is in enable_orgs
+        # with feedback_config_file enable is False and org_name1 is not in enable_orgs
         config.pop('ckan.feedback.downloads.enable', None)
         config.pop('ckan.feedback.downloads.enable_orgs', None)
         config.pop('ckan.feedback.downloads.disable_orgs', None)
