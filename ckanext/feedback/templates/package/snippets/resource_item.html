@@ -8,6 +8,7 @@
   </a>
 {% endblock %}
 {% block resource_item_description %}
+  {% asset 'feedback/feedback-package-item-css' %}
   <p class="description">
     {% if res.description %}
       {{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=80) }}
