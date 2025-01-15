@@ -10,25 +10,25 @@
 - **ckanext-feedback**で追加された以下のモジュールや機能のON/OFFを切り替えることができます。
   - [utilization](./utilization.md)   
   データの利活用方法に関するモジュール  
-  デフォルト：🟢ON
+  デフォルト：🟢**ON**
 
   - [resource](./resource.md)  
   リソースへのコメントに関するモジュール  
-  デフォルト：🟢ON
+  デフォルト：🟢**ON**
 
   - [repeat post limit](./resource.md)  
   1つのリソースに対してコメントできる回数を各ユーザーごと、1回に制限する機能  
-  デフォルト：🔴OFF
+  デフォルト：🔴**OFF**
 
   - [rating](./resource.md)  
   リソースへの評価を行う機能  
-  デフォルト：🔴OFF
+  デフォルト：🔴**OFF**
 
   - [download](./download.md)  
   ダウンロードに関するモジュール  
-  デフォルト：🟢ON
+  デフォルト：🟢**ON**
 
-  ※ [repeat post limit](./resource.md)と[rating](./resource.md)に関しては、[resource](./resource.md)が🟢ONになっている場合にのみON/OFFを切り替えることができます。
+  ※ [repeat post limit](./resource.md)と[rating](./resource.md)に関しては、[resource](./resource.md)が🟢**ON**になっている場合にのみON/OFFを切り替えることができます。
 
 ## 設定方法
 
@@ -47,7 +47,7 @@
 → モジュールや機能は🟢**ON**になります。  
 (※ この動作は、以下の相互作用の5番に該当します。)
 
-詳細は以下の**相互作用**, **ユースケース別設定適用表**を参照してください。  
+詳細は以下の**相互作用**、 **ユースケース別設定適用表**を参照してください。  
 
 ### 相互作用
 
@@ -55,19 +55,19 @@
 
 - **ckan.ini**：`ckan.ini`に記述したモジュールや機能のenable設定値です。
 - **feedback_config.json**：`feedback_config.json`に記述したモジュールや機能のenable設定値です。
-- **ON/OFF**：モジュールや機能のON/OFF設定の結果
+- **ON/OFF**：モジュールや機能のON/OFF設定の結果です。
 
 | No. | ckan.ini | feedback_config.json | ON/OFF |
 | :-: | :-: | :-: | :-: |
 | 1 | - | - | デフォルト値 |
-| 2 | 🟢True | - | 🟢ON |
-| 3 | - | 🟢True | 🟢ON |
-| 4 | 🟢True | 🟢True | 🟢ON |
-| 5 | 🔴False | 🟢True | 🟢ON |
-| 6 | 🔴False | - | 🔴OFF |
-| 7 | - | 🔴False | 🔴OFF |
-| 8 | 🟢True | 🔴False | 🔴OFF |
-| 9 | 🔴False | 🔴False | 🔴OFF |
+| 2 | ✔️True | - | 🟢ON |
+| 3 | - | ✔️True | 🟢ON |
+| 4 | ✔️True | ✔️True | 🟢ON |
+| 5 | ❌False | ✔️True | 🟢ON |
+| 6 | ❌False | - | 🔴OFF |
+| 7 | - | ❌False | 🔴OFF |
+| 8 | ✔️True | ❌False | 🔴OFF |
+| 9 | ❌False | ❌False | 🔴OFF |
 
 ### ユースケース別設定適用表
 
@@ -79,17 +79,19 @@
 
 | No. | ユースケース | enable | enable_orgs | disable_orgs |
 | :-: | :-: | :-: | :-: | :-: |
-| 1 | 全ての組織でモジュールや機能をONにしたい場合 | 🟢True | - | - |
-| 2 | 全ての組織でモジュールや機能をOFFにしたい場合 | 🔴False | - | - |
-| 3 | 組織毎にON/OFFを設定したい場合 | 🟢True | ["org_name1", "org_name2"] | ["org_name3"] |
-| 4 | 特定の組織のみOFFにしたい場合 | 🟢True | - | ["org_name3"] |
+| 1 | 全ての組織でモジュールや機能を🟢ONにしたい場合 | ✔️True | - | - |
+| 2 | 全ての組織でモジュールや機能を🔴OFFにしたい場合 | ❌False | - | - |
+| 3 | 組織毎に🟢ON/🔴OFFを設定したい場合 | ✔️True | ["org_name1", "org_name2"] | ["org_name3"] |
+| 4 | 特定の組織のみ🔴OFFにしたい場合 | ✔️True | - | ["org_name3"] |
 
 ※ **enable_orgs**と**disable_orgs**に同じ組織を記載した場合、設定は不適切であり、該当する組織のモジュールや機能は🔴**OFF**になります。  
 
 （例）  
-```
-enable_orgs: ["org_name1", "org_name2"],
-disable_orgs: ["org_name1", "org_name3"]
+```json
+{
+    "enable_orgs": ["org_name1", "org_name2"],
+    "disable_orgs": ["org_name1", "org_name3"]
+}
 ```  
 → **"org_name1"** の設定は🔴**OFF**になる
 
@@ -101,7 +103,7 @@ disable_orgs: ["org_name1", "org_name3"]
 ※ `feedback_config.json`がCKAN環境に配置されている場合は本設定は反映されません。
 
 （例）すべてのモジュールや機能を🟢ONにする場合
-```
+```ini
 ・・・
 ## Plugins Settings ############################################################
 ckan.plugins = xxxxx xxxxx xxxx xxxxx xxxxx feedback
@@ -122,7 +124,7 @@ ckan.feedback.downloads.enable = True
 ### `feedback_config.json`でON/OFFの設定を行う
 
 （例）すべてのモジュールや機能を🟢ONにする場合
-```
+```json
 {
     "modules": {
         "utilizations": {
@@ -152,7 +154,7 @@ ckan.feedback.downloads.enable = True
 | 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
 
 （例）組織毎にモジュールや機能のON/OFFを設定する場合
-```
+```json
 {
     "modules":{
         "utilizations": {
