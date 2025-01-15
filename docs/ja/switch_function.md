@@ -10,25 +10,25 @@
 - **ckanext-feedback**で追加された以下のモジュールや機能のON/OFFを切り替えることができます。
   - [utilization](./utilization.md)   
   データの利活用方法に関するモジュール  
-  デフォルト：ON
+  デフォルト：🟢ON
 
   - [resource](./resource.md)  
   リソースへのコメントに関するモジュール  
-  デフォルト：ON
+  デフォルト：🟢ON
 
   - [repeat post limit](./resource.md)  
   1つのリソースに対してコメントできる回数を各ユーザーごと、1回に制限する機能  
-  デフォルト：OFF
+  デフォルト：🔴OFF
 
   - [rating](./resource.md)  
   リソースへの評価を行う機能  
-  デフォルト：OFF
+  デフォルト：🔴OFF
 
   - [download](./download.md)  
   ダウンロードに関するモジュール  
-  デフォルト：ON
+  デフォルト：🟢ON
 
-  ※ [repeat post limit](./resource.md)と[rating](./resource.md)に関しては、[resource](./resource.md)がONになっている場合にのみON/OFFを切り替えることができます。
+  ※ [repeat post limit](./resource.md)と[rating](./resource.md)に関しては、[resource](./resource.md)が🟢ONになっている場合にのみON/OFFを切り替えることができます。
 
 ## 設定方法
 
@@ -42,9 +42,9 @@
 `ckan.ini`と`feedback_config.json`の2つの設定を行った場合、`feedback_config.json`に記述した設定が優先されます。  
 
 （例）  
-`ckan.ini`でモジュールや機能を**OFF**に設定  
-`feedback_config.json`でモジュールや機能を**ON**に設定  
-→ モジュールや機能は**ON**になります。  
+`ckan.ini`でモジュールや機能を🔴**OFF**に設定  
+`feedback_config.json`でモジュールや機能を🟢**ON**に設定  
+→ モジュールや機能は🟢**ON**になります。  
 (※ この動作は、以下の相互作用の5番に該当します。)
 
 詳細は以下の**相互作用**, **ユースケース別設定適用表**を参照してください。  
@@ -74,8 +74,8 @@
 `feedback_config.json`を用いて設定する際、特定のユースケース毎にモジュールや機能のON/OFF設定をどのように適用するかを示しています。
 
 - **enable**：`feedback_config.json`に記述したモジュールや機能のenable設定値です。
-- **enable_orgs**：`feedback_config.json`に記述したモジュールや機能をONにしたい組織の名前リストです。
-- **disable_orgs**：`feedback_config.json`に記述したモジュールや機能をOFFにしたい組織の名前リストです。
+- **enable_orgs**：`feedback_config.json`に記述したモジュールや機能を🟢ONにしたい組織の名前リストです。
+- **disable_orgs**：`feedback_config.json`に記述したモジュールや機能を🔴OFFにしたい組織の名前リストです。
 
 | No. | ユースケース | enable | enable_orgs | disable_orgs |
 | :-: | :-: | :-: | :-: | :-: |
@@ -84,23 +84,23 @@
 | 3 | 組織毎にON/OFFを設定したい場合 | 🟢True | ["org_name1", "org_name2"] | ["org_name3"] |
 | 4 | 特定の組織のみOFFにしたい場合 | 🟢True | - | ["org_name3"] |
 
-※ **enable_orgs**と**disable_orgs**に同じ組織を記載した場合、設定は不適切であり、該当する組織のモジュールや機能は**OFF**になります。  
+※ **enable_orgs**と**disable_orgs**に同じ組織を記載した場合、設定は不適切であり、該当する組織のモジュールや機能は🔴**OFF**になります。  
 
 （例）  
 ```
 enable_orgs: ["org_name1", "org_name2"],
 disable_orgs: ["org_name1", "org_name3"]
 ```  
-→ **"org_name1"** の設定は**OFF**になる
+→ **"org_name1"** の設定は🔴**OFF**になる
 
 ## 設定例
 
 ### `ckan.ini`でON/OFFの設定を行う
 
-※ この方法で設定を行った場合はすべての組織のモジュールや機能はONまたは、OFFになります。  
+※ この方法で設定を行った場合はすべての組織のモジュールや機能は🟢ONまたは、🔴OFFになります。  
 ※ `feedback_config.json`がCKAN環境に配置されている場合は本設定は反映されません。
 
-（例）すべてのモジュールや機能をONにする場合
+（例）すべてのモジュールや機能を🟢ONにする場合
 ```
 ・・・
 ## Plugins Settings ############################################################
@@ -121,7 +121,7 @@ ckan.feedback.downloads.enable = True
 
 ### `feedback_config.json`でON/OFFの設定を行う
 
-（例）すべてのモジュールや機能をONにする場合
+（例）すべてのモジュールや機能を🟢ONにする場合
 ```
 {
     "modules": {
