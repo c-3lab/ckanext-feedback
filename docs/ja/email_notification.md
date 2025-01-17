@@ -99,3 +99,5 @@
             ```
 
         ※指定がない場合は「New Submission Notification」となります。
+
+3. Webアプリケーションサーバを再起動する
