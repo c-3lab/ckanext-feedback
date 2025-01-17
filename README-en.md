@@ -1,4 +1,4 @@
-[English](https://github.com/c-3lab/ckanext-feedback/blob/main/README-en.md) | [日本語](https://github.com/c-3lab/ckanext-feedback/blob/main/README.md)
+English | [日本語](https://github.com/c-3lab/ckanext-feedback/blob/main/README.md)
 
 # ckanext-feedback
 
