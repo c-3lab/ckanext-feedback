@@ -117,8 +117,8 @@ class BaseConfig:
         enable_orgs = config.get(f"{ck_conf_str}.enable_orgs", []) or []
         disable_orgs = config.get(f"{ck_conf_str}.disable_orgs", []) or []
 
-        duplication = set(enable_orgs) & set(disable_orgs)
-        if organization.name in duplication:
+        deplication = set(enable_orgs) & set(disable_orgs)
+        if organization.name in deplication:
             enable = False
             toolkit.error_shout('Conflict in organization enable/disable lists.')
         elif organization.name in enable_orgs:
