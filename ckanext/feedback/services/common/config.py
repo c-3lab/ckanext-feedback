@@ -63,20 +63,16 @@ class BaseConfig:
         fb_conf_path = fb_conf_path or self.conf_path
 
         conf_tree = feedback_config
-        try:
-            for key in self.fb_conf_prefix + fb_conf_path:
-                conf_tree = conf_tree.get(key)
+        ckan_conf_str = self.get_ckan_conf_str()
+        for key in self.fb_conf_prefix + fb_conf_path:
+            conf_tree = conf_tree.get(key)
+            if conf_tree is None:
+                conf_tree = {"enable": None, "enable_orgs": None, "disable_orgs": None}
+                break
 
-            ckan_conf_str = self.get_ckan_conf_str()
-            config[f"{ckan_conf_str}.enable"] = conf_tree.get("enable")
-            config[f"{ckan_conf_str}.enable_orgs"] = conf_tree.get("enable_orgs")
-            config[f"{ckan_conf_str}.disable_orgs"] = conf_tree.get("disable_orgs")
-        except AttributeError as e:
-            toolkit.error_shout(
-                f"{e}.  module[{self.name}]\nfeedback_config:{feedback_config}"
-                f" feedback_conf_path:{self.fb_conf_prefix + fb_conf_path} "
-                "target-key:'{key}'"
-            )
+        config[f"{ckan_conf_str}.enable"] = conf_tree.get("enable")
+        config[f"{ckan_conf_str}.enable_orgs"] = conf_tree.get("enable_orgs")
+        config[f"{ckan_conf_str}.disable_orgs"] = conf_tree.get("disable_orgs")
 
     def set_config(
         self,
