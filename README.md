@@ -1,3 +1,5 @@
+[English](https://github.com/c-3lab/ckanext-feedback/blob/main/README-en.md) | 日本語
+
 # ckanext-feedback
 
 [![codecov](https://codecov.io/github/c-3lab/ckanext-feedback/graph/badge.svg?token=8T2RIXPXOM)](https://codecov.io/github/c-3lab/ckanext-feedback)
