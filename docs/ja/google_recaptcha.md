@@ -44,4 +44,6 @@ botによる各種投稿へのスパム対策機能です。
         * Google reCAPTCHA による検証結果のスコアが 閾値未満の場合はユーザに再試行を要求します。
         * 適切な閾値を判断する方法については [公式ドキュメント スコアの解釈](https://developers.google.com/recaptcha/docs/v3?hl=ja#interpreting_the_score)を参照してください。 
 
+3. Webアプリケーションサーバを再起動する
+
 google reCAPTCHA v3の詳しい仕様については[公式ドキュメント](https://developers.google.com/recaptcha/docs/v3?hl=ja)を参照してください。
