@@ -67,7 +67,11 @@ class BaseConfig:
         for key in self.fb_conf_prefix + fb_conf_path:
             conf_tree = conf_tree.get(key)
             if conf_tree is None:
-                conf_tree = {"enable": None, "enable_orgs": None, "disable_orgs": None}
+                conf_tree = {
+                    "enable": self.default,
+                    "enable_orgs": None,
+                    "disable_orgs": None,
+                }
                 break
 
         config[f"{ckan_conf_str}.enable"] = conf_tree.get("enable")
@@ -105,7 +109,7 @@ class BaseConfig:
 
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
-        enable = config.get(f"{ck_conf_str}.enable") or self.default
+        enable = config.get(f"{ck_conf_str}.enable", self.default)
 
         if not is_bool(enable):
             enable = self.default
