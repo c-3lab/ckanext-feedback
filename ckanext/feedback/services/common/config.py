@@ -105,7 +105,13 @@ class BaseConfig:
 
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
-        enable = config.get(f"{ck_conf_str}.enable", self.default)
+        enable = config.get(f"{ck_conf_str}.enable") or self.default
+
+        if not is_bool(enable):
+            enable = self.default
+            toolkit.error_shout('Invalid value for enable in feedback config.')
+            return toolkit.asbool(enable)
+
         if not enable or not FeedbackConfig().is_feedback_config_file or not org_id:
             return toolkit.asbool(enable)
 
@@ -114,8 +120,18 @@ class BaseConfig:
             enable = False
             return toolkit.asbool(enable)
 
-        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs", []) or []
-        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs", []) or []
+        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs") or []
+        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs") or []
+
+        if not is_list_of_strings(enable_orgs):
+            enable = False
+            toolkit.error_shout('Invalid value for enable_orgs in feedback config.')
+            return toolkit.asbool(enable)
+
+        if not is_list_of_strings(disable_orgs):
+            enable = False
+            toolkit.error_shout('Invalid value for disable_orgs in feedback config.')
+            return toolkit.asbool(enable)
 
         deplication = set(enable_orgs) & set(disable_orgs)
         if organization.name in deplication:
@@ -289,3 +305,17 @@ class FeedbackConfig(Singleton):
             self.is_feedback_config_file = False
         except json.JSONDecodeError:
             toolkit.error_shout('The feedback config file not decoded correctly')
+
+
+def is_bool(value):
+    if type(value) is not bool:
+        return False
+    return True
+
+
+def is_list_of_strings(value):
+    if type(value) is not list:
+        return False
+    elif not all(isinstance(item, str) for item in value):
+        return False
+    return True
