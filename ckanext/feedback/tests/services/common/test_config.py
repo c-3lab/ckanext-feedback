@@ -324,6 +324,123 @@ class TestCheck:
         assert FeedbackConfig().download.is_enable(org_name3) is False
         os.remove('/srv/app/feedback_config.json')
 
+        # When the "enable" in ckan.ini is a string
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config['ckan.feedback.downloads.enable'] = "enable"
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') == "enable"
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().download.is_enable() is True
+        assert FeedbackConfig().download.is_enable(org_name1) is True
+        assert FeedbackConfig().download.is_enable(org_name2) is True
+        assert FeedbackConfig().download.is_enable(org_name3) is True
+
+        # When the "enable" in the feedback_config_file is a string
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': "enable",
+                    'enable_orgs': [org_name1, org_name2],
+                    'disable_orgs': [org_name3],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') == "enable"
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [
+            org_name1,
+            org_name2,
+        ]
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [org_name3]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is True
+        assert FeedbackConfig().download.is_enable(org_name1) is True
+        assert FeedbackConfig().download.is_enable(org_name2) is True
+        assert FeedbackConfig().download.is_enable(org_name3) is True
+        os.remove('/srv/app/feedback_config.json')
+
+        # When the "enable_orgs" in feedback_config_file is not a list
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': org_name1,
+                    'disable_orgs': [],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == org_name1
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == []
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # When the contents of the "disable_orgs" list
+        # in feedback_config_file are not strings
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [{"name": org_name3}],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [
+            {"name": org_name3}
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
     @patch('ckanext.feedback.services.common.config.get_organization')
     def test_utilization_is_enable(self, mock_get_organization):
         org_name1 = 'enable_org'
