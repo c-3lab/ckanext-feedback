@@ -11,7 +11,7 @@ This module aggregates and visualizes the number of downloads.
 ## Function Description
 
 【download Module Image】  
-![download Module Image](../assets/download_image.jpg)
+![download Module Image](../assets/download_image_en.png)
 
 * You can aggregate the number of downloads for each data resource
 
