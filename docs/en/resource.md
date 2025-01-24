@@ -14,10 +14,10 @@ This module allows you to comment and rate data resources.
 ## Function Description
 
 【resource Module Comment Registration Screen Image】  
-![resource Module Comment Registration Screen Image](../assets/register_resource_comment.jpg)
+![resource Module Comment Registration Screen Image](../assets/register_resource_comment_en.png)
 
 【resource Module Dataset Detail Screen Image】  
-![resource Module Dataset Detail Screen Image](../assets/comments_rating_image.jpg)  
+![resource Module Dataset Detail Screen Image](../assets/comments_rating_image_en.png)  
 
 * You can do the following for each data resource:
   * Comment on each data resource
