@@ -14,16 +14,16 @@ You can also send comments to the registered utilization methods.
 ## Function Description
 
 【Utilization Module Registration Screen Image】  
-![Utilization Module Registration Screen Image](../assets/register_utilization_image.jpg)
+![Utilization Module Registration Screen Image](../assets/register_utilization_image_en.png)
 
 【Utilization Module Utilization Method Search Screen Image】  
-![Utilization Module Search Screen Image](../assets/search_utilization_image.jpg)
+![Utilization Module Search Screen Image](../assets/search_utilization_image_en.png)
 
 【Utilization Module Utilization Method Detail Screen Image】  
-![Utilization Module Utilization Method Detail Screen Image](../assets/utilizations_image.jpg)
+![Utilization Module Utilization Method Detail Screen Image](../assets/utilizations_image_en.png)
 
 【Utilization Module Resource Detail Screen Image】  
-![Utilization Module Resource Detail Screen Image](../assets/utilization_comment_image.jpg)
+![Utilization Module Resource Detail Screen Image](../assets/utilization_comment_image_en.png)
 
 * You can do the following for apps and systems that utilize data
   * Introduction of utilization methods
