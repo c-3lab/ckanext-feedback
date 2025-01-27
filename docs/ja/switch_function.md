@@ -39,7 +39,7 @@
 
 ### 設定優先度
 
-`ckan.ini`と`feedback_config.json`の2つの設定を行った場合、`feedback_config.json`に記述した設定が優先されます。  
+`ckan.ini`に本設定がされていても、`feedback_config.json`がサーバー内に存在する場合は、`feedback_config.json`の内容をもとに設定が反映されます。
 
 （例）  
 `ckan.ini`でモジュールや機能を🔴**OFF**に設定  
