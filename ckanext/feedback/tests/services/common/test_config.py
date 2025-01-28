@@ -337,10 +337,10 @@ class TestCheck:
         assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == 'None'
         assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == 'None'
         assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().download.is_enable() is True
-        assert FeedbackConfig().download.is_enable(org_name1) is True
-        assert FeedbackConfig().download.is_enable(org_name2) is True
-        assert FeedbackConfig().download.is_enable(org_name3) is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
 
         # When the "enable" in the feedback_config_file is a string
         # Execute only in the download module
@@ -370,10 +370,10 @@ class TestCheck:
         ]
         assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [org_name3]
         assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().download.is_enable() is True
-        assert FeedbackConfig().download.is_enable(org_name1) is True
-        assert FeedbackConfig().download.is_enable(org_name2) is True
-        assert FeedbackConfig().download.is_enable(org_name3) is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
         os.remove('/srv/app/feedback_config.json')
 
         # When the "enable_orgs" in feedback_config_file is not a list

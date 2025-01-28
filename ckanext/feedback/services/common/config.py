@@ -109,15 +109,15 @@ class BaseConfig:
 
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
-        enable = config.get(f"{ck_conf_str}.enable", self.default)
-
-        if not is_bool(enable):
-            enable = self.default
+        try:
+            enable = toolkit.asbool(config.get(f"{ck_conf_str}.enable", self.default))
+        except ValueError:
+            enable = False
             toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable')
-            return toolkit.asbool(enable)
+            return enable
 
         if not enable or not FeedbackConfig().is_feedback_config_file:
-            return toolkit.asbool(enable)
+            return enable
 
         enable_orgs = config.get(f"{ck_conf_str}.enable_orgs") or []
         disable_orgs = config.get(f"{ck_conf_str}.disable_orgs") or []
@@ -125,20 +125,20 @@ class BaseConfig:
         if not is_list_of_str(enable_orgs):
             enable = False
             toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable_orgs')
-            return toolkit.asbool(enable)
+            return enable
 
         if not is_list_of_str(disable_orgs):
             enable = False
             toolkit.error_shout(f'Invalid value for {ck_conf_str}.disable_orgs')
-            return toolkit.asbool(enable)
+            return enable
 
         if not org_id:
-            return toolkit.asbool(enable)
+            return enable
 
         organization = get_organization(org_id)
         if organization is None:
             enable = False
-            return toolkit.asbool(enable)
+            return enable
 
         deplication = set(enable_orgs) & set(disable_orgs)
         if organization.name in deplication:
@@ -149,7 +149,7 @@ class BaseConfig:
         elif organization.name in disable_orgs:
             enable = False
 
-        return toolkit.asbool(enable)
+        return enable
 
 
 class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
@@ -312,10 +312,6 @@ class FeedbackConfig(Singleton):
             self.is_feedback_config_file = False
         except json.JSONDecodeError:
             toolkit.error_shout('The feedback config file not decoded correctly')
-
-
-def is_bool(value):
-    return isinstance(value, bool)
 
 
 def is_list_of_str(value):
