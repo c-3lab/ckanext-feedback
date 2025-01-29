@@ -309,6 +309,11 @@ msgstr "データセット検索"
 msgid "Submit"
 msgstr "検索"
 
+#: ckanext/feedback/templates/management/comments.html:10
+#: ckanext/feedback/templates/management/comments.html:13
+msgid "Management Comments"
+msgstr "コメント管理"
+
 #: ckanext/feedback/templates/management/approval_delete.html:11
 #: ckanext/feedback/templates/management/approval_delete.html:14
 #: ckanext/feedback/templates/management/approval_delete.html:33

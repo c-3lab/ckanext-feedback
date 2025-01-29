@@ -42,4 +42,13 @@ function runBulkAction(action) {
         return;
     }
     form.submit();
-  }
+}
+
+function updateSortParameter() {
+    const selectElement = document.getElementById('field-order-by');
+
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('sort', selectElement.value);
+
+    window.location.href = currentUrl.toString();
+}
