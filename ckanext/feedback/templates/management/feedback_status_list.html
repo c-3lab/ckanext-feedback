@@ -57,11 +57,11 @@
                   <div class="target">
                     <div style="float:left;">
                       {% if feedback.feedback_type == 'リソースコメント' %}
-                        <input class="checkbox-inline" type="checkbox" name="resource-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}">
+                        <input class="checkbox-inline" type="checkbox" name="resource-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
                       {% elif feedback.feedback_type == '利活用申請' %}
-                        <input class="checkbox-inline" type="checkbox" name="utilization-checkbox" id="{{ feedback.utilization_id }}" value="{{ feedback.utilization_id }}">
+                        <input class="checkbox-inline" type="checkbox" name="utilization-checkbox" id="{{ feedback.utilization_id }}" value="{{ feedback.utilization_id }}" data-approval="{{ feedback.is_approved }}">
                       {% elif feedback.feedback_type == '利活用コメント' %}
-                        <input class="checkbox-inline" type="checkbox" name="utilization-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}">
+                        <input class="checkbox-inline" type="checkbox" name="utilization-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
                       {% endif %}
                     </div>
                     <div class="row form-check-label fs-6">
