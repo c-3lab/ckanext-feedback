@@ -9,6 +9,7 @@ import ckanext.feedback.services.management.feedbacks as feedback_service
 import ckanext.feedback.services.management.utilization as utilization_service
 import ckanext.feedback.services.resource.comment as resource_comment_service
 import ckanext.feedback.services.utilization.details as utilization_detail_service
+from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
@@ -26,6 +27,10 @@ class ManagementController:
         active_filters = request.args.getlist('filter')
         sort = request.args.get('sort', 'newest')
 
+        page, limit, offset, pager_url = get_pagination_value(
+            'management.feedback-approval'
+        )
+
         # If user is organization admin
         owner_orgs = None
         if not current_user.sysadmin:
@@ -37,12 +42,16 @@ class ManagementController:
                     'name': current_user.get_groups(group_type='organization')[0].name,
                 }
             }
-            feedbacks = feedback_service.get_feedbacks(
-                owner_orgs=owner_orgs, active_filters=active_filters, sort=sort
+            feedbacks, total_count = feedback_service.get_feedbacks(
+                owner_orgs=owner_orgs,
+                active_filters=active_filters,
+                sort=sort,
+                limit=limit,
+                offset=offset,
             )
         else:
-            feedbacks = feedback_service.get_feedbacks(
-                active_filters=active_filters, sort=sort
+            feedbacks, total_count = feedback_service.get_feedbacks(
+                active_filters=active_filters, sort=sort, limit=limit, offset=offset
             )
 
         def get_href(name, active_list):
@@ -114,7 +123,13 @@ class ManagementController:
             {
                 "filters": filters,
                 "sort": sort,
-                "feedbacks": feedbacks,
+                "page": helpers.Page(
+                    collection=feedbacks,
+                    page=page,
+                    item_count=total_count,
+                    items_per_page=limit,
+                    url=pager_url,
+                ),
             },
         )
 

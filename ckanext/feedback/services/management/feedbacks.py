@@ -3,7 +3,7 @@ import logging
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
-from sqlalchemy import literal, select, union_all
+from sqlalchemy import func, literal, select, union_all
 from sqlalchemy.sql import and_, or_
 
 from ckanext.feedback.models.resource_comment import ResourceComment
@@ -134,9 +134,11 @@ def get_feedbacks(
                 combined_subquery.c.package_name,
             )
 
-    if limit is not None:
+    count_query = select(func.count()).select_from(query.subquery())
+    total_count = session.execute(count_query).scalar()
+
+    if limit is not None and offset is not None:
         query = query.limit(limit)
-    if offset is not None:
         query = query.offset(offset)
 
     results = session.execute(query).fetchall()
@@ -157,7 +159,7 @@ def get_feedbacks(
         }
         feedback_list.append(feedback)
 
-    return feedback_list
+    return feedback_list, total_count
 
 
 def get_resource_comments():
@@ -237,8 +239,10 @@ def get_utilization_comments():
 
 
 def get_feedbacks_count(owner_orgs, active_filters):
-    count = len(get_feedbacks(owner_orgs=owner_orgs, active_filters=[active_filters]))
-    return count
+    feedback_list, total_count = get_feedbacks(
+        owner_orgs=owner_orgs, active_filters=[active_filters]
+    )
+    return total_count
 
 
 def get_org_list(id=None):
