@@ -48,6 +48,7 @@ def get_resource_comments_query(org_list):
 def get_simple_resource_comments_query(org_list):
     org_names = [org['name'] for org in org_list]
 
+<<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
     query = (
         session.query(
             Group.name.label('group_name'),
@@ -58,9 +59,69 @@ def get_simple_resource_comments_query(org_list):
         .join(Resource, Package.id == Resource.package_id)
         .join(ResourceComment, Resource.id == ResourceComment.resource_id)
         .filter(Group.name.in_(org_names))
+=======
+
+# Get the IDs of utilization where approval is False using utilization_id_list.
+def get_utilization_ids(utilization_id_list):
+    query = (
+        session.query(Utilization.id)
+        .filter(Utilization.id.in_(utilization_id_list))
+        .filter(~Utilization.approval)
+    )
+
+    utilization_ids = [utilization.id for utilization in query.all()]
+
+    return utilization_ids
+
+
+# Get the IDs of utilization_comments where approval is False using comment_id_list.
+def get_utilization_comment_ids(comment_id_list):
+    query = (
+        session.query(UtilizationComment.id)
+        .filter(UtilizationComment.id.in_(comment_id_list))
+        .filter(~UtilizationComment.approval)
+    )
+
+    comment_ids = [comment.id for comment in query.all()]
+
+    return comment_ids
+
+
+# Get organization using owner_org
+def get_organization(owner_org):
+    organization = session.query(Group).filter(Group.id == owner_org).first()
+    return organization
+
+
+# Recalculate total approved bulk utilizations comments
+def refresh_utilizations_comments(utilizations):
+    session.bulk_update_mappings(
+        Utilization,
+        [
+            {
+                'id': utilization.id,
+                'comment': get_utilization_comments(utilization.id),
+                'updated': datetime.now(),
+            }
+            for utilization in utilizations
+        ],
+>>>>>>> dac8944 (Add logic to skip re-approval for already approved items):ckanext/feedback/services/management/comments.py
     )
 
     return query
+
+
+# Get the IDs of resource_comments where approval is False using comment_id_list.
+def get_resource_comment_ids(comment_id_list):
+    query = (
+        session.query(ResourceComment.id)
+        .filter(ResourceComment.id.in_(comment_id_list))
+        .filter(~ResourceComment.approval)
+    )
+
+    comment_ids = [comment.id for comment in query.all()]
+
+    return comment_ids
 
 
 # Get the IDs of resource_comments where approval is False using comment_id_list.

@@ -455,15 +455,15 @@ msgstr "リソース名　降順"
 msgid "Post Content"
 msgstr "投稿内容"
 
-#: ckanext/feedback/templates/management/feedback_status_list.html:107
+#: ckanext/feedback/templates/management/feedback_status_list.html:104
 msgid "There are no applications."
 msgstr "申請はありません。"
 
-#: ckanext/feedback/templates/management/feedback_status_list.html:120
+#: ckanext/feedback/templates/management/feedback_status_list.html:117
 msgid "What are Feedback Approval・Remove"
 msgstr "フィードバック 承認・削除について"
 
-#: ckanext/feedback/templates/management/feedback_status_list.html:124
+#: ckanext/feedback/templates/management/feedback_status_list.html:121
 msgid ""
 "You can change the approval status of resource comments to the "
 "organization, utilization requests, or comments on registered "
