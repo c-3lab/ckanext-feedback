@@ -191,6 +191,7 @@ class ManagementController:
     @staticmethod
     @check_administrator
     def approve_bulk_utilization_comments(target):
+        target = comments_service.get_utilization_comment_ids(target)
         utilizations = comments_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_utilization(
             utilizations
@@ -206,6 +207,7 @@ class ManagementController:
     @staticmethod
     @check_administrator
     def approve_bulk_utilization(target):
+        target = comments_service.get_utilization_ids(target)
         utilizations = comments_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_resource(utilizations)
         utilization_service.approve_utilization(target, current_user.id)
@@ -218,6 +220,7 @@ class ManagementController:
     @staticmethod
     @check_administrator
     def approve_bulk_resource_comments(target):
+        target = comments_service.get_resource_comment_ids(target)
         resource_comment_summaries = comments_service.get_resource_comment_summaries(
             target
         )
