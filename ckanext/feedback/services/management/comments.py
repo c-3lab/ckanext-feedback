@@ -37,6 +37,32 @@ def get_utilizations(comment_id_list):
     return utilizations
 
 
+# Get the IDs of utilization where approval is False using utilization_id_list.
+def get_utilization_ids(utilization_id_list):
+    query = (
+        session.query(Utilization.id)
+        .filter(Utilization.id.in_(utilization_id_list))
+        .filter(~Utilization.approval)
+    )
+
+    utilization_ids = [utilization.id for utilization in query.all()]
+
+    return utilization_ids
+
+
+# Get the IDs of utilization_comments where approval is False using comment_id_list.
+def get_utilization_comment_ids(comment_id_list):
+    query = (
+        session.query(UtilizationComment.id)
+        .filter(UtilizationComment.id.in_(comment_id_list))
+        .filter(~UtilizationComment.approval)
+    )
+
+    comment_ids = [comment.id for comment in query.all()]
+
+    return comment_ids
+
+
 # Get organization using owner_org
 def get_organization(owner_org):
     organization = session.query(Group).filter(Group.id == owner_org).first()
@@ -56,6 +82,19 @@ def refresh_utilizations_comments(utilizations):
             for utilization in utilizations
         ],
     )
+
+
+# Get the IDs of resource_comments where approval is False using comment_id_list.
+def get_resource_comment_ids(comment_id_list):
+    query = (
+        session.query(ResourceComment.id)
+        .filter(ResourceComment.id.in_(comment_id_list))
+        .filter(~ResourceComment.approval)
+    )
+
+    comment_ids = [comment.id for comment in query.all()]
+
+    return comment_ids
 
 
 # Get resource comment summaries using comment_id_list
