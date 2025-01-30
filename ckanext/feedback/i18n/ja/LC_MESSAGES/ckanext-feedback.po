@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-01-27 15:35+0900\n"
+"POT-Creation-Date: 2025-01-30 09:19+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -83,9 +83,17 @@ msgstr "評価"
 msgid "Number of Likes"
 msgstr "いいね数"
 
-#: ckanext/feedback/assets/js/feedback_status_list.js:24
-#: ckanext/feedback/assets/js/management_comments.js:32
-msgid "Please select at least one checkbox"
+#: ckanext/feedback/plugin.py:389 ckanext/feedback/plugin.py:433
+#: ckanext/feedback/templates/package/snippets/resource_item.html:17
+#: ckanext/feedback/templates/snippets/package_item.html:21
+#: ckanext/feedback/tests/test_plugin.py:927
+#: ckanext/feedback/tests/test_plugin.py:940
+#: ckanext/feedback/tests/test_plugin.py:1014
+msgid "Number of Likes"
+msgstr "いいね数"
+
+#: ckanext/feedback/assets/js/feedback_status_list.js:30
+msgid "Please select at least one checkbox."
 msgstr "少なくとも1つのチェックボックスを選択してください。"
 
 #: ckanext/feedback/assets/js/approval_delete.js:41
@@ -104,7 +112,7 @@ msgid ""
 "are you sure?"
 msgstr "チェックした%d項目を完全に削除します。この操作を元に戻すことはできませんが、よろしいですか？"
 
-#: ckanext/feedback/controllers/management.py:96
+#: ckanext/feedback/controllers/management.py:86
 #: ckanext/feedback/templates/management/comments.html:34
 #: ckanext/feedback/templates/management/comments.html:96
 #: ckanext/feedback/templates/management/comments.html:160
@@ -115,7 +123,7 @@ msgstr "チェックした%d項目を完全に削除します。この操作を�
 msgid "Approved"
 msgstr "承認済"
 
-#: ckanext/feedback/controllers/management.py:97
+#: ckanext/feedback/controllers/management.py:87
 #: ckanext/feedback/templates/management/comments.html:32
 #: ckanext/feedback/templates/management/comments.html:98
 #: ckanext/feedback/templates/management/comments.html:162
@@ -123,12 +131,12 @@ msgstr "承認済"
 msgid "Waiting"
 msgstr "承認待ち"
 
-#: ckanext/feedback/controllers/management.py:101
+#: ckanext/feedback/controllers/management.py:91
 #: ckanext/feedback/templates/management/feedback_status_list.html:73
 msgid "Resource Comment"
 msgstr "リソースコメント"
 
-#: ckanext/feedback/controllers/management.py:102
+#: ckanext/feedback/controllers/management.py:92
 #: ckanext/feedback/templates/header.html:115
 #: ckanext/feedback/templates/management/feedback_status_list.html:79
 #: ckanext/feedback/templates/utilization/details.html:11
@@ -137,12 +145,12 @@ msgstr "リソースコメント"
 msgid "Utilization"
 msgstr "利活用方法"
 
-#: ckanext/feedback/controllers/management.py:103
+#: ckanext/feedback/controllers/management.py:93
 #: ckanext/feedback/templates/management/feedback_status_list.html:88
 msgid "Utilization Comment"
 msgstr "利活用コメント"
 
-#: ckanext/feedback/controllers/management.py:116
+#: ckanext/feedback/controllers/management.py:106
 #: ckanext/feedback/templates/management/comments.html:30
 #: ckanext/feedback/templates/management/comments.html:69
 #: ckanext/feedback/templates/management/comments.html:131
@@ -152,21 +160,21 @@ msgstr "利活用コメント"
 msgid "Status"
 msgstr "ステータス"
 
-#: ckanext/feedback/controllers/management.py:117
+#: ckanext/feedback/controllers/management.py:107
 #: ckanext/feedback/templates/management/feedback_status_list.html:51
 msgid "Type"
 msgstr "種類"
 
-#: ckanext/feedback/controllers/management.py:119
+#: ckanext/feedback/controllers/management.py:109
 #: ckanext/feedback/templates/management/comments.html:64
 #: ckanext/feedback/templates/management/comments.html:126
 #: ckanext/feedback/templates/utilization/search.html:58
 msgid "Organization"
 msgstr "組織"
 
-#: ckanext/feedback/controllers/management.py:217
-#: ckanext/feedback/controllers/management.py:229
-#: ckanext/feedback/controllers/management.py:246
+#: ckanext/feedback/controllers/management.py:203
+#: ckanext/feedback/controllers/management.py:216
+#: ckanext/feedback/controllers/management.py:234
 #: ckanext/feedback/tests/controllers/test_management.py:201
 #: ckanext/feedback/tests/controllers/test_management.py:275
 msgid "bulk approval completed."
@@ -187,8 +195,8 @@ msgstr "利活用方法"
 msgid "bulk delete completed."
 msgstr "一括削除完了"
 
-#: ckanext/feedback/controllers/management.py:307
-#: ckanext/feedback/controllers/management.py:324
+#: ckanext/feedback/controllers/management.py:295
+#: ckanext/feedback/controllers/management.py:312
 #: ckanext/feedback/controllers/resource.py:179
 #: ckanext/feedback/controllers/utilization.py:451
 #: ckanext/feedback/services/common/check.py:13
