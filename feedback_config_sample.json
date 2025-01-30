@@ -2,25 +2,30 @@
     "modules":{
         "utilizations": {
             "enable": true,
-            "enable_orgs": ["organizaiton_id1", "organization_id2"]
+            "enable_orgs": ["organization_name1", "organization_name2"],
+            "disable_orgs":["organization_name3"]
         },
         "resources": {
             "enable": true,
-            "enable_orgs": ["organizaiton_id1", "organizaiton_id2"],
+            "enable_orgs": ["organization_name1", "organization_name2"],
+            "disable_orgs":["organization_name3"],
             "comments": {
                 "repeat_post_limit": {
-                    "enable": false,
-                    "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
+                    "enable": true,
+                    "enable_orgs": ["organization_name1"],
+                    "disable_orgs":["organization_name2"]
                 },
                 "rating": {
-                    "enable": false,
-                    "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
+                    "enable": true,
+                    "enable_orgs": ["organization_name1"],
+                    "disable_orgs":["organization_name2"]
                 }
             }
         },
         "downloads": {
             "enable": true,
-            "enable_orgs": ["organizaiton_id1", "organizaiton_id2"]
+            "enable_orgs": ["organization_name1", "organization_name2"],
+            "disable_orgs":["organization_name3"]
         }
     }
 }

@@ -28,15 +28,15 @@ class TestCheck:
         model.repo.init_db()
 
     def test_check_administrator(self):
-        example_organization = factories.Organization(
+        enable_org = factories.Organization(
             is_organization=True,
-            name='org_name',
+            name='enable_org',
             type='organization',
-            title='org_title',
+            title='enable_org',
         )
 
-        result = get_organization(example_organization['id'])
-        assert result.name == example_organization['name']
+        result = get_organization(enable_org['id'])
+        assert result.name == enable_org['name']
 
     @patch('ckanext.feedback.services.common.config.import_string')
     def test_seted_download_handler(self, mock_import_string):
@@ -111,468 +111,69 @@ class TestCheck:
 
     @patch('ckanext.feedback.services.common.config.get_organization')
     def test_download_is_enable(self, mock_get_organization):
-        org_name = 'example_org_name'
+        org_name1 = 'enable_org'
+        org_name2 = 'disable_org'
+        org_name3 = 'nonexistent_org'
 
         # without feedback_config_file and .ini file
         config.pop('ckan.feedback.downloads.enable', None)
         config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
         assert config.get('ckan.feedback.downloads.enable', 'None') == 'None'
         assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == 'None'
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().download.is_enable() is True
-        assert FeedbackConfig().download.is_enable(org_name) is True
+        assert FeedbackConfig().download.is_enable(org_name1) is True
+        assert FeedbackConfig().download.is_enable(org_name2) is True
+        assert FeedbackConfig().download.is_enable(org_name3) is True
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.downloads.enable'] = True
         config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
         assert config.get('ckan.feedback.downloads.enable', 'None') is True
         assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == 'None'
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().download.is_enable() is True
-        assert FeedbackConfig().download.is_enable(org_name) is True
+        assert FeedbackConfig().download.is_enable(org_name1) is True
+        assert FeedbackConfig().download.is_enable(org_name2) is True
+        assert FeedbackConfig().download.is_enable(org_name3) is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.downloads.enable'] = False
         config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
         assert config.get('ckan.feedback.downloads.enable', 'None') is False
         assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == 'None'
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().download.is_enable() is False
-        assert FeedbackConfig().download.is_enable(org_name) is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
 
-        # with feedback_config_file enable is False and org_name is not in enable_orgs
+        # with feedback_config_file enable is False and org_name1 is in enable_orgs
         config.pop('ckan.feedback.downloads.enable', None)
         config.pop('ckan.feedback.downloads.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'downloads': {'enable': False, 'enable_orgs': []}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = None
-        assert config.get('ckan.feedback.downloads.enable', 'None') is False
-        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == []
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().download.is_enable() is False
-        assert FeedbackConfig().download.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is False and org_name is in enable_orgs
-        config.pop('ckan.feedback.downloads.enable', None)
-        config.pop('ckan.feedback.downloads.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'downloads': {'enable': False, 'enable_orgs': [org_name]}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
-        assert config.get('ckan.feedback.downloads.enable', 'None') is False
-        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [org_name]
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().download.is_enable() is False
-        assert FeedbackConfig().download.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is True and org_name is not in enable_orgs
-        config.pop('ckan.feedback.downloads.enable', None)
-        config.pop('ckan.feedback.downloads.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'downloads': {'enable': True, 'enable_orgs': []}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = None
-        assert config.get('ckan.feedback.downloads.enable', 'None') is True
-        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == []
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().download.is_enable() is True
-        assert FeedbackConfig().download.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is True and org_name is in enable_orgs
-        config['ckan.feedback.downloads.enable'] = False
-        config.pop('ckan.feedback.downloads.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'downloads': {'enable': True, 'enable_orgs': [org_name]}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
-        assert config.get('ckan.feedback.downloads.enable', 'None') is True
-        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [org_name]
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().download.is_enable() is True
-        assert FeedbackConfig().download.is_enable(org_name) is True
-        os.remove('/srv/app/feedback_config.json')
-
-    @patch('ckanext.feedback.services.common.config.get_organization')
-    def test_utilization_is_enable(self, mock_get_organization):
-        org_name = 'example_org_name'
-
-        # without feedback_config_file and .ini file
-        config.pop('ckan.feedback.utilizations.enable', None)
-        config.pop('ckan.feedback.utilizations.enable_orgs', None)
-
-        FeedbackConfig().load_feedback_config()
-
-        assert config.get('ckan.feedback.utilizations.enable', 'None') == 'None'
-        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == 'None'
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().utilization.is_enable() is True
-        assert FeedbackConfig().utilization.is_enable(org_name) is True
-
-        # without feedback_config_file, .ini file enable is True
-        config['ckan.feedback.utilizations.enable'] = True
-        config.pop('ckan.feedback.utilizations.enable_orgs', None)
-
-        FeedbackConfig().load_feedback_config()
-
-        assert config.get('ckan.feedback.utilizations.enable', 'None') is True
-        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == 'None'
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().utilization.is_enable() is True
-        assert FeedbackConfig().utilization.is_enable(org_name) is True
-
-        # without feedback_config_file, .ini file enable is False
-        config['ckan.feedback.utilizations.enable'] = False
-        config.pop('ckan.feedback.utilizations.enable_orgs', None)
-
-        FeedbackConfig().load_feedback_config()
-
-        assert config.get('ckan.feedback.utilizations.enable', 'None') is False
-        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == 'None'
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().utilization.is_enable() is False
-        assert FeedbackConfig().utilization.is_enable(org_name) is False
-
-        # with feedback_config_file enable is False and org_name is not in enable_orgs
-        config.pop('ckan.feedback.utilizations.enable', None)
-        config.pop('ckan.feedback.utilizations.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'utilizations': {'enable': False, 'enable_orgs': []}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = None
-        assert config.get('ckan.feedback.utilizations.enable', 'None') is False
-        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == []
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().utilization.is_enable() is False
-        assert FeedbackConfig().utilization.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is False and org_name is in enable_orgs
-        config.pop('ckan.feedback.utilizations.enable', None)
-        config.pop('ckan.feedback.utilizations.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'utilizations': {'enable': False, 'enable_orgs': [org_name]}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
-        assert config.get('ckan.feedback.utilizations.enable', 'None') is False
-        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == [
-            org_name
-        ]
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().utilization.is_enable() is False
-        assert FeedbackConfig().utilization.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is True and org_name is not in enable_orgs
-        config.pop('ckan.feedback.utilizations.enable', None)
-        config.pop('ckan.feedback.utilizations.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'utilizations': {'enable': True, 'enable_orgs': []}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = None
-        assert config.get('ckan.feedback.utilizations.enable', 'None') is True
-        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == []
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().utilization.is_enable() is True
-        assert FeedbackConfig().utilization.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is True and org_name is in enable_orgs
-        config['ckan.feedback.utilizations.enable'] = False
-        config.pop('ckan.feedback.utilizations.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'utilizations': {'enable': True, 'enable_orgs': [org_name]}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
-        assert config.get('ckan.feedback.utilizations.enable', 'None') is True
-        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == [
-            org_name
-        ]
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().utilization.is_enable() is True
-        assert FeedbackConfig().utilization.is_enable(org_name) is True
-        os.remove('/srv/app/feedback_config.json')
-
-    @patch('ckanext.feedback.services.common.config.get_organization')
-    def test_resource_comment_is_enable(self, mock_get_organization):
-        org_name = 'example_org_name'
-
-        # without feedback_config_file and .ini file
-        config.pop('ckan.feedback.resources.enable', None)
-        config.pop('ckan.feedback.resources.enable_orgs', None)
-
-        FeedbackConfig().load_feedback_config()
-
-        assert config.get('ckan.feedback.resources.enable', 'None') == 'None'
-        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == 'None'
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name) is True
-
-        # without feedback_config_file, .ini file enable is True
-        config['ckan.feedback.resources.enable'] = True
-        config.pop('ckan.feedback.resources.enable_orgs', None)
-
-        FeedbackConfig().load_feedback_config()
-
-        assert config.get('ckan.feedback.resources.enable', 'None') is True
-        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == 'None'
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name) is True
-
-        # without feedback_config_file, .ini file enable is False
-        config['ckan.feedback.resources.enable'] = False
-        config.pop('ckan.feedback.resources.enable_orgs', None)
-
-        FeedbackConfig().load_feedback_config()
-
-        assert config.get('ckan.feedback.resources.enable', 'None') is False
-        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == 'None'
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().resource_comment.is_enable() is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name) is False
-
-        # with feedback_config_file enable is False and org_name is not in enable_orgs
-        config.pop('ckan.feedback.resources.enable', None)
-        config.pop('ckan.feedback.resources.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'resources': {'enable': False, 'enable_orgs': []}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = None
-        assert config.get('ckan.feedback.resources.enable', 'None') is False
-        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == []
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().resource_comment.is_enable() is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is False and org_name is in enable_orgs
-        config.pop('ckan.feedback.resources.enable', None)
-        config.pop('ckan.feedback.resources.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'resources': {'enable': False, 'enable_orgs': [org_name]}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
-        assert config.get('ckan.feedback.resources.enable', 'None') is False
-        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == [org_name]
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().resource_comment.is_enable() is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is True and org_name is not in enable_orgs
-        config.pop('ckan.feedback.resources.enable', None)
-        config.pop('ckan.feedback.resources.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'resources': {'enable': True, 'enable_orgs': []}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = None
-        assert config.get('ckan.feedback.resources.enable', 'None') is True
-        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == []
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name) is False
-        os.remove('/srv/app/feedback_config.json')
-
-        # with feedback_config_file enable is True and org
-        config.pop('ckan.feedback.resources.enable', None)
-        config.pop('ckan.feedback.resources.enable_orgs', None)
-
-        feedback_config = {
-            'modules': {'resources': {'enable': True, 'enable_orgs': [org_name]}}
-        }
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
-        assert config.get('ckan.feedback.resources.enable', 'None') is True
-        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == [org_name]
-        assert FeedbackConfig().is_feedback_config_file is True
-        assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name) is True
-        os.remove('/srv/app/feedback_config.json')
-
-    @patch('ckanext.feedback.services.common.config.get_organization')
-    def test_repeat_post_on_resource_is_enable(self, mock_get_organization):
-        org_name = 'example_org_name'
-
-        # without feedback_config_file and .ini file
-        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
-        config.pop(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
-        )
-
-        FeedbackConfig().load_feedback_config()
-
-        assert (
-            config.get(
-                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
-            )
-            == 'None'
-        )
-        assert (
-            config.get(
-                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
-                'None',
-            )
-            == 'None'
-        )
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
-        assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name)
-            is False
-        )
-
-        # without feedback_config_file, .ini file enable is True
-        config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = True
-        config.pop(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
-        )
-
-        FeedbackConfig().load_feedback_config()
-
-        assert (
-            config.get(
-                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
-            )
-            is True
-        )
-        assert (
-            config.get(
-                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
-                'None',
-            )
-            == 'None'
-        )
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is True
-        assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name)
-            is True
-        )
-
-        # without feedback_config_file, .ini file enable is False
-        config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = False
-        config.pop(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
-        )
-
-        FeedbackConfig().load_feedback_config()
-
-        assert (
-            config.get(
-                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
-            )
-            is False
-        )
-        assert (
-            config.get(
-                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
-                'None',
-            )
-            == 'None'
-        )
-        assert FeedbackConfig().is_feedback_config_file is False
-        assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
-        assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name)
-            is False
-        )
-
-        # with feedback_config_file enable is False and org_name is not in enable_orgs
-        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
-        config.pop(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
-        )
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
 
         feedback_config = {
             'modules': {
-                'resources': {
-                    'comments': {
-                        'repeat_post_limit': {'enable': False, 'enable_orgs': []}
-                    }
+                'downloads': {
+                    'enable': False,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name2],
                 }
             }
         }
@@ -581,7 +182,813 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
+        assert config.get('ckan.feedback.downloads.enable', 'None') is False
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().download.is_enable(org_name2) is False
         mock_get_organization.return_value = None
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is False and org_name1 is not in enable_orgs
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': False,
+                    'enable_orgs': [],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is False
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == []
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name1 is not in enable_orgs
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': [],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == []
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().download.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name1 is in enable_orgs
+        config['ckan.feedback.downloads.enable'] = False
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().download.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # If enable in feedback_config_file is True
+        # and org_name1 is in enable_orgs and disable_orgs
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name1, org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [
+            org_name1,
+            org_name2,
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # When the "enable" in ckan.ini is a string
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config['ckan.feedback.downloads.enable'] = "enable"
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') == "enable"
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+
+        # When the "enable" in the feedback_config_file is a string
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': "enable",
+                    'enable_orgs': [org_name1, org_name2],
+                    'disable_orgs': [org_name3],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') == "enable"
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [
+            org_name1,
+            org_name2,
+        ]
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [org_name3]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # When the "enable_orgs" in feedback_config_file is not a list
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': org_name1,
+                    'disable_orgs': [],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == org_name1
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == []
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # When the contents of the "disable_orgs" list
+        # in feedback_config_file are not strings
+        # Execute only in the download module
+        # as it does not vary across other modules or functionalities.
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'downloads': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [{"name": org_name3}],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.downloads.enable', 'None') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.downloads.disable_orgs', 'None') == [
+            {"name": org_name3}
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.is_enable() is False
+        assert FeedbackConfig().download.is_enable(org_name1) is False
+        assert FeedbackConfig().download.is_enable(org_name2) is False
+        assert FeedbackConfig().download.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_utilization_is_enable(self, mock_get_organization):
+        org_name1 = 'enable_org'
+        org_name2 = 'disable_org'
+        org_name3 = 'nonexistent_org'
+
+        # without feedback_config_file and .ini file
+        config.pop('ckan.feedback.utilizations.enable', None)
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') == 'None'
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().utilization.is_enable() is True
+        assert FeedbackConfig().utilization.is_enable(org_name1) is True
+        assert FeedbackConfig().utilization.is_enable(org_name2) is True
+        assert FeedbackConfig().utilization.is_enable(org_name3) is True
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.utilizations.enable'] = True
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') is True
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().utilization.is_enable() is True
+        assert FeedbackConfig().utilization.is_enable(org_name1) is True
+        assert FeedbackConfig().utilization.is_enable(org_name2) is True
+        assert FeedbackConfig().utilization.is_enable(org_name3) is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.utilizations.enable'] = False
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') is False
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().utilization.is_enable() is False
+        assert FeedbackConfig().utilization.is_enable(org_name1) is False
+        assert FeedbackConfig().utilization.is_enable(org_name2) is False
+        assert FeedbackConfig().utilization.is_enable(org_name3) is False
+
+        # with feedback_config_file enable is False and org_name1 is not in enable_orgs
+        config.pop('ckan.feedback.utilizations.enable', None)
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'utilizations': {
+                    'enable': False,
+                    'enable_orgs': [],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') is False
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == []
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == [
+            org_name2
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().utilization.is_enable() is False
+        assert FeedbackConfig().utilization.is_enable(org_name1) is False
+        assert FeedbackConfig().utilization.is_enable(org_name2) is False
+        assert FeedbackConfig().utilization.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is False and org_name1 is in enable_orgs
+        config.pop('ckan.feedback.utilizations.enable', None)
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'utilizations': {
+                    'enable': False,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') is False
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == [
+            org_name1
+        ]
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == [
+            org_name2
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().utilization.is_enable() is False
+        assert FeedbackConfig().utilization.is_enable(org_name1) is False
+        assert FeedbackConfig().utilization.is_enable(org_name2) is False
+        assert FeedbackConfig().utilization.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name1 is not in enable_orgs
+        config.pop('ckan.feedback.utilizations.enable', None)
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'utilizations': {
+                    'enable': True,
+                    'enable_orgs': [],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') is True
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == []
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == [
+            org_name2
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().utilization.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().utilization.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().utilization.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().utilization.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name1 is in enable_orgs
+        config['ckan.feedback.utilizations.enable'] = False
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'utilizations': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') is True
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == [
+            org_name1
+        ]
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == [
+            org_name2
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().utilization.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().utilization.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().utilization.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().utilization.is_enable(org_name3) is False
+
+        os.remove('/srv/app/feedback_config.json')
+
+        # If enable in feedback_config_file is True
+        # and org_name1 is in enable_orgs and disable_orgs
+        config.pop('ckan.feedback.utilizations.enable', None)
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'utilizations': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name1, org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.utilizations.enable', 'None') is True
+        assert config.get('ckan.feedback.utilizations.enable_orgs', 'None') == [
+            org_name1
+        ]
+        assert config.get('ckan.feedback.utilizations.disable_orgs', 'None') == [
+            org_name1,
+            org_name2,
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().utilization.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().utilization.is_enable(org_name1) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().utilization.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().utilization.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_resource_comment_is_enable(self, mock_get_organization):
+        org_name1 = 'enable_org'
+        org_name2 = 'disable_org'
+        org_name3 = 'nonexistent_org'
+
+        # without feedback_config_file and .ini file
+        config.pop('ckan.feedback.resources.enable', None)
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') == 'None'
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().resource_comment.is_enable() is True
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is True
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is True
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is True
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.resources.enable'] = True
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') is True
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().resource_comment.is_enable() is True
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is True
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is True
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is True
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.resources.enable'] = False
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') is False
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == 'None'
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == 'None'
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().resource_comment.is_enable() is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is False
+
+        # with feedback_config_file enable is False and org_name1 is not in enable_orgs
+        config.pop('ckan.feedback.resources.enable', None)
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'enable': False,
+                    'enable_orgs': [],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') is False
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == []
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.is_enable() is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is False and org_name1 is in enable_orgs
+        config.pop('ckan.feedback.resources.enable', None)
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'enable': False,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') is False
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.is_enable() is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is False
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name1 is not in enable_orgs
+        config.pop('ckan.feedback.resources.enable', None)
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'enable': True,
+                    'enable_orgs': [],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') is True
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == []
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org
+        config.pop('ckan.feedback.resources.enable', None)
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') is True
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # If enable in feedback_config_file is True
+        # and org_name1 is in enable_orgs and disable_orgs
+        config.pop('ckan.feedback.resources.enable', None)
+        config.pop('ckan.feedback.resources.enable_orgs', None)
+        config.pop('ckan.feedback.resources.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'enable': True,
+                    'enable_orgs': [org_name1],
+                    'disable_orgs': [org_name1, org_name2],
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.resources.enable', 'None') is True
+        assert config.get('ckan.feedback.resources.enable_orgs', 'None') == [org_name1]
+        assert config.get('ckan.feedback.resources.disable_orgs', 'None') == [
+            org_name1,
+            org_name2,
+        ]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().resource_comment.is_enable(org_name1) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().resource_comment.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().resource_comment.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.get_organization')
+    def test_repeat_post_on_resource_is_enable(self, mock_get_organization):
+        org_name1 = 'enable_org'
+        org_name2 = 'disable_org'
+        org_name3 = 'nonexistent_org'
+
+        # without feedback_config_file and .ini file
+        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
+        )
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
+            )
+            == 'None'
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
+            )
+            == 'None'
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs',
+                'None',
+            )
+            == 'None'
+        )
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
+            is False
+        )
+
+        # without feedback_config_file, .ini file enable is True
+        config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = True
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
+        )
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
+            )
+            is True
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
+            )
+            == 'None'
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs',
+                'None',
+            )
+            == 'None'
+        )
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is True
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
+            is True
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is True
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
+            is True
+        )
+
+        # without feedback_config_file, .ini file enable is False
+        config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = False
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
+        )
+
+        FeedbackConfig().load_feedback_config()
+
         assert (
             config.get(
                 'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
@@ -593,20 +1000,37 @@ class TestCheck:
                 'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
                 'None',
             )
-            == []
+            == 'None'
         )
-        assert FeedbackConfig().is_feedback_config_file is True
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs',
+                'None',
+            )
+            == 'None'
+        )
+        assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
             is False
         )
-        os.remove('/srv/app/feedback_config.json')
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
+            is False
+        )
 
-        # with feedback_config_file enable is False and org_name is in enable_orgs
+        # with feedback_config_file enable is False and org_name1 is not in enable_orgs
         config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
         config.pop(
             'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
         )
 
         feedback_config = {
@@ -615,7 +1039,8 @@ class TestCheck:
                     'comments': {
                         'repeat_post_limit': {
                             'enable': False,
-                            'enable_orgs': [org_name],
+                            'enable_orgs': [],
+                            'disable_orgs': [org_name2],
                         }
                     }
                 }
@@ -626,35 +1051,56 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
         assert (
             config.get(
                 'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
             )
             is False
         )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs',
+                'None',
+            )
+            == []
+        )
         assert config.get(
-            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', 'None'
-        ) == [org_name]
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', 'None'
+        ) == [org_name2]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
             is False
         )
         os.remove('/srv/app/feedback_config.json')
 
-        # with feedback_config_file enable is True and org_name is not in enable_orgs
+        # with feedback_config_file enable is False and org_name1 is in enable_orgs
         config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
         config.pop(
             'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
         )
 
         feedback_config = {
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {'enable': True, 'enable_orgs': []}
+                        'repeat_post_limit': {
+                            'enable': False,
+                            'enable_orgs': [org_name1],
+                            'disable_orgs': [org_name2],
+                        }
                     }
                 }
             }
@@ -664,7 +1110,61 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = None
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
+            )
+            is False
+        )
+        assert config.get(
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', 'None'
+        ) == [org_name1]
+        assert config.get(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', 'None'
+        ) == [org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
+            is False
+        )
+        os.remove('/srv/app/feedback_config.json')
+
+        # with feedback_config_file enable is True and org_name1 is not in enable_orgs
+        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
+        )
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {
+                        'repeat_post_limit': {
+                            'enable': True,
+                            'enable_orgs': [],
+                            'disable_orgs': [org_name2],
+                        }
+                    }
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
         assert (
             config.get(
                 'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
@@ -678,25 +1178,46 @@ class TestCheck:
             )
             == []
         )
+        assert config.get(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', 'None'
+        ) == [org_name2]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
+            is True
+        )
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is False
+        )
+        mock_get_organization.return_value = None
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
             is False
         )
         os.remove('/srv/app/feedback_config.json')
 
-        # with feedback_config_file enable is True and org_name is in enable_orgs
+        # with feedback_config_file enable is True and org_name1 is in enable_orgs
         config['ckan.feedback.resources.comment.repeated_post_limit.enable'] = False
         config.pop(
             'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
         )
 
         feedback_config = {
             'modules': {
                 'resources': {
                     'comments': {
-                        'repeat_post_limit': {'enable': True, 'enable_orgs': [org_name]}
+                        'repeat_post_limit': {
+                            'enable': True,
+                            'enable_orgs': [org_name1],
+                            'disable_orgs': [org_name2],
+                        }
                     }
                 }
             }
@@ -706,7 +1227,6 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
         assert (
             config.get(
                 'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
@@ -715,22 +1235,98 @@ class TestCheck:
         )
         assert config.get(
             'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', 'None'
-        ) == [org_name]
+        ) == [org_name1]
+        assert config.get(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', 'None'
+        ) == [org_name2]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
             is True
+        )
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is False
+        )
+        mock_get_organization.return_value = None
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
+            is False
+        )
+        os.remove('/srv/app/feedback_config.json')
+
+        # If enable in feedback_config_file is True
+        # and org_name1 is in enable_orgs and disable_orgs
+        config.pop('ckan.feedback.resources.comment.repeated_post_limit.enable', None)
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', None
+        )
+        config.pop(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', None
+        )
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {
+                        'repeat_post_limit': {
+                            'enable': True,
+                            'enable_orgs': [org_name1],
+                            'disable_orgs': [org_name1, org_name2],
+                        }
+                    }
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.repeated_post_limit.enable', 'None'
+            )
+            is True
+        )
+        assert config.get(
+            'ckan.feedback.resources.comment.repeated_post_limit.enable_orgs', 'None'
+        ) == [org_name1]
+        assert config.get(
+            'ckan.feedback.resources.comment.repeated_post_limit.disable_orgs', 'None'
+        ) == [org_name1, org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name1)
+            is False
+        )
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name2)
+            is False
+        )
+        mock_get_organization.return_value = None
+        assert (
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name3)
+            is False
         )
         os.remove('/srv/app/feedback_config.json')
 
     @patch('ckanext.feedback.services.common.config.get_organization')
     def test_rating_is_enable(self, mock_get_organization):
-        org_name = 'example_org_name'
+        org_name1 = 'enable_org'
+        org_name2 = 'disable_org'
+        org_name3 = 'nonexistent_org'
 
         # without feedback_config_file and .ini file
         config.pop('ckan.feedback.resources.comment.rating.enable', None)
         config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
@@ -742,13 +1338,20 @@ class TestCheck:
             config.get('ckan.feedback.resources.comment.rating.enable_orgs', 'None')
             == 'None'
         )
+        assert (
+            config.get('ckan.feedback.resources.comment.rating.disable_orgs', 'None')
+            == 'None'
+        )
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.rating.is_enable() is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is False
 
         # without feedback_config_file, .ini file enable is True
         config['ckan.feedback.resources.comment.rating.enable'] = True
         config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
@@ -759,13 +1362,20 @@ class TestCheck:
             config.get('ckan.feedback.resources.comment.rating.enable_orgs', 'None')
             == 'None'
         )
+        assert (
+            config.get('ckan.feedback.resources.comment.rating.disable_orgs', 'None')
+            == 'None'
+        )
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.rating.is_enable() is True
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name) is True
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is True
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is True
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is True
 
         # without feedback_config_file, .ini file enable is False
         config['ckan.feedback.resources.comment.rating.enable'] = False
         config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
@@ -776,18 +1386,31 @@ class TestCheck:
             config.get('ckan.feedback.resources.comment.rating.enable_orgs', 'None')
             == 'None'
         )
+        assert (
+            config.get('ckan.feedback.resources.comment.rating.disable_orgs', 'None')
+            == 'None'
+        )
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.rating.is_enable() is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is False
 
-        # with feedback_config_file enable is False and org_name is not in enable_orgs
+        # with feedback_config_file enable is False and org_name1 is not in enable_orgs
         config.pop('ckan.feedback.resources.comment.rating.enable', None)
         config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
 
         feedback_config = {
             'modules': {
                 'resources': {
-                    'comments': {'rating': {'enable': False, 'enable_orgs': []}}
+                    'comments': {
+                        'rating': {
+                            'enable': False,
+                            'enable_orgs': [],
+                            'disable_orgs': [org_name2],
+                        }
+                    }
                 }
             }
         }
@@ -804,19 +1427,31 @@ class TestCheck:
             config.get('ckan.feedback.resources.comment.rating.enable_orgs', 'None')
             == []
         )
+        assert config.get(
+            'ckan.feedback.resources.comment.rating.disable_orgs', 'None'
+        ) == [org_name2]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.rating.is_enable() is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is False
         os.remove('/srv/app/feedback_config.json')
 
-        # with feedback_config_file enable is False and org_name is in enable_orgs
+        # with feedback_config_file enable is False and org_name1 is in enable_orgs
         config.pop('ckan.feedback.resources.comment.rating.enable', None)
         config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
 
         feedback_config = {
             'modules': {
                 'resources': {
-                    'comments': {'rating': {'enable': False, 'enable_orgs': [org_name]}}
+                    'comments': {
+                        'rating': {
+                            'enable': False,
+                            'enable_orgs': [org_name1],
+                            'disable_orgs': [org_name2],
+                        }
+                    }
                 }
             }
         }
@@ -825,26 +1460,37 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
         assert (
             config.get('ckan.feedback.resources.comment.rating.enable', 'None') is False
         )
         assert config.get(
             'ckan.feedback.resources.comment.rating.enable_orgs', 'None'
-        ) == [org_name]
+        ) == [org_name1]
+        assert config.get(
+            'ckan.feedback.resources.comment.rating.disable_orgs', 'None'
+        ) == [org_name2]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.rating.is_enable() is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is False
         os.remove('/srv/app/feedback_config.json')
 
-        # with feedback_config_file enable is True and org_name is not in enable_orgs
+        # with feedback_config_file enable is True and org_name1 is not in enable_orgs
         config.pop('ckan.feedback.resources.comment.rating.enable', None)
         config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
 
         feedback_config = {
             'modules': {
                 'resources': {
-                    'comments': {'rating': {'enable': True, 'enable_orgs': []}}
+                    'comments': {
+                        'rating': {
+                            'enable': True,
+                            'enable_orgs': [],
+                            'disable_orgs': [org_name2],
+                        }
+                    }
                 }
             }
         }
@@ -853,7 +1499,6 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = None
         assert (
             config.get('ckan.feedback.resources.comment.rating.enable', 'None') is True
         )
@@ -861,19 +1506,34 @@ class TestCheck:
             config.get('ckan.feedback.resources.comment.rating.enable_orgs', 'None')
             == []
         )
+        assert config.get(
+            'ckan.feedback.resources.comment.rating.disable_orgs', 'None'
+        ) == [org_name2]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.rating.is_enable() is True
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is False
         os.remove('/srv/app/feedback_config.json')
 
-        # with feedback_config_file enable is True and org_name is in enable_orgs
+        # with feedback_config_file enable is True and org_name1 is in enable_orgs
         config['ckan.feedback.resources.comment.rating.enable'] = False
         config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
 
         feedback_config = {
             'modules': {
                 'resources': {
-                    'comments': {'rating': {'enable': True, 'enable_orgs': [org_name]}}
+                    'comments': {
+                        'rating': {
+                            'enable': True,
+                            'enable_orgs': [org_name1],
+                            'disable_orgs': [org_name2],
+                        }
+                    }
                 }
             }
         }
@@ -882,16 +1542,66 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name})
         assert (
             config.get('ckan.feedback.resources.comment.rating.enable', 'None') is True
         )
         assert config.get(
             'ckan.feedback.resources.comment.rating.enable_orgs', 'None'
-        ) == [org_name]
+        ) == [org_name1]
+        assert config.get(
+            'ckan.feedback.resources.comment.rating.disable_orgs', 'None'
+        ) == [org_name2]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.rating.is_enable() is True
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is False
+        os.remove('/srv/app/feedback_config.json')
+
+        # If enable in feedback_config_file is True
+        # and org_name1 is in enable_orgs and disable_orgs
+        config.pop('ckan.feedback.resources.comment.rating.enable', None)
+        config.pop('ckan.feedback.resources.comment.rating.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.rating.disable_orgs', None)
+
+        feedback_config = {
+            'modules': {
+                'resources': {
+                    'comments': {
+                        'rating': {
+                            'enable': True,
+                            'enable_orgs': [org_name1],
+                            'disable_orgs': [org_name1, org_name2],
+                        }
+                    }
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get('ckan.feedback.resources.comment.rating.enable', 'None') is True
+        )
+        assert config.get(
+            'ckan.feedback.resources.comment.rating.enable_orgs', 'None'
+        ) == [org_name1]
+        assert config.get(
+            'ckan.feedback.resources.comment.rating.disable_orgs', 'None'
+        ) == [org_name1, org_name2]
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.rating.is_enable() is True
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name1})
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name1) is False
+        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name2})
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name2) is False
+        mock_get_organization.return_value = None
+        assert FeedbackConfig().resource_comment.rating.is_enable(org_name3) is False
         os.remove('/srv/app/feedback_config.json')
 
     def test_recaptcha_config(self):

@@ -40,7 +40,9 @@ class Singleton(object):
 
 class FeedbackConfigInterface(ABC):
     @abstractmethod
-    def load_config(self, feedback_config):
+    def load_config(self, feedback_config):  # pragma: no cover
+        # Excluded from coverage because it cannot be directly tested and
+        # must be implemented in subclasses.
         pass
 
 
@@ -61,19 +63,20 @@ class BaseConfig:
         fb_conf_path = fb_conf_path or self.conf_path
 
         conf_tree = feedback_config
-        try:
-            for key in self.fb_conf_prefix + fb_conf_path:
-                conf_tree = conf_tree.get(key)
+        ckan_conf_str = self.get_ckan_conf_str()
+        for key in self.fb_conf_prefix + fb_conf_path:
+            conf_tree = conf_tree.get(key)
+            if conf_tree is None:
+                conf_tree = {
+                    "enable": self.default,
+                    "enable_orgs": None,
+                    "disable_orgs": None,
+                }
+                break
 
-            ckan_conf_str = self.get_ckan_conf_str()
-            config[f"{ckan_conf_str}.enable"] = conf_tree.get("enable")
-            config[f"{ckan_conf_str}.enable_orgs"] = conf_tree.get("enable_orgs")
-        except AttributeError as e:
-            toolkit.error_shout(
-                f"{e}.  module[{self.name}]\nfeedback_config:{feedback_config}"
-                f" feedback_conf_path:{self.fb_conf_prefix + fb_conf_path} "
-                "target-key:'{key}'"
-            )
+        config[f"{ckan_conf_str}.enable"] = conf_tree.get("enable")
+        config[f"{ckan_conf_str}.enable_orgs"] = conf_tree.get("enable_orgs")
+        config[f"{ckan_conf_str}.disable_orgs"] = conf_tree.get("disable_orgs")
 
     def set_config(
         self,
@@ -106,16 +109,47 @@ class BaseConfig:
 
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
-        enable = config.get(f"{ck_conf_str}.enable", self.default)
-        if enable and FeedbackConfig().is_feedback_config_file and org_id:
-            organization = get_organization(org_id)
-            if organization is not None:
-                enable = organization.name in config.get(
-                    f"{ck_conf_str}.enable_orgs", []
-                )
-            else:
-                enable = False
-        return toolkit.asbool(enable)
+        try:
+            enable = toolkit.asbool(config.get(f"{ck_conf_str}.enable", self.default))
+        except ValueError:
+            enable = False
+            toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable')
+            return enable
+
+        if not enable or not FeedbackConfig().is_feedback_config_file:
+            return enable
+
+        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs") or []
+        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs") or []
+
+        if not is_list_of_str(enable_orgs):
+            enable = False
+            toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable_orgs')
+            return enable
+
+        if not is_list_of_str(disable_orgs):
+            enable = False
+            toolkit.error_shout(f'Invalid value for {ck_conf_str}.disable_orgs')
+            return enable
+
+        if not org_id:
+            return enable
+
+        organization = get_organization(org_id)
+        if organization is None:
+            enable = False
+            return enable
+
+        deplication = set(enable_orgs) & set(disable_orgs)
+        if organization.name in deplication:
+            enable = False
+            toolkit.error_shout('Conflict in organization enable/disable lists.')
+        elif organization.name in enable_orgs:
+            enable = True
+        elif organization.name in disable_orgs:
+            enable = False
+
+        return enable
 
 
 class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
@@ -271,7 +305,14 @@ class FeedbackConfig(Singleton):
                     if isinstance(value, BaseConfig):
                         value.load_config(feedback_config)
         except FileNotFoundError:
-            toolkit.error_shout('The feedback config file not found')
+            toolkit.error_shout(
+                'The feedback config file not found. '
+                f'{self.feedback_config_path}/feedback_config.json'
+            )
             self.is_feedback_config_file = False
         except json.JSONDecodeError:
             toolkit.error_shout('The feedback config file not decoded correctly')
+
+
+def is_list_of_str(value):
+    return isinstance(value, list) and all(isinstance(x, str) for x in value)

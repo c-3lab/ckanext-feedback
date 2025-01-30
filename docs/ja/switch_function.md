@@ -1,170 +1,213 @@
-# オンオフ機能
+# ON/OFF 機能
 
-* ckanext-feedbackには以下の3つのモジュールがあり、各モジュールのオンオフを切り替えることが出来ます。
-  * [Utilization](./utilization.md) (データの利活用方法に関するモジュール)
-  * [Resource](./resource.md) (リソースへのコメントに関するモジュール)
-  * [Download](./download.md) (ダウンロードに関するモジュール)
+本ドキュメントでは、**ckanext-feedback**のモジュールと機能に関するON/OFFについて説明します。
 
-※ デフォルトでは全てのモジュールがオン(`True`)になっています
+**ckanext-feedback**は既にインストール済みであることを前提としています。  
+まだインストールが完了していない場合は、[README](../../README.md)に記載の**クイックスタート**に従い、インストールを完了させてください。
 
-* [Resource](./resource.md)についてはさらに以下のオプションのオンオフを切り替えることが出来ます。
-  * 1つのリソースに対してコメントできる回数を各ユーザーごと、1回に制限する機能
-  * リソースへの評価を行う機能
+## 機能説明
 
-※ デフォルトでは上記2つのオプションはオフ(`False`)になっています
+- **ckanext-feedback**で追加された以下のモジュールや機能のON/OFFを切り替えることができます。
+  - [utilization](./utilization.md)   
+  データの利活用方法に関するモジュール  
+  デフォルト：🟢**ON**
+
+  - [resource](./resource.md)  
+  リソースへのコメントに関するモジュール  
+  デフォルト：🟢**ON**
+
+  - [repeat post limit](./resource.md)  
+  1つのリソースに対してコメントできる回数を各ユーザーごと、1回に制限する機能  
+  デフォルト：🔴**OFF**
+
+  - [rating](./resource.md)  
+  リソースへの評価を行う機能  
+  デフォルト：🔴**OFF**
+
+  - [download](./download.md)  
+  ダウンロードに関するモジュール  
+  デフォルト：🟢**ON**
+
+  ※ [repeat post limit](./resource.md)と[rating](./resource.md)に関しては、[resource](./resource.md)が🟢**ON**になっている場合にのみON/OFFを切り替えることができます。
 
 ## 設定方法
 
-* 各モジュールとオプションを設定するには、以下の２通りの方法があります。
-  * `ckan.ini`にオンオフの設定を記述する。
-    * Organizationごとにモジュールのオンオフ設定はできない
-  * `feedback_config.json`に設定を記述し、CKAN環境に配置する。
-    * Organizationごとにモジュールのオンオフ設定が可能
+- 各モジュールと機能のON/OFFを設定するには、以下の２通りの方法があります。
+  - `ckan.ini`にON/OFFの設定を記述する。
+  - `feedback_config.json`に設定を記述し、CKAN環境に配置する。  
+  ※ 組織毎の設定を行いたい場合は、`feedback_config.json`でのみ設定することができます。
 
-`ckan.ini`と`feedback_config.json`の2つの設定を行った場合、  
-`feedback_config.json`に記述した設定が`ckan.ini`に記述した設定よりも優先されます。  
+### 設定優先度
 
-(例)  
-`ckan.ini`にUtilizationの`enable`を`false`として記載  
-`feedback_config.json`にUtilizationの`enable`を`true`として記載し、`enable_org`にorganization1の`name`を記述  
-→ `feedback_config.json`の設定が優先され、organization1にて、Utilizationがオンになる  
+`ckan.ini`に本設定がされていても、`feedback_config.json`がサーバー内に存在する場合は、`feedback_config.json`の内容をもとに設定が反映されます。
 
-詳細は以下のマトリクスを参照して下さい。  
+（例）  
+`ckan.ini`でモジュールや機能を🔴**OFF**に設定  
+`feedback_config.json`でモジュールや機能を🟢**ON**に設定  
+→ モジュールや機能は🟢**ON**になります。  
+(※ この動作は、以下の相互作用の5番に該当します。)
 
-* 縦軸：`ckan.ini`への設定記述の有無と記述された設定(`enable`)を表現しています。
-* 横軸：`feedback_config.json`の有無と記述された設定(`enable`, `enable_org`)を表現しています。
-  * `enable`は`True`/`False`の値を設定可能です
-  * `enable_org`はリスト型の配列で、Organizationの`name`を格納することで、格納されたOrganizationは設定をオンにできます。
-    * 設定方法の詳細は設定手順をご覧ください。
+詳細は以下の**相互作用**、 **ユースケース別設定適用表**を参照してください。  
 
-モジュールのオンオフ設定 優先度マトリクス  
-![モジュールのオンオフ設定 優先度マトリクス](../assets/module_setting.png)
+### 相互作用
 
-オプションのオンオフ設定 優先度マトリクス  
-![オプションのオンオフ設定 優先度マトリクス](../assets/module_option_setting.png)
+モジュールや機能のON/OFF設定が、`ckan.ini`と`feedback_config.json`のそれぞれに記述された値によってどのように決定されるかを示しています。
 
-## 設定手順
+- **ckan.ini**：`ckan.ini`に記述したモジュールや機能のenable設定値です。
+- **feedback_config.json**：`feedback_config.json`に記述したモジュールや機能のenable設定値です。
+- **ON/OFF**：モジュールや機能のON/OFF設定の結果です。
 
-`ckanext-feedback`のインストール(まだの方のみ)
+| No. | ckan.ini | feedback_config.json | ON/OFF |
+| :-: | :-: | :-: | :-: |
+| 1 | - | - | デフォルト値 |
+| 2 | ✔️True | - | 🟢ON |
+| 3 | - | ✔️True | 🟢ON |
+| 4 | ✔️True | ✔️True | 🟢ON |
+| 5 | ❌False | ✔️True | 🟢ON |
+| 6 | ❌False | - | 🔴OFF |
+| 7 | - | ❌False | 🔴OFF |
+| 8 | ✔️True | ❌False | 🔴OFF |
+| 9 | ❌False | ❌False | 🔴OFF |
 
-* [クイックスタート](../../README.md) **1~4番**の手順を参照してください
+### ユースケース別設定適用表
 
-### `ckan.ini`でオンオフの設定を行う場合
+`feedback_config.json`を用いて設定する際、特定のユースケース毎にモジュールや機能のON/OFF設定をどのように適用するかを示しています。
 
-※ この方法で設定を行った場合はすべてのOrganizationにおいて、モジュールがオンまたは、オフになる  
-※ `feedback_config.json`に設定が記述され、CKAN環境に配置されている場合は本設定は反映されません
+- **enable**：`feedback_config.json`に記述したモジュールや機能のenable設定値です。
+- **enable_orgs**：`feedback_config.json`に記述したモジュールや機能を🟢ONにしたい組織の名前リストです。
+- **disable_orgs**：`feedback_config.json`に記述したモジュールや機能を🔴OFFにしたい組織の名前リストです。
 
-1. **オフにするモジュール**について、`ckan.plugins`の下に以下の記述を追記する
-    * utilizationモジュールをオフにする場合
+| No. | ユースケース | enable | enable_orgs | disable_orgs |
+| :-: | :-: | :-: | :-: | :-: |
+| 1 | 全ての組織でモジュールや機能を🟢ONにしたい場合 | ✔️True | - | - |
+| 2 | 全ての組織でモジュールや機能を🔴OFFにしたい場合 | ❌False | - | - |
+| 3 | 組織毎に🟢ON/🔴OFFを設定したい場合 | ✔️True | ["org_name1", "org_name2"] | ["org_name3"] |
+| 4 | 特定の組織のみ🔴OFFにしたい場合 | ✔️True | - | ["org_name3"] |
 
-        ```bash
-        ckan.feedback.utilizations.enable = False
-        ```
+※ **enable_orgs**と**disable_orgs**に同じ組織を記載した場合、設定は不適切であり、該当する組織のモジュールや機能は🔴**OFF**になります。  
 
-    * resourceモジュールをオフにする場合
+（例）  
+```json
+{
+    "enable_orgs": ["org_name1", "org_name2"],
+    "disable_orgs": ["org_name1", "org_name3"]
+}
+```  
+→ **"org_name1"** の設定は🔴**OFF**になる
 
-        ```bash
-        ckan.feedback.resources.enable = False
-        ```
+## 設定例
 
-        * 1つのリソースに対してコメントできる回数を各ユーザーごと、１回に制限する場合(ユーザーのCookieを利用)
-            * デフォルトの設定(False)では複数回のコメントが可能です
+### `ckan.ini`でON/OFFの設定を行う
 
-            ```bash
-            ckan.feedback.resources.comment.repeated_post_limit.enable = True
-            ```
+※ この方法で設定を行った場合はすべての組織のモジュールや機能は🟢ONまたは、🔴OFFになります。  
+※ `feedback_config.json`がCKAN環境に配置されている場合は本設定は反映されません。
 
-        * リソースへの評価を行う機能をオンにする場合
-          * デフォルトの設定(False)では、星5つでの評価機能を利用することはできません
+（例）すべてのモジュールや機能を🟢ONにする場合
+```ini
+・・・
+## Plugins Settings ############################################################
+ckan.plugins = xxxxx xxxxx xxxx xxxxx xxxxx feedback
 
-            ```bash
-            ckan.feedback.resources.comment.rating.enable = True
-            ```
+ckan.feedback.utilization.enable = True
+ckan.feedback.resources.enable = True
+ckan.feedback.resources.comment.repeated_post_limit.enable = True
+ckan.feedback.resources.comment.rating.enable = True
+ckan.feedback.downloads.enable = True
+・・・
+```
+| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
 
-    * downloadモジュールをオフにする場合
+### `feedback_config.json`でON/OFFの設定を行う
 
-        ```bash
-        ckan.feedback.downloads.enable = False
-        ```
-
-2. テーブル作成(まだの方のみ)
-    * [feedbackコマンド](./feedback_command.md)の```-modules```オプションを参考に**オンにするモジュール**のテーブル作成を行なってください
-
-### `feedback_config.json`でオンオフの設定を行う場合
-
-1. `ckanext-feedback/feedback_config_sample.json`の編集を行います
-    * (例1) Utilizationをオフにする場合
-
-    ```json
-    {
-        "modules": {
-            "utilizations": {
-                "enable": false,
-                "enable_orgs": []
-            },
-        }
-    }
-    ```
-
-    * (例2) 以下の3つの設定を行う場合
-      * organization1とorganization2において、Resourceをオンにする
-      * また、1つのリソースに対する複数回のコメント制限するオプションはオフにする
-      * organization1のみリソースへの評価機能をオンにする
-        * `{organization1のname}`, `{organization2のname}`にはそれぞれのOrganizationの`name`を記述してください
-
-    ```json
-    {   
-        "modules": {
-            "resources": {
-                "enable": true,
-                "enable_orgs": ["{organizaiton1のname}", "{organizaiton2のname}"],
-                "comments": {
-                    "repeat_post_limit": {
-                        "enable": false,
-                        "enable_orgs": []
-                    },
-                    "rating": {
-                        "enable": true,
-                        "enable_orgs": ["{organizaiton1のname}"]
-                    }
+（例）すべてのモジュールや機能を🟢ONにする場合
+```json
+{
+    "modules": {
+        "utilizations": {
+            "enable": true
+        },
+        "resources": {
+            "enable": true,
+            "comments": {
+                "repeat_post_limit": {
+                    "enable": true
+                },
+                "rating": {
+                    "enable": true
                 }
             }
+        },
+        "downloads": {
+            "enable": true
         }
     }
-    ```
-
-    ※ `name`が記述されていないOrganizationは、モジュールやオプションはオフとなる
-
-2. `feedback_config.json`をCKAN環境に配置する
-    * `/srv/app`配下に`feedback_config.json`を配置する
-      * `/srv/app`以外の場所に配置する場合は以下の設定を`ckan.ini`に記述する
-        * `{feedback_config.jsonを格納しているディレクトリパス}`にパスを記述してください (例) `/etc/ckan/default`
-
-      ```bash
-      ckan.feedback.config_file = {feedback_config.jsonを格納しているディレクトリパス}
-      ```
-
-3. テーブル作成(まだの方のみ)
-    * [feedbackコマンド](./feedback_command.md)の```-modules```オプションを参考に**オンにするモジュール**のテーブル作成を行なってください
-
-## downloadモジュールを外部プラグインと連携する場合
-
-リソースがダウンロードされると、downloadモジュールはダウンロード数のカウント処理を行った後、デフォルトのダウンロードコールバックである`ckan.views.resource:download`を呼び出します。</br>
-しかし、そのコールバックを他Extensionの関数（例：[googleanalytics](https://github.com/ckan/ckanext-googleanalytics) のdonwload関数）に変更したい場合があります。</br>
-その場合ckan.ini内の設定変数ckan.feedback.download_handlerへ対象の関数を指定することで置き換えることも可能です。
-
-例：ckanext-googleanalytics の場合
-
-```bash
-ckan.feedback.download_handler = ckanext.googleanalytics.views:download
+}
 ```
+| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
 
-また、逆に外部ハンドラを設定できる他のExtensionのコールバックとしてckanext-feedbackのdownloadモジュールを指定したい場合は、`ckanext.feedback.views.download:download`を使用できます。
-
-例：ckanext-googleanalytics の場合
-
-```bash
-googleanalytics.download_handler = ckanext.feedback.views.download:download
+（例）組織毎にモジュールや機能のON/OFFを設定する場合
+```json
+{
+    "modules":{
+        "utilizations": {
+            "enable": true,
+            "enable_orgs": ["org_name1", "org_name2"],
+            "disable_orgs": ["org_name3"]
+        },
+        "resources": {
+            "enable": true,
+            "enable_orgs": ["org_name1", "org_name2"],
+            "disable_orgs": ["org_name3"],
+            "comments": {
+                "repeat_post_limit": {
+                    "enable": true,
+                    "enable_orgs": ["org_name1"],
+                    "disable_orgs": ["org_name2"]
+                },
+                "rating": {
+                    "enable": true,
+                    "enable_orgs": ["org_name1"],
+                    "disable_orgs": ["org_name2"]
+                }
+            }
+        },
+        "downloads": {
+            "enable": true,
+            "enable_orgs": ["org_name1", "org_name2"],
+            "disable_orgs": ["org_name3"]
+        }
+    }
+}
 ```
+| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🟢ON |
+| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+
+## downloadモジュールを外部プラグインと連携
+
+リソースがダウンロードされると、downloadモジュールはダウンロード数のカウント処理を行った後、デフォルトのダウンロードコールバックである`ckan.views.resource:download`を呼び出します。  
+しかし、そのコールバックを他Extensionの関数（例：[googleanalytics](https://github.com/ckan/ckanext-googleanalytics) のdonwload関数）に変更したい場合は、`ckan.ini`の設定変数`ckan.feedback.download_handler`へ対象の関数を指定することで置き換えることが可能です。  
+
+（例）**ckanext-feedback**で**ckanext-googleanalytics**のdonwload関数を使用したい場合
+  ```bash
+  ckan.feedback.download_handler = ckanext.googleanalytics.views:download
+  ```
+
+また、逆に外部ハンドラを設定できる他Extensionのコールバックとして**ckanext-feedback**のdownloadモジュールを指定したい場合は、`ckanext.feedback.views.download:download`を使用できます。  
+
+（例）**ckanext-googleanalytics**で**ckanext-feedback**のdonwload関数を使用したい場合  
+  ```bash
+  googleanalytics.download_handler = ckanext.feedback.views.download:download
+  ```
 
 これらの連携方法は、複数のextensionを使用する際に`/download`などのパスが競合してしまう場合に役立ちます。
