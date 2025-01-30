@@ -41,7 +41,7 @@
             <button class="btn btn-primary bulk-button" type="button" onclick="runBulkAction('{{ delete_action }}')">{{ _('Bulk Delete') }}</button>
           </div>
           <div class="container">
-            {% if feedbacks %}
+            {% if page.collection %}
               <div class="org">
                 <div class="border-bottom fw-bold mb-2">
                   <div style="float:left;"><input class="checkbox-inline" type="checkbox" id="target-checkbox-all"></div>
@@ -53,7 +53,7 @@
                     <div class="col-2">{{ _('Status') }}</div>
                   </div>
                 </div>
-                {% for feedback in feedbacks %}
+                {% for feedback in page.collection %}
                   <div class="target">
                     <div style="float:left;">
                       {% if feedback.feedback_type == 'リソースコメント' %}
@@ -99,6 +99,9 @@
                     </div>
                   </div>
                 {% endfor %}
+                {% block page_pagination %}
+                  {{ page.pager() }}
+                {% endblock %}
               </div>
             {% else %}
               <p>{{ _('There are no applications.') }}</p>
