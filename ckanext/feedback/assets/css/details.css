@@ -36,6 +36,11 @@
   overflow-y: scroll;
 }
 
+.issue-resolution {
+  font-size: 1.75em;
+  color: #FFCA00;
+}
+
 #issue-resolution {
   width: 28px !important;
   height: 28px !important;

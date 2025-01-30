@@ -1,3 +1,7 @@
 .utilization-data a {
   background-color: transparent !important;
 }
+
+.issue-resolution {
+  color: #FFCA00;
+}

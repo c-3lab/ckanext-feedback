@@ -15,7 +15,7 @@ function checkCommentExists(button) {
   }
   if (comment.length>1000) {
     commentOverErrorElement.style.display = '';
-    return false;  
+    return false;
   }
   button.style.pointerEvents = "none"
   return true;
@@ -44,9 +44,9 @@ function selectRating(selectedStar) {
   // Loop through each star and set the appropriate star icon
   stars.forEach(star => {
     if(star.dataset.rating <= selectedStar.dataset.rating) {
-      star.src = '/images/rating_star_small.png';
+      star.className = 'rating-star fa-solid fa-star';
     } else {
-      star.src = '/images/empty_rating_star_small.png';
+      star.className = 'rating-star fa-regular fa-star';
     }
   });
 }
