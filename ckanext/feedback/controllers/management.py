@@ -7,8 +7,6 @@ from ckan.plugins import toolkit
 import ckanext.feedback.services.management.comments as comments_service
 import ckanext.feedback.services.management.feedbacks as feedback_service
 import ckanext.feedback.services.management.utilization as utilization_service
-import ckanext.feedback.services.resource.comment as resource_comment_service
-import ckanext.feedback.services.utilization.details as utilization_detail_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
@@ -28,7 +26,7 @@ class ManagementController:
         sort = request.args.get('sort', 'newest')
 
         page, limit, offset, pager_url = get_pagination_value(
-            'management.feedback-approval'
+            'feedback.approval-delete'
         )
 
         # If user is organization admin
@@ -62,7 +60,7 @@ class ManagementController:
                 # 有効化
                 active_list.append(name)
 
-            url = f"{toolkit.url_for('management.feedback-approval')}"
+            url = f"{toolkit.url_for('feedback.approval-delete')}"
             url_params = request.args
             sort_param = url_params.get('sort')
             if sort_param:
@@ -119,7 +117,7 @@ class ManagementController:
         )
 
         return toolkit.render(
-            'management/feedback_status_list.html',
+            'management/approval_delete.html',
             {
                 "filters": filters,
                 "sort": sort,
@@ -133,43 +131,7 @@ class ManagementController:
             },
         )
 
-    # management/comments
-    @staticmethod
-    @check_administrator
-    def comments():
-        tab = request.args.get('tab', 'utilization-comments')
-        categories = utilization_detail_service.get_utilization_comment_categories()
-
-        # If user is organization admin
-        if not current_user.sysadmin:
-            ids = current_user.get_group_ids(
-                group_type='organization', capacity='admin'
-            )
-            resource_comments = resource_comment_service.get_resource_comments(
-                owner_orgs=ids
-            )
-            utilization_comments = utilization_detail_service.get_utilization_comments(
-                owner_orgs=ids
-            )
-            g.pkg_dict = {
-                'organization': {
-                    'name': current_user.get_groups(group_type='organization')[0].name,
-                }
-            }
-        else:
-            resource_comments = resource_comment_service.get_resource_comments()
-            utilization_comments = utilization_detail_service.get_utilization_comments()
-        return toolkit.render(
-            'management/comments.html',
-            {
-                'categories': categories,
-                'utilization_comments': utilization_comments,
-                'resource_comments': resource_comments,
-                'tab': tab,
-            },
-        )
-
-    # management/approve_bulk_target
+    # feedback/management/approve_bulk_target
     @staticmethod
     @check_administrator
     def approve_bulk_target():
@@ -184,9 +146,9 @@ class ManagementController:
         if utilization_comments:
             ManagementController.approve_bulk_utilization_comments(utilization_comments)
 
-        return toolkit.redirect_to('management.feedback-approval')
+        return toolkit.redirect_to('feedback.approval-delete')
 
-    # management/delete_bulk_target
+    # feedback/management/delete_bulk_target
     @staticmethod
     @check_administrator
     def delete_bulk_target():
@@ -201,7 +163,7 @@ class ManagementController:
         if utilization_comments:
             ManagementController.delete_bulk_utilization_comments(utilization_comments)
 
-        return toolkit.redirect_to('management.feedback-approval')
+        return toolkit.redirect_to('feedback.approval-delete')
 
     @staticmethod
     @check_administrator

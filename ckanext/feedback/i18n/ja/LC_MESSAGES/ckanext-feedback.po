@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-01-30 09:19+0900\n"
+"POT-Creation-Date: 2025-01-31 13:07+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -65,8 +65,7 @@ msgstr "コメント数"
 
 #: ckanext/feedback/plugin.py:152 ckanext/feedback/plugin.py:191
 #: ckanext/feedback/plugin.py:193
-#: ckanext/feedback/templates/management/comments.html:124
-#: ckanext/feedback/templates/package/snippets/resource_item.html:52
+#: ckanext/feedback/templates/package/snippets/resource_item.html:41
 #: ckanext/feedback/templates/resource/comment.html:38
 #: ckanext/feedback/templates/snippets/package_item.html:51
 #: ckanext/feedback/tests/test_plugin.py:149
@@ -74,104 +73,91 @@ msgstr "コメント数"
 msgid "Rating"
 msgstr "評価"
 
-#: ckanext/feedback/assets/js/feedback_status_list.js:30
+#: ckanext/feedback/assets/js/approval_delete.js:30
 msgid "Please select at least one checkbox."
 msgstr "少なくとも1つのチェックボックスを選択してください。"
 
-#: ckanext/feedback/assets/js/feedback_status_list.js:44
+#: ckanext/feedback/assets/js/approval_delete.js:44
 msgid "Please select the checkbox whose status is Waiting."
 msgstr "ステータスが承認待ちのチェックボックスを選択してください。"
 
-#: ckanext/feedback/assets/js/feedback_status_list.js:47
-#: ckanext/feedback/assets/js/management_comments.js:38
+#: ckanext/feedback/assets/js/approval_delete.js:47
 #, python-format
 msgid "Is it okay to approve checked %d item(s)?"
 msgstr "チェックした%d項目を承認してもよろしいですか？"
 
-#: ckanext/feedback/assets/js/feedback_status_list.js:50
-#: ckanext/feedback/assets/js/management_comments.js:40
+#: ckanext/feedback/assets/js/approval_delete.js:50
 #, python-format
 msgid "Is it okay to delete checked %d item(s)?"
 msgstr "チェックした%d項目を削除してもよろしいですか？"
 
-#: ckanext/feedback/controllers/management.py:86
-#: ckanext/feedback/templates/management/comments.html:34
-#: ckanext/feedback/templates/management/comments.html:96
-#: ckanext/feedback/templates/management/comments.html:160
-#: ckanext/feedback/templates/management/feedback_status_list.html:94
+#: ckanext/feedback/controllers/management.py:93
+#: ckanext/feedback/templates/management/approval_delete.html:94
 #: ckanext/feedback/templates/utilization/search.html:40
 #: ckanext/feedback/templates/utilization/search.html:91
 #: ckanext/feedback/templates/utilization/search.html:98
 msgid "Approved"
 msgstr "承認済"
 
-#: ckanext/feedback/controllers/management.py:87
-#: ckanext/feedback/templates/management/comments.html:32
-#: ckanext/feedback/templates/management/comments.html:98
-#: ckanext/feedback/templates/management/comments.html:162
-#: ckanext/feedback/templates/management/feedback_status_list.html:96
+#: ckanext/feedback/controllers/management.py:94
+#: ckanext/feedback/templates/management/approval_delete.html:96
 msgid "Waiting"
 msgstr "承認待ち"
 
-#: ckanext/feedback/controllers/management.py:91
-#: ckanext/feedback/templates/management/feedback_status_list.html:73
+#: ckanext/feedback/controllers/management.py:98
+#: ckanext/feedback/templates/management/approval_delete.html:73
 msgid "Resource Comment"
 msgstr "リソースコメント"
 
-#: ckanext/feedback/controllers/management.py:92
+#: ckanext/feedback/controllers/management.py:99
 #: ckanext/feedback/templates/header.html:115
-#: ckanext/feedback/templates/management/feedback_status_list.html:79
+#: ckanext/feedback/templates/management/approval_delete.html:79
 #: ckanext/feedback/templates/utilization/details.html:11
 #: ckanext/feedback/templates/utilization/edit.html:11
 #: ckanext/feedback/templates/utilization/search.html:12
 msgid "Utilization"
 msgstr "利活用方法"
 
-#: ckanext/feedback/controllers/management.py:93
-#: ckanext/feedback/templates/management/feedback_status_list.html:88
+#: ckanext/feedback/controllers/management.py:100
+#: ckanext/feedback/templates/management/approval_delete.html:88
 msgid "Utilization Comment"
 msgstr "利活用コメント"
 
-#: ckanext/feedback/controllers/management.py:106
-#: ckanext/feedback/templates/management/comments.html:30
-#: ckanext/feedback/templates/management/comments.html:69
-#: ckanext/feedback/templates/management/comments.html:131
-#: ckanext/feedback/templates/management/feedback_status_list.html:53
+#: ckanext/feedback/controllers/management.py:113
+#: ckanext/feedback/templates/management/approval_delete.html:53
 #: ckanext/feedback/templates/utilization/search.html:36
 #: ckanext/feedback/templates/utilization/search.html:64
 msgid "Status"
 msgstr "ステータス"
 
-#: ckanext/feedback/controllers/management.py:107
-#: ckanext/feedback/templates/management/feedback_status_list.html:51
+#: ckanext/feedback/controllers/management.py:114
+#: ckanext/feedback/templates/management/approval_delete.html:51
 msgid "Type"
 msgstr "種類"
 
-#: ckanext/feedback/controllers/management.py:109
-#: ckanext/feedback/templates/management/comments.html:64
-#: ckanext/feedback/templates/management/comments.html:126
+#: ckanext/feedback/controllers/management.py:116
 #: ckanext/feedback/templates/utilization/search.html:58
 msgid "Organization"
 msgstr "組織"
 
-#: ckanext/feedback/controllers/management.py:203
-#: ckanext/feedback/controllers/management.py:216
-#: ckanext/feedback/controllers/management.py:234
+#: ckanext/feedback/controllers/management.py:180
+#: ckanext/feedback/controllers/management.py:193
+#: ckanext/feedback/controllers/management.py:211
 #: ckanext/feedback/tests/controllers/test_management.py:201
 #: ckanext/feedback/tests/controllers/test_management.py:275
 msgid "bulk approval completed."
 msgstr "一括承認完了"
 
-#: ckanext/feedback/controllers/management.py:250
-#: ckanext/feedback/controllers/management.py:264
-#: ckanext/feedback/controllers/management.py:282
+#: ckanext/feedback/controllers/management.py:227
+#: ckanext/feedback/controllers/management.py:241
+#: ckanext/feedback/controllers/management.py:259
 #: ckanext/feedback/tests/controllers/test_management.py:354
 #: ckanext/feedback/tests/controllers/test_management.py:440
 msgid "bulk delete completed."
 msgstr "一括削除完了"
 
-#: ckanext/feedback/controllers/management.py:295
-#: ckanext/feedback/controllers/management.py:312
+#: ckanext/feedback/controllers/management.py:272
+#: ckanext/feedback/controllers/management.py:289
 #: ckanext/feedback/controllers/resource.py:179
 #: ckanext/feedback/controllers/utilization.py:451
 #: ckanext/feedback/services/common/check.py:13
@@ -298,10 +284,7 @@ msgid "Groups"
 msgstr "グループ"
 
 #: ckanext/feedback/templates/header.html:118
-#: ckanext/feedback/templates/management/feedback_status_list.html:11
-#: ckanext/feedback/templates/management/feedback_status_list.html:14
-#: ckanext/feedback/templates/management/feedback_status_list.html:33
-msgid "Feedback Approval・Remove"
+msgid "Feedback Approval and Delete"
 msgstr "フィードバック 承認・削除"
 
 #: ckanext/feedback/templates/header.html:120
@@ -325,55 +308,49 @@ msgstr "データセット検索"
 msgid "Submit"
 msgstr "検索"
 
-#: ckanext/feedback/templates/management/comments.html:10
-#: ckanext/feedback/templates/management/comments.html:13
-msgid "Management Comments"
-msgstr "コメント管理"
+#: ckanext/feedback/templates/management/approval_delete.html:11
+#: ckanext/feedback/templates/management/approval_delete.html:14
+#: ckanext/feedback/templates/management/approval_delete.html:33
+msgid "Approval and Delete"
+msgstr "承認・削除"
 
-#: ckanext/feedback/templates/management/comments.html:21
-#: ckanext/feedback/templates/management/comments.html:67
-#: ckanext/feedback/templates/management/comments.html:129
-msgid "Category"
-msgstr "カテゴリー"
+#: ckanext/feedback/templates/management/approval_delete.html:21
+msgid "Order by"
+msgstr "並び順"
 
-#: ckanext/feedback/templates/management/comments.html:43
-msgid "Utilization Comments"
-msgstr "利活用コメント"
+#: ckanext/feedback/templates/management/approval_delete.html:24
+msgid "Newest"
+msgstr "新着順"
 
-#: ckanext/feedback/templates/management/comments.html:45
-msgid "Resource Comments"
-msgstr "リソースコメント"
+#: ckanext/feedback/templates/management/approval_delete.html:24
+msgid "Oldest"
+msgstr "古い順"
 
-#: ckanext/feedback/templates/management/comments.html:49
-#: ckanext/feedback/templates/management/comments.html:109
-#: ckanext/feedback/templates/utilization/search.html:50
-msgid "Results: "
-msgstr "検索結果: "
+#: ckanext/feedback/templates/management/approval_delete.html:24
+msgid "Dataset Name Ascending"
+msgstr "データセット名　昇順"
 
-#: ckanext/feedback/templates/management/comments.html:53
-#: ckanext/feedback/templates/management/comments.html:113
-#: ckanext/feedback/templates/management/feedback_status_list.html:40
+#: ckanext/feedback/templates/management/approval_delete.html:25
+msgid "Dataset Name Descending"
+msgstr "データセット名　降順"
+
+#: ckanext/feedback/templates/management/approval_delete.html:25
+msgid "Resource Name Ascending"
+msgstr "リソース名　昇順"
+
+#: ckanext/feedback/templates/management/approval_delete.html:26
+msgid "Resource Name Descending"
+msgstr "リソース名　降順"
+
+#: ckanext/feedback/templates/management/approval_delete.html:40
 msgid "Bulk Approval"
 msgstr "一括承認"
 
-#: ckanext/feedback/templates/management/comments.html:54
-#: ckanext/feedback/templates/management/comments.html:114
-#: ckanext/feedback/templates/management/feedback_status_list.html:41
+#: ckanext/feedback/templates/management/approval_delete.html:41
 msgid "Bulk Delete"
 msgstr "一括削除"
 
-#: ckanext/feedback/templates/management/comments.html:62
-#: ckanext/feedback/templates/management/comments.html:122
-msgid "Comments Body"
-msgstr "本文"
-
-#: ckanext/feedback/templates/management/comments.html:63
-msgid "Utilization Title"
-msgstr "利活用方法"
-
-#: ckanext/feedback/templates/management/comments.html:65
-#: ckanext/feedback/templates/management/comments.html:127
-#: ckanext/feedback/templates/management/feedback_status_list.html:49
+#: ckanext/feedback/templates/management/approval_delete.html:49
 #: ckanext/feedback/templates/resource/comment.html:25
 #: ckanext/feedback/templates/utilization/details.html:35
 #: ckanext/feedback/templates/utilization/edit.html:24
@@ -382,9 +359,7 @@ msgstr "利活用方法"
 msgid "Dataset"
 msgstr "データセット"
 
-#: ckanext/feedback/templates/management/comments.html:66
-#: ckanext/feedback/templates/management/comments.html:128
-#: ckanext/feedback/templates/management/feedback_status_list.html:50
+#: ckanext/feedback/templates/management/approval_delete.html:50
 #: ckanext/feedback/templates/resource/comment.html:28
 #: ckanext/feedback/templates/utilization/details.html:38
 #: ckanext/feedback/templates/utilization/edit.html:27
@@ -392,52 +367,19 @@ msgstr "データセット"
 msgid "Resource"
 msgstr "データリソース"
 
-#: ckanext/feedback/templates/management/comments.html:68
-#: ckanext/feedback/templates/management/comments.html:130
-msgid "Created"
-msgstr "作成日"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:21
-msgid "Order by"
-msgstr "並び順"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:24
-msgid "Newest"
-msgstr "新着順"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:24
-msgid "Oldest"
-msgstr "古い順"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:24
-msgid "Dataset Name Ascending"
-msgstr "データセット名　昇順"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:25
-msgid "Dataset Name Descending"
-msgstr "データセット名　降順"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:25
-msgid "Resource Name Ascending"
-msgstr "リソース名　昇順"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:26
-msgid "Resource Name Descending"
-msgstr "リソース名　降順"
-
-#: ckanext/feedback/templates/management/feedback_status_list.html:52
+#: ckanext/feedback/templates/management/approval_delete.html:52
 msgid "Post Content"
 msgstr "投稿内容"
 
-#: ckanext/feedback/templates/management/feedback_status_list.html:104
+#: ckanext/feedback/templates/management/approval_delete.html:107
 msgid "There are no applications."
 msgstr "申請はありません。"
 
-#: ckanext/feedback/templates/management/feedback_status_list.html:117
-msgid "What are Feedback Approval・Remove"
-msgstr "フィードバック 承認・削除について"
+#: ckanext/feedback/templates/management/approval_delete.html:120
+msgid "What are Approval and Delete"
+msgstr "承認・削除について"
 
-#: ckanext/feedback/templates/management/feedback_status_list.html:121
+#: ckanext/feedback/templates/management/approval_delete.html:124
 msgid ""
 "You can change the approval status of resource comments to the "
 "organization, utilization requests, or comments on registered "
@@ -725,6 +667,10 @@ msgstr "キーワード検索..."
 msgid "Search utilization data"
 msgstr "利活用方法を検索"
 
+#: ckanext/feedback/templates/utilization/search.html:50
+msgid "Results: "
+msgstr "検索結果: "
+
 #: ckanext/feedback/templates/utilization/search.html:57
 msgid "Issue resolutions"
 msgstr "課題解決数"
@@ -800,4 +746,28 @@ msgstr "登録日"
 
 #~ msgid "Please provide a valid URL"
 #~ msgstr "有効なURLを入力してください。"
+
+#~ msgid "Management Comments"
+#~ msgstr "コメント管理"
+
+#~ msgid "Category"
+#~ msgstr "カテゴリー"
+
+#~ msgid "Utilization Comments"
+#~ msgstr "利活用コメント"
+
+#~ msgid "Resource Comments"
+#~ msgstr "リソースコメント"
+
+#~ msgid "Comments Body"
+#~ msgstr "本文"
+
+#~ msgid "Utilization Title"
+#~ msgstr "利活用方法"
+
+#~ msgid "Created"
+#~ msgstr "作成日"
+
+#~ msgid "What are Feedback Approval・Remove"
+#~ msgstr "フィードバック 承認・削除について"
 
