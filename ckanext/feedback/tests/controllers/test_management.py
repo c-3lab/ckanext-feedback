@@ -163,7 +163,7 @@ class TestManagementController:
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_approve_bulk_utilization_comments(
+    def test_approve_utilization_comments(
         self,
         mock_form,
         mock_comments_service,
@@ -188,7 +188,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.approve_bulk_utilization_comments()
+            response = ManagementController.approve_utilization_comments()
 
         mock_form.getlist.assert_called_once_with('utilization-comments-checkbox')
         mock_comments_service.get_utilizations.assert_called_once_with(comments)
@@ -200,7 +200,7 @@ class TestManagementController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once_with(
-            f'{len(comments)} ' + _('bulk approval completed.'),
+            f'{len(comments)} ' + _('approval completed.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
@@ -212,7 +212,7 @@ class TestManagementController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_approve_bulk_utilization_comments_without_comment(
+    def test_approve_utilization_comments_without_comment(
         self, mock_form, mock_redirect_to, current_user, app, sysadmin_env
     ):
         mock_form.getlist.return_value = None
@@ -222,7 +222,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.approve_bulk_utilization_comments()
+            response = ManagementController.approve_utilization_comments()
 
         assert response == 'redirect_response'
 
@@ -233,7 +233,7 @@ class TestManagementController:
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_approve_bulk_resource_comments(
+    def test_approve_resource_comments(
         self,
         mock_form,
         mock_comments_service,
@@ -260,7 +260,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.approve_bulk_resource_comments()
+            response = ManagementController.approve_resource_comments()
 
         mock_form.getlist.assert_called_once_with('resource-comments-checkbox')
         mock_comments_service.get_resource_comment_summaries.assert_called_once_with(
@@ -274,7 +274,7 @@ class TestManagementController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once_with(
-            f'{len(comments)} ' + _('bulk approval completed.'),
+            f'{len(comments)} ' + _('approval completed.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
@@ -286,7 +286,7 @@ class TestManagementController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_approve_bulk_resource_comments_without_comment(
+    def test_approve_resource_comments_without_comment(
         self,
         mock_form,
         mock_redirect_to,
@@ -301,7 +301,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.approve_bulk_resource_comments()
+            response = ManagementController.approve_resource_comments()
 
         mock_redirect_to.assert_called_once_with(
             'management.feedback-approval', tab='resource-comments'
@@ -316,7 +316,7 @@ class TestManagementController:
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_delete_bulk_utilization_comments(
+    def test_delete_utilization_comments(
         self,
         mock_form,
         mock_comments_service,
@@ -341,7 +341,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.delete_bulk_utilization_comments()
+            response = ManagementController.delete_utilization_comments()
 
         mock_form.getlist.assert_called_once_with('utilization-comments-checkbox')
         mock_comments_service.get_utilizations.assert_called_once_with(comments)
@@ -353,7 +353,7 @@ class TestManagementController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once_with(
-            f'{len(comments)} ' + _('bulk delete completed.'),
+            f'{len(comments)} ' + _('delete completed.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
@@ -365,7 +365,7 @@ class TestManagementController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_delete_bulk_utilization_comments_without_comment(
+    def test_delete_utilization_comments_without_comment(
         self,
         mock_form,
         mock_redirect_to,
@@ -380,7 +380,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.delete_bulk_utilization_comments()
+            response = ManagementController.delete_utilization_comments()
 
         mock_redirect_to.assert_called_once_with(
             'management.feedback-approval', tab='utilization-comments'
@@ -395,7 +395,7 @@ class TestManagementController:
     @patch('ckanext.feedback.controllers.management.session.commit')
     @patch('ckanext.feedback.controllers.management.comments_service')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_delete_bulk_resource_comments(
+    def test_delete_resource_comments(
         self,
         mock_form,
         mock_comments_service,
@@ -427,7 +427,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.delete_bulk_resource_comments()
+            response = ManagementController.delete_resource_comments()
 
         mock_form.getlist.assert_called_once_with('resource-comments-checkbox')
         mock_comments_service.get_resource_comment_summaries.assert_called_once_with(
@@ -439,7 +439,7 @@ class TestManagementController:
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once_with(
-            f'{len(comments)} ' + _('bulk delete completed.'),
+            f'{len(comments)} ' + _('delete completed.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with(
@@ -451,7 +451,7 @@ class TestManagementController:
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.management.request.form')
-    def test_delete_bulk_resource_comments_without_comment(
+    def test_delete_resource_comments_without_comment(
         self,
         mock_form,
         mock_redirect_to,
@@ -466,7 +466,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            response = ManagementController.delete_bulk_resource_comments()
+            response = ManagementController.delete_resource_comments()
 
         mock_redirect_to.assert_called_once_with(
             'management.feedback-approval', tab='resource-comments'

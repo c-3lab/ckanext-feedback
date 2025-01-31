@@ -131,43 +131,43 @@ class ManagementController:
             },
         )
 
-    # feedback/management/approve_bulk_target
+    # feedback/management/approve_target
     @staticmethod
     @check_administrator
-    def approve_bulk_target():
+    def approve_target():
         resource_comments = request.form.getlist('resource-comments-checkbox')
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
 
         if resource_comments:
-            ManagementController.approve_bulk_resource_comments(resource_comments)
+            ManagementController.approve_resource_comments(resource_comments)
         if utilization:
-            ManagementController.approve_bulk_utilization(utilization)
+            ManagementController.approve_utilization(utilization)
         if utilization_comments:
-            ManagementController.approve_bulk_utilization_comments(utilization_comments)
+            ManagementController.approve_utilization_comments(utilization_comments)
 
         return toolkit.redirect_to('feedback.approval-delete')
 
-    # feedback/management/delete_bulk_target
+    # feedback/management/delete_target
     @staticmethod
     @check_administrator
-    def delete_bulk_target():
+    def delete_target():
         resource_comments = request.form.getlist('resource-comments-checkbox')
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
 
         if resource_comments:
-            ManagementController.delete_bulk_resource_comments(resource_comments)
+            ManagementController.delete_resource_comments(resource_comments)
         if utilization:
-            ManagementController.delete_bulk_utilization(utilization)
+            ManagementController.delete_utilization(utilization)
         if utilization_comments:
-            ManagementController.delete_bulk_utilization_comments(utilization_comments)
+            ManagementController.delete_utilization_comments(utilization_comments)
 
         return toolkit.redirect_to('feedback.approval-delete')
 
     @staticmethod
     @check_administrator
-    def approve_bulk_utilization_comments(target):
+    def approve_utilization_comments(target):
         target = comments_service.get_utilization_comment_ids(target)
         utilizations = comments_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_utilization(
@@ -177,26 +177,26 @@ class ManagementController:
         comments_service.refresh_utilizations_comments(utilizations)
         session.commit()
         helpers.flash_success(
-            f'{len(target)} ' + _('bulk approval completed.'),
+            f'{len(target)} ' + _('approval completed.'),
             allow_html=True,
         )
 
     @staticmethod
     @check_administrator
-    def approve_bulk_utilization(target):
+    def approve_utilization(target):
         target = comments_service.get_utilization_ids(target)
         utilizations = comments_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_resource(utilizations)
         utilization_service.approve_utilization(target, current_user.id)
         session.commit()
         helpers.flash_success(
-            f'{len(target)} ' + _('bulk approval completed.'),
+            f'{len(target)} ' + _('approval completed.'),
             allow_html=True,
         )
 
     @staticmethod
     @check_administrator
-    def approve_bulk_resource_comments(target):
+    def approve_resource_comments(target):
         target = comments_service.get_resource_comment_ids(target)
         resource_comment_summaries = comments_service.get_resource_comment_summaries(
             target
@@ -208,13 +208,13 @@ class ManagementController:
         comments_service.refresh_resources_comments(resource_comment_summaries)
         session.commit()
         helpers.flash_success(
-            f'{len(target)} ' + _('bulk approval completed.'),
+            f'{len(target)} ' + _('approval completed.'),
             allow_html=True,
         )
 
     @staticmethod
     @check_administrator
-    def delete_bulk_utilization_comments(target):
+    def delete_utilization_comments(target):
         utilizations = comments_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_utilization(
             utilizations
@@ -224,13 +224,13 @@ class ManagementController:
         session.commit()
 
         helpers.flash_success(
-            f'{len(target)} ' + _('bulk delete completed.'),
+            f'{len(target)} ' + _('delete completed.'),
             allow_html=True,
         )
 
     @staticmethod
     @check_administrator
-    def delete_bulk_utilization(target):
+    def delete_utilization(target):
         utilizations = comments_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_utilization(
             utilizations
@@ -238,13 +238,13 @@ class ManagementController:
         utilization_service.delete_utilization(target)
         session.commit()
         helpers.flash_success(
-            f'{len(target)} ' + _('bulk delete completed.'),
+            f'{len(target)} ' + _('delete completed.'),
             allow_html=True,
         )
 
     @staticmethod
     @check_administrator
-    def delete_bulk_resource_comments(target):
+    def delete_resource_comments(target):
         resource_comment_summaries = comments_service.get_resource_comment_summaries(
             target
         )
@@ -256,7 +256,7 @@ class ManagementController:
         session.commit()
 
         helpers.flash_success(
-            f'{len(target)} ' + _('bulk delete completed.'),
+            f'{len(target)} ' + _('delete completed.'),
             allow_html=True,
         )
 
