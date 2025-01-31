@@ -54,3 +54,7 @@
 .comment-count {
   color: #808080;
 }
+
+label:after {
+  content: "" !important;
+}
