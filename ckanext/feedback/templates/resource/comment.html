@@ -52,7 +52,7 @@
               {% for category in categories %}
               <div>
                 <label>
-                  <input type="radio" name="category" value="{{ category.name }}">
+                  <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
                   {{ category.value }}
                 </label>
               </div>

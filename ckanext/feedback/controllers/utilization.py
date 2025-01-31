@@ -14,6 +14,7 @@ import ckanext.feedback.services.utilization.search as search_service
 import ckanext.feedback.services.utilization.summary as summary_service
 import ckanext.feedback.services.utilization.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
+from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
@@ -234,6 +235,10 @@ class UtilizationController:
                 )
             }
         }
+        if not category:
+            selected_category = ResourceCommentCategory.REQUEST.name
+        else:
+            selected_category = category
 
         return toolkit.render(
             'utilization/details.html',
@@ -242,7 +247,7 @@ class UtilizationController:
                 'utilization': utilization,
                 'categories': categories,
                 'issue_resolutions': issue_resolutions,
-                'selected_category': category,
+                'selected_category': selected_category,
                 'content': content,
                 'page': helpers.Page(
                     collection=comments,
