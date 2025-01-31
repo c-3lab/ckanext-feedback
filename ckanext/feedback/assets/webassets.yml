@@ -43,12 +43,6 @@ feedback-feedback-status-list-js:
   contents:
     - js/feedback_status_list.js
 
-feedback-feedback-status-list-js:
-  filter: rjsmin
-  output: ckanext-feedback/%(version)s-feedback_status_list.js
-  contents:
-    - js/feedback_status_list.js
-
 feedback-recaptcha-js:
   filter: rjsmin
   output: ckanext-feedback/%(version)s-recaptch.js
