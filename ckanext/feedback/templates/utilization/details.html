@@ -71,12 +71,10 @@
           <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
             <h4>{{ _('Comment') }}</h4>
             {% for category in categories %}
-            <div>
-              <label>
-                <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
-                {{ category.value }}
-              </label>
-            </div>
+            <label>
+              <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
+              {{ category.value }}
+            </label>
             {% endfor %}
             <br>
             <br>
