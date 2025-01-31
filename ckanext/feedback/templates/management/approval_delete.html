@@ -35,10 +35,16 @@
       <div>
         <form id="comments-form" method="post">
           <div class="right-text mb-2">
-            {% set approval_action=h.url_for( "feedback.approve_bulk_target" ) %}
-            {% set delete_action=h.url_for( "feedback.delete_bulk_target" ) %}
-            <button class="btn btn-primary bulk-button" type="button" onclick="runBulkAction('{{ approval_action }}')">{{ _('Bulk Approval') }}</button>
-            <button class="btn btn-primary bulk-button" type="button" onclick="runBulkAction('{{ delete_action }}')">{{ _('Bulk Delete') }}</button>
+            {% set approval_action=h.url_for( "feedback.approve_target" ) %}
+            {% set delete_action=h.url_for( "feedback.delete_target" ) %}
+            <button id="approval-button" class="btn btn-primary" type="button" onclick="runApproval('{{ approval_action }}')">
+              <i class="fa-solid fa-check"></i>
+              {{ _('Approval') }}
+            </button>
+            <button id="delete-button" class="btn btn-danger" type="button" onclick="runDelete('{{ delete_action }}')">
+              <i class="fa-solid fa-trash"></i>
+              {{ _('Delete') }}
+            </button>
           </div>
           <div class="container">
             {% if page.collection %}

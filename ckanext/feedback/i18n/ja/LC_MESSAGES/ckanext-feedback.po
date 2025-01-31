@@ -455,15 +455,15 @@ msgstr "リソース名　降順"
 msgid "Post Content"
 msgstr "投稿内容"
 
-#: ckanext/feedback/templates/management/approval_delete.html:107
+#: ckanext/feedback/templates/management/approval_delete.html:113
 msgid "There are no applications."
 msgstr "申請はありません。"
 
-#: ckanext/feedback/templates/management/approval_delete.html:120
+#: ckanext/feedback/templates/management/approval_delete.html:126
 msgid "What are Approval and Delete"
 msgstr "承認・削除について"
 
-#: ckanext/feedback/templates/management/approval_delete.html:124
+#: ckanext/feedback/templates/management/approval_delete.html:130
 msgid ""
 "You can change the approval status of resource comments to the "
 "organization, utilization requests, or comments on registered "

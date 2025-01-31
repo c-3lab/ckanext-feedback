@@ -11,16 +11,22 @@ function changeAllCheckbox(e){
     })
 }
 
-function runBulkAction(action) {
+function getCheckedCheckboxes(name, approval) {
+    return document.querySelectorAll(`input[name="${name}"]:checked[data-approval="${approval}"]`)
+}
+
+function processAction(action, isApproval) {
     const form = document.getElementById('comments-form');
     form.setAttribute("action", action);
-    
-    const resourceCommentWaiting = document.querySelectorAll('input[name="resource-comments-checkbox"]:checked[data-approval="False"]');
-    const resourceCommentApproved = document.querySelectorAll('input[name="resource-comments-checkbox"]:checked[data-approval="True"]');
-    const utilizationWaiting = document.querySelectorAll('input[name="utilization-checkbox"]:checked[data-approval="False"]');
-    const utilizationApproved = document.querySelectorAll('input[name="utilization-checkbox"]:checked[data-approval="True"]');
-    const utilizationCommentWaiting = document.querySelectorAll('input[name="utilization-comments-checkbox"]:checked[data-approval="False"]');
-    const utilizationCommentApproved = document.querySelectorAll('input[name="utilization-comments-checkbox"]:checked[data-approval="True"]');
+
+    const resourceCommentWaiting = getCheckedCheckboxes('resource-comments-checkbox', 'False');
+    const resourceCommentApproved = getCheckedCheckboxes('resource-comments-checkbox', 'True');
+
+    const utilizationWaiting = getCheckedCheckboxes('utilization-checkbox', 'False');
+    const utilizationApproved = getCheckedCheckboxes('utilization-checkbox', 'True');
+
+    const utilizationCommentWaiting = getCheckedCheckboxes('utilization-comments-checkbox', 'False');
+    const utilizationCommentApproved = getCheckedCheckboxes('utilization-comments-checkbox', 'True');
 
     const waitingRows = resourceCommentWaiting.length + utilizationWaiting.length + utilizationCommentWaiting.length;
     const approvedRows = resourceCommentApproved.length + utilizationApproved.length + utilizationCommentApproved.length;
@@ -31,35 +37,43 @@ function runBulkAction(action) {
         return;
     }
 
-    let bulkButtonList = document.getElementsByClassName('bulk-button');
+    if (isApproval && waitingRows === 0) {
+        alert(ckan.i18n._('Please select the checkbox whose status is Waiting.'));
+        return;
+    }
+
+    const buttonId = isApproval ? 'approval-button' : 'delete-button';
+    const actionButton = document.getElementById(buttonId);
+    actionButton.style.pointerEvents = 'none';
 
     let message;
-    if (action.includes('approve')) {
-        bulkButtonList[0].style.pointerEvents = 'none';
-        resourceCommentApproved.forEach(checkbox => checkbox.checked = false);
-        utilizationApproved.forEach(checkbox => checkbox.checked = false);
-        utilizationCommentApproved.forEach(checkbox => checkbox.checked = false);
-        
-        if (waitingRows === 0) {
-            alert(ckan.i18n._('Please select the checkbox whose status is Waiting.'));
-            return;
-        }
+
+    if (isApproval) {
+        [...resourceCommentApproved, ...utilizationApproved, ...utilizationCommentApproved].forEach(checkbox => {
+            checkbox.checked = false;
+        });
         message = ckan.i18n.translate('Is it okay to approve checked %d item(s)?').fetch(waitingRows);
-    } else  {
-        bulkButtonList[1].style.pointerEvents = 'none';
-        message = ckan.i18n.translate('Is it okay to delete checked %d item(s)?').fetch(checkedRows);
+    } else {
+        message = ckan.i18n.translate('Completely delete checked %d item(s). This operation cannot be undone, are you sure?').fetch(checkedRows);
     }
 
     requestAnimationFrame(() => {
         setTimeout(() => {
             if (!confirm(message)) {
-                bulkButtonList[0].style.pointerEvents = '';
-                bulkButtonList[1].style.pointerEvents = '';
+                actionButton.style.pointerEvents = '';
                 return;
             }
             form.submit();
         }, 0);
     });
+}
+
+function runApproval(action) {
+    processAction(action, true);
+}
+
+function runDelete(action) {
+    processAction(action, false);
 }
 
 function updateSortParameter() {
