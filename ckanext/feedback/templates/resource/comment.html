@@ -49,15 +49,14 @@
             <form id="comment_form" name="comment_form" action="{{ h.url_for('resource_comment.create_comment', resource_id=resource.id ) }}" method="post">
               <input type="hidden" id="rating" name="rating" value=""/>
               <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
-              <select name="category" id="category">
-                {% for category in categories %}
-                {% if category.name == selected_category %}
-                <option value="{{ category.name }}" selected>{{ _(category.value) }}</option>
-                {% else %}
-                <option value="{{ category.name }}">{{ _(category.value) }}</option>
-                {% endif %}
-                {% endfor %}
-              </select>
+              {% for category in categories %}
+              <div>
+                <label>
+                  <input type="radio" name="category" value="{{ category.name }}">
+                  {{ category.value }}
+                </label>
+              </div>
+              {% endfor %}
               <br>
               <br>
               <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
