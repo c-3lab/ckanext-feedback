@@ -14,15 +14,15 @@ rules = [
         {'methods': ['GET']},
     ),
     (
-        '/management/approve_bulk_target',
-        'approve_bulk_target',
-        management.ManagementController.approve_bulk_target,
+        '/management/approve_target',
+        'approve_target',
+        management.ManagementController.approve_target,
         {'methods': ['POST']},
     ),
     (
-        '/management/delete_bulk_target',
-        'delete_bulk_target',
-        management.ManagementController.delete_bulk_target,
+        '/management/delete_target',
+        'delete_target',
+        management.ManagementController.delete_target,
         {'methods': ['POST']},
     ),
 ]
