@@ -2,16 +2,16 @@
 
 {% block styles %}
   {{ super() }}
-  {% asset 'feedback/feedback-management-comments-css' %}
+  {% asset 'feedback/feedback-management-css' %}
   {% asset 'feedback/feedback-tooltip-css' %}
 {% endblock %}
 
 {% block breadcrumb_content %}
   {{ super() }}
-  <li class="active"><a href="{{ h.url_for('management.feedback-approval') }}">{{ _('Feedback Approval・Remove') }}</a></li>
+  <li class="active"><a href="{{ h.url_for('feedback.approval-delete') }}">{{ _('Approval and Delete') }}</a></li>
 {% endblock %}
 
-{% block title %}{{ _('Feedback Approval・Remove') }} - CKAN{% endblock %}
+{% block title %}{{ _('Approval and Delete') }} - CKAN{% endblock %}
 
 {% block primary_content %}
   <article class="module">
@@ -30,13 +30,13 @@
             {% endfor %}
           </select>
         </div>
-        <h2>{{ _('Feedback Approval・Remove') }}</h2>
+        <h2>{{ _('Approval and Delete') }}</h2>
       </form>
       <div>
         <form id="comments-form" method="post">
           <div class="right-text mb-2">
-            {% set approval_action=h.url_for( "management.approve_bulk_target" ) %}
-            {% set delete_action=h.url_for( "management.delete_bulk_target" ) %}
+            {% set approval_action=h.url_for( "feedback.approve_bulk_target" ) %}
+            {% set delete_action=h.url_for( "feedback.delete_bulk_target" ) %}
             <button class="btn btn-primary bulk-button" type="button" onclick="runBulkAction('{{ approval_action }}')">{{ _('Bulk Approval') }}</button>
             <button class="btn btn-primary bulk-button" type="button" onclick="runBulkAction('{{ delete_action }}')">{{ _('Bulk Delete') }}</button>
           </div>
@@ -117,7 +117,7 @@
   <div class="module module-narrow module-shallow">
     <h2 class="module-heading">
       <i class="fa fa-info-circle"></i>
-      {{ _('What are Feedback Approval・Remove') }}
+      {{ _('What are Approval and Delete') }}
     </h2>
     <div class="module-content">
       <p>
@@ -158,5 +158,5 @@
 
 {%- block scripts %}
   {{ super() }}
-  {% asset 'feedback/feedback-feedback-status-list-js' %}
+  {% asset 'feedback/approval-delete' %}
 {% endblock %}
