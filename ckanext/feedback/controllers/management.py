@@ -24,6 +24,32 @@ log = logging.getLogger(__name__)
 
 
 class ManagementController:
+    # management/top
+    @staticmethod
+    @check_administrator
+    def management():
+        managements = [
+            {
+                'name': _('Approval and Delete'),
+                'url': 'feedback.approval-delete',
+                'description': _(
+                    'You can change the approval status of resource comments '
+                    'to the organization, utilization requests, '
+                    'or comments on registered utilizations.'
+                ),
+            },
+            {
+                'name': _('aggregation'),
+                'url': 'feedback.approval-delete',
+                'description': _('aggregation'),
+            },
+        ]
+
+        return toolkit.render(
+            'management/management.html',
+            {'managements': managements},
+        )
+
     def get_href(name, active_list):
         if name in active_list:
             # 無効化
