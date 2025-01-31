@@ -50,7 +50,7 @@
               <input type="hidden" id="rating" name="rating" value=""/>
               <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
               {% for category in categories %}
-              <label>
+              <label class="radio">
                 <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
                 {{ _(category.value) }}
               </label>
