@@ -73,7 +73,7 @@
             {% for category in categories %}
             <label>
               <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
-              {{ category.value }}
+              {{ _(category.value) }}
             </label>
             {% endfor %}
             <br>

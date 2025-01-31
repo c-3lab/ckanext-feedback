@@ -12,9 +12,9 @@ from ckanext.feedback.models.session import Base
 
 
 class UtilizationCommentCategory(enum.Enum):
-    REQUEST = _('Request')
-    QUESTION = _('Question')
-    THANK = _('Thank')
+    REQUEST = 'Request'
+    QUESTION = 'Question'
+    THANK = 'Thank'
 
 
 class Utilization(Base):
