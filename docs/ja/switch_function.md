@@ -28,6 +28,10 @@
   ダウンロードに関するモジュール  
   デフォルト：🟢**ON**
 
+  - [like](./likes.md)  
+  リソースにいいねを行うモジュール  
+  デフォルト：🟢**ON**
+
   ※ [repeat post limit](./resource.md)と[rating](./resource.md)に関しては、[resource](./resource.md)が🟢**ON**になっている場合にのみON/OFFを切り替えることができます。
 
 ## 設定方法
@@ -113,13 +117,14 @@ ckan.feedback.resources.enable = True
 ckan.feedback.resources.comment.repeated_post_limit.enable = True
 ckan.feedback.resources.comment.rating.enable = True
 ckan.feedback.downloads.enable = True
+ckan.feedback.likes.enable = True
 ・・・
 ```
-| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download | like |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
 
 ### `feedback_config.json`でON/OFFの設定を行う
 
@@ -143,15 +148,18 @@ ckan.feedback.downloads.enable = True
         },
         "downloads": {
             "enable": true
+        },
+        "likes": {
+            "enable": true
         }
     }
 }
 ```
-| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download | like |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
 
 （例）組織毎にモジュールや機能のON/OFFを設定する場合
 ```json
@@ -183,15 +191,20 @@ ckan.feedback.downloads.enable = True
             "enable": true,
             "enable_orgs": ["org_name1", "org_name2"],
             "disable_orgs": ["org_name3"]
+        },
+        "likes": {
+            "enable": true,
+            "enable_orgs": ["org_name1", "org_name2"],
+            "disable_orgs": ["org_name3"]
         }
     }
 }
 ```
-| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🟢ON |
-| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+| No. | 組織名 | utilization | resource | repeated_post_limit | rating | download | like |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🟢ON | 🟢ON |
+| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
 
 ## downloadモジュールを外部プラグインと連携
 
