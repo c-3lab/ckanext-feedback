@@ -11,7 +11,7 @@ from ckanext.feedback.command import feedback
 from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.download import summary as download_summary_service
-from ckanext.feedback.services.management import comments as management_comments_service
+from ckanext.feedback.services.organization import organization as organization_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
@@ -101,7 +101,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_comments': resource_summary_service.get_package_comments,
             'get_resource_rating': resource_summary_service.get_resource_rating,
             'get_package_rating': resource_summary_service.get_package_rating,
-            'get_organization': management_comments_service.get_organization,
+            'get_organization': organization_service.get_organization,
             'is_enabled_feedback_recaptcha': (FeedbackConfig().recaptcha.is_enable),
             'get_feedback_recaptcha_publickey': (
                 FeedbackConfig().recaptcha.publickey.get
