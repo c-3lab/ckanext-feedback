@@ -34,7 +34,7 @@
     border-top: 5px solid #000;
     transform: translateX(-50%);
 }
-.description.position-right:before {
+.bubbleText.position-right:before {
     content: "";
     position: absolute;
     top: 100%;
@@ -43,7 +43,6 @@
     border-top: 5px solid #000;
     margin-left: -15px;
 }
-
 .bubble:hover .bubbleText{
     display: inline-block;
 }
