@@ -18,6 +18,44 @@ log = logging.getLogger(__name__)
 
 
 class ManagementController:
+    def get_href(name, active_list):
+        if name in active_list:
+            # 無効化
+            active_list.remove(name)
+        else:
+            # 有効化
+            active_list.append(name)
+
+        url = f"{toolkit.url_for('feedback.approval-delete')}"
+
+        sort_param = request.args.get('sort')
+        if sort_param:
+            url += f'?sort={sort_param}'
+
+        for active in active_list:
+            url += '?' if '?' not in url else '&'
+            url += f'filter={active}'
+
+        return url
+
+    def create_filter_dict(
+        filter_set_name, name_label_dict, active_filters, owner_orgs
+    ):
+        filter_item_list = []
+        for name, label in name_label_dict.items():
+            filter_item = {}
+            filter_item["name"] = name
+            filter_item["label"] = label
+            filter_item["href"] = ManagementController.get_href(name, active_filters[:])
+            filter_item["count"] = feedback_service.get_feedbacks_count(
+                owner_orgs=owner_orgs, active_filters=name
+            )
+            filter_item["active"] = (
+                False if active_filters == [] else name in active_filters
+            )
+            filter_item_list.append(filter_item)
+        return {"type": filter_set_name, "list": filter_item_list}
+
     # management/feedback-approval
     @staticmethod
     @check_administrator
@@ -52,41 +90,6 @@ class ManagementController:
                 active_filters=active_filters, sort=sort, limit=limit, offset=offset
             )
 
-        def get_href(name, active_list):
-            if name in active_list:
-                # 無効化
-                active_list.remove(name)
-            else:
-                # 有効化
-                active_list.append(name)
-
-            url = f"{toolkit.url_for('feedback.approval-delete')}"
-            url_params = request.args
-            sort_param = url_params.get('sort')
-            if sort_param:
-                url += f'?sort={sort_param}'
-            for active in active_list:
-                url += '?' if '?' not in url else '&'
-                url += f'filter={active}'
-
-            return url
-
-        def create_filter_dict(filter_set_name, name_label_dict, active_filters):
-            filter_item_list = []
-            for name, label in name_label_dict.items():
-                filter_item = {}
-                filter_item["name"] = name
-                filter_item["label"] = label
-                filter_item["href"] = get_href(name, active_filters[:])
-                filter_item["count"] = feedback_service.get_feedbacks_count(
-                    owner_orgs=owner_orgs, active_filters=name
-                )
-                filter_item["active"] = (
-                    False if active_filters == [] else name in active_filters
-                )
-                filter_item_list.append(filter_item)
-            return {"type": filter_set_name, "list": filter_item_list}
-
         filters = []
 
         filter_status = {
@@ -110,10 +113,20 @@ class ManagementController:
         for org in org_list:
             filter_org[org['name']] = org['title']
 
-        filters.append(create_filter_dict(_('Status'), filter_status, active_filters))
-        filters.append(create_filter_dict(_('Type'), filter_type, active_filters))
         filters.append(
-            create_filter_dict(_('Organization'), filter_org, active_filters)
+            ManagementController.create_filter_dict(
+                _('Status'), filter_status, active_filters, owner_orgs
+            )
+        )
+        filters.append(
+            ManagementController.create_filter_dict(
+                _('Type'), filter_type, active_filters, owner_orgs
+            )
+        )
+        filters.append(
+            ManagementController.create_filter_dict(
+                _('Organization'), filter_org, active_filters, owner_orgs
+            )
         )
 
         return toolkit.render(
