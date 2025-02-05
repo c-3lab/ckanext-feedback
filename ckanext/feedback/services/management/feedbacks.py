@@ -1,14 +1,17 @@
 import logging
 
-from ckan.model.group import Group
-from ckan.model.package import Package
-from ckan.model.resource import Resource
-from sqlalchemy import func, literal, select, union_all
+from sqlalchemy import func, select, union_all
 from sqlalchemy.sql import and_, or_
 
-from ckanext.feedback.models.resource_comment import ResourceComment
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.utilization import Utilization, UtilizationComment
+from ckanext.feedback.services.management import (
+    resource_comments as resource_comments_service,
+)
+from ckanext.feedback.services.management import utilization as utilization_service
+from ckanext.feedback.services.management import (
+    utilization_comments as utilization_comments_service,
+)
+from ckanext.feedback.services.organization import organization as organization_service
 
 log = logging.getLogger(__name__)
 
@@ -61,9 +64,9 @@ def get_feedbacks(
             - 'is_approved': Approval status of the feedback.
     """
 
-    resource_comments = get_resource_comments()
-    utilizations = get_utilizations()
-    utilization_comments = get_utilization_comments()
+    resource_comments = resource_comments_service.get_resource_comments_query()
+    utilizations = utilization_service.get_utilizations_query()
+    utilization_comments = utilization_comments_service.get_utilization_comments_query()
 
     combined_query = union_all(resource_comments, utilizations, utilization_comments)
     combined_subquery = combined_query.subquery()
@@ -90,9 +93,9 @@ def get_feedbacks(
 
         org_list = []
         if owner_orgs is not None:
-            org_list = get_org_list(owner_orgs)
+            org_list = organization_service.get_org_list(owner_orgs)
         else:
-            org_list = get_org_list()
+            org_list = organization_service.get_org_list()
 
         filter_org = []
         for org in org_list:
@@ -162,100 +165,8 @@ def get_feedbacks(
     return feedback_list, total_count
 
 
-def get_resource_comments():
-    query = (
-        session.query(
-            Group.name.label('group_name'),
-            Package.name.label('package_name'),
-            Package.title.label('package_title'),
-            Package.owner_org.label('owner_org'),
-            Resource.id.label('resource_id'),
-            Resource.name.label('resource_name'),
-            literal(None).label('utilization_id'),
-            literal('リソースコメント').label('feedback_type'),
-            ResourceComment.id.label('comment_id'),
-            ResourceComment.content.label('content'),
-            ResourceComment.created.label('created'),
-            ResourceComment.approval.label('is_approved'),
-        )
-        .select_from(Package)
-        .join(Group, Package.owner_org == Group.id)
-        .join(Resource)
-        .join(ResourceComment)
-    )
-
-    return query
-
-
-def get_utilizations():
-    query = (
-        session.query(
-            Group.name.label('group_name'),
-            Package.name.label('package_name'),
-            Package.title.label('package_title'),
-            Package.owner_org.label('owner_org'),
-            Resource.id.label('resource_id'),
-            Resource.name.label('resource_name'),
-            Utilization.id.label('utilization_id'),
-            literal('利活用申請').label('feedback_type'),
-            literal(None).label('comment_id'),
-            Utilization.title.label('content'),
-            Utilization.created.label('created'),
-            Utilization.approval.label('is_approved'),
-        )
-        .select_from(Package)
-        .join(Group, Package.owner_org == Group.id)
-        .join(Resource)
-        .join(Utilization)
-    )
-
-    return query
-
-
-def get_utilization_comments():
-    query = (
-        session.query(
-            Group.name.label('group_name'),
-            Package.name.label('package_name'),
-            Package.title.label('package_title'),
-            Package.owner_org.label('owner_org'),
-            Resource.id.label('resource_id'),
-            Resource.name.label('resource_name'),
-            Utilization.id.label('utilization_id'),
-            literal('利活用コメント').label('feedback_type'),
-            UtilizationComment.id.label('comment_id'),
-            UtilizationComment.content.label('content'),
-            UtilizationComment.created.label('created'),
-            UtilizationComment.approval.label('is_approved'),
-        )
-        .select_from(Package)
-        .join(Group, Package.owner_org == Group.id)
-        .join(Resource)
-        .join(Utilization)
-        .join(UtilizationComment)
-    )
-
-    return query
-
-
 def get_feedbacks_count(owner_orgs, active_filters):
     feedback_list, total_count = get_feedbacks(
         owner_orgs=owner_orgs, active_filters=[active_filters]
     )
     return total_count
-
-
-def get_org_list(id=None):
-    query = session.query(Group.name, Group.title)
-
-    if id is not None:
-        query = query.filter(Group.id.in_(id))
-
-    results = query.all()
-
-    org_list = []
-    for result in results:
-        org = {'name': result.name, 'title': result.title}
-        org_list.append(org)
-
-    return org_list
