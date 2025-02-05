@@ -4,15 +4,21 @@ from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
 
-import ckanext.feedback.services.management.comments as comments_service
-import ckanext.feedback.services.management.feedbacks as feedback_service
-import ckanext.feedback.services.management.utilization as utilization_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
 )
+from ckanext.feedback.services.management import feedbacks as feedback_service
+from ckanext.feedback.services.management import (
+    resource_comments as resource_comments_service,
+)
+from ckanext.feedback.services.management import utilization as utilization_service
+from ckanext.feedback.services.management import (
+    utilization_comments as utilization_comments_service,
+)
+from ckanext.feedback.services.organization import organization as organization_service
 
 log = logging.getLogger(__name__)
 
@@ -106,9 +112,9 @@ class ManagementController:
         filter_org = {}
 
         if owner_orgs is None:
-            org_list = feedback_service.get_org_list()
+            org_list = organization_service.get_org_list()
         else:
-            org_list = feedback_service.get_org_list(owner_orgs)
+            org_list = organization_service.get_org_list(owner_orgs)
 
         for org in org_list:
             filter_org[org['name']] = org['title']
@@ -152,12 +158,21 @@ class ManagementController:
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
 
+        target = 0
+
         if resource_comments:
-            ManagementController.approve_resource_comments(resource_comments)
+            target += ManagementController.approve_resource_comments(resource_comments)
         if utilization:
-            ManagementController.approve_utilization(utilization)
+            target += ManagementController.approve_utilization(utilization)
         if utilization_comments:
-            ManagementController.approve_utilization_comments(utilization_comments)
+            target += ManagementController.approve_utilization_comments(
+                utilization_comments
+            )
+
+        helpers.flash_success(
+            f'{target} ' + _('approval completed.'),
+            allow_html=True,
+        )
 
         return toolkit.redirect_to('feedback.approval-delete')
 
@@ -169,109 +184,106 @@ class ManagementController:
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
 
+        target = 0
+
         if resource_comments:
-            ManagementController.delete_resource_comments(resource_comments)
+            target += ManagementController.delete_resource_comments(resource_comments)
         if utilization:
-            ManagementController.delete_utilization(utilization)
+            target += ManagementController.delete_utilization(utilization)
         if utilization_comments:
-            ManagementController.delete_utilization_comments(utilization_comments)
+            target += ManagementController.delete_utilization_comments(
+                utilization_comments
+            )
+
+        helpers.flash_success(
+            f'{target} ' + _('delete completed.'),
+            allow_html=True,
+        )
 
         return toolkit.redirect_to('feedback.approval-delete')
 
     @staticmethod
     @check_administrator
     def approve_utilization_comments(target):
-        target = comments_service.get_utilization_comment_ids(target)
-        utilizations = comments_service.get_utilizations(target)
+        target = utilization_comments_service.get_utilization_comment_ids(target)
+        utilizations = utilization_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_utilization(
             utilizations
         )
-        comments_service.approve_utilization_comments(target, current_user.id)
-        comments_service.refresh_utilizations_comments(utilizations)
-        session.commit()
-        helpers.flash_success(
-            f'{len(target)} ' + _('approval completed.'),
-            allow_html=True,
+        utilization_comments_service.approve_utilization_comments(
+            target, current_user.id
         )
+        utilization_comments_service.refresh_utilizations_comments(utilizations)
+        session.commit()
+
+        return len(target)
 
     @staticmethod
     @check_administrator
     def approve_utilization(target):
-        target = comments_service.get_utilization_ids(target)
-        utilizations = comments_service.get_utilizations(target)
+        target = utilization_service.get_utilization_ids(target)
+        utilizations = utilization_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_resource(utilizations)
         utilization_service.approve_utilization(target, current_user.id)
         session.commit()
-        helpers.flash_success(
-            f'{len(target)} ' + _('approval completed.'),
-            allow_html=True,
-        )
+
+        return len(target)
 
     @staticmethod
     @check_administrator
     def approve_resource_comments(target):
-        target = comments_service.get_resource_comment_ids(target)
-        resource_comment_summaries = comments_service.get_resource_comment_summaries(
-            target
+        target = resource_comments_service.get_resource_comment_ids(target)
+        resource_comment_summaries = (
+            resource_comments_service.get_resource_comment_summaries(target)
         )
         ManagementController._check_organization_admin_role_with_resource(
             resource_comment_summaries
         )
-        comments_service.approve_resource_comments(target, current_user.id)
-        comments_service.refresh_resources_comments(resource_comment_summaries)
+        resource_comments_service.approve_resource_comments(target, current_user.id)
+        resource_comments_service.refresh_resources_comments(resource_comment_summaries)
         session.commit()
-        helpers.flash_success(
-            f'{len(target)} ' + _('approval completed.'),
-            allow_html=True,
-        )
+
+        return len(target)
 
     @staticmethod
     @check_administrator
     def delete_utilization_comments(target):
-        utilizations = comments_service.get_utilizations(target)
+        utilizations = utilization_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_utilization(
             utilizations
         )
-        comments_service.delete_utilization_comments(target)
-        comments_service.refresh_utilizations_comments(utilizations)
+        utilization_comments_service.delete_utilization_comments(target)
+        utilization_comments_service.refresh_utilizations_comments(utilizations)
         session.commit()
 
-        helpers.flash_success(
-            f'{len(target)} ' + _('delete completed.'),
-            allow_html=True,
-        )
+        return len(target)
 
     @staticmethod
     @check_administrator
     def delete_utilization(target):
-        utilizations = comments_service.get_utilizations(target)
+        utilizations = utilization_service.get_utilizations(target)
         ManagementController._check_organization_admin_role_with_utilization(
             utilizations
         )
         utilization_service.delete_utilization(target)
         session.commit()
-        helpers.flash_success(
-            f'{len(target)} ' + _('delete completed.'),
-            allow_html=True,
-        )
+
+        return len(target)
 
     @staticmethod
     @check_administrator
     def delete_resource_comments(target):
-        resource_comment_summaries = comments_service.get_resource_comment_summaries(
-            target
+        resource_comment_summaries = (
+            resource_comments_service.get_resource_comment_summaries(target)
         )
         ManagementController._check_organization_admin_role_with_resource(
             resource_comment_summaries
         )
-        comments_service.delete_resource_comments(target)
-        comments_service.refresh_resources_comments(resource_comment_summaries)
+        resource_comments_service.delete_resource_comments(target)
+        resource_comments_service.refresh_resources_comments(resource_comment_summaries)
         session.commit()
 
-        helpers.flash_success(
-            f'{len(target)} ' + _('delete completed.'),
-            allow_html=True,
-        )
+        return len(target)
 
     @staticmethod
     def _check_organization_admin_role_with_utilization(utilizations):
