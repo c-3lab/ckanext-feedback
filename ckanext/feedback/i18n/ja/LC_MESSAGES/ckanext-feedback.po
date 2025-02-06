@@ -471,7 +471,7 @@ msgstr "フィードバック管理について"
 msgid "You can manage feedback on the dataset."
 msgstr "組織へのフィードバックを管理できます。"
 
-#: ckanext/feedback/templates/package/resource_read.html:6
+#: ckanext/feedback/templates/package/resource_read.html:7
 msgid "Manage"
 msgstr "管理"
 
@@ -479,7 +479,7 @@ msgstr "管理"
 msgid "View"
 msgstr "ビュー"
 
-#: ckanext/feedback/templates/package/resource_read.html:19
+#: ckanext/feedback/templates/package/resource_read.html:29
 msgid "API Endpoint"
 msgstr "API エンドポイント"
 
