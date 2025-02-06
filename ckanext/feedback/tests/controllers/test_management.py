@@ -52,6 +52,24 @@ class TestManagementController:
         self.app = Flask(__name__)
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.management.toolkit.render')
+    def test_management(
+        self,
+        mock_render,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            ManagementController.management()
+
+        mock_render.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.management.request.args', autospec=True)
     def test_get_href(
         self,
