@@ -115,7 +115,7 @@
                 {{ h.build_nav_main( ('utilization.search', _('Utilization')) ) }}
               {% endif %}
               {% if c.userobj.sysadmin or h.is_organization_admin() %}
-                {{ h.build_nav_main( ('feedback.approval-delete', _('Feedback Approval and Delete')) ) }}
+                {{ h.build_nav_main( ('feedback.management', _('Feedback Management')) ) }}
               {% endif %}
               {{ h.build_nav_main( ('home.about', _('About')) ) }}
 	          {% endblock %}
