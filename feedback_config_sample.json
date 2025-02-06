@@ -26,6 +26,11 @@
             "enable": true,
             "enable_orgs": ["organization_name1", "organization_name2"],
             "disable_orgs":["organization_name3"]
+        },
+        "likes": {
+            "enable": true,
+            "enable_orgs": ["organization_name1", "organization_name2"],
+            "disable_orgs":["organization_name3"]
         }
     }
 }
