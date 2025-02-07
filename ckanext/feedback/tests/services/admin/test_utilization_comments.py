@@ -18,7 +18,7 @@ from ckanext.feedback.models.utilization import (
     UtilizationComment,
     UtilizationCommentCategory,
 )
-from ckanext.feedback.services.management import utilization_comments
+from ckanext.feedback.services.admin import utilization_comments
 
 
 def register_utilization(id, resource_id, title, description, approval):
@@ -172,7 +172,7 @@ class TestUtilizationComments:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch(
-        'ckanext.feedback.services.management.utilization_comments.'
+        'ckanext.feedback.services.admin.utilization_comments.'
         'session.bulk_update_mappings'
     )
     def test_approve_utilization_comments(self, mock_mappings):
@@ -244,11 +244,11 @@ class TestUtilizationComments:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch(
-        'ckanext.feedback.services.management.utilization_comments.'
+        'ckanext.feedback.services.admin.utilization_comments.'
         'get_utilization_comments'
     )
     @patch(
-        'ckanext.feedback.services.management.utilization_comments.'
+        'ckanext.feedback.services.admin.utilization_comments.'
         'session.bulk_update_mappings'
     )
     def test_refresh_utilizations_comments(

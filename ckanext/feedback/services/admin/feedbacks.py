@@ -4,11 +4,11 @@ from sqlalchemy import func, select, union_all
 from sqlalchemy.sql import and_, or_
 
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.management import (
+from ckanext.feedback.services.admin import (
     resource_comments as resource_comments_service,
 )
-from ckanext.feedback.services.management import utilization as utilization_service
-from ckanext.feedback.services.management import (
+from ckanext.feedback.services.admin import utilization as utilization_service
+from ckanext.feedback.services.admin import (
     utilization_comments as utilization_comments_service,
 )
 from ckanext.feedback.services.organization import organization as organization_service

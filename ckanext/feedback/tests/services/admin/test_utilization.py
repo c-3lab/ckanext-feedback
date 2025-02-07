@@ -18,7 +18,7 @@ from ckanext.feedback.models.utilization import (
     UtilizationComment,
     UtilizationCommentCategory,
 )
-from ckanext.feedback.services.management import utilization as utilization_service
+from ckanext.feedback.services.admin import utilization as utilization_service
 
 
 def register_utilization(id, resource_id, title, description, approval):
@@ -166,9 +166,7 @@ class TestUtilization:
         assert utilization_ids == [utilization_id]
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    @patch(
-        'ckanext.feedback.services.management.utilization.session.bulk_update_mappings'
-    )
+    @patch('ckanext.feedback.services.admin.utilization.session.bulk_update_mappings')
     def test_approve_utilization(self, mock_mappings):
         resource = factories.Resource()
 
