@@ -1,5 +1,6 @@
 from datetime import datetime
 
+<<<<<<< HEAD
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 from ckan.common import config
 from ckan.model.group import Group
@@ -11,11 +12,16 @@ from sqlalchemy import func, literal
 from sqlalchemy import desc, func
 >>>>>>> 30b8a75 (Implement basic features for the admin panel):ckanext/feedback/services/management/comments.py
 =======
+=======
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from sqlalchemy import func, literal
+<<<<<<< HEAD
 >>>>>>> 5952ee3 (Move functions to appropriate files for better organization):ckanext/feedback/services/management/resource_comments.py
+=======
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
 
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
@@ -24,6 +30,7 @@ from ckanext.feedback.models.resource_comment import (
 from ckanext.feedback.models.session import session
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 def get_resource_comments_query(org_list):
     org_names = [org['name'] for org in org_list]
@@ -31,6 +38,9 @@ def get_resource_comments_query(org_list):
 =======
 def get_resource_comments_query():
 >>>>>>> 5952ee3 (Move functions to appropriate files for better organization):ckanext/feedback/services/management/resource_comments.py
+=======
+def get_resource_comments_query():
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
     query = (
         session.query(
             Group.name.label('group_name'),
@@ -50,15 +60,19 @@ def get_resource_comments_query():
         .join(Group, Package.owner_org == Group.id)
         .join(Resource)
         .join(ResourceComment)
+<<<<<<< HEAD
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
         .filter(Group.name.in_(org_names))
 =======
 >>>>>>> 5952ee3 (Move functions to appropriate files for better organization):ckanext/feedback/services/management/resource_comments.py
+=======
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
     )
 
     return query
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 def get_simple_resource_comments_query(org_list):
     org_names = [org['name'] for org in org_list]
@@ -141,6 +155,8 @@ def get_resource_comment_ids(comment_id_list):
 
 =======
 >>>>>>> 5952ee3 (Move functions to appropriate files for better organization):ckanext/feedback/services/management/resource_comments.py
+=======
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
 # Get the IDs of resource_comments where approval is False using comment_id_list.
 def get_resource_comment_ids(comment_id_list):
     query = (
@@ -165,10 +181,13 @@ def get_resource_comment_summaries(comment_id_list):
     return resource_comment_summaries
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 =======
 >>>>>>> 5952ee3 (Move functions to appropriate files for better organization):ckanext/feedback/services/management/resource_comments.py
+=======
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
 # Approve selected resource comments
 def approve_resource_comments(comment_id_list, approval_user_id):
     session.bulk_update_mappings(
@@ -192,6 +211,7 @@ def delete_resource_comments(comment_id_list):
         .filter(ResourceComment.id.in_(comment_id_list))
         .delete(synchronize_session='fetch')
     )
+<<<<<<< HEAD
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 =======
 def get_non_approve_contests(owner_orgs=None, limit=None, offset=None):
@@ -246,6 +266,8 @@ def get_non_approve_contests(owner_orgs=None, limit=None, offset=None):
 >>>>>>> 61f0718 (ページネーションバックエンド（検討・実装中）):ckanext/feedback/services/management/comments.py
 =======
 >>>>>>> 5952ee3 (Move functions to appropriate files for better organization):ckanext/feedback/services/management/resource_comments.py
+=======
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
 
 
 # Recalculate total approved bulk resources comments
@@ -278,6 +300,7 @@ def refresh_resources_comments(resource_comment_summaries):
             }
         )
     session.bulk_update_mappings(ResourceCommentSummary, mappings)
+<<<<<<< HEAD
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 <<<<<<< HEAD:ckanext/feedback/services/admin/resource_comments.py
 =======
@@ -391,3 +414,5 @@ def get_page_for_utilization_comment(utilization_id, utilization_comment_id):
 >>>>>>> 30b8a75 (Implement basic features for the admin panel):ckanext/feedback/services/management/comments.py
 =======
 >>>>>>> 5952ee3 (Move functions to appropriate files for better organization):ckanext/feedback/services/management/resource_comments.py
+=======
+>>>>>>> 9c4e13f (Rename directory from management to admin and update affected files)
