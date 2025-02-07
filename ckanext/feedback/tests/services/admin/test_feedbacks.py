@@ -17,7 +17,7 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentCategory,
 )
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.management import feedbacks
+from ckanext.feedback.services.admin import feedbacks
 
 log = logging.getLogger(__name__)
 

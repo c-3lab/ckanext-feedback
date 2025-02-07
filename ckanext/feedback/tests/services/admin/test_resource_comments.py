@@ -18,7 +18,7 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentSummary,
 )
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.management import resource_comments
+from ckanext.feedback.services.admin import resource_comments
 from ckanext.feedback.services.resource import comment, summary
 
 
@@ -156,7 +156,7 @@ class TestResourceComments:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch(
-        'ckanext.feedback.services.management.resource_comments.'
+        'ckanext.feedback.services.admin.resource_comments.'
         'session.bulk_update_mappings'
     )
     def test_approve_resource_comments(self, mock_mappings):
@@ -210,7 +210,7 @@ class TestResourceComments:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch(
-        'ckanext.feedback.services.management.resource_comments.'
+        'ckanext.feedback.services.admin.resource_comments.'
         'session.bulk_update_mappings'
     )
     def test_refresh_resource_comments(self, mock_mappings):

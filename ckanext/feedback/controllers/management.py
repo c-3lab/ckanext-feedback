@@ -6,17 +6,17 @@ from ckan.plugins import toolkit
 
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
+from ckanext.feedback.services.admin import feedbacks as feedback_service
+from ckanext.feedback.services.admin import (
+    resource_comments as resource_comments_service,
+)
+from ckanext.feedback.services.admin import utilization as utilization_service
+from ckanext.feedback.services.admin import (
+    utilization_comments as utilization_comments_service,
+)
 from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
-)
-from ckanext.feedback.services.management import feedbacks as feedback_service
-from ckanext.feedback.services.management import (
-    resource_comments as resource_comments_service,
-)
-from ckanext.feedback.services.management import utilization as utilization_service
-from ckanext.feedback.services.management import (
-    utilization_comments as utilization_comments_service,
 )
 from ckanext.feedback.services.organization import organization as organization_service
 
@@ -41,7 +41,7 @@ class ManagementController:
         ]
 
         return toolkit.render(
-            'management/management.html',
+            'admin/management.html',
             {'management_list': management_list},
         )
 
@@ -157,7 +157,7 @@ class ManagementController:
         )
 
         return toolkit.render(
-            'management/approval_delete.html',
+            'admin/approval_delete.html',
             {
                 "filters": filters,
                 "sort": sort,
