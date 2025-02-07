@@ -208,6 +208,81 @@ class TestResourceController:
             },
         )
 
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.request')
+    def test_comment_question_with_user(
+        self,
+        mock_request,
+        mock_render,
+        mock_page,
+        mock_pagination,
+        current_user,
+        app,
+        user_env,
+    ):
+        user_dict = factories.User()
+        owner_org = factories.Organization()
+        dataset = factories.Dataset(owner_org=owner_org['id'])
+        mock_current_user(current_user, user_dict)
+        resource = factories.Resource(package_id=dataset['id'])
+        resource_id = resource['id']
+
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            _,
+        ]
+
+        mock_page.return_value = 'mock_page'
+
+        with app.get(url='/', environ_base=user_env):
+            g.userobj = current_user
+            ResourceController.comment(resource_id, category='QUESTION')
+
+        approval = True
+        resource = comment_service.get_resource(resource_id)
+        comments, total_count = comment_service.get_resource_comments(
+            resource_id,
+            approval,
+            limit=limit,
+            offset=offset,
+        )
+        categories = comment_service.get_resource_comment_categories()
+        cookie = comment_service.get_cookie(resource_id)
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
+
+        mock_page.assert_called_once_with(
+            collection=comments,
+            page=page,
+            item_count=total_count,
+            items_per_page=limit,
+        )
+
+        mock_render.assert_called_once_with(
+            'resource/comment.html',
+            {
+                'resource': resource.Resource,
+                'pkg_dict': package,
+                'categories': categories,
+                'cookie': cookie,
+                'selected_category': 'QUESTION',
+                'content': '',
+                'page': 'mock_page',
+            },
+        )
+
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
