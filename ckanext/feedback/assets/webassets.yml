@@ -31,11 +31,11 @@ feedback-comment-js:
   contents:
     - js/comment.js
 
-approval-delete:
+feedback-approval-and-delete:
   filter: rjsmin
-  output: ckanext-feedback/%(version)s-approval_delete.js
+  output: ckanext-feedback/%(version)s-approval_and_delete.js
   contents:
-    - js/approval_delete.js
+    - js/approval_and_delete.js
 
 feedback-recaptcha-js:
   filter: rjsmin
@@ -55,11 +55,11 @@ feedback-search-css:
   contents:
     - css/search.css
 
-feedback-management-css:
+feedback-admin-css:
   filter: cssrewrite
-  output: feedback/%(version)s-management.css
+  output: feedback/%(version)s-admin.css
   contents:
-    - css/management.css
+    - css/admin.css
 
 feedback-tooltip-css:
   filter: cssrewrite

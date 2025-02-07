@@ -1,6 +1,6 @@
 from flask import Blueprint
 
-from ckanext.feedback.controllers import management
+from ckanext.feedback.controllers import admin
 from ckanext.feedback.views.error_handler import add_error_handler
 
 blueprint = Blueprint('feedback', __name__, url_prefix='/feedback')
@@ -10,25 +10,25 @@ rules = [
     (
         '/management',
         'management',
-        management.ManagementController.management,
+        admin.ManagementController.management,
         {'methods': ['GET']},
     ),
     (
         '/management/approval-delete',
         'approval-delete',
-        management.ManagementController.admin,
+        admin.ManagementController.admin,
         {'methods': ['GET']},
     ),
     (
         '/management/approve_target',
         'approve_target',
-        management.ManagementController.approve_target,
+        admin.ManagementController.approve_target,
         {'methods': ['POST']},
     ),
     (
         '/management/delete_target',
         'delete_target',
-        management.ManagementController.delete_target,
+        admin.ManagementController.delete_target,
         {'methods': ['POST']},
     ),
 ]

@@ -41,7 +41,7 @@ class ManagementController:
         ]
 
         return toolkit.render(
-            'admin/management.html',
+            'admin/admin.html',
             {'management_list': management_list},
         )
 
@@ -157,7 +157,7 @@ class ManagementController:
         )
 
         return toolkit.render(
-            'admin/approval_delete.html',
+            'admin/approval_and_delete.html',
             {
                 "filters": filters,
                 "sort": sort,

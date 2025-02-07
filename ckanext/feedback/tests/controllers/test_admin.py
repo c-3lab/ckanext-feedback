@@ -13,7 +13,7 @@ from ckanext.feedback.command.feedback import (
     create_resource_tables,
     create_utilization_tables,
 )
-from ckanext.feedback.controllers.management import ManagementController
+from ckanext.feedback.controllers.admin import ManagementController
 
 engine = model.repo.session.get_bind()
 
@@ -52,7 +52,7 @@ class TestManagementController:
         self.app = Flask(__name__)
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.toolkit.render')
+    @patch('ckanext.feedback.controllers.admin.toolkit.render')
     def test_management(
         self,
         mock_render,
@@ -70,7 +70,7 @@ class TestManagementController:
         mock_render.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.request.args', autospec=True)
+    @patch('ckanext.feedback.controllers.admin.request.args', autospec=True)
     def test_get_href(
         self,
         mock_args,
@@ -93,12 +93,12 @@ class TestManagementController:
         assert '/feedback/management/approval-delete?filter=resource' == url
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.request.args')
-    @patch('ckanext.feedback.controllers.management.get_pagination_value')
-    @patch('ckanext.feedback.controllers.management.feedback_service')
-    @patch('ckanext.feedback.controllers.management.organization_service')
-    @patch('ckanext.feedback.controllers.management.toolkit.render')
-    @patch('ckanext.feedback.controllers.management.helpers.Page')
+    @patch('ckanext.feedback.controllers.admin.request.args')
+    @patch('ckanext.feedback.controllers.admin.get_pagination_value')
+    @patch('ckanext.feedback.controllers.admin.feedback_service')
+    @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.toolkit.render')
+    @patch('ckanext.feedback.controllers.admin.helpers.Page')
     def test_admin_with_sysadmin(
         self,
         mock_page,
@@ -166,13 +166,13 @@ class TestManagementController:
         mock_render.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.request.args.getlist')
-    @patch('ckanext.feedback.controllers.management.request.args.get')
-    @patch('ckanext.feedback.controllers.management.get_pagination_value')
-    @patch('ckanext.feedback.controllers.management.feedback_service')
-    @patch('ckanext.feedback.controllers.management.organization_service')
-    @patch('ckanext.feedback.controllers.management.toolkit.render')
-    @patch('ckanext.feedback.controllers.management.helpers.Page')
+    @patch('ckanext.feedback.controllers.admin.request.args.getlist')
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    @patch('ckanext.feedback.controllers.admin.get_pagination_value')
+    @patch('ckanext.feedback.controllers.admin.feedback_service')
+    @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.toolkit.render')
+    @patch('ckanext.feedback.controllers.admin.helpers.Page')
     def test_admin_with_org_admin(
         self,
         mock_page,
@@ -260,12 +260,12 @@ class TestManagementController:
         assert g.pkg_dict['organization']['name'] is not None
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.request.form.getlist')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch.object(ManagementController, 'approve_resource_comments')
     @patch.object(ManagementController, 'approve_utilization')
     @patch.object(ManagementController, 'approve_utilization_comments')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_approve_target(
         self,
         mock_redirect_to,
@@ -314,10 +314,10 @@ class TestManagementController:
         mock_redirect_to.assert_called_once_with('feedback.approval-delete')
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.request.form.getlist')
-    @patch('ckanext.feedback.controllers.management.ManagementController')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    @patch('ckanext.feedback.controllers.admin.ManagementController')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_approve_target_without_feedbacks(
         self,
         mock_redirect_to,
@@ -355,12 +355,12 @@ class TestManagementController:
         mock_redirect_to.assert_called_once_with('feedback.approval-delete')
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.request.form.getlist')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch.object(ManagementController, 'delete_resource_comments')
     @patch.object(ManagementController, 'delete_utilization')
     @patch.object(ManagementController, 'delete_utilization_comments')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_delete_target(
         self,
         mock_redirect_to,
@@ -409,10 +409,10 @@ class TestManagementController:
         mock_redirect_to.assert_called_once_with('feedback.approval-delete')
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.request.form.getlist')
-    @patch('ckanext.feedback.controllers.management.ManagementController')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.management.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    @patch('ckanext.feedback.controllers.admin.ManagementController')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_delete_target_without_feedbacks(
         self,
         mock_redirect_to,
@@ -450,10 +450,10 @@ class TestManagementController:
         mock_redirect_to.assert_called_once_with('feedback.approval-delete')
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.utilization_comments_service')
-    @patch('ckanext.feedback.controllers.management.utilization_service')
-    @patch('ckanext.feedback.controllers.management.session.commit')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_approve_utilization_comments(
         self,
         mock_flash_success,
@@ -496,9 +496,9 @@ class TestManagementController:
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.utilization_service')
-    @patch('ckanext.feedback.controllers.management.session.commit')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_approve_utilization(
         self,
         mock_flash_success,
@@ -533,9 +533,9 @@ class TestManagementController:
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.resource_comments_service')
-    @patch('ckanext.feedback.controllers.management.session.commit')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_approve_resource_comments(
         self,
         mock_flash_success,
@@ -579,10 +579,10 @@ class TestManagementController:
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.utilization_comments_service')
-    @patch('ckanext.feedback.controllers.management.utilization_service')
-    @patch('ckanext.feedback.controllers.management.session.commit')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_delete_utilization_comments(
         self,
         mock_flash_success,
@@ -619,9 +619,9 @@ class TestManagementController:
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.utilization_service')
-    @patch('ckanext.feedback.controllers.management.session.commit')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_delete_utilization(
         self,
         mock_flash_success,
@@ -651,9 +651,9 @@ class TestManagementController:
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.resource_comments_service')
-    @patch('ckanext.feedback.controllers.management.session.commit')
-    @patch('ckanext.feedback.controllers.management.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_delete_resource_comments(
         self,
         mock_flash_success,
@@ -691,7 +691,7 @@ class TestManagementController:
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_utilization_using_sysadmin(
         self, mock_toolkit_abort, current_user
     ):
@@ -707,7 +707,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_utilization_using_org_admin(
         self, mock_toolkit_abort, current_user
     ):
@@ -739,7 +739,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_utilization_using_user(
         self, mock_toolkit_abort, current_user
     ):
@@ -765,7 +765,7 @@ class TestManagementController:
         )
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_resource_using_sysadmin(
         self, mock_toolkit_abort, current_user
     ):
@@ -781,7 +781,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_resource_using_org_admin(
         self, mock_toolkit_abort, current_user
     ):
@@ -815,7 +815,7 @@ class TestManagementController:
         mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.management.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_resource_using_user(
         self, mock_toolkit_abort, current_user
     ):
