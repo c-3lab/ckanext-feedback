@@ -18,7 +18,7 @@ from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
-from ckanext.feedback.views import download, likes, management, resource, utilization
+from ckanext.feedback.views import admin, download, likes, resource, utilization
 
 log = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             blueprints.append(utilization.get_utilization_blueprint())
         if FeedbackConfig().like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
-        blueprints.append(management.get_management_blueprint())
+        blueprints.append(admin.get_management_blueprint())
         return blueprints
 
     # Check production.ini settings
