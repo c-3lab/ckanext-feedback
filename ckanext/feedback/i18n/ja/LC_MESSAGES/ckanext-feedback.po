@@ -479,7 +479,7 @@ msgstr "管理"
 msgid "View"
 msgstr "ビュー"
 
-#: ckanext/feedback/templates/package/resource_read.html:19
+#: ckanext/feedback/templates/package/resource_read.html:29
 msgid "API Endpoint"
 msgstr "API エンドポイント"
 
