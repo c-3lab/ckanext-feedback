@@ -2,7 +2,6 @@ import enum
 import uuid
 from datetime import datetime
 
-from ckan.common import _
 from ckan.model.resource import Resource
 from ckan.model.user import User
 from sqlalchemy import BOOLEAN, TIMESTAMP, Column, Enum, ForeignKey, Integer, Text
