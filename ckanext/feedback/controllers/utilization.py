@@ -14,8 +14,8 @@ import ckanext.feedback.services.utilization.search as search_service
 import ckanext.feedback.services.utilization.summary as summary_service
 import ckanext.feedback.services.utilization.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
-from ckanext.feedback.models.utilization import UtilizationCommentCategory
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.utilization import UtilizationCommentCategory
 from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
