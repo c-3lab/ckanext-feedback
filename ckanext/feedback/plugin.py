@@ -66,7 +66,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             blueprints.append(utilization.get_utilization_blueprint())
         if FeedbackConfig().like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
-        blueprints.append(admin.get_management_blueprint())
+        blueprints.append(admin.get_admin_blueprint())
         return blueprints
 
     # Check production.ini settings

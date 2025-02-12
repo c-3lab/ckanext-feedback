@@ -27,7 +27,7 @@ class AdminController:
     # management/top
     @staticmethod
     @check_administrator
-    def management():
+    def admin():
         management_list = [
             {
                 'name': _('Approval and Delete'),
@@ -86,7 +86,7 @@ class AdminController:
     # management/feedback-approval
     @staticmethod
     @check_administrator
-    def admin():
+    def approval_and_delete():
         active_filters = request.args.getlist('filter')
         sort = request.args.get('sort', 'newest')
 

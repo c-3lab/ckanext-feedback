@@ -53,7 +53,7 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
-    def test_management(
+    def test_admin(
         self,
         mock_render,
         current_user,
@@ -65,7 +65,7 @@ class TestAdminController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            AdminController.management()
+            AdminController.admin()
 
         mock_render.assert_called_once()
 
@@ -99,7 +99,7 @@ class TestAdminController:
     @patch('ckanext.feedback.controllers.admin.organization_service')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     @patch('ckanext.feedback.controllers.admin.helpers.Page')
-    def test_admin_with_sysadmin(
+    def test_approval_and_delete_with_sysadmin(
         self,
         mock_page,
         mock_render,
@@ -157,7 +157,7 @@ class TestAdminController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            AdminController.admin()
+            AdminController.approval_and_delete()
 
         mock_feedback_service.get_feedbacks.assert_called_once_with(
             active_filters=active_filters, sort=sort, limit=limit, offset=offset
@@ -173,7 +173,7 @@ class TestAdminController:
     @patch('ckanext.feedback.controllers.admin.organization_service')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     @patch('ckanext.feedback.controllers.admin.helpers.Page')
-    def test_admin_with_org_admin(
+    def test_approval_and_delete_with_org_admin(
         self,
         mock_page,
         mock_render,
@@ -244,7 +244,7 @@ class TestAdminController:
 
         with app.get(url='/', environ_base=user_env):
             g.userobj = current_user
-            AdminController.admin()
+            AdminController.approval_and_delete()
 
         mock_feedback_service.get_feedbacks.assert_called_once_with(
             owner_orgs=[organization_dict['id']],
