@@ -8,25 +8,25 @@ blueprint = Blueprint('feedback', __name__, url_prefix='/feedback')
 # Add target page URLs to rules and add each URL to the blueprint
 rules = [
     (
-        '/management',
-        'management',
+        '/admin',
+        'admin',
         admin.AdminController.admin,
         {'methods': ['GET']},
     ),
     (
-        '/management/approval-delete',
-        'approval-delete',
+        '/admin/approval-and-delete',
+        'approval-and-delete',
         admin.AdminController.approval_and_delete,
         {'methods': ['GET']},
     ),
     (
-        '/management/approve_target',
+        '/admin/approve_target',
         'approve_target',
         admin.AdminController.approve_target,
         {'methods': ['POST']},
     ),
     (
-        '/management/delete_target',
+        '/admin/delete_target',
         'delete_target',
         admin.AdminController.delete_target,
         {'methods': ['POST']},

@@ -7,7 +7,7 @@
 
 {% block breadcrumb_content %}
   {{ super() }}
-  <li class="active"><a href="{{ h.url_for('feedback.management') }}">{{ _('Feedback Management') }}</a></li>
+  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Management') }}</a></li>
 {% endblock %}
 
 {% block title %}{{ _('Feedback Management') }} - CKAN{% endblock %}
