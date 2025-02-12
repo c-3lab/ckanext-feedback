@@ -455,21 +455,13 @@ msgstr "リソース名　降順"
 msgid "Post Content"
 msgstr "投稿内容"
 
-#: ckanext/feedback/templates/management/approval_delete.html:113
+#: ckanext/feedback/templates/admin/approval_and_delete.html:113
 msgid "There are no applications."
 msgstr "申請はありません。"
 
-#: ckanext/feedback/templates/management/approval_delete.html:126
+#: ckanext/feedback/templates/admin/approval_and_delete.html:126
 msgid "What are Approval and Delete"
 msgstr "承認・削除について"
-
-#: ckanext/feedback/templates/management/management.html:41
-msgid "What are Feedback Management"
-msgstr "フィードバック管理について"
-
-#: ckanext/feedback/templates/management/management.html:45
-msgid "You can manage feedback on the dataset."
-msgstr "組織へのフィードバックを管理できます。"
 
 #: ckanext/feedback/templates/package/resource_read.html:7
 msgid "Manage"
