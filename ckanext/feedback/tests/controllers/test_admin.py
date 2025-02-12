@@ -13,7 +13,7 @@ from ckanext.feedback.command.feedback import (
     create_resource_tables,
     create_utilization_tables,
 )
-from ckanext.feedback.controllers.admin import ManagementController
+from ckanext.feedback.controllers.admin import AdminController
 
 engine = model.repo.session.get_bind()
 
@@ -39,7 +39,7 @@ def mock_current_user(current_user, user):
 
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-class TestManagementController:
+class TestAdminController:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
@@ -65,7 +65,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.management()
+            AdminController.management()
 
         mock_render.assert_called_once()
 
@@ -88,7 +88,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            url = ManagementController.get_href(name, active_list)
+            url = AdminController.get_href(name, active_list)
 
         assert '/feedback/management/approval-delete?filter=resource' == url
 
@@ -157,7 +157,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.admin()
+            AdminController.admin()
 
         mock_feedback_service.get_feedbacks.assert_called_once_with(
             active_filters=active_filters, sort=sort, limit=limit, offset=offset
@@ -244,7 +244,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=user_env):
             g.userobj = current_user
-            ManagementController.admin()
+            AdminController.admin()
 
         mock_feedback_service.get_feedbacks.assert_called_once_with(
             owner_orgs=[organization_dict['id']],
@@ -261,9 +261,9 @@ class TestManagementController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
-    @patch.object(ManagementController, 'approve_resource_comments')
-    @patch.object(ManagementController, 'approve_utilization')
-    @patch.object(ManagementController, 'approve_utilization_comments')
+    @patch.object(AdminController, 'approve_resource_comments')
+    @patch.object(AdminController, 'approve_utilization')
+    @patch.object(AdminController, 'approve_utilization_comments')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_approve_target(
@@ -302,7 +302,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.approve_target()
+            AdminController.approve_target()
 
         mock_approve_resource_comments.assert_called_once_with(resource_comments)
         mock_approve_utilization.assert_called_once_with(utilization)
@@ -315,7 +315,7 @@ class TestManagementController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
-    @patch('ckanext.feedback.controllers.admin.ManagementController')
+    @patch('ckanext.feedback.controllers.admin.AdminController')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_approve_target_without_feedbacks(
@@ -343,7 +343,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.approve_target()
+            AdminController.approve_target()
 
         mock_management.approve_resource_comments.assert_not_called()
         mock_management.approve_utilization.assert_not_called()
@@ -356,9 +356,9 @@ class TestManagementController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
-    @patch.object(ManagementController, 'delete_resource_comments')
-    @patch.object(ManagementController, 'delete_utilization')
-    @patch.object(ManagementController, 'delete_utilization_comments')
+    @patch.object(AdminController, 'delete_resource_comments')
+    @patch.object(AdminController, 'delete_utilization')
+    @patch.object(AdminController, 'delete_utilization_comments')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_delete_target(
@@ -397,7 +397,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.delete_target()
+            AdminController.delete_target()
 
         mock_delete_resource_comments.assert_called_once_with(resource_comments)
         mock_delete_utilization.assert_called_once_with(utilization)
@@ -410,7 +410,7 @@ class TestManagementController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
-    @patch('ckanext.feedback.controllers.admin.ManagementController')
+    @patch('ckanext.feedback.controllers.admin.AdminController')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
     def test_delete_target_without_feedbacks(
@@ -438,7 +438,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.delete_target()
+            AdminController.delete_target()
 
         mock_management.delete_resource_comments.assert_not_called()
         mock_management.delete_utilization.assert_not_called()
@@ -481,7 +481,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.approve_utilization_comments(target)
+            AdminController.approve_utilization_comments(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -523,7 +523,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.approve_utilization(target)
+            AdminController.approve_utilization(target)
 
         mock_utilization_service.get_utilization_ids.assert_called_once_with(target)
         mock_utilization_service.get_utilizations.assert_called_once_with(target)
@@ -562,7 +562,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.approve_resource_comments(target)
+            AdminController.approve_resource_comments(target)
 
         mock_resource_comments_service.get_resource_comment_ids.assert_called_once_with(
             target
@@ -606,7 +606,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.delete_utilization_comments(target)
+            AdminController.delete_utilization_comments(target)
 
         mock_utilization_service.get_utilizations.assert_called_once_with(target)
         # fmt: off
@@ -644,7 +644,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.delete_utilization(target)
+            AdminController.delete_utilization(target)
 
         mock_utilization_service.get_utilizations.assert_called_once_with(target)
         mock_utilization_service.delete_utilization.assert_called_once_with(target)
@@ -677,7 +677,7 @@ class TestManagementController:
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
-            ManagementController.delete_resource_comments(target)
+            AdminController.delete_resource_comments(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -701,7 +701,7 @@ class TestManagementController:
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
         g.userobj = current_user
-        ManagementController._check_organization_admin_role_with_utilization(
+        AdminController._check_organization_admin_role_with_utilization(
             [mocked_utilization]
         )
         mock_toolkit_abort.assert_not_called()
@@ -733,7 +733,7 @@ class TestManagementController:
         model.Session.add(member)
         model.Session.commit()
 
-        ManagementController._check_organization_admin_role_with_utilization(
+        AdminController._check_organization_admin_role_with_utilization(
             [mocked_utilization]
         )
         mock_toolkit_abort.assert_not_called()
@@ -753,7 +753,7 @@ class TestManagementController:
 
         mocked_utilization.resource.package.owner_org = organization_dict['id']
 
-        ManagementController._check_organization_admin_role_with_utilization(
+        AdminController._check_organization_admin_role_with_utilization(
             [mocked_utilization]
         )
         mock_toolkit_abort.assert_called_once_with(
@@ -775,7 +775,7 @@ class TestManagementController:
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
         g.userobj = current_user
-        ManagementController._check_organization_admin_role_with_resource(
+        AdminController._check_organization_admin_role_with_resource(
             [mocked_resource_comment_summary]
         )
         mock_toolkit_abort.assert_not_called()
@@ -809,7 +809,7 @@ class TestManagementController:
         model.Session.add(member)
         model.Session.commit()
 
-        ManagementController._check_organization_admin_role_with_resource(
+        AdminController._check_organization_admin_role_with_resource(
             [mocked_resource_comment_summary]
         )
         mock_toolkit_abort.assert_not_called()
@@ -831,7 +831,7 @@ class TestManagementController:
             'id'
         ]
 
-        ManagementController._check_organization_admin_role_with_resource(
+        AdminController._check_organization_admin_role_with_resource(
             [mocked_resource_comment_summary]
         )
         mock_toolkit_abort.assert_called_once_with(

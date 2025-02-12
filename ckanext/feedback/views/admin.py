@@ -10,25 +10,25 @@ rules = [
     (
         '/management',
         'management',
-        admin.ManagementController.management,
+        admin.AdminController.management,
         {'methods': ['GET']},
     ),
     (
         '/management/approval-delete',
         'approval-delete',
-        admin.ManagementController.admin,
+        admin.AdminController.admin,
         {'methods': ['GET']},
     ),
     (
         '/management/approve_target',
         'approve_target',
-        admin.ManagementController.approve_target,
+        admin.AdminController.approve_target,
         {'methods': ['POST']},
     ),
     (
         '/management/delete_target',
         'delete_target',
-        admin.ManagementController.delete_target,
+        admin.AdminController.delete_target,
         {'methods': ['POST']},
     ),
 ]
