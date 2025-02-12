@@ -8,7 +8,7 @@
 
 {% block breadcrumb_content %}
   {{ super() }}
-  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Management') }}</a> / <a href="{{ h.url_for('feedback.approval-and-delete') }}">{{ _('Approval and Delete') }}</a></li>
+  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Admin') }}</a> / <a href="{{ h.url_for('feedback.approval-and-delete') }}">{{ _('Approval and Delete') }}</a></li>
 {% endblock %}
 
 {% block title %}{{ _('Approval and Delete') }} - CKAN{% endblock %}

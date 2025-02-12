@@ -7,16 +7,16 @@
 
 {% block breadcrumb_content %}
   {{ super() }}
-  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Management') }}</a></li>
+  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Admin') }}</a></li>
 {% endblock %}
 
-{% block title %}{{ _('Feedback Management') }} - CKAN{% endblock %}
+{% block title %}{{ _('Feedback Admin') }} - CKAN{% endblock %}
 
 {% block primary_content %}
   <article class="module">
     <div class="module-content">
       <div class="module-title">
-        <h1>{{ _('Feedback Management') }}</h1>
+        <h1>{{ _('Feedback Admin') }}</h1>
       </div>
       <ul class="management-list list-unstyled" style="list-style-type: none;">
         {% for management in management_list %}
@@ -38,7 +38,7 @@
 <div class="module module-narrow module-shallow">
   <h2 class="module-heading">
     <i class="fa fa-info-circle"></i>
-    {{ _('What are Feedback Management') }}
+    {{ _('What are Feedback Admin') }}
   </h2>
   <div class="module-content">
     <p>
