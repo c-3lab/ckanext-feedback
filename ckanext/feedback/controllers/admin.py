@@ -23,7 +23,7 @@ from ckanext.feedback.services.organization import organization as organization_
 log = logging.getLogger(__name__)
 
 
-class ManagementController:
+class AdminController:
     # management/top
     @staticmethod
     @check_administrator
@@ -73,7 +73,7 @@ class ManagementController:
             filter_item = {}
             filter_item["name"] = name
             filter_item["label"] = label
-            filter_item["href"] = ManagementController.get_href(name, active_filters[:])
+            filter_item["href"] = AdminController.get_href(name, active_filters[:])
             filter_item["count"] = feedback_service.get_feedbacks_count(
                 owner_orgs=owner_orgs, active_filters=name
             )
@@ -141,17 +141,17 @@ class ManagementController:
             filter_org[org['name']] = org['title']
 
         filters.append(
-            ManagementController.create_filter_dict(
+            AdminController.create_filter_dict(
                 _('Status'), filter_status, active_filters, owner_orgs
             )
         )
         filters.append(
-            ManagementController.create_filter_dict(
+            AdminController.create_filter_dict(
                 _('Type'), filter_type, active_filters, owner_orgs
             )
         )
         filters.append(
-            ManagementController.create_filter_dict(
+            AdminController.create_filter_dict(
                 _('Organization'), filter_org, active_filters, owner_orgs
             )
         )
@@ -182,13 +182,11 @@ class ManagementController:
         target = 0
 
         if resource_comments:
-            target += ManagementController.approve_resource_comments(resource_comments)
+            target += AdminController.approve_resource_comments(resource_comments)
         if utilization:
-            target += ManagementController.approve_utilization(utilization)
+            target += AdminController.approve_utilization(utilization)
         if utilization_comments:
-            target += ManagementController.approve_utilization_comments(
-                utilization_comments
-            )
+            target += AdminController.approve_utilization_comments(utilization_comments)
 
         helpers.flash_success(
             f'{target} ' + _('approval completed.'),
@@ -208,13 +206,11 @@ class ManagementController:
         target = 0
 
         if resource_comments:
-            target += ManagementController.delete_resource_comments(resource_comments)
+            target += AdminController.delete_resource_comments(resource_comments)
         if utilization:
-            target += ManagementController.delete_utilization(utilization)
+            target += AdminController.delete_utilization(utilization)
         if utilization_comments:
-            target += ManagementController.delete_utilization_comments(
-                utilization_comments
-            )
+            target += AdminController.delete_utilization_comments(utilization_comments)
 
         helpers.flash_success(
             f'{target} ' + _('delete completed.'),
@@ -228,9 +224,7 @@ class ManagementController:
     def approve_utilization_comments(target):
         target = utilization_comments_service.get_utilization_comment_ids(target)
         utilizations = utilization_service.get_utilizations(target)
-        ManagementController._check_organization_admin_role_with_utilization(
-            utilizations
-        )
+        AdminController._check_organization_admin_role_with_utilization(utilizations)
         utilization_comments_service.approve_utilization_comments(
             target, current_user.id
         )
@@ -244,7 +238,7 @@ class ManagementController:
     def approve_utilization(target):
         target = utilization_service.get_utilization_ids(target)
         utilizations = utilization_service.get_utilizations(target)
-        ManagementController._check_organization_admin_role_with_resource(utilizations)
+        AdminController._check_organization_admin_role_with_resource(utilizations)
         utilization_service.approve_utilization(target, current_user.id)
         session.commit()
 
@@ -257,7 +251,7 @@ class ManagementController:
         resource_comment_summaries = (
             resource_comments_service.get_resource_comment_summaries(target)
         )
-        ManagementController._check_organization_admin_role_with_resource(
+        AdminController._check_organization_admin_role_with_resource(
             resource_comment_summaries
         )
         resource_comments_service.approve_resource_comments(target, current_user.id)
@@ -270,9 +264,7 @@ class ManagementController:
     @check_administrator
     def delete_utilization_comments(target):
         utilizations = utilization_service.get_utilizations(target)
-        ManagementController._check_organization_admin_role_with_utilization(
-            utilizations
-        )
+        AdminController._check_organization_admin_role_with_utilization(utilizations)
         utilization_comments_service.delete_utilization_comments(target)
         utilization_comments_service.refresh_utilizations_comments(utilizations)
         session.commit()
@@ -283,9 +275,7 @@ class ManagementController:
     @check_administrator
     def delete_utilization(target):
         utilizations = utilization_service.get_utilizations(target)
-        ManagementController._check_organization_admin_role_with_utilization(
-            utilizations
-        )
+        AdminController._check_organization_admin_role_with_utilization(utilizations)
         utilization_service.delete_utilization(target)
         session.commit()
 
@@ -297,7 +287,7 @@ class ManagementController:
         resource_comment_summaries = (
             resource_comments_service.get_resource_comment_summaries(target)
         )
-        ManagementController._check_organization_admin_role_with_resource(
+        AdminController._check_organization_admin_role_with_resource(
             resource_comment_summaries
         )
         resource_comments_service.delete_resource_comments(target)
