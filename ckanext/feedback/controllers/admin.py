@@ -24,14 +24,14 @@ log = logging.getLogger(__name__)
 
 
 class AdminController:
-    # management/top
+    # feedback/admin
     @staticmethod
     @check_administrator
     def admin():
         management_list = [
             {
                 'name': _('Approval and Delete'),
-                'url': 'feedback.approval-delete',
+                'url': 'feedback.approval-and-delete',
                 'description': _(
                     'You can change the approval status of resource comments '
                     'to the organization, utilization requests, '
@@ -53,7 +53,7 @@ class AdminController:
             # 有効化
             active_list.append(name)
 
-        url = f"{toolkit.url_for('feedback.approval-delete')}"
+        url = f"{toolkit.url_for('feedback.approval-and-delete')}"
 
         sort_param = request.args.get('sort')
         if sort_param:
@@ -83,7 +83,7 @@ class AdminController:
             filter_item_list.append(filter_item)
         return {"type": filter_set_name, "list": filter_item_list}
 
-    # management/feedback-approval
+    # feedback/admin/approval-and-delete
     @staticmethod
     @check_administrator
     def approval_and_delete():
@@ -91,7 +91,7 @@ class AdminController:
         sort = request.args.get('sort', 'newest')
 
         page, limit, offset, pager_url = get_pagination_value(
-            'feedback.approval-delete'
+            'feedback.approval-and-delete'
         )
 
         # If user is organization admin
@@ -171,7 +171,7 @@ class AdminController:
             },
         )
 
-    # feedback/management/approve_target
+    # feedback/admin/approve_target
     @staticmethod
     @check_administrator
     def approve_target():
@@ -193,9 +193,9 @@ class AdminController:
             allow_html=True,
         )
 
-        return toolkit.redirect_to('feedback.approval-delete')
+        return toolkit.redirect_to('feedback.approval-and-delete')
 
-    # feedback/management/delete_target
+    # feedback/admin/delete_target
     @staticmethod
     @check_administrator
     def delete_target():
@@ -217,7 +217,7 @@ class AdminController:
             allow_html=True,
         )
 
-        return toolkit.redirect_to('feedback.approval-delete')
+        return toolkit.redirect_to('feedback.approval-and-delete')
 
     @staticmethod
     @check_administrator

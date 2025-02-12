@@ -90,7 +90,7 @@ class TestAdminController:
             g.userobj = current_user
             url = AdminController.get_href(name, active_list)
 
-        assert '/feedback/management/approval-delete?filter=resource' == url
+        assert '/feedback/admin/approval-and-delete?filter=resource' == url
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.args')
@@ -311,7 +311,7 @@ class TestAdminController:
             '3 ' + _('approval completed.'),
             allow_html=True,
         )
-        mock_redirect_to.assert_called_once_with('feedback.approval-delete')
+        mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
@@ -352,7 +352,7 @@ class TestAdminController:
             '0 ' + _('approval completed.'),
             allow_html=True,
         )
-        mock_redirect_to.assert_called_once_with('feedback.approval-delete')
+        mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
@@ -406,7 +406,7 @@ class TestAdminController:
             '3 ' + _('delete completed.'),
             allow_html=True,
         )
-        mock_redirect_to.assert_called_once_with('feedback.approval-delete')
+        mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
@@ -447,7 +447,7 @@ class TestAdminController:
             '0 ' + _('delete completed.'),
             allow_html=True,
         )
-        mock_redirect_to.assert_called_once_with('feedback.approval-delete')
+        mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
