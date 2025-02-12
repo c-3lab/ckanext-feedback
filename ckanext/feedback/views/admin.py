@@ -10,13 +10,13 @@ rules = [
     (
         '/management',
         'management',
-        admin.AdminController.management,
+        admin.AdminController.admin,
         {'methods': ['GET']},
     ),
     (
         '/management/approval-delete',
         'approval-delete',
-        admin.AdminController.admin,
+        admin.AdminController.approval_and_delete,
         {'methods': ['GET']},
     ),
     (
@@ -38,5 +38,5 @@ for rule, endpoint, view_func, *others in rules:
 
 
 @add_error_handler
-def get_management_blueprint():
+def get_admin_blueprint():
     return blueprint
