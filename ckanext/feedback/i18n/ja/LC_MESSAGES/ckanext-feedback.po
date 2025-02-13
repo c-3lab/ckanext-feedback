@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-02-12 10:27+0900\n"
+"POT-Creation-Date: 2025-02-13 13:20+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -113,10 +113,10 @@ msgstr "承認・削除"
 #: ckanext/feedback/controllers/admin.py:35
 #: ckanext/feedback/templates/admin/approval_and_delete.html:130
 msgid ""
-"You can change the approval status of resource comments to the "
-"organization, utilization requests, or comments on registered "
-"utilizations."
-msgstr "組織に対するリソースコメント、利用申請、登録された利用に対するコメントの承認ステータスを変更することができます。"
+"This is the management screen for approving or deleting resource "
+"comments, utilization method registration requests, and utilization "
+"method comments related to the organization's resources."
+msgstr "組織のリソースに対するリソースコメント、利活用方法登録申請、利活用方法コメントの承認・削除を行う管理画面です。"
 
 #: ckanext/feedback/controllers/admin.py:123
 #: ckanext/feedback/templates/admin/approval_and_delete.html:100
@@ -339,8 +339,11 @@ msgid "What are Feedback Admin"
 msgstr "フィードバック管理について"
 
 #: ckanext/feedback/templates/admin/admin.html:45
-msgid "You can manage feedback on the dataset."
-msgstr "組織へのフィードバックを管理できます。"
+msgid ""
+"Provides management features for feedback. You can access various screens"
+" related to feedback management, such as reviewing and approving "
+"feedback."
+msgstr "フィードバックに関する管理機能を提供します。フィードバック管理に関連する様々な画面へアクセスできます。"
 
 #: ckanext/feedback/templates/admin/approval_and_delete.html:21
 msgid "Order by"
@@ -704,111 +707,3 @@ msgstr "データリソース"
 #: ckanext/feedback/templates/utilization/search.html:62
 msgid "Registered"
 msgstr "登録日"
-
-#~ msgid "Dashboard (%(num)d new item)"
-#~ msgid_plural "Dashboard (%(num)d new items)"
-#~ msgstr[0] "ダッシュボード (%(num)d 件の新着アイテム)"
-
-#~ msgid "Top"
-#~ msgstr "Top"
-
-#~ msgid "Group"
-#~ msgstr "グループ"
-
-#~ msgid "Search Datasets"
-#~ msgstr "データセット検索"
-
-#~ msgid "Bulk Appproval"
-#~ msgstr "一括承認"
-
-#~ msgid "Additional Information"
-#~ msgstr "追加情報"
-
-#~ msgid "Field"
-#~ msgstr "フィールド"
-
-#~ msgid "Value"
-#~ msgstr "値"
-
-#~ msgid "Data last updated"
-#~ msgstr "最終更新日"
-
-#~ msgid "unknown"
-#~ msgstr "不明"
-
-#~ msgid "Metadata last updated"
-#~ msgstr "メタデータ 最終更新日時"
-
-#~ msgid "Format"
-#~ msgstr "フォーマット"
-
-#~ msgid "License"
-#~ msgstr "ライセンス"
-
-#~ msgid "Source"
-#~ msgstr "ソース"
-
-#~ msgid "Author"
-#~ msgstr "作成者"
-
-#~ msgid "Maintainer"
-#~ msgstr "メンテナー"
-
-#~ msgid "Version"
-#~ msgstr "バージョン"
-
-#~ msgid "State"
-#~ msgstr "状態"
-
-#~ msgid "Last Updated"
-#~ msgstr "最終更新"
-
-#~ msgid "Advertise"
-#~ msgstr "宣伝"
-
-#~ msgid "Please provide a valid URL"
-#~ msgstr "有効なURLを入力してください。"
-
-#~ msgid "Management Comments"
-#~ msgstr "コメント管理"
-
-#~ msgid "Category"
-#~ msgstr "カテゴリー"
-
-#~ msgid "Utilization Comments"
-#~ msgstr "利活用コメント"
-
-#~ msgid "Resource Comments"
-#~ msgstr "リソースコメント"
-
-#~ msgid "Comments Body"
-#~ msgstr "本文"
-
-#~ msgid "Utilization Title"
-#~ msgstr "利活用方法"
-
-#~ msgid "Created"
-#~ msgstr "作成日"
-
-#~ msgid "What are Feedback Approval・Remove"
-#~ msgstr "フィードバック 承認・削除について"
-
-#~ msgid "Is it okay to approve checked %d item(s)?"
-#~ msgstr "チェックした%d項目を承認してもよろしいですか？"
-
-#~ msgid "Is it okay to delete checked %d item(s)?"
-#~ msgstr "チェックした%d項目を削除してもよろしいですか？"
-
-#~ msgid "Bulk Approval"
-#~ msgstr "一括承認"
-
-#~ msgid "Bulk Delete"
-#~ msgstr "一括削除"
-
-#~ msgid "Feedback Approval and Delete"
-#~ msgstr "フィードバック 承認・削除"
-
-# | msgid "Toggle navigation"
-#~ msgid "aggregation"
-#~ msgstr "トグル ナビゲーション"
-

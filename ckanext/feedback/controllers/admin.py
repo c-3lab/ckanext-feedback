@@ -33,9 +33,10 @@ class AdminController:
                 'name': _('Approval and Delete'),
                 'url': 'feedback.approval-and-delete',
                 'description': _(
-                    'You can change the approval status of resource comments '
-                    'to the organization, utilization requests, '
-                    'or comments on registered utilizations.'
+                    "This is the management screen for approving or deleting "
+                    "resource comments, utilization method registration requests, "
+                    "and utilization method comments related to "
+                    "the organization's resources."
                 ),
             },
         ]
