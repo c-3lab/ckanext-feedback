@@ -93,9 +93,10 @@ class AdminController:
             'feedback.approval-and-delete'
         )
 
-        # If user is organization admin
         owner_orgs = None
         if not current_user.sysadmin:
+            # If the user is not a sysadmin, feedbacks for the organization groups
+            # the user is an admin of will be retrieved.
             owner_orgs = current_user.get_group_ids(
                 group_type='organization', capacity='admin'
             )
@@ -112,6 +113,8 @@ class AdminController:
                 offset=offset,
             )
         else:
+            # If the user is a sysadmin, all feedbacks
+            # will be retrieved regardless of group affiliation.
             feedbacks, total_count = feedback_service.get_feedbacks(
                 active_filters=active_filters, sort=sort, limit=limit, offset=offset
             )
