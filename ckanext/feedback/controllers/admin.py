@@ -48,10 +48,8 @@ class AdminController:
 
     def get_href(name, active_list):
         if name in active_list:
-            # 無効化
             active_list.remove(name)
         else:
-            # 有効化
             active_list.append(name)
 
         url = f"{toolkit.url_for('feedback.approval-and-delete')}"
