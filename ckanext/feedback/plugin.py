@@ -8,8 +8,8 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
-from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.controllers.api import ranking as get_action_controllers
+from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.download import summary as download_summary_service
