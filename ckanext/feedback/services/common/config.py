@@ -290,6 +290,15 @@ class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
         self.subject_resource_comment.set_config(feedback_config)
 
 
+class MoralKeeperAiConfig(BaseConfig, FeedbackConfigInterface):
+    def __init__(self):
+        super().__init__('moral_keeper_ai')
+        self.default = False
+
+    def load_config(self, feedback_config):
+        self.set_enable_and_enable_orgs(feedback_config)
+
+
 class FeedbackConfig(Singleton):
     is_feedback_config_file = None
     _initialized = False
@@ -310,6 +319,7 @@ class FeedbackConfig(Singleton):
             self.recaptcha = ReCaptchaConfig()
             self.notice_email = NoticeEmailConfig()
             self.like = LikesConfig()
+            self.moral_keeper_ai = MoralKeeperAiConfig()
 
     def load_feedback_config(self):
         try:

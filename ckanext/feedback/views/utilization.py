@@ -34,6 +34,18 @@ rules = [
         {'methods': ['POST']},
     ),
     (
+        '/<utilization_id>/comment/suggested',
+        'suggested_comment',
+        utilization.UtilizationController.suggested_comment,
+        {'methods': ['GET', 'POST']},
+    ),
+    (
+        '/<utilization_id>/comment/check',
+        'check_comment',
+        utilization.UtilizationController.check_comment,
+        {'methods': ['GET', 'POST']},
+    ),
+    (
         '/<utilization_id>/comment/<comment_id>/approve',
         'approve_comment',
         utilization.UtilizationController.approve_comment,

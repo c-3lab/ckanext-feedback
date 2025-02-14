@@ -46,7 +46,7 @@
               </div>
             {% endif %}
             <br>
-            <form id="comment_form" name="comment_form" action="{{ h.url_for('resource_comment.create_comment', resource_id=resource.id ) }}" method="post">
+            <form id="comment_form" name="comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post">
               <input type="hidden" id="rating" name="rating" value=""/>
               <input type="hidden" id="package_name" name="package_name" value="{{ pkg_dict.name }}">
               {% for category in categories %}
@@ -58,7 +58,7 @@
               <br>
               <br>
               <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
-              <div class="char-count"><span id="comment-count" class="comment-count">0</span>/1000</div>
+              <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
               <div>
                 <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
                 <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
@@ -67,8 +67,25 @@
                 <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
               {% endif %}
               <br>
+              <div class="notice-container">
+                <h3>
+                  <span><i class="fa-solid fa-triangle-exclamation"></i></span>
+                  <span>{{ _('Please check before sending') }}</span>
+                </h3>
+                <h4>{{ _('Comment Policy') }}</h4>
+                <ul>
+                  <li><strong>{{ _('Constructive criticism') }}: </strong>{{ _('When seeking improvements, provide constructive and specific criticism. Including alternative suggestions or problem-solving proposals can lead to improvements that meet the needs.') }}</li>
+                  <li><strong>{{ _('Respect Privacy and Ethics') }}: </strong>{{ _('When posting comments, remember to protect personal information and consider ethical implications.') }}</li>
+                  <li><strong>{{ _('Positive Feedback') }}: </strong>{{ _('Positive comments contribute more to the motivation of data providers and provide valuable deta than aggressive negative comments.') }}</li>
+                </ul>
+              </div>
+              <br>
               <div class="form-actions">
-                <button class="btn btn-primary" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
+                {% else %}
+                <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+                {% endif %}
               </div>
               <br>
               <br>
@@ -126,6 +143,7 @@
                 {{ _('Unapproved') }}
               {% endif %}
             </h4>
+            <br>
             <div class="content-align wrap-text {{'unapproved' if not comment.approval }}">
               {% if comment.content %}
                 <div class="{{'unapproved' if not comment.approval }}">
@@ -173,7 +191,11 @@
               </div>
             </div>
             <div class="modal-footer">
+              {% if h.is_base_public_folder_bs3() %}
+              <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">{{ _('Send') }}</button>
+              {% else %}
               <button class="btn btn-primary" onclick="return checkReplyExists(this);">{{ _('Send') }}</button>
+              {% endif %}
             </div>
           </form>
         </div>

@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from ckan import model
-from ckan.common import _
+from ckan.common import _, config
 from ckan.logic import get_action
 from ckan.model import Session, User
 from ckan.tests import factories
@@ -1469,7 +1469,7 @@ class TestUtilizationController:
         category = 'category'
         content = 'content'
 
-        mock_form.get.side_effect = [category, content]
+        mock_form.get.side_effect = [category, content, True]
 
         UtilizationController.create_comment(utilization_id)
 
@@ -1497,7 +1497,7 @@ class TestUtilizationController:
         category = ''
         content = ''
 
-        mock_form.get.side_effect = [category, content]
+        mock_form.get.side_effect = [category, content, True, True]
 
         UtilizationController.create_comment(utilization_id)
 
@@ -1520,7 +1520,7 @@ class TestUtilizationController:
             if 1000 < len(content):
                 break
 
-        mock_form.get.side_effect = [category, content]
+        mock_form.get.side_effect = [category, content, True, True]
 
         UtilizationController.create_comment(utilization_id)
 
@@ -1557,6 +1557,441 @@ class TestUtilizationController:
         mock_is_recaptcha_verified.return_value = False
         UtilizationController.create_comment(utilization_id)
         mock_details.assert_called_once_with(utilization_id, category, content)
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.suggest_ai_comment')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    def test_suggested_comment(
+        self,
+        mock_get_resource,
+        mock_suggest_ai_comment,
+        mock_get_utilization,
+        mock_render,
+    ):
+        utilization_id = 'utilization_id'
+        category = 'category'
+        content = 'comment_content'
+        softened = 'mock_softened'
+
+        mock_suggest_ai_comment.return_value = softened
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_resource.organization_name = 'mock_organization_name'
+        mock_get_resource.return_value = mock_resource
+
+        UtilizationController.suggested_comment(utilization_id, category, content)
+        mock_render.assert_called_once_with(
+            'utilization/suggestion.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'selected_category': category,
+                'content': content,
+                'softened': softened,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.suggest_ai_comment')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    def test_suggested_comment_is_None(
+        self,
+        mock_get_resource,
+        mock_suggest_ai_comment,
+        mock_get_utilization,
+        mock_render,
+    ):
+        utilization_id = 'utilization_id'
+        category = 'category'
+        content = 'comment_content'
+        softened = None
+
+        mock_suggest_ai_comment.return_value = softened
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_resource.organization_name = 'mock_organization_name'
+        mock_get_resource.return_value = mock_resource
+
+        UtilizationController.suggested_comment(utilization_id, category, content)
+        mock_render.assert_called_once_with(
+            'utilization/expect_suggestion.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'selected_category': category,
+                'content': content,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    def test_check_comment_GET(
+        self,
+        mock_redirect_to,
+        mock_form,
+    ):
+        utilization_id = 'utilization_id'
+
+        mock_form.return_value = 'GET'
+
+        UtilizationController.check_comment(utilization_id)
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_utilization_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    def test_check_comment_POST_moral_keeper_ai_disable(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_utilization,
+        mock_get_utilization_comment_categories,
+        mock_is_recaptcha_verified,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = False
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_utilization_comment_categories.return_value = 'mock_categories'
+
+        UtilizationController.check_comment(utilization_id)
+        mock_render.assert_called_once_with(
+            'utilization/comment_check.html',
+            {
+                'pkg_dict': mock_package,
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'content': content,
+                'selected_category': category,
+                'categories': 'mock_categories',
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_utilization_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    def test_check_comment_POST_judgement_True(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_check_ai_comment,
+        mock_get_resource,
+        mock_get_utilization,
+        mock_get_utilization_comment_categories,
+        mock_is_recaptcha_verified,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        judgement = True
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_check_ai_comment.return_value = judgement
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_utilization_comment_categories.return_value = 'mock_categories'
+
+        UtilizationController.check_comment(utilization_id)
+        mock_render.assert_called_once_with(
+            'utilization/comment_check.html',
+            {
+                'pkg_dict': mock_package,
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'content': content,
+                'selected_category': category,
+                'categories': 'mock_categories',
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'UtilizationController.suggested_comment'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_utilization_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    def test_check_comment_POST_judgement_False(
+        self,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_utilization,
+        mock_get_utilization_comment_categories,
+        mock_suggested_comment,
+        mock_check_ai_comment,
+        mock_is_recaptcha_verified,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        judgement = False
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'comment-suggested': False,
+        }.get(x, default)
+
+        mock_check_ai_comment.return_value = judgement
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_utilization_comment_categories.return_value = 'mock_categories'
+
+        UtilizationController.check_comment(utilization_id)
+        mock_suggested_comment.assert_called_once_with(
+            utilization_id=utilization_id,
+            category=category,
+            content=content,
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_utilization_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    def test_check_comment_POST_suggested(
+        self,
+        mock_render,
+        mock_get_action,
+        mock_get_resource,
+        mock_get_utilization,
+        mock_get_utilization_comment_categories,
+        mock_is_recaptcha_verified,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'comment-suggested': True,
+        }.get(x, default)
+
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'mock_resource_id'
+        mock_get_utilization.return_value = mock_utilization
+
+        mock_resource = MagicMock()
+        mock_get_resource.return_value = mock_resource
+
+        mock_package = 'mock_package'
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = mock_package
+        mock_get_action.return_value = mock_package_show
+
+        mock_get_utilization_comment_categories.return_value = 'mock_categories'
+
+        UtilizationController.check_comment(utilization_id)
+        mock_render.assert_called_once_with(
+            'utilization/comment_check.html',
+            {
+                'pkg_dict': mock_package,
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'content': content,
+                'selected_category': category,
+                'categories': 'mock_categories',
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    def test_check_comment_POST_no_comment_and_category(
+        self,
+        mock_redirect_to,
+        mock_method,
+    ):
+        utilization_id = 'utilization_id'
+        mock_method.return_value = 'POST'
+
+        mock_MoralKeeperAI = MagicMock()
+        mock_MoralKeeperAI.return_value = None
+
+        UtilizationController.check_comment(utilization_id)
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
+    def test_check_comment_POST_bad_recaptcha(
+        self,
+        mock_details,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'utilization_id'
+        category = 'category'
+        content = 'comment_content'
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'comment-suggested': True,
+        }.get(x, default)
+
+        mock_is_recaptcha_verified.return_value = False
+
+        UtilizationController.check_comment(utilization_id)
+        mock_flash_error.assert_called_once_with(
+            'Bad Captcha. Please try again.', allow_html=True
+        )
+        mock_details.assert_called_once_with(utilization_id, category, content)
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    def test_check_comment_POST_without_validate_comment(
+        self,
+        mock_redirect_to,
+        mock_flash_error,
+        mock_is_recaptcha_verified,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'utilization_id'
+        category = 'category'
+        content = 'comment_content'
+        while len(content) < 1000:
+            content += content
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'comment-suggested': True,
+        }.get(x, default)
+
+        mock_is_recaptcha_verified.return_value = True
+
+        UtilizationController.check_comment(utilization_id)
+        mock_flash_error.assert_called_once_with(
+            'Please keep the comment length below 1000',
+            allow_html=True,
+        )
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details',
+            utilization_id=utilization_id,
+            category=category,
+        )
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')

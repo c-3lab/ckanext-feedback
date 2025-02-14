@@ -14,6 +14,10 @@ import ckanext.feedback.services.resource.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
+from ckanext.feedback.services.common.ai_functions import (
+    check_ai_comment,
+    suggest_ai_comment,
+)
 from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
@@ -82,18 +86,15 @@ class ResourceController:
     def create_comment(resource_id):
         package_name = request.form.get('package_name', '')
         category = None
-        content = None
-        if request.form.get('comment-content'):
-            content = request.form.get('comment-content')
-            category = request.form.get('category')
-        rating = None
-        if request.form.get('rating'):
-            rating = int(request.form.get('rating'))
+        if content := request.form.get('comment-content', ''):
+            category = request.form.get('category', '')
+        if rating := request.form.get('rating', ''):
+            rating = int(rating)
         if not (category and content):
             toolkit.abort(400)
 
         if not is_recaptcha_verified(request):
-            helpers.flash_error(_(u'Bad Captcha. Please try again.'), allow_html=True)
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return ResourceController.comment(resource_id, category, content)
 
         if message := validate_service.validate_comment(content):
@@ -102,6 +103,9 @@ class ResourceController:
                 allow_html=True,
             )
             return ResourceController.comment(resource_id, category, content)
+
+        if not rating:
+            rating = None
 
         comment_service.create_resource_comment(resource_id, category, content, rating)
         summary_service.create_resource_summary(resource_id)
@@ -142,6 +146,105 @@ class ResourceController:
         resp.set_cookie(resource_id, 'alreadyPosted')
 
         return resp
+
+    # resource_comment/<resource_id>/comment/suggested
+    @staticmethod
+    def suggested_comment(resource_id, category='', content='', rating=''):
+        softened = suggest_ai_comment(comment=content)
+
+        context = {'model': model, 'session': session, 'for_view': True}
+
+        resource = comment_service.get_resource(resource_id)
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+
+        if softened is None:
+            return toolkit.render(
+                'resource/expect_suggestion.html',
+                {
+                    'resource': resource.Resource,
+                    'pkg_dict': package,
+                    'selected_category': category,
+                    'rating': rating,
+                    'content': content,
+                },
+            )
+
+        return toolkit.render(
+            'resource/suggestion.html',
+            {
+                'resource': resource.Resource,
+                'pkg_dict': package,
+                'selected_category': category,
+                'rating': rating,
+                'content': content,
+                'softened': softened,
+            },
+        )
+
+    # resource_comment/<resource_id>/comment/check
+    @staticmethod
+    def check_comment(resource_id):
+        if request.method == 'GET':
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        category = None
+        if content := request.form.get('comment-content', ''):
+            category = request.form.get('category', '')
+        if rating := request.form.get('rating', ''):
+            rating = int(rating)
+        if not (category and content):
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
+            return ResourceController.comment(resource_id, category, content)
+
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return ResourceController.comment(resource_id, category, content)
+
+        categories = comment_service.get_resource_comment_categories()
+        resource = comment_service.get_resource(resource_id)
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+
+        if not request.form.get(
+            'comment-suggested', False
+        ) and FeedbackConfig().moral_keeper_ai.is_enable(
+            resource.Resource.package.owner_org
+        ):
+            if check_ai_comment(comment=content) is False:
+                return ResourceController.suggested_comment(
+                    resource_id=resource_id,
+                    rating=rating,
+                    category=category,
+                    content=content,
+                )
+
+        return toolkit.render(
+            'resource/comment_check.html',
+            {
+                'resource': resource.Resource,
+                'pkg_dict': package,
+                'categories': categories,
+                'selected_category': category,
+                'rating': rating,
+                'content': content,
+            },
+        )
 
     # resource_comment/<resource_id>/comment/approve
     @staticmethod

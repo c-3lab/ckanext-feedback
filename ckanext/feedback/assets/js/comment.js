@@ -1,5 +1,15 @@
-function checkCommentExists(button) {
-  const comment = document.getElementById('comment-content').value;
+const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
+const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
+
+function checkCommentExists(button, bs3=false) {
+  let comment
+  if ( button.id === "comment-button" ) {
+    comment = document.getElementById('comment-content').value;
+  }
+  if ( button.id === "proposal-comment-button" ) {
+    comment = document.getElementById('proposal-comment-content').value;
+  }
+
   const rating = document.getElementById('rating').value;
   const commentNoneErrorElement = document.getElementById('comment-none-error');
   const commentOverErrorElement = document.getElementById('comment-over-error');
@@ -17,7 +27,17 @@ function checkCommentExists(button) {
     commentOverErrorElement.style.display = '';
     return false;
   }
-  button.style.pointerEvents = "none"
+  const sendButtons = document.getElementsByName('send-button');
+  sendButtons.forEach(button => {
+    button.style.pointerEvents = "none";
+    button.style.background = "#333333";
+    if (!bs3) {
+      button.innerHTML = spinner + button.innerHTML;
+    }else{
+      button.innerHTML = spinner_bs3 + button.innerHTML;
+    }
+  });
+
   return true;
 }
 
@@ -67,12 +87,30 @@ function setButtonDisable(button) {
 }
 
 //文字数カウント
-document.addEventListener('DOMContentLoaded', function() {
-  const textarea = document.getElementById('comment-content');
-  const charCount = document.getElementById('comment-count');
+document.addEventListener('DOMContentLoaded', () => {
+  const textareas = document.getElementsByName('comment-content');
+  const charCounts = document.getElementsByName('comment-count');
 
-  textarea.addEventListener('input', function() {
+  function updateCharCount(textarea, charCount) {
     const currentLength = textarea.value.length;
     charCount.textContent = currentLength;
+  }
+
+  textareas.forEach((textarea, index) => {
+    updateCharCount(textarea, charCounts[index]);
+    textarea.addEventListener('input', () => {
+      const currentLength = textarea.value.length;
+      charCounts[index].textContent = currentLength;
+    });
+  });
+});
+
+window.addEventListener('pageshow', () => {
+  const sendButtons = document.getElementsByName('send-button');
+  sendButtons.forEach(sendButton => {
+    sendButton.style.pointerEvents = "auto";
+    sendButton.style.background = "#206b82";
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
   });
 });

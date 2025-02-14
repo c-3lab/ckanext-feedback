@@ -68,7 +68,7 @@
           <h4>{{ _('Comments') }}</h4>
           <p>{{ row.comment }}</p>
           <hr>
-          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
+          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post">
             <h4>{{ _('Comment') }}</h4>
             {% for category in categories %}
             <label class="radio">
@@ -78,15 +78,31 @@
             {% endfor %}
             <br>
             <br>
-            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="content" maxlength="1000">{{ content }}</textarea>
-            <div class="char-count"><span id="comment-count" class="comment-count">0</span>/1000</div>
+            <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
+            <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
             <div>
               <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
             <br>
-            <button class="btn btn-primary right-aligned" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+            <div class="notice-container">
+              <h3>
+                <span><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <span>{{ _('Please check before sending') }}</span>
+              </h3>
+              <h4>{{ _('Comment Policy') }}</h4>
+              <ul>
+                <li><strong>{{ _('Constructive criticism') }}: </strong>{{ _('When seeking improvements, provide constructive and specific criticism. Including alternative suggestions or problem-solving proposals can lead to improvements that meet the needs.') }}</li>
+                <li><strong>{{ _('Respect Privacy and Ethics') }}: </strong>{{ _('When posting comments, remember to protect personal information and consider ethical implications.') }}</li>
+                <li><strong>{{ _('Positive Feedback') }}: </strong>{{ _('Positive comments contribute more to the motivation of data providers and provide valuable deta than aggressive negative comments.') }}</li>
+              </ul>
+            </div>
             <br>
+            {% if h.is_base_public_folder_bs3() %}
+            <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
+            {% else %}
+            <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+            {% endif %}
             <br>
             <br>
           </form>
@@ -146,6 +162,7 @@
                 </div>
               </div>
             </div>
+            <br>
             <div class="modal-footer">
               <button class="btn btn-primary" onclick="return checkDescriptionExists(this)">{{ _('Certificate') }}</button>
             </div>
