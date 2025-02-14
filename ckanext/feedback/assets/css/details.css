@@ -54,3 +54,8 @@
 .comment-count {
   color: #808080;
 }
+
+label.radio {
+  margin-right: 24px;
+  display: inline-block;
+}

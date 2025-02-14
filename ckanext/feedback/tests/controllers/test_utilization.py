@@ -1047,7 +1047,7 @@ class TestUtilizationController:
                 'utilization': mock_utilization,
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
-                'selected_category': '',
+                'selected_category': 'REQUEST',
                 'content': '',
                 'page': 'mock_page',
             },
@@ -1149,7 +1149,7 @@ class TestUtilizationController:
                 'utilization': mock_utilization,
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
-                'selected_category': '',
+                'selected_category': 'REQUEST',
                 'content': '',
                 'page': 'mock_page',
             },
@@ -1231,7 +1231,7 @@ class TestUtilizationController:
                 'utilization': mock_utilization,
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
-                'selected_category': '',
+                'selected_category': 'REQUEST',
                 'content': '',
                 'page': 'mock_page',
             },
@@ -1319,7 +1319,96 @@ class TestUtilizationController:
                 'utilization': mock_utilization,
                 'categories': 'categories',
                 'issue_resolutions': 'issue resolutions',
-                'selected_category': '',
+                'selected_category': 'REQUEST',
+                'content': '',
+                'page': 'mock_page',
+            },
+        )
+        assert g.pkg_dict['organization']['name'] == 'test_organization'
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    def test_details_thnak_with_user(
+        self,
+        mock_render,
+        mock_detail_service,
+        mock_get_resource,
+        mock_page,
+        mock_pagination,
+        current_user,
+    ):
+        utilization_id = 'utilization id'
+        user_dict = factories.User()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        mock_pagination.return_value = [
+            page,
+            limit,
+            offset,
+            _,
+        ]
+
+        mock_utilization = MagicMock()
+        mock_utilization.owner_org = 'organization id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        mock_detail_service.get_utilization_comments.return_value = [
+            'comments',
+            'total_count',
+        ]
+        mock_detail_service.get_utilization_comment_categories.return_value = (
+            'categories'
+        )
+        mock_detail_service.get_issue_resolutions.return_value = 'issue resolutions'
+
+        mock_organization = factories.Organization()
+        mock_dataset = MagicMock()
+        mock_dataset.owner_org = mock_organization['id']
+        mock_resource = MagicMock()
+        mock_resource.package = mock_dataset
+        mock_resource.organization_name = 'test_organization'
+        mock_get_resource.return_value = mock_resource
+
+        mock_page.return_value = 'mock_page'
+
+        UtilizationController.details(utilization_id, category='THANK')
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comment_categories.assert_called_once()
+        mock_detail_service.get_issue_resolutions.assert_called_once_with(
+            utilization_id
+        )
+        mock_detail_service.get_utilization_comments.assert_called_once_with(
+            utilization_id,
+            True,
+            limit=limit,
+            offset=offset,
+        )
+
+        mock_page.assert_called_once_with(
+            collection='comments',
+            page=page,
+            item_count='total_count',
+            items_per_page=limit,
+        )
+
+        mock_render.assert_called_once_with(
+            'utilization/details.html',
+            {
+                'utilization_id': utilization_id,
+                'utilization': mock_utilization,
+                'categories': 'categories',
+                'issue_resolutions': 'issue resolutions',
+                'selected_category': 'THANK',
                 'content': '',
                 'page': 'mock_page',
             },

@@ -12,6 +12,7 @@ import ckanext.feedback.services.resource.likes as likes_service
 import ckanext.feedback.services.resource.summary as summary_service
 import ckanext.feedback.services.resource.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
+from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.check import (
     check_administrator,
@@ -53,6 +54,10 @@ class ResourceController:
             context, {'id': resource.Resource.package_id}
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
+        if not category:
+            selected_category = ResourceCommentCategory.REQUEST.name
+        else:
+            selected_category = category
 
         return toolkit.render(
             'resource/comment.html',
@@ -61,7 +66,7 @@ class ResourceController:
                 'pkg_dict': package,
                 'categories': categories,
                 'cookie': cookie,
-                'selected_category': category,
+                'selected_category': selected_category,
                 'content': content,
                 'page': helpers.Page(
                     collection=comments,
