@@ -92,3 +92,8 @@
 textarea {
   padding-bottom: 25px; /* Adjust padding to account for char-count */
 }
+
+label.radio {
+  margin-right: 24px;
+  display: inline-block;
+}

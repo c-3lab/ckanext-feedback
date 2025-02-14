@@ -70,15 +70,12 @@
           <hr>
           <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post">
             <h4>{{ _('Comment') }}</h4>
-            <select name="category" id="category">
-              {% for category in categories %}
-                {% if category.name == selected_category %}
-                <option value="{{ category.name }}" selected>{{ _(category.value) }}</option>
-                {% else %}
-                <option value="{{ category.name }}">{{ _(category.value) }}</option>
-                {% endif %}
-              {% endfor %}
-            </select>
+            {% for category in categories %}
+            <label class="radio">
+              <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
+              {{ _(category.value) }}
+            </label>
+            {% endfor %}
             <br>
             <br>
             <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>

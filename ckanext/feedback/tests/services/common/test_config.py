@@ -2461,3 +2461,19 @@ class TestCheck:
         assert FeedbackConfig().moral_keeper_ai.is_enable() is True
         assert FeedbackConfig().moral_keeper_ai.is_enable(org_name) is True
         os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.config.get')
+    def test_get_enable_orgs(self, mock_config_get):
+        mock_config_get.side_effect = [True, ['org1', 'org2']]
+
+        result = FeedbackConfig().download.get_enable_orgs()
+
+        assert result == ['org1', 'org2']
+
+    @patch('ckanext.feedback.services.common.config.config.get')
+    def test_get_enable_orgs_false(self, mock_config_get):
+        mock_config_get.return_value = False
+
+        result = FeedbackConfig().download.get_enable_orgs()
+
+        assert result is False
