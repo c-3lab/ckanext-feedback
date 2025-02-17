@@ -68,14 +68,15 @@ class AdminController:
         filter_set_name, name_label_dict, active_filters, owner_orgs
     ):
         filter_item_list = []
+        filter_item_counts = feedback_service.get_feedbacks_total_count(
+            filter_set_name,
+        )
         for name, label in name_label_dict.items():
             filter_item = {}
             filter_item["name"] = name
             filter_item["label"] = label
             filter_item["href"] = AdminController.get_href(name, active_filters[:])
-            filter_item["count"] = feedback_service.get_feedbacks_count(
-                owner_orgs=owner_orgs, active_filters=name
-            )
+            filter_item["count"] = filter_item_counts.get(name, 0)
             filter_item["active"] = (
                 False if active_filters == [] else name in active_filters
             )

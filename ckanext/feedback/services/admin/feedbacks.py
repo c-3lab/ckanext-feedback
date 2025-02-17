@@ -1,9 +1,15 @@
 import logging
 
+from ckan.common import _
+from ckan.model.group import Group
+from ckan.model.package import Package
+from ckan.model.resource import Resource
 from sqlalchemy import func, select, union_all
 from sqlalchemy.sql import and_, or_
 
+from ckanext.feedback.models.resource_comment import ResourceComment
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.utilization import Utilization, UtilizationComment
 from ckanext.feedback.services.admin import (
     resource_comments as resource_comments_service,
 )
@@ -62,6 +68,8 @@ def get_feedbacks(
             - 'content': The actual feedback content.
             - 'created': The creation timestamp of the feedback.
             - 'is_approved': Approval status of the feedback.
+        total_count: Returns the number of cases obtained.
+        No limit on the number of rows.
     """
 
     resource_comments = resource_comments_service.get_resource_comments_query()
@@ -165,8 +173,87 @@ def get_feedbacks(
     return feedback_list, total_count
 
 
-def get_feedbacks_count(owner_orgs, active_filters):
-    feedback_list, total_count = get_feedbacks(
-        owner_orgs=owner_orgs, active_filters=[active_filters]
+def get_approval_counts():
+    approval_union = union_all(
+        select(ResourceComment.approval),
+        select(Utilization.approval),
+        select(UtilizationComment.approval),
+    ).alias("approval_union")
+
+    query = select(
+        func.count().filter(approval_union.c.approval.is_(True)).label("true_count"),
+        func.count().filter(approval_union.c.approval.is_(False)).label("false_count"),
     )
-    return total_count
+
+    results = session.execute(query).fetchone()
+
+    return {"approved": results[0], "unapproved": results[1]}
+
+
+def get_type_counts():
+    resource_comment_subquery = session.query(
+        func.count(ResourceComment.id).label('resource_comment_count')
+    ).subquery()
+    utilization_subquery = session.query(
+        func.count(Utilization.id).label('utilization_count')
+    ).subquery()
+    utilization_comment_subquery = session.query(
+        func.count(UtilizationComment.id).label('utilization_comment_count')
+    ).subquery()
+
+    counts = session.query(
+        resource_comment_subquery.c.resource_comment_count,
+        utilization_subquery.c.utilization_count,
+        utilization_comment_subquery.c.utilization_comment_count,
+    ).first()
+
+    return {
+        "resource": counts.resource_comment_count,
+        "utilization": counts.utilization_count,
+        "util-comment": counts.utilization_comment_count,
+    }
+
+
+def get_organization_counts():
+    resource_comment_query = (
+        session.query(Group.name, ResourceComment.id)
+        .join(Package, Group.id == Package.owner_org)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(ResourceComment, Resource.id == ResourceComment.resource_id)
+    )
+
+    utilization_query = (
+        session.query(Group.name, Utilization.id)
+        .join(Package, Group.id == Package.owner_org)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(Utilization, Resource.id == Utilization.resource_id)
+    )
+
+    utilization_comment_query = (
+        session.query(Group.name, UtilizationComment.id)
+        .join(Package, Group.id == Package.owner_org)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(Utilization, Resource.id == Utilization.resource_id)
+        .join(UtilizationComment, Utilization.id == UtilizationComment.utilization_id)
+    )
+
+    org_name_union = union_all(
+        resource_comment_query, utilization_query, utilization_comment_query
+    ).alias('org_name_union')
+
+    count_query = select(org_name_union.c[0], func.count().label('count')).group_by(
+        org_name_union.c[0]
+    )
+
+    results = session.execute(count_query).fetchall()
+
+    return {org_name: count for org_name, count in results}
+
+
+def get_feedbacks_total_count(filter_set_name):
+    if filter_set_name == _('Status'):
+        return get_approval_counts()
+    elif filter_set_name == _('Type'):
+        return get_type_counts()
+    elif filter_set_name == _('Organization'):
+        return get_organization_counts()
