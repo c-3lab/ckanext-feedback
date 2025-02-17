@@ -51,23 +51,13 @@
               <div class="org">
                 <div class="border-bottom fw-bold mb-2">
                   <div style="float:left;"><input class="checkbox-inline" type="checkbox" id="target-checkbox-all"></div>
-                  {% if h.is_base_public_folder_bs3() %}
-                    <div class="row form-check-label fs-6">
-                      <div class="col-xs-2">{{ _('Dataset') }}</div>
-                      <div class="col-xs-2">{{ _('Resource') }}</div>
-                      <div class="col-xs-1">{{ _('Type') }}</div>
-                      <div class="col-xs-5">{{ _('Post Content') }}</div>
-                      <div class="col-xs-2">{{ _('Status') }}</div>
-                    </div>
-                  {% else %}
-                    <div class="row form-check-label fs-6">
-                      <div class="col-2">{{ _('Dataset') }}</div>
-                      <div class="col-2">{{ _('Resource') }}</div>
-                      <div class="col-1">{{ _('Type') }}</div>
-                      <div class="col">{{ _('Post Content') }}</div>
-                      <div class="col-2">{{ _('Status') }}</div>
-                    </div>
-                  {% endif %}
+                  <div class="row form-check-label fs-6">
+                    <div class="col-2">{{ _('Dataset') }}</div>
+                    <div class="col-2">{{ _('Resource') }}</div>
+                    <div class="col-1">{{ _('Type') }}</div>
+                    <div class="col">{{ _('Post Content') }}</div>
+                    <div class="col-2">{{ _('Status') }}</div>
+                  </div>
                 </div>
                 {% for feedback in page.collection %}
                   <div class="target">
@@ -80,75 +70,39 @@
                         <input class="checkbox-inline" type="checkbox" name="utilization-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
                       {% endif %}
                     </div>
-                    {% if h.is_base_public_folder_bs3() %}
-                      <div class="row form-check-label fs-6">
-                        <a class="col-xs-2" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title|truncate(20) }}</a>
-                        <a class="col-xs-2" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name|truncate(20) }}</a>
-                        {% if feedback.feedback_type == 'リソースコメント' %}
-                          <div class="col-1 bubble" style="margin-right: 0;">
-                            <i class="fa-solid fa-comment-dots"></i>
-                            <div class="bubbleText position-right">{{ _('Resource Comment') }}</div>
-                          </div>
-                          <a class="col-xs-5" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content|truncate(30) }}</a>
-                        {% elif feedback.feedback_type == '利活用申請' %}
-                          <div class="col-1 bubble" style="margin-right: 0;">
-                            <i class="fa-solid fa-seedling"></i>
-                            <div class="bubbleText position-right">{{ _('Utilization') }}</div>
-                          </div>
-                          <a class="col-xs-5" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content|truncate(30) }}</a>
-                        {% elif feedback.feedback_type == '利活用コメント' %}
-                          <div class="col-1 bubble" style="margin-right: 0;">
-                            <span class="fa-stack" style="font-size: 7px;">
-                              <i class="fa fa-comment fa-stack-2x" style="text-align: start;"></i>
-                              <i class="fa-solid fa-seedling fa-stack-1x" style="color: #ffffff; text-align: start; margin-left: 3.3px;"></i>
-                            </span>
-                            <div class="bubbleText position-right">{{ _('Utilization Comment') }}</div>
-                          </div>
-                          <a class="col-xs-5" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content|truncate(30) }}</a>
-                        {% endif %}
-                        <div class="col-xs-2">
-                          {% if feedback.is_approved %}
-                            {{ _('Approved') }}
-                          {% else %}
-                            {{ _('Waiting') }}
-                          {% endif %}
+                    <div class="row form-check-label fs-6">
+                      <a class="col-2 text-truncate" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
+                      <a class="col-2 text-truncate" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
+                      {% if feedback.feedback_type == 'リソースコメント' %}
+                        <div class="col-1 bubble" style="margin-right: 0;">
+                          <i class="fa-solid fa-comment-dots"></i>
+                          <div class="bubbleText position-right">{{ _('Resource Comment') }}</div>
                         </div>
-                      </div>
-                    {% else %}
-                      <div class="row form-check-label fs-6">
-                        <a class="col-2 text-truncate" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
-                        <a class="col-2 text-truncate" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
-                        {% if feedback.feedback_type == 'リソースコメント' %}
-                          <div class="col-1 bubble" style="margin-right: 0;">
-                            <i class="fa-solid fa-comment-dots"></i>
-                            <div class="bubbleText position-right">{{ _('Resource Comment') }}</div>
-                          </div>
-                          <a class="col text-truncate" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
-                        {% elif feedback.feedback_type == '利活用申請' %}
-                          <div class="col-1 bubble" style="margin-right: 0;">
-                            <i class="fa-solid fa-seedling"></i>
-                            <div class="bubbleText position-right">{{ _('Utilization') }}</div>
-                          </div>
-                          <a class="col text-truncate" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
-                        {% elif feedback.feedback_type == '利活用コメント' %}
-                          <div class="col-1 bubble" style="margin-right: 0;">
-                            <span class="fa-stack" style="font-size: 7px;">
-                              <i class="fa fa-comment fa-stack-2x" style="text-align: start;"></i>
-                              <i class="fa-solid fa-seedling fa-stack-1x" style="color: #ffffff; text-align: start; margin-left: 3.3px;"></i>
-                            </span>
-                            <div class="bubbleText position-right">{{ _('Utilization Comment') }}</div>
-                          </div>
-                          <a class="col text-truncate" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
-                        {% endif %}
-                        <div class="col-2 text-truncate">
-                          {% if feedback.is_approved %}
-                            {{ _('Approved') }}
-                          {% else %}
-                            {{ _('Waiting') }}
-                          {% endif %}
+                        <a class="col text-truncate" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                      {% elif feedback.feedback_type == '利活用申請' %}
+                        <div class="col-1 bubble" style="margin-right: 0;">
+                          <i class="fa-solid fa-seedling"></i>
+                          <div class="bubbleText position-right">{{ _('Utilization') }}</div>
                         </div>
+                        <a class="col text-truncate" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
+                      {% elif feedback.feedback_type == '利活用コメント' %}
+                        <div class="col-1 bubble" style="margin-right: 0;">
+                          <span class="fa-stack" style="font-size: 7px;">
+                            <i class="fa fa-comment fa-stack-2x" style="text-align: start;"></i>
+                            <i class="fa-solid fa-seedling fa-stack-1x" style="color: #ffffff; text-align: start; margin-left: 3.3px;"></i>
+                          </span>
+                          <div class="bubbleText position-right">{{ _('Utilization Comment') }}</div>
+                        </div>
+                        <a class="col text-truncate" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                      {% endif %}
+                      <div class="col-2 text-truncate">
+                        {% if feedback.is_approved %}
+                          {{ _('Approved') }}
+                        {% else %}
+                          {{ _('Waiting') }}
+                        {% endif %}
                       </div>
-                    {% endif %}
+                    </div>
                   </div>
                 {% endfor %}
                 {% block page_pagination %}
