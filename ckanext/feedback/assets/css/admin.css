@@ -140,3 +140,9 @@ input[name="tab-menu"] {
 .management-heading a {
   color: #333;
 }
+
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

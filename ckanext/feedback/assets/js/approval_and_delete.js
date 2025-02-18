@@ -16,7 +16,7 @@ function getCheckedCheckboxes(name, approval) {
 }
 
 function processAction(action, isApproval) {
-    const form = document.getElementById('comments-form');
+    const form = document.getElementById('feedbacks-form');
     form.setAttribute("action", action);
 
     const resourceCommentWaiting = getCheckedCheckboxes('resource-comments-checkbox', 'False');
