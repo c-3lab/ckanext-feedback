@@ -192,7 +192,7 @@ class AdminController:
             target += AdminController.approve_utilization_comments(utilization_comments)
 
         helpers.flash_success(
-            f'{target} ' + _('approval completed.'),
+            f'{target} ' + _('item(s) were approved.'),
             allow_html=True,
         )
 
@@ -216,7 +216,7 @@ class AdminController:
             target += AdminController.delete_utilization_comments(utilization_comments)
 
         helpers.flash_success(
-            f'{target} ' + _('delete completed.'),
+            f'{target} ' + _('item(s) were completely deleted.'),
             allow_html=True,
         )
 
