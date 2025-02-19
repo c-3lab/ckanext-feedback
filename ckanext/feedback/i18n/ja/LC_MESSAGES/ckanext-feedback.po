@@ -455,11 +455,12 @@ msgstr "リソース名　降順"
 msgid "Post Content"
 msgstr "投稿内容"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:113
+#: ckanext/feedback/templates/admin/approval_and_delete.html:109
+#: ckanext/feedback/templates/admin/approval_and_delete.html:183
 msgid "There are no applications."
 msgstr "申請はありません。"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:126
+#: ckanext/feedback/templates/admin/approval_and_delete.html:197
 msgid "What are Approval and Delete"
 msgstr "承認・削除について"
 
