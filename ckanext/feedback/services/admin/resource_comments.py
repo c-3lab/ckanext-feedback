@@ -12,7 +12,9 @@ from ckanext.feedback.models.resource_comment import (
 from ckanext.feedback.models.session import session
 
 
-def get_resource_comments_query():
+def get_resource_comments_query(org_list):
+    org_names = [org['name'] for org in org_list]
+
     query = (
         session.query(
             Group.name.label('group_name'),
@@ -32,6 +34,25 @@ def get_resource_comments_query():
         .join(Group, Package.owner_org == Group.id)
         .join(Resource)
         .join(ResourceComment)
+        .filter(Group.name.in_(org_names))
+    )
+
+    return query
+
+
+def get_simple_resource_comments_query(org_list):
+    org_names = [org['name'] for org in org_list]
+
+    query = (
+        session.query(
+            Group.name.label('group_name'),
+            literal("リソースコメント").label("feedback_type"),
+            ResourceComment.approval.label('is_approved'),
+        )
+        .join(Package, Group.id == Package.owner_org)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(ResourceComment, Resource.id == ResourceComment.resource_id)
+        .filter(Group.name.in_(org_names))
     )
 
     return query

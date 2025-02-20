@@ -9,7 +9,9 @@ from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization, UtilizationComment
 
 
-def get_utilization_comments_query():
+def get_utilization_comments_query(org_list):
+    org_names = [org['name'] for org in org_list]
+
     query = (
         session.query(
             Group.name.label('group_name'),
@@ -30,6 +32,26 @@ def get_utilization_comments_query():
         .join(Resource)
         .join(Utilization)
         .join(UtilizationComment)
+        .filter(Group.name.in_(org_names))
+    )
+
+    return query
+
+
+def get_simple_utilization_comments_query(org_list):
+    org_names = [org['name'] for org in org_list]
+
+    query = (
+        session.query(
+            Group.name.label('group_name'),
+            literal("利活用コメント").label("feedback_type"),
+            UtilizationComment.approval.label('is_approved'),
+        )
+        .join(Package, Group.id == Package.owner_org)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(Utilization, Resource.id == Utilization.resource_id)
+        .join(UtilizationComment, Utilization.id == UtilizationComment.utilization_id)
+        .filter(Group.name.in_(org_names))
     )
 
     return query

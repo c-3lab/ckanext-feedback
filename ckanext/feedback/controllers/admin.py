@@ -64,12 +64,12 @@ class AdminController:
 
         return url
 
-    def create_filter_dict(
-        filter_set_name, name_label_dict, active_filters, owner_orgs
-    ):
+    def create_filter_dict(filter_set_name, name_label_dict, active_filters, org_list):
         filter_item_list = []
         filter_item_counts = feedback_service.get_feedbacks_total_count(
             filter_set_name,
+            active_filters,
+            org_list,
         )
         for name, label in name_label_dict.items():
             filter_item = {}
@@ -80,7 +80,9 @@ class AdminController:
             filter_item["active"] = (
                 False if active_filters == [] else name in active_filters
             )
-            filter_item_list.append(filter_item)
+            if filter_item["count"] > 0:
+                filter_item_list.append(filter_item)
+
         return {"type": filter_set_name, "list": filter_item_list}
 
     # feedback/admin/approval-and-delete
@@ -106,8 +108,9 @@ class AdminController:
                     'name': current_user.get_groups(group_type='organization')[0].name,
                 }
             }
+            org_list = organization_service.get_org_list(owner_orgs)
             feedbacks, total_count = feedback_service.get_feedbacks(
-                owner_orgs=owner_orgs,
+                org_list,
                 active_filters=active_filters,
                 sort=sort,
                 limit=limit,
@@ -116,8 +119,13 @@ class AdminController:
         else:
             # If the user is a sysadmin, all feedbacks
             # will be retrieved regardless of group affiliation.
+            org_list = organization_service.get_org_list()
             feedbacks, total_count = feedback_service.get_feedbacks(
-                active_filters=active_filters, sort=sort, limit=limit, offset=offset
+                org_list,
+                active_filters=active_filters,
+                sort=sort,
+                limit=limit,
+                offset=offset,
             )
 
         filters = []
@@ -135,27 +143,22 @@ class AdminController:
 
         filter_org = {}
 
-        if owner_orgs is None:
-            org_list = organization_service.get_org_list()
-        else:
-            org_list = organization_service.get_org_list(owner_orgs)
-
         for org in org_list:
             filter_org[org['name']] = org['title']
 
         filters.append(
             AdminController.create_filter_dict(
-                _('Status'), filter_status, active_filters, owner_orgs
+                _('Status'), filter_status, active_filters, org_list
             )
         )
         filters.append(
             AdminController.create_filter_dict(
-                _('Type'), filter_type, active_filters, owner_orgs
+                _('Type'), filter_type, active_filters, org_list
             )
         )
         filters.append(
             AdminController.create_filter_dict(
-                _('Organization'), filter_org, active_filters, owner_orgs
+                _('Organization'), filter_org, active_filters, org_list
             )
         )
 
