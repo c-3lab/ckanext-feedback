@@ -13,14 +13,17 @@
 .bubbleText {
     display: none;
     position: absolute;
-    bottom: 100%;  
-    padding: 5px;
+    bottom: calc(100% + 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px 10px;
     font-size: 9px;
     text-align: center;
     color: #fff;
     border-radius: 5px;
     background: #000;
-    width: 125px;
+    width: auto;
+    white-space: nowrap;
 }
 .bubbleText:before {
     content: "";
@@ -29,24 +32,8 @@
     left: 50%;
     border: 5px solid transparent;
     border-top: 5px solid #000;
-    margin-left: -15px;
-}
-.bubbleText.position-right:before {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 58%;
-    border: 5px solid transparent;
-    border-top: 5px solid #000;
-    margin-left: -15px;
+    transform: translateX(-50%);
 }
 .bubble:hover .bubbleText{
     display: inline-block;
-    top: -25px;
-    left: -40px;
-}
-.bubble:hover .bubbleText.position-right {
-    display: inline-block;
-    top: -25px;
-    left: -43px;
 }

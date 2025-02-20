@@ -146,3 +146,18 @@ input[name="tab-menu"] {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.feedback-list-header [class*="col-"] {
+  padding-left: 7.5px;
+  padding-right: 7.5px;
+}
+
+.feedback-list-body [class*="col-"] {
+  padding-left: 7.5px;
+  padding-right: 7.5px;
+  height: 20px;
+}
+
+.row {
+  margin-bottom: 0px;
+}
