@@ -4,9 +4,7 @@ from ckan.common import _
 from sqlalchemy import case, func, select, union_all
 from sqlalchemy.sql import and_
 
-from ckanext.feedback.models.resource_comment import ResourceComment
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.utilization import Utilization, UtilizationComment
 from ckanext.feedback.services.admin import (
     resource_comments as resource_comments_service,
 )
