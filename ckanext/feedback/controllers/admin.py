@@ -83,7 +83,11 @@ class AdminController:
             if filter_item["count"] > 0:
                 filter_item_list.append(filter_item)
 
-        return {"type": filter_set_name, "list": filter_item_list}
+        result_filter_item_list = sorted(
+            filter_item_list, key=lambda x: x["count"], reverse=True
+        )
+
+        return {"type": filter_set_name, "list": result_filter_item_list}
 
     # feedback/admin/approval-and-delete
     @staticmethod
