@@ -55,12 +55,15 @@ def get_resource_comment_categories():
 
 
 # Create new comment
-def create_resource_comment(resource_id, category, content, rating):
+def create_resource_comment(
+    resource_id, category, content, rating, attached_image_filename=None
+):
     comment = ResourceComment(
         resource_id=resource_id,
         category=category,
         content=content,
         rating=rating,
+        attached_image_filename=attached_image_filename,
     )
     session.add(comment)
 
