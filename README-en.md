@@ -4,7 +4,8 @@ English | [日本語](https://github.com/c-3lab/ckanext-feedback/blob/main/READM
 
 [![codecov](https://codecov.io/github/c-3lab/ckanext-feedback/graph/badge.svg?token=8T2RIXPXOM)](https://codecov.io/github/c-3lab/ckanext-feedback)
 
-This CKAN Extension provides functionality to obtain feedback from data users. The mechanism for receiving opinions/requests and reports on usage examples from users of this extension will help data users understand data and promote data utilization, while data providers will be able to understand data needs and improve the data improvement process. You can improve efficiency.
+This CKAN Extension provides functionality to obtain feedback from data users.  
+The mechanism for receiving opinions/requests and reports on usage examples from users of this extension will help data users understand data and promote data utilization, while data providers will be able to understand data needs and improve the data improvement process. You can improve efficiency.
 
 Feedback enables an ecosystem between users and providers that continually improves the data.
 
