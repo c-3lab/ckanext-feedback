@@ -92,8 +92,11 @@ class TestUtilizationComments:
         create_download_tables(engine)
 
     def test_get_utilization_comments_query(self):
-        query = utilization_comments.get_utilization_comments_query()
+        organization = factories.Organization()
 
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        query = utilization_comments.get_utilization_comments_query(org_list)
         sql_str = str(query.statement)
 
         assert "group_name" in sql_str
@@ -107,6 +110,18 @@ class TestUtilizationComments:
         assert "comment_id" in sql_str
         assert "content" in sql_str
         assert "created" in sql_str
+        assert "is_approved" in sql_str
+
+    def test_get_simple_utilization_comments_query(self):
+        organization = factories.Organization()
+
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        query = utilization_comments.get_simple_utilization_comments_query(org_list)
+        sql_str = str(query.statement)
+
+        assert "group_name" in sql_str
+        assert "feedback_type" in sql_str
         assert "is_approved" in sql_str
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
@@ -147,7 +162,6 @@ class TestUtilizationComments:
         category = UtilizationCommentCategory.QUESTION
         content = 'test content'
         created = datetime.now()
-        approved = datetime.now()
 
         register_utilization_comment(
             comment_id,
@@ -156,7 +170,7 @@ class TestUtilizationComments:
             content,
             created,
             False,
-            approved,
+            None,
             None,
         )
 

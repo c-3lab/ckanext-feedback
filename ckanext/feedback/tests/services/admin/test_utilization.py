@@ -75,8 +75,11 @@ class TestUtilization:
         create_download_tables(engine)
 
     def test_get_utilizations_query(self):
-        query = utilization_service.get_utilizations_query()
+        organization = factories.Organization()
 
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        query = utilization_service.get_utilizations_query(org_list)
         sql_str = str(query.statement)
 
         assert "group_name" in sql_str
@@ -90,6 +93,18 @@ class TestUtilization:
         assert "comment_id" in sql_str
         assert "content" in sql_str
         assert "created" in sql_str
+        assert "is_approved" in sql_str
+
+    def test_get_simple_utilizations_query(self):
+        organization = factories.Organization()
+
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        query = utilization_service.get_simple_utilizations_query(org_list)
+        sql_str = str(query.statement)
+
+        assert "group_name" in sql_str
+        assert "feedback_type" in sql_str
         assert "is_approved" in sql_str
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))

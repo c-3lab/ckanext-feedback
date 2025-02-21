@@ -70,8 +70,11 @@ class TestResourceComments:
         create_download_tables(engine)
 
     def test_get_resource_comments_query(self):
-        query = resource_comments.get_resource_comments_query()
+        organization = factories.Organization()
 
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        query = resource_comments.get_resource_comments_query(org_list)
         sql_str = str(query.statement)
 
         assert "group_name" in sql_str
@@ -87,6 +90,18 @@ class TestResourceComments:
         assert "created" in sql_str
         assert "is_approved" in sql_str
 
+    def test_get_simple_resource_comments_query(self):
+        organization = factories.Organization()
+
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        query = resource_comments.get_simple_resource_comments_query(org_list)
+        sql_str = str(query.statement)
+
+        assert "group_name" in sql_str
+        assert "feedback_type" in sql_str
+        assert "is_approved" in sql_str
+
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_resource_comment_ids(self):
         resource = factories.Resource()
@@ -95,7 +110,6 @@ class TestResourceComments:
         category = ResourceCommentCategory.QUESTION
         content = 'test content'
         created = datetime.now()
-        approved = datetime.now()
 
         register_resource_comment(
             comment_id,
@@ -105,7 +119,7 @@ class TestResourceComments:
             None,
             created,
             False,
-            approved,
+            None,
             None,
         )
 

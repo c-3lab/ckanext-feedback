@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,6 +15,8 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
 )
 from ckanext.feedback.controllers.admin import AdminController
+
+log = logging.getLogger(__name__)
 
 engine = model.repo.session.get_bind()
 
@@ -82,29 +85,85 @@ class TestAdminController:
         mock_current_user(current_user, user_dict)
 
         name = 'unapproved'
-        active_list = ['unapproved', 'resource']
-
-        mock_args.get.return_value = None
-
+        active_list = []
+        mock_args.get.return_value = 'newest'
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
             url = AdminController.get_href(name, active_list)
+        assert (
+            '/feedback/admin/approval-and-delete?sort=newest&filter=unapproved' == url
+        )
 
-        assert '/feedback/admin/approval-and-delete?filter=resource' == url
+        name = 'unapproved'
+        active_list = ['unapproved']
+        mock_args.get.return_value = None
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            url = AdminController.get_href(name, active_list)
+        assert '/feedback/admin/approval-and-delete' == url
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.admin.feedback_service.get_feedbacks_total_count'
+    )
+    def test_create_filter_dict(
+        self,
+        mock_get_feedback_total_count,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+
+        organization = factories.Organization()
+
+        filter_set_name = 'Status'
+        name_label_dict = {
+            "approved": 'Approved',
+            "unapproved": 'Waiting',
+        }
+        active_filters = []
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        mock_get_feedback_total_count.return_value = {"approved": 0, "unapproved": 1}
+
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            results = AdminController.create_filter_dict(
+                filter_set_name, name_label_dict, active_filters, org_list
+            )
+
+        expected_results = {
+            'type': 'Status',
+            'list': [
+                {
+                    'name': 'unapproved',
+                    'label': 'Waiting',
+                    'href': '/feedback/admin/approval-and-delete?filter=unapproved',
+                    'count': 1,
+                    'active': False,
+                }
+            ],
+        }
+
+        assert results == expected_results
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
-    @patch('ckanext.feedback.controllers.admin.feedback_service')
     @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.feedback_service')
+    @patch('ckanext.feedback.controllers.admin.AdminController.create_filter_dict')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     @patch('ckanext.feedback.controllers.admin.helpers.Page')
     def test_approval_and_delete_with_sysadmin(
         self,
         mock_page,
         mock_render,
-        mock_organization_service,
+        mock_create_filter_dict,
         mock_feedback_service,
+        mock_organization_service,
         mock_pagination,
         mock_args,
         current_user,
@@ -114,20 +173,19 @@ class TestAdminController:
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
-        organization_dict = factories.Organization()
-        dataset_dict = factories.Dataset()
-        resource_dict = factories.Dataset()
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=dataset['id'])
 
-        active_filters = []
-        sort = 'newest'
-        limit = 20
-        offset = 0
+        org_list = [
+            {'name': organization['name'], 'title': organization['title']},
+        ]
         feedback_list = [
             {
-                'package_name': dataset_dict['name'],
-                'package_title': dataset_dict['title'],
-                'resource_id': resource_dict['id'],
-                'resource_name': resource_dict['name'],
+                'package_name': dataset['name'],
+                'package_title': dataset['title'],
+                'resource_id': resource['id'],
+                'resource_name': resource['name'],
                 'utilization_id': 'util_001',
                 'feedback_type': 'リソースコメント',
                 'comment_id': 'cmt_001',
@@ -136,52 +194,52 @@ class TestAdminController:
                 'is_approved': False,
             },
         ]
-        org_list = [
-            {'name': organization_dict['name'], 'title': organization_dict['title']},
-        ]
 
-        mock_args.getlist.return_value = active_filters
-        mock_args.get.return_value = sort
+        mock_args.getlist.return_value = []
+        mock_args.get.return_value = 'newest'
         mock_pagination.return_value = [
             1,
-            limit,
-            offset,
+            20,
+            0,
             'pager_url',
         ]
+        mock_organization_service.get_org_list.return_value = org_list
         mock_feedback_service.get_feedbacks.return_value = feedback_list, len(
             feedback_list
         )
-        mock_organization_service.get_org_list.return_value = org_list
-        mock_feedback_service.get_feedbacks_count.return_value = len(feedback_list)
+        mock_create_filter_dict.return_value = 'mock_filter'
         mock_page.return_value = 'mock_page'
 
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
             AdminController.approval_and_delete()
 
-        mock_feedback_service.get_feedbacks.assert_called_once_with(
-            active_filters=active_filters, sort=sort, limit=limit, offset=offset
+        mock_render.assert_called_once_with(
+            'admin/approval_and_delete.html',
+            {
+                "filters": ['mock_filter', 'mock_filter', 'mock_filter'],
+                "sort": 'newest',
+                "page": 'mock_page',
+            },
         )
-        mock_organization_service.get_org_list.assert_called_once_with()
-        mock_render.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.request.args.getlist')
-    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
-    @patch('ckanext.feedback.controllers.admin.feedback_service')
     @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.feedback_service')
+    @patch('ckanext.feedback.controllers.admin.AdminController.create_filter_dict')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     @patch('ckanext.feedback.controllers.admin.helpers.Page')
     def test_approval_and_delete_with_org_admin(
         self,
         mock_page,
         mock_render,
-        mock_organization_service,
+        mock_create_filter_dict,
         mock_feedback_service,
+        mock_organization_service,
         mock_pagination,
-        mock_get,
-        mock_getlist,
+        mock_args,
         current_user,
         app,
         user_env,
@@ -192,8 +250,8 @@ class TestAdminController:
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
-        dataset_dict = factories.Dataset()
-        resource_dict = factories.Dataset()
+        dataset = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=dataset['id'])
 
         member = model.Member(
             group=organization,
@@ -205,16 +263,15 @@ class TestAdminController:
         model.Session.add(member)
         model.Session.commit()
 
-        active_filters = []
-        sort = 'newest'
-        limit = 20
-        offset = 0
+        org_list = [
+            {'name': organization_dict['name'], 'title': organization_dict['title']},
+        ]
         feedback_list = [
             {
-                'package_name': dataset_dict['name'],
-                'package_title': dataset_dict['title'],
-                'resource_id': resource_dict['id'],
-                'resource_name': resource_dict['name'],
+                'package_name': dataset['name'],
+                'package_title': dataset['title'],
+                'resource_id': resource['id'],
+                'resource_name': resource['name'],
                 'utilization_id': 'util_001',
                 'feedback_type': 'リソースコメント',
                 'comment_id': 'cmt_001',
@@ -223,41 +280,34 @@ class TestAdminController:
                 'is_approved': False,
             },
         ]
-        org_list = [
-            {'name': organization_dict['name'], 'title': organization_dict['title']},
-        ]
 
-        mock_getlist.return_value = active_filters
-        mock_get.return_value = sort
+        mock_args.getlist.return_value = []
+        mock_args.get.return_value = 'newest'
         mock_pagination.return_value = [
             1,
-            limit,
-            offset,
+            20,
+            0,
             'pager_url',
         ]
+        mock_organization_service.get_org_list.return_value = org_list
         mock_feedback_service.get_feedbacks.return_value = feedback_list, len(
             feedback_list
         )
-        mock_organization_service.get_org_list.return_value = org_list
-        mock_feedback_service.get_feedbacks_count.return_value = len(feedback_list)
+        mock_create_filter_dict.return_value = 'mock_filter'
         mock_page.return_value = 'mock_page'
 
         with app.get(url='/', environ_base=user_env):
             g.userobj = current_user
             AdminController.approval_and_delete()
 
-        mock_feedback_service.get_feedbacks.assert_called_once_with(
-            owner_orgs=[organization_dict['id']],
-            active_filters=active_filters,
-            sort=sort,
-            limit=limit,
-            offset=offset,
+        mock_render.assert_called_once_with(
+            'admin/approval_and_delete.html',
+            {
+                "filters": ['mock_filter', 'mock_filter', 'mock_filter'],
+                "sort": 'newest',
+                "page": 'mock_page',
+            },
         )
-        mock_organization_service.get_org_list.assert_called_once_with(
-            [organization_dict['id']]
-        )
-        mock_render.assert_called_once()
-        assert g.pkg_dict['organization']['name'] is not None
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
@@ -308,7 +358,7 @@ class TestAdminController:
         mock_approve_utilization.assert_called_once_with(utilization)
         mock_approve_utilization_comments.assert_called_once_with(utilization_comments)
         mock_flash_success.assert_called_once_with(
-            '3 ' + _('approval completed.'),
+            '3 ' + _('item(s) were approved.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
@@ -349,7 +399,7 @@ class TestAdminController:
         mock_management.approve_utilization.assert_not_called()
         mock_management.approve_utilization_comments.assert_not_called()
         mock_flash_success.assert_called_once_with(
-            '0 ' + _('approval completed.'),
+            '0 ' + _('item(s) were approved.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
@@ -403,7 +453,7 @@ class TestAdminController:
         mock_delete_utilization.assert_called_once_with(utilization)
         mock_delete_utilization_comments.assert_called_once_with(utilization_comments)
         mock_flash_success.assert_called_once_with(
-            '3 ' + _('delete completed.'),
+            '3 ' + _('item(s) were completely deleted.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
@@ -444,7 +494,7 @@ class TestAdminController:
         mock_management.delete_utilization.assert_not_called()
         mock_management.delete_utilization_comments.assert_not_called()
         mock_flash_success.assert_called_once_with(
-            '0 ' + _('delete completed.'),
+            '0 ' + _('item(s) were completely deleted.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
