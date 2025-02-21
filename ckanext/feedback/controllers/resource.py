@@ -3,9 +3,12 @@ import logging
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
+from ckan.lib.uploader import get_uploader
 from ckan.logic import get_action
 from ckan.plugins import toolkit
+from ckan.types import PUploader
 from flask import Response, make_response
+from werkzeug.datastructures import FileStorage
 
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.resource.likes as likes_service
@@ -33,7 +36,9 @@ class ResourceController:
     # Render HTML pages
     # resource_comment/<resource_id>
     @staticmethod
-    def comment(resource_id, category='', content=''):
+    def comment(
+        resource_id, category='', content='', attached_image_filename: str | None = None
+    ):
         approval = True
         resource = comment_service.get_resource(resource_id)
         if not isinstance(current_user, model.User):
@@ -72,6 +77,7 @@ class ResourceController:
                 'cookie': cookie,
                 'selected_category': selected_category,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
                 'page': helpers.Page(
                     collection=comments,
                     page=page,
@@ -90,25 +96,46 @@ class ResourceController:
             category = request.form.get('category', '')
         if rating := request.form.get('rating', ''):
             rating = int(rating)
+        attached_image_filename = request.form.get('attached_image_filename', None)
         if not (category and content):
             toolkit.abort(400)
 
+        attached_image: FileStorage = request.files.get("image-upload")
+        if attached_image:
+            try:
+                attached_image_filename = ResourceController._upload_image(
+                    attached_image
+                )
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return ResourceController.comment(resource_id, category, content)
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                toolkit.abort(500)
+
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return ResourceController.comment(resource_id, category, content)
+            return ResourceController.comment(
+                resource_id, category, content, attached_image_filename
+            )
 
         if message := validate_service.validate_comment(content):
             helpers.flash_error(
                 _(message),
                 allow_html=True,
             )
-            return ResourceController.comment(resource_id, category, content)
+            return ResourceController.comment(
+                resource_id, category, content, attached_image_filename
+            )
 
         if not rating:
             rating = None
 
-        comment_service.create_resource_comment(resource_id, category, content, rating)
+        comment_service.create_resource_comment(
+            resource_id, category, content, rating, attached_image_filename
+        )
         summary_service.create_resource_summary(resource_id)
+
         session.commit()
 
         try:
@@ -149,7 +176,13 @@ class ResourceController:
 
     # resource_comment/<resource_id>/comment/suggested
     @staticmethod
-    def suggested_comment(resource_id, category='', content='', rating=''):
+    def suggested_comment(
+        resource_id,
+        category='',
+        content='',
+        rating='',
+        attached_image_filename: str | None = None,
+    ):
         softened = suggest_ai_comment(comment=content)
 
         context = {'model': model, 'session': session, 'for_view': True}
@@ -169,6 +202,7 @@ class ResourceController:
                     'selected_category': category,
                     'rating': rating,
                     'content': content,
+                    'attached_image_filename': attached_image_filename,
                 },
             )
 
@@ -180,6 +214,7 @@ class ResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
                 'softened': softened,
             },
         )
@@ -197,21 +232,40 @@ class ResourceController:
             category = request.form.get('category', '')
         if rating := request.form.get('rating', ''):
             rating = int(rating)
+        attached_image_filename = request.form.get('attached_image_filename', None)
         if not (category and content):
             return toolkit.redirect_to(
                 'resource_comment.comment', resource_id=resource_id
             )
 
+        attached_image_filename = None
+        attached_image: FileStorage = request.files.get("image-upload")
+        if attached_image:
+            try:
+                attached_image_filename = ResourceController._upload_image(
+                    attached_image
+                )
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return ResourceController.comment(resource_id, category, content)
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                toolkit.abort(500)
+
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return ResourceController.comment(resource_id, category, content)
+            return ResourceController.comment(
+                resource_id, category, content, attached_image_filename
+            )
 
         if message := validate_service.validate_comment(content):
             helpers.flash_error(
                 _(message),
                 allow_html=True,
             )
-            return ResourceController.comment(resource_id, category, content)
+            return ResourceController.comment(
+                resource_id, category, content, attached_image_filename
+            )
 
         categories = comment_service.get_resource_comment_categories()
         resource = comment_service.get_resource(resource_id)
@@ -232,6 +286,7 @@ class ResourceController:
                     rating=rating,
                     category=category,
                     content=content,
+                    attached_image_filename=attached_image_filename,
                 )
 
         return toolkit.render(
@@ -243,6 +298,7 @@ class ResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
             },
         )
 
@@ -317,3 +373,17 @@ class ResourceController:
         resp = Response("OK", status=200, mimetype='text/plain')
         resp.set_cookie(resource_id, f'{like_status}', max_age=2147483647)
         return resp
+
+    @staticmethod
+    def _upload_image(image: FileStorage) -> str:
+        upload_to = comment_service.get_upload_destination()
+        uploader: PUploader = get_uploader(upload_to)
+        data_dict = {
+            "image_upload": image,
+        }
+        uploader.update_data_dict(
+            data_dict, 'image_url', 'image_upload', 'clear_upload'
+        )
+        attached_image_filename = data_dict["image_url"]
+        uploader.upload()
+        return attached_image_filename
