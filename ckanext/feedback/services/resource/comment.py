@@ -1,8 +1,12 @@
 from datetime import datetime
+from urllib.parse import urljoin
 
+from ckan.common import config
+from ckan.lib.uploader import get_uploader
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
+from ckan.types import PUploader
 from flask import request
 
 from ckanext.feedback.models.resource_comment import (
@@ -55,12 +59,15 @@ def get_resource_comment_categories():
 
 
 # Create new comment
-def create_resource_comment(resource_id, category, content, rating):
+def create_resource_comment(
+    resource_id, category, content, rating, attached_image_filename=None
+):
     comment = ResourceComment(
         resource_id=resource_id,
         category=category,
         content=content,
         rating=rating,
+        attached_image_filename=attached_image_filename,
     )
     session.add(comment)
 
@@ -95,3 +102,16 @@ def create_reply(resource_comment_id, content, creator_user_id):
 # Get cookie
 def get_cookie(resource_id):
     return request.cookies.get(resource_id)
+
+
+# Get url for attached image
+def get_attached_image_url(attached_image_filename: str) -> str:
+    site_url = config.get('ckan.site_url', '')
+    upload_to = get_upload_destination()
+    uploader: PUploader = get_uploader(upload_to, attached_image_filename)
+    return urljoin(site_url, f'uploads/{upload_to}/{uploader.old_filename}')
+
+
+# Get directory name to save attached image
+def get_upload_destination() -> str:
+    return "feedback_resouce_comment"
