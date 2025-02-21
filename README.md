@@ -57,7 +57,7 @@ CKANの環境に本Extensionを適用する手順を示します。
     ```bash
     ckan db upgrade -p feedback
     ```
-    * ckan.ini が見つからないなどのエラーが出る場合、 `ckan -c <ckan.iniのパス> db upgrade -p feedback` としてください。
+    * `ckan.ini` が見つからないなどのエラーが出る場合、 `ckan -c <ckan.iniのパス> db upgrade -p feedback` としてください。
 
 ## 構成
 
