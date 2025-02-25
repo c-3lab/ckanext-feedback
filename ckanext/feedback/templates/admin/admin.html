@@ -1,0 +1,55 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+  {% asset 'feedback/feedback-admin-css' %}
+{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Admin') }}</a></li>
+{% endblock %}
+
+{% block title %}{{ _('Feedback Admin') }} - CKAN{% endblock %}
+
+{% block primary_content %}
+  <article class="module">
+    <div class="module-content">
+      <div class="module-title">
+        <h1>{{ _('Feedback Admin') }}</h1>
+      </div>
+      <ul class="management-list list-unstyled" style="list-style-type: none;">
+        {% for management in management_list %}
+          <li class="management-item">
+            <div class="management-content">
+              <h2 class="management-heading">
+                <a href="{{ h.url_for(management.url) }}" title="{{ management.name }}">{{ management.name }}</a>
+              </h2>
+              <p>{{ management.description }}</p>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </article>
+{% endblock %}
+
+{% block secondary_content %}
+<div class="module module-narrow module-shallow">
+  <h2 class="module-heading">
+    <i class="fa fa-info-circle"></i>
+    {{ _('What are Feedback Admin') }}
+  </h2>
+  <div class="module-content">
+    <p>
+      {% trans %}
+        Provides management features for feedback. You can access various screens related to feedback management, such as reviewing and approving feedback.
+      {% endtrans %}
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{%- block scripts %}
+  {{ super() }}
+{% endblock %}
