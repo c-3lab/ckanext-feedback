@@ -39,6 +39,15 @@ class AdminController:
                     "the organization's resources."
                 ),
             },
+            {
+                'name': _('aggregation'),
+                'url': 'feedback.aggregation',
+                'description': _(
+                    "This is a management screen where you can download "
+                    "statistical data on the number of 'likes' and downloads "
+                    "on a monthly and yearly basis in CSV format."
+                ),
+            },
         ]
 
         return toolkit.render(
@@ -337,3 +346,98 @@ class AdminController:
                         ' the URL manually please check your spelling and try again.'
                     ),
                 )
+
+    # feedback/admin/aggregation
+    @staticmethod
+    @check_administrator
+    def aggregation():
+        base_metrics = [
+            (
+                "monthly-number-of-likes",
+                _("Monthly Number of Likes"),
+                _("Aggregated data of the total number of 'likes' per month."),
+            ),
+            (
+                "annual-number-of-likes",
+                _("Annual Number of Likes"),
+                _("Aggregated data of the total number of 'likes' per year."),
+            ),
+            (
+                "monthly-downloads",
+                _("Monthly Downloads"),
+                _("Aggregated data of the number of downloads per month."),
+            ),
+            (
+                "annual-downloads",
+                _("Annual Downloads"),
+                _("Aggregated data of the number of downloads per year."),
+            ),
+            (
+                "monthly-utilizations",
+                _("Monthly Utilizations"),
+                _("Aggregated data of the number of data utilizations per month."),
+            ),
+            (
+                "annual-utilizations",
+                _("Annual Utilizations"),
+                _("Aggregated data of the number of data utilizations per year."),
+            ),
+            (
+                "monthly-utilization-comments",
+                _("Monthly Utilization Comments"),
+                _(
+                    "Aggregated data of the number of comments "
+                    "related to data utilization per month."
+                ),
+            ),
+            (
+                "annual-utilization-comments",
+                _("Annual Utilization Comments"),
+                _(
+                    "Aggregated data of the number of comments "
+                    "related to data utilization per year."
+                ),
+            ),
+            (
+                "monthly-resource-comments",
+                _("Monthly Resource Comments"),
+                _("Aggregated data of the number of comments on resources per month."),
+            ),
+            (
+                "annual-resource-comments",
+                _("Annual Resource Comments"),
+                _("Aggregated data of the number of comments on resources per year."),
+            ),
+            (
+                "monthly-ratings",
+                _("Monthly Ratings"),
+                _("Aggregated data of the total number of ratings per month."),
+            ),
+            (
+                "annual-ratings",
+                _("Annual Ratings"),
+                _("Aggregated data of the total number of ratings per year."),
+            ),
+            (
+                "monthly-issue-resolutions",
+                _("Monthly Issue Resolutions"),
+                _("Aggregated data of the number of issue resolutions per month."),
+            ),
+            (
+                "annual-issue-resolutions",
+                _("Annual Issue Resolutions"),
+                _("Aggregated data of the number of issue resolutions per year."),
+            ),
+        ]
+
+        metric_list = [
+            {"name": name, "title": title, "description": description}
+            for name, title, description in base_metrics
+        ]
+
+        return toolkit.render('admin/aggregation.html', {"metric_list": metric_list})
+
+    @staticmethod
+    @check_administrator
+    def download_csv():
+        return
