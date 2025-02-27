@@ -1,0 +1,52 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Admin') }}</a> / <a href="{{ h.url_for('feedback.aggregation') }}">{{ _('Aggregation') }}</a></li>
+{% endblock %}
+
+{% block title %}{{ _('Aggregation') }} - CKAN{% endblock %}
+
+{% block primary_content %}
+  <article class="module">
+    <div class="module-content">
+      <h2>{{ _('Aggregation') }}</h2>
+      <div style="padding: 10px;">
+        <ul class="list-group">
+          {% for metric in metric_list %}
+            <li class="list-group-item">
+              <a href="{{ h.url_for('feedback.download_csv', metric=metric.name)}}">{{ metric.title }}</a>
+              <span>- {{ metric.description }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-info-circle"></i>
+      {{ _('What are Aggregation') }}
+    </h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+          This is a management screen where you can download statistical data on the number of 'likes' and downloads on a monthly and yearly basis in CSV format.
+        {% endtrans %}
+      </p>
+    </div>
+  </div>
+{% endblock %}
+
+
+{%- block scripts %}
+  {{ super() }}
+  {% asset 'feedback/feedback-approval-and-delete' %}
+{% endblock %}
