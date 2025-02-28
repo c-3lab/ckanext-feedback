@@ -3,8 +3,10 @@ import logging
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
+from ckan.lib.uploader import get_uploader
 from ckan.logic import get_action
 from ckan.plugins import toolkit
+from ckan.types import PUploader
 
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.utilization.details as detail_service
@@ -297,7 +299,31 @@ class UtilizationController:
                 category=category,
             )
 
-        detail_service.create_utilization_comment(utilization_id, category, content)
+        attached_image_filename = None
+        file_upload = request.files.get("image-upload")
+        if file_upload:
+            try:
+                upload_to = "feedbacK_utilization_comment"
+                uploader: PUploader = get_uploader(upload_to)
+                data_dict = {
+                    "image_upload": file_upload,
+                }
+                uploader.update_data_dict(
+                    data_dict, 'image_url', 'image_upload', 'clear_upload'
+                )
+                attached_image_filename = f'{upload_to}/{data_dict["image_url"]}'
+                uploader.upload()
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return UtilizationController.details(utilization_id, category, content)
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                toolkit.abort(500)
+
+        detail_service.create_utilization_comment(
+            utilization_id, category, content, attached_image_filename
+        )
+
         session.commit()
 
         try:
