@@ -1,7 +1,11 @@
 from datetime import datetime
+from urllib.parse import urljoin
 
+from ckan.common import config
+from ckan.lib.uploader import get_uploader
 from ckan.model.package import Package
 from ckan.model.resource import Resource
+from ckan.types import PUploader
 
 from ckanext.feedback.models.issue import IssueResolution
 from ckanext.feedback.models.session import session
@@ -68,11 +72,14 @@ def get_utilization_comments(
 
 
 # Create comment for currently displayed utilization
-def create_utilization_comment(utilization_id, category, content):
+def create_utilization_comment(
+    utilization_id, category, content, attached_image_filename=None
+):
     comment = UtilizationComment(
         utilization_id=utilization_id,
         category=category,
         content=content,
+        attached_image_filename=attached_image_filename,
     )
     session.add(comment)
 
@@ -123,3 +130,16 @@ def refresh_utilization_comments(utilization_id):
     utilization = session.query(Utilization).get(utilization_id)
     utilization.comment = count
     utilization.updated = datetime.now()
+
+
+# Get url for attached image
+def get_attached_image_url(attached_image_filename: str) -> str:
+    site_url = config.get('ckan.site_url', '')
+    upload_to = get_upload_destination()
+    uploader: PUploader = get_uploader(upload_to, attached_image_filename)
+    return urljoin(site_url, f'uploads/{upload_to}/{uploader.old_filename}')
+
+
+# Get directory name to save attached image
+def get_upload_destination() -> str:
+    return "feedback_utilization_comment"

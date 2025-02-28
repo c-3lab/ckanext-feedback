@@ -40,6 +40,10 @@
               <input type="hidden" name="comment-content" value="{{ content }}">
               <input type="hidden" name="comment-suggested" value="True">
               <input type="hidden" name="comment-checked" value="True">
+              <input type="hidden" name="comment-content" value="{{ content }}">
+              {% if attached_image_filename %}
+              <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+              {% endif %}
             </div>
             <div class="d-flex justify-content-between">
               <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>

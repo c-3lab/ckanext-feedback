@@ -68,7 +68,7 @@
           <h4>{{ _('Comments') }}</h4>
           <p>{{ row.comment }}</p>
           <hr>
-          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post">
+          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post" enctype="multipart/form-data">
             <h4>{{ _('Comment') }}</h4>
             {% for category in categories %}
             <label class="radio">
@@ -83,6 +83,13 @@
             <div>
               <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
+            </div>
+            <div>
+              <label for="image-upload">{{ _('Upload Image') }} ({{ _('Optional') }})</label>
+              <input type="file" id="image-upload" name="image-upload" accept="image/*">
+              {% if attached_image_filename %}
+                <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+              {% endif %}
             </div>
             <br>
             <div class="notice-container">
