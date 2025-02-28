@@ -68,11 +68,14 @@ def get_utilization_comments(
 
 
 # Create comment for currently displayed utilization
-def create_utilization_comment(utilization_id, category, content):
+def create_utilization_comment(
+    utilization_id, category, content, attached_image_filename=None
+):
     comment = UtilizationComment(
         utilization_id=utilization_id,
         category=category,
         content=content,
+        attached_image_filename=attached_image_filename,
     )
     session.add(comment)
 
