@@ -56,6 +56,11 @@ class ResourceController:
         comments, total_count = comment_service.get_resource_comments(
             resource_id, approval, limit=limit, offset=offset
         )
+        for comment in comments:
+            if comment.attached_image_filename:
+                comment.attached_image_url = comment_service.get_attached_image_url(
+                    comment.attached_image_filename
+                )
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
@@ -67,6 +72,11 @@ class ResourceController:
             selected_category = ResourceCommentCategory.REQUEST.name
         else:
             selected_category = category
+        attached_image_url = None
+        if attached_image_filename:
+            attached_image_url = comment_service.get_attached_image_url(
+                attached_image_filename
+            )
 
         return toolkit.render(
             'resource/comment.html',
@@ -77,6 +87,7 @@ class ResourceController:
                 'cookie': cookie,
                 'selected_category': selected_category,
                 'content': content,
+                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'page': helpers.Page(
                     collection=comments,
@@ -192,6 +203,11 @@ class ResourceController:
             context, {'id': resource.Resource.package_id}
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
+        attached_image_url = None
+        if attached_image_filename:
+            attached_image_url = comment_service.get_attached_image_url(
+                attached_image_filename
+            )
 
         if softened is None:
             return toolkit.render(
@@ -202,6 +218,7 @@ class ResourceController:
                     'selected_category': category,
                     'rating': rating,
                     'content': content,
+                    'attached_image_url': attached_image_url,
                     'attached_image_filename': attached_image_filename,
                 },
             )
@@ -214,6 +231,7 @@ class ResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
+                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
             },
@@ -251,6 +269,11 @@ class ResourceController:
             except Exception as e:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
+        attached_image_url = None
+        if attached_image_filename:
+            attached_image_url = comment_service.get_attached_image_url(
+                attached_image_filename
+            )
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
@@ -298,6 +321,7 @@ class ResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
+                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
             },
         )

@@ -75,6 +75,11 @@
                 {% endif %}
               </div>
             </div>
+            {% if attached_image_url %}
+            <div>
+              <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+            </div>
+            {% endif %}
           </form>
         </div>
       </div>
