@@ -157,6 +157,11 @@
                   <span class="comment-content" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
                 </div>
               {% endif %}
+              {% if comment.attached_image_url %}
+                <div>
+                  <img src="{{ comment.attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                </div>
+              {% endif %}
               {% if reply %}
                 <hr>
                 <h4 class="reply">{{ reply.created.strftime('%Y/%m/%d %H:%M') }}</h4>

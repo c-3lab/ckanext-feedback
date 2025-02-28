@@ -57,6 +57,11 @@ class ResourceController:
         comments, total_count = comment_service.get_resource_comments(
             resource_id, approval, limit=limit, offset=offset
         )
+        for comment in comments:
+            if comment.attached_image_filename:
+                comment.attached_image_url = ResourceController._get_attached_image_url(
+                    comment.attached_image_filename
+                )
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}

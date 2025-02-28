@@ -489,6 +489,10 @@ msgstr "承認"
 msgid "Unapproved"
 msgstr "未承認"
 
+#: ckanext/feedback/templates/resource/comment.html:159
+msgid "Attached Image"
+msgstr "添付ファイル"
+
 #: ckanext/feedback/templates/resource/comment.html:169
 msgid "Input"
 msgstr "入力欄"
