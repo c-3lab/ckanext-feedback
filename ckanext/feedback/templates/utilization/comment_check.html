@@ -28,20 +28,6 @@
               <span>{{ _(category.value) }}</span>
             {% endif %}
           {% endfor %}
-
-          {% if h.is_enabled_rating(pkg_dict.owner_org) %}
-            {% if rating %}
-              <span class="group-stars">
-                {% for i in range(rating) %}
-                  <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
-                {% endfor %}
-                {% for i in range(5 - rating) %}
-                  <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
-                {% endfor %}
-              </span>
-            {% endif %}
-          {% endif %}
-          </span>
         </h4>
         <div class="content-align wrap-text">
               <span class="comment-content" >{{ content }}</span>

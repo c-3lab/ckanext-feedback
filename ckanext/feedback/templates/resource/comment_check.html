@@ -30,15 +30,14 @@
             {% if rating %}
               <span class="group-stars">
                 {% for i in range(rating) %}
-                  <img class="rating-star" src="/images/rating_star.png" alt="rating star"/>
+                  <i class="rating-star fa-solid fa-star"></i>
                 {% endfor %}
                 {% for i in range(5 - rating) %}
-                  <img class="rating-star" src="/images/empty_rating_star.png" alt="empty rating star"/>
+                  <i class="rating-star fa-regular fa-star"></i>
                 {% endfor %}
               </span>
             {% endif %}
           {% endif %}
-          </span>
         </h4>
         <div class="content-align wrap-text">
               <span class="comment-content" >{{ content }}</span>

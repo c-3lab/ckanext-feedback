@@ -111,7 +111,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_resource_like_count': resource_likes_service.get_resource_like_count,
             'get_package_like_count': resource_likes_service.get_package_like_count,
             'get_organization': management_comments_service.get_organization,
-            'is_enabled_feedback_recaptcha': (FeedbackConfig().recaptcha.is_enable),
+            'is_enabled_feedback_recaptcha': FeedbackConfig().recaptcha.is_enable,
             'get_feedback_recaptcha_publickey': (
                 FeedbackConfig().recaptcha.publickey.get
             ),
