@@ -5,10 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Install Python 3.12.3
+      - name: Install Python 3.10.13
         uses: actions/setup-python@v4
         with:
-            python-version: "3.12.3"
+            python-version: "3.10.13"
 
       - name: Check out
         uses: actions/checkout@v3
