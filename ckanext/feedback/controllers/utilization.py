@@ -405,7 +405,7 @@ class UtilizationController:
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
         )
-        g.pkg_dict = {'organization': {'name': (resource.organization_name)}}
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if not request.form.get(
             'comment-suggested', False
