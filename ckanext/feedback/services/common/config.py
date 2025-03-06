@@ -29,6 +29,10 @@ def download_handler():
     return handler
 
 
+def is_list_of_str(value):
+    return isinstance(value, list) and all(isinstance(x, str) for x in value)
+
+
 class Singleton(object):
     _instance = None
 
@@ -210,7 +214,7 @@ class BaseConfig:
         ck_conf_str = self.get_ckan_conf_str()
         enable = config.get(f"{ck_conf_str}.enable", self.default)
         if enable:
-            enable = config.get(f"{ck_conf_str}.enable_orgs", [])
+            return config.get(f"{ck_conf_str}.enable_orgs", [])
         return enable
 
 
@@ -394,7 +398,3 @@ class FeedbackConfig(Singleton):
             self.is_feedback_config_file = False
         except json.JSONDecodeError:
             toolkit.error_shout('The feedback config file not decoded correctly')
-
-
-def is_list_of_str(value):
-    return isinstance(value, list) and all(isinstance(x, str) for x in value)
