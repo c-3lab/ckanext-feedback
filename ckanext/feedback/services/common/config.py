@@ -124,47 +124,87 @@ class BaseConfig:
 
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
+        # Retrieve the on/off value for the feature from the ini file
+        enable = config.get(f"{ck_conf_str}.enable", self.default)
+
         try:
-            enable = toolkit.asbool(config.get(f"{ck_conf_str}.enable", self.default))
+            # Convert the retrieved value to a boolean
+            # (True, yes, on, 1, False, no, off, 0)
+            enable = toolkit.asbool(enable)
         except ValueError:
-            enable = False
-            toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable')
+            # Raise a ValidationError if conversion fails
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "The value of the \"enable\" key is invalid. "
+                        "Please specify a boolean value such as "
+                        "`true` or `false` for the \"enable\" key."
+                    )
+                }
+            )
+
+        # Return the value of the module or feature if it is off, if the
+        # configuration file is missing, or if no organization is specified
+        if not enable or not FeedbackConfig().is_feedback_config_file or not org_id:
             return enable
 
-        if not enable or not FeedbackConfig().is_feedback_config_file:
-            return enable
-
-        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs") or []
-        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs") or []
-
-        if not is_list_of_str(enable_orgs):
-            enable = False
-            toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable_orgs')
-            return enable
-
-        if not is_list_of_str(disable_orgs):
-            enable = False
-            toolkit.error_shout(f'Invalid value for {ck_conf_str}.disable_orgs')
-            return enable
-
-        if not org_id:
-            return enable
-
+        # Retrieve the name of the specified organization
         organization = get_organization(org_id)
-        if organization is None:
-            enable = False
+
+        # Return False if the specified organization cannot be retrieved
+        if not organization:
+            return False
+
+        # Retrieve the list of enabled organizations and disabled
+        # organizations from the ini file
+        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs")
+        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs")
+
+        # Return True if neither the list of enabled organizations
+        # nor the list of disabled organizations exists
+        if not enable_orgs and not disable_orgs:
             return enable
 
-        deplication = set(enable_orgs) & set(disable_orgs)
-        if organization.name in deplication:
-            enable = False
-            toolkit.error_shout('Conflict in organization enable/disable lists.')
-        elif organization.name in enable_orgs:
-            enable = True
-        elif organization.name in disable_orgs:
-            enable = False
+        # Raise a ValidationError if the list of enabled
+        # organizations exists and is not an array of strings
+        if enable_orgs and not is_list_of_str(enable_orgs):
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "The \"enable_orgs\" key must be a string array "
+                        "to specify valid organizations "
+                        "(e.g., \"enable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+                    )
+                }
+            )
 
-        return enable
+        # Raise a ValidationError if the list of disabled
+        # organizations exists and is not an array of strings
+        if disable_orgs and not is_list_of_str(disable_orgs):
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "The \"disable_orgs\" key must be a string array "
+                        "to specify invalid organizations "
+                        "(e.g., \"disable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+                    )
+                }
+            )
+
+        # If both the list of enabled organizations and the list
+        # of disabled organizations exist, turn off the organizations
+        # in the disabled list and turn on the others
+        if enable_orgs and disable_orgs:
+            return organization.name not in disable_orgs
+
+        if enable_orgs:
+            # If only the list of enabled organizations exists,
+            # turn on organizations in the enabled list and turn off the others
+            return organization.name in enable_orgs
+        else:
+            # If only the list of disabled organizations exists,
+            # turn off organizations in the disabled list and turn on the others
+            return organization.name not in disable_orgs
 
     def get_enable_orgs(self):
         ck_conf_str = self.get_ckan_conf_str()
