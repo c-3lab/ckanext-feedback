@@ -232,6 +232,7 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
         parents = self.conf_path + ['comment']
+        # TODO:Standardize to either repeated_post_limit or　repeat_post_limit
         self.repeat_post_limit = BaseConfig('repeated_post_limit', parents)
         self.repeat_post_limit.default = False
 
