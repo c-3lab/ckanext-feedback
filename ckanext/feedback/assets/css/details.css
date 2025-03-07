@@ -17,6 +17,11 @@
   margin-left: 10px;
 }
 
+.attached-image {
+  max-width: 64px;
+  max-height: 64px;
+}
+
 .unapproved {
   color: #808080;
   background-color: #EEEEEE;

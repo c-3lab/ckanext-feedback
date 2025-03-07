@@ -236,6 +236,11 @@ class UtilizationController:
         comments, total_count = detail_service.get_utilization_comments(
             utilization_id, approval, limit=limit, offset=offset
         )
+        for comment in comments:
+            if comment.attached_image_filename:
+                comment.attached_image_url = detail_service.get_attached_image_url(
+                    comment.attached_image_filename
+                )
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
         g.pkg_dict = {
@@ -251,6 +256,11 @@ class UtilizationController:
             selected_category = UtilizationCommentCategory.REQUEST.name
         else:
             selected_category = category
+        attached_image_url = None
+        if attached_image_filename:
+            attached_image_url = detail_service.get_attached_image_url(
+                attached_image_filename
+            )
 
         return toolkit.render(
             'utilization/details.html',
@@ -261,6 +271,7 @@ class UtilizationController:
                 'issue_resolutions': issue_resolutions,
                 'selected_category': selected_category,
                 'content': content,
+                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'page': helpers.Page(
                     collection=comments,
@@ -379,6 +390,11 @@ class UtilizationController:
                 )
             }
         }
+        attached_image_url = None
+        if attached_image_filename:
+            attached_image_url = detail_service.get_attached_image_url(
+                attached_image_filename
+            )
 
         if softened is None:
             return toolkit.render(
@@ -388,6 +404,7 @@ class UtilizationController:
                     'utilization': utilization,
                     'selected_category': category,
                     'content': content,
+                    'attached_image_url': attached_image_url,
                     'attached_image_filename': attached_image_filename,
                 },
             )
@@ -399,6 +416,7 @@ class UtilizationController:
                 'utilization': utilization,
                 'selected_category': category,
                 'content': content,
+                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
             },
@@ -433,6 +451,11 @@ class UtilizationController:
             except Exception as e:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
+        attached_image_url = None
+        if attached_image_filename:
+            attached_image_url = detail_service.get_attached_image_url(
+                attached_image_filename
+            )
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
@@ -483,6 +506,7 @@ class UtilizationController:
                 'content': content,
                 'selected_category': category,
                 'categories': categories,
+                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
             },
         )

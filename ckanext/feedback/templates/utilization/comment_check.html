@@ -32,7 +32,11 @@
         <div class="content-align wrap-text">
               <span class="comment-content" >{{ content }}</span>
         </div>
-        <hr class="divider">
+        {% if attached_image_url %}
+        <div>
+          <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+        </div>
+        {% endif %}        <hr class="divider">
         <form name="comment_form" action="{{ h.url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
           <div style="display: flex; flex-direction: column; align-items: stretch;">
             <div class="select-button ml-2" style="display: flex; justify-content: center;">

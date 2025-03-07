@@ -525,14 +525,20 @@ msgstr "コメントは1000文字以下にしてください"
 #: ckanext/feedback/templates/resource/comment_check.html:47
 #: ckanext/feedback/templates/resource/expect_suggestion.html:52
 #: ckanext/feedback/templates/resource/suggestion.html:80
+#: ckanext/feedback/templates/utilization/comment_check.html:37
+#: ckanext/feedback/templates/utilization/details.html:89
+#: ckanext/feedback/templates/utilization/expect_suggestion.html:50
+#: ckanext/feedback/templates/utilization/suggestion.html:79
 msgid "Attached Image"
 msgstr "添付ファイル"
 
 #: ckanext/feedback/templates/resource/comment.html:70
+#: ckanext/feedback/templates/utilization/details.html:91
 msgid "Upload Image"
 msgstr "画像をアップロード"
 
 #: ckanext/feedback/templates/resource/comment.html:70
+#: ckanext/feedback/templates/utilization/details.html:91
 #: ckanext/feedback/templates/utilization/edit.html:41
 #: ckanext/feedback/templates/utilization/new.html:44
 msgid "※ option"
