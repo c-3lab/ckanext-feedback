@@ -1,15 +1,20 @@
+import logging
+import os
 from datetime import datetime
 
 from ckan.model.group import Group
 from ckan.model.resource import Resource
 from sqlalchemy import func
 
+import ckanext.feedback.services.resource.comment as comment_service
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentSummary,
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization, UtilizationComment
+
+log = logging.getLogger(__name__)
 
 
 # Get approval utilization comment count using utilization.id
@@ -142,6 +147,21 @@ def approve_resource_comments(comment_id_list, approval_user_id):
 
 # Delete selected resource comments
 def delete_resource_comments(comment_id_list):
+    comments = (
+        session.query(ResourceComment)
+        .filter(ResourceComment.id.in_(comment_id_list))
+        .all()
+    )
+
+    for comment in comments:
+        attached_image_filename = comment.attached_image_filename
+        if attached_image_filename:
+            attached_image_path = comment_service.get_attached_image_path(
+                attached_image_filename
+            )
+            if os.path.exists(attached_image_path):
+                os.remove(attached_image_path)
+
     (
         session.query(ResourceComment)
         .filter(ResourceComment.id.in_(comment_id_list))
