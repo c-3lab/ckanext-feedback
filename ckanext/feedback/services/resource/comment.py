@@ -112,6 +112,13 @@ def get_attached_image_url(attached_image_filename: str) -> str:
     return urljoin(site_url, f'uploads/{upload_to}/{uploader.old_filename}')
 
 
+# Get path for attached image
+def get_attached_image_path(attached_image_filename: str) -> str:
+    upload_to = get_upload_destination()
+    uploader: PUploader = get_uploader(upload_to, attached_image_filename)
+    return uploader.old_filepath
+
+
 # Get directory name to save attached image
 def get_upload_destination() -> str:
     return "feedback_resouce_comment"
