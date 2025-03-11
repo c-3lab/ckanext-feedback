@@ -1,0 +1,245 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+  {% asset 'feedback/feedback-admin-css' %}
+  {% asset 'feedback/feedback-tooltip-css' %}
+{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Admin') }}</a> / <a href="{{ h.url_for('feedback.approval-and-delete') }}">{{ _('Approval and Delete') }}</a></li>
+{% endblock %}
+
+{% block title %}{{ _('Approval and Delete') }} - CKAN{% endblock %}
+
+{% block primary_content %}
+  <article class="module">
+    <div class="module-content">
+      <form id="feedback-search-form" class="search-form" method="GET">
+        <div class="form-group control-order-by">
+          <label for="field-order-by">{{ _('Order by') }}:</label>
+          <select id="field-order-by" name="sort" onchange="updateSortParameter()">
+            {% set sort_items = [
+              (_('Newest'), 'newest'), (_('Oldest'), 'oldest'), (_('Dataset Name Ascending'),'dataset_asc'),
+              (_('Dataset Name Descending'), 'dataset_desc'), (_('Resource Name Ascending'), 'resource_asc'),
+              (_('Resource Name Descending'), 'resource_desc')
+            ] %}
+            {% for item in sort_items + (extra_sort or []) %}
+              <option value="{{ item[1] }}"{% if sort==item[1] %} selected="selected"{% endif %}>{{ item[0] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <h2>{{ _('Approval and Delete') }}</h2>
+      </form>
+      <div>
+        <form id="feedbacks-form" method="post">
+          {% if h.is_base_public_folder_bs3() %}
+            <div class="right-text" style="margin-bottom: 8px;">
+              {% set approval_action=h.url_for( "feedback.approve_target" ) %}
+              {% set delete_action=h.url_for( "feedback.delete_target" ) %}
+              <button id="approval-button" class="btn btn-primary" type="button" onclick="runApproval('{{ approval_action }}')">
+                <i class="fa-solid fa-check"></i>
+                {{ _('Approval') }}
+              </button>
+              <button id="delete-button" class="btn btn-danger" type="button" onclick="runDelete('{{ delete_action }}')">
+                <i class="fa-solid fa-trash"></i>
+                {{ _('Delete') }}
+              </button>
+            </div>
+            <div class="container" style="width: 100%;">
+              {% if page.collection %}
+                <div class="row form-check-label feedback-list-header" style="font-weight: bold;">
+                  <div class="col-md-1" style="float:left; max-width: 25px;"><input class="checkbox-inline" style="margin: 0;" type="checkbox" id="target-checkbox-all"></div>
+                  <div class="col-md-2" style="text-align: center;">{{ _('Dataset') }}</div>
+                  <div class="col-md-2" style="text-align: center;">{{ _('Resource') }}</div>
+                  <div class="col-md-1" style="text-align: center;">{{ _('Type') }}</div>
+                  <div class="col-md-4" style="min-width: 37%; text-align: center;">{{ _('Post Content') }}</div>
+                  <div class="col-md-2" style="text-align: center;">{{ _('Status') }}</div>
+                </div>
+                <div style="border-top: 1px solid #eeeeee; margin-bottom: 8px;"></div>
+                {% for feedback in page.collection %}
+                  <div class="row form-check-label feedback-list-body" style="font-size: 14px;">
+                    <div class="col-md-1 target" style="max-width: 25px;">
+                      {% if feedback.feedback_type == 'リソースコメント' %}
+                        <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="resource-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
+                      {% elif feedback.feedback_type == '利活用申請' %}
+                        <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="utilization-checkbox" id="{{ feedback.utilization_id }}" value="{{ feedback.utilization_id }}" data-approval="{{ feedback.is_approved }}">
+                      {% elif feedback.feedback_type == '利活用コメント' %}
+                        <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="utilization-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
+                      {% endif %}
+                    </div>
+                    <a class="col-md-2 text-truncate" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
+                    <a class="col-md-2 text-truncate" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
+                    {% if feedback.feedback_type == 'リソースコメント' %}
+                      <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
+                        <i class="fa-solid fa-comment-dots"></i>
+                        <div class="bubbleText">{{ _('Resource Comment') }}</div>
+                      </div>
+                      <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                    {% elif feedback.feedback_type == '利活用申請' %}
+                      <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
+                        <i class="fa-solid fa-seedling"></i>
+                        <div class="bubbleText">{{ _('Utilization') }}</div>
+                      </div>
+                      <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
+                    {% elif feedback.feedback_type == '利活用コメント' %}
+                      <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
+                        <span class="fa-stack" style="font-size: 7px;">
+                          <i class="fa fa-comment fa-stack-2x"></i>
+                          <i class="fa-solid fa-seedling fa-stack-1x" style="color: #ffffff;"></i>
+                        </span>
+                        <div class="bubbleText">{{ _('Utilization Comment') }}</div>
+                      </div>
+                      <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                    {% endif %}
+                    <div class="col-md-2" style="display: flex; justify-content: center;">
+                      {% if feedback.is_approved %}
+                        {{ _('Approved') }}
+                      {% else %}
+                        {{ _('Waiting') }}
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+                {% block page_pagination_bs3 %}
+                  {{ page.pager() }}
+                {% endblock %}
+              {% else %}
+                <p>{{ _('There are no applications.') }}</p>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="right-text mb-2">
+              {% set approval_action=h.url_for( "feedback.approve_target" ) %}
+              {% set delete_action=h.url_for( "feedback.delete_target" ) %}
+              <button id="approval-button" class="btn btn-primary" type="button" onclick="runApproval('{{ approval_action }}')">
+                <i class="fa-solid fa-check"></i>
+                {{ _('Approval') }}
+              </button>
+              <button id="delete-button" class="btn btn-danger" type="button" onclick="runDelete('{{ delete_action }}')">
+                <i class="fa-solid fa-trash"></i>
+                {{ _('Delete') }}
+              </button>
+            </div>
+            <div class="container">
+              {% if page.collection %}
+                <div class="row form-check-label fs-6 border-bottom fw-bold mb-2">
+                  <div class="col-1" style="float:left; max-width: 25px;"><input class="checkbox-inline" type="checkbox" id="target-checkbox-all"></div>
+                  <div class="col-2" style="text-align: center;">{{ _('Dataset') }}</div>
+                  <div class="col-2" style="text-align: center;">{{ _('Resource') }}</div>
+                  <div class="col-1" style="text-align: center;">{{ _('Type') }}</div>
+                  <div class="col" style="min-width: 37%; text-align: center;">{{ _('Post Content') }}</div>
+                  <div class="col-2" style="text-align: center;">{{ _('Status') }}</div>
+                </div>
+                {% for feedback in page.collection %}
+                  <div class="row form-check-label fs-6">
+                    <div class="col-1 target" style="float:left; max-width: 25px;">
+                      {% if feedback.feedback_type == 'リソースコメント' %}
+                        <input class="checkbox-inline" type="checkbox" name="resource-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
+                      {% elif feedback.feedback_type == '利活用申請' %}
+                        <input class="checkbox-inline" type="checkbox" name="utilization-checkbox" id="{{ feedback.utilization_id }}" value="{{ feedback.utilization_id }}" data-approval="{{ feedback.is_approved }}">
+                      {% elif feedback.feedback_type == '利活用コメント' %}
+                        <input class="checkbox-inline" type="checkbox" name="utilization-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
+                      {% endif %}
+                    </div>
+                    <a class="col-2 text-truncate" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
+                    <a class="col-2 text-truncate" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
+                    {% if feedback.feedback_type == 'リソースコメント' %}
+                      <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
+                        <i class="fa-solid fa-comment-dots"></i>
+                        <div class="bubbleText">{{ _('Resource Comment') }}</div>
+                      </div>
+                      <a class="col text-truncate" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                    {% elif feedback.feedback_type == '利活用申請' %}
+                      <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
+                        <i class="fa-solid fa-seedling"></i>
+                        <div class="bubbleText">{{ _('Utilization') }}</div>
+                      </div>
+                      <a class="col text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
+                    {% elif feedback.feedback_type == '利活用コメント' %}
+                      <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
+                        <span class="fa-stack" style="font-size: 7px;">
+                          <i class="fa fa-comment fa-stack-2x"></i>
+                          <i class="fa-solid fa-seedling fa-stack-1x" style="color: #ffffff;"></i>
+                        </span>
+                        <div class="bubbleText">{{ _('Utilization Comment') }}</div>
+                      </div>
+                      <a class="col text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                    {% endif %}
+                    <div class="col-2 text-truncate" style="display: flex; justify-content: center;">
+                      {% if feedback.is_approved %}
+                        {{ _('Approved') }}
+                      {% else %}
+                        {{ _('Waiting') }}
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+                {% block page_pagination %}
+                  {{ page.pager() }}
+                {% endblock %}
+              {% else %}
+                <p>{{ _('There are no applications.') }}</p>
+              {% endif %}
+            </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-info-circle"></i>
+      {{ _('What are Approval and Delete') }}
+    </h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+          This is the management screen for approving or deleting resource comments, 
+          utilization method registration requests, and utilization method comments 
+          related to the organization's resources.
+        {% endtrans %}
+      </p>
+    </div>
+  </div>
+  <div class="filters">
+    {% for _filter in filters %}
+      <section class="module module-narrow module-shallow">
+        <h2 class="module-heading">
+          <i class="fa fa-filter"></i>
+          {{ _(_filter.type) }}
+        </h2>
+
+        <nav aria-label="{{ _filter['name'] }}">
+          <ul class="list-unstyled nav nav-simple nav-facet">
+          {% for filter_item in _filter.list %}
+            <li class="nav-item {% if filter_item.active %} active{% endif %}">
+              <a href="{{ filter_item.href }}" title="{{ filter_item.label }}">
+                <span class="item-label">{{ filter_item.label }}</span>
+                <span class="hidden separator"> - </span>
+                <span class="item-count badge">{{ filter_item.count }}</span>
+                {% if not h.is_base_public_folder_bs3() %}
+                  {% if filter_item.active %}
+                    <span class="facet-close">x</span>
+                  {% endif %}
+                {% endif %}
+              </a>
+            </li>
+          {% endfor %}
+          </ul>
+        </nav>
+      </section>
+    {% endfor %}
+  </div>
+  <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span class="text">close</span></a>
+{% endblock %}
+
+
+{%- block scripts %}
+  {{ super() }}
+  {% asset 'feedback/feedback-approval-and-delete' %}
+{% endblock %}

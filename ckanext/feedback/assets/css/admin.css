@@ -109,3 +109,55 @@ input[name="tab-menu"] {
   background-color: #1f71b5;
   color: #fff;
 }
+
+.module-title {
+  margin-bottom: 20px;
+  padding-bottom: 25px;
+  border-bottom: 1px dotted #ddd;
+}
+.management-list {
+  margin-bottom: 20px;
+}
+.management-item {
+  border-bottom: 1px dotted #ddd;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 575.98px) {
+  .management-item {
+    word-wrap: break-word;
+  }
+}
+.management-content {
+  min-height: 54px;
+}
+.management-heading {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.management-heading a {
+  color: #333;
+}
+
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feedback-list-header [class*="col-"] {
+  padding-left: 7.5px;
+  padding-right: 7.5px;
+}
+
+.feedback-list-body [class*="col-"] {
+  padding-left: 7.5px;
+  padding-right: 7.5px;
+  height: 20px;
+}
+
+.row {
+  margin-bottom: 0px;
+}

@@ -13,12 +13,12 @@ from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.download import summary as download_summary_service
-from ckanext.feedback.services.management import comments as management_comments_service
+from ckanext.feedback.services.organization import organization as organization_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
-from ckanext.feedback.views import download, likes, management, resource, utilization
+from ckanext.feedback.views import admin, download, likes, resource, utilization
 
 log = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             blueprints.append(utilization.get_utilization_blueprint())
         if FeedbackConfig().like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
-        blueprints.append(management.get_management_blueprint())
+        blueprints.append(admin.get_admin_blueprint())
         return blueprints
 
     # Check production.ini settings
@@ -110,7 +110,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_rating': resource_summary_service.get_package_rating,
             'get_resource_like_count': resource_likes_service.get_resource_like_count,
             'get_package_like_count': resource_likes_service.get_package_like_count,
-            'get_organization': management_comments_service.get_organization,
+            'get_organization': organization_service.get_organization,
             'is_enabled_feedback_recaptcha': FeedbackConfig().recaptcha.is_enable,
             'get_feedback_recaptcha_publickey': (
                 FeedbackConfig().recaptcha.publickey.get
