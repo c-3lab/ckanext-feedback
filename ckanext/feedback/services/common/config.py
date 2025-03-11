@@ -75,7 +75,7 @@ class BaseConfig:
             conf_tree = conf_tree.get(key)
 
             if conf_tree is None:
-                config[f"{ckan_conf_str}.enable"] = None
+                config.pop(f"{ckan_conf_str}.enable", None)
                 return
 
             if key == key_list[-1]:
