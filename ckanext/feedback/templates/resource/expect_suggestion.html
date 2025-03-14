@@ -49,7 +49,9 @@
             </div>
             {% if attached_image_url %}
             <div>
-              <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+              <a href="{{ attached_image_url }}" target="_blank">
+                <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+              </a>
             </div>
             {% endif %}
           </form>

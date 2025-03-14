@@ -65,7 +65,9 @@
               </div>
               <div>
                 {% if attached_image_url %}
-                <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                <a href="{{ attached_image_url }}" target="_blank">
+                  <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                </a>
                 {% else %}
                 <label for="image-upload">{{ _('Upload Image') }} {{ _('※ option') }}</label>
                 <input type="file" id="image-upload" name="image-upload" accept="image/*">
@@ -163,7 +165,9 @@
               {% endif %}
               {% if comment.attached_image_url %}
                 <div>
-                  <img src="{{ comment.attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                  <a href="{{ comment.attached_image_url }}" target="_blank">
+                    <img src="{{ comment.attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                  </a>
                 </div>
               {% endif %}
               {% if reply %}
