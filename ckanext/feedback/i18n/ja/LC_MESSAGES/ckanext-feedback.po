@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-03-11 15:00+0900\n"
+"POT-Creation-Date: 2025-02-26 17:32+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -103,14 +103,14 @@ msgid ""
 "are you sure?"
 msgstr "チェックした%d項目を完全に削除します。この操作を元に戻すことはできませんが、よろしいですか？"
 
-#: ckanext/feedback/controllers/admin.py:33
+#: ckanext/feedback/controllers/admin.py:37
 #: ckanext/feedback/templates/admin/approval_and_delete.html:11
 #: ckanext/feedback/templates/admin/approval_and_delete.html:14
 #: ckanext/feedback/templates/admin/approval_and_delete.html:33
 msgid "Approval and Delete"
 msgstr "承認・削除"
 
-#: ckanext/feedback/controllers/admin.py:35
+#: ckanext/feedback/controllers/admin.py:39
 #: ckanext/feedback/templates/admin/approval_and_delete.html:201
 msgid ""
 "This is the management screen for approving or deleting resource "
@@ -118,7 +118,21 @@ msgid ""
 "method comments related to the organization's resources."
 msgstr "組織のリソースに対するリソースコメント、利活用方法登録申請、利活用方法コメントの承認・削除を行う管理画面です。"
 
-#: ckanext/feedback/controllers/admin.py:138
+#: ckanext/feedback/controllers/admin.py:47
+#, fuzzy
+#| msgid "Toggle navigation"
+msgid "aggregation"
+msgstr "トグル ナビゲーション"
+
+#: ckanext/feedback/controllers/admin.py:49
+#: ckanext/feedback/templates/admin/aggregation.html:42
+msgid ""
+"This is a management screen where you can download statistical data on "
+"the number of 'likes' and downloads on a monthly and yearly basis in CSV "
+"format."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:151
 #: ckanext/feedback/templates/admin/approval_and_delete.html:98
 #: ckanext/feedback/templates/admin/approval_and_delete.html:172
 #: ckanext/feedback/templates/utilization/search.html:40
@@ -127,19 +141,19 @@ msgstr "組織のリソースに対するリソースコメント、利活用方
 msgid "Approved"
 msgstr "承認済"
 
-#: ckanext/feedback/controllers/admin.py:139
+#: ckanext/feedback/controllers/admin.py:152
 #: ckanext/feedback/templates/admin/approval_and_delete.html:100
 #: ckanext/feedback/templates/admin/approval_and_delete.html:174
 msgid "Waiting"
 msgstr "承認待ち"
 
-#: ckanext/feedback/controllers/admin.py:143
+#: ckanext/feedback/controllers/admin.py:156
 #: ckanext/feedback/templates/admin/approval_and_delete.html:77
 #: ckanext/feedback/templates/admin/approval_and_delete.html:151
 msgid "Resource Comment"
 msgstr "リソースコメント"
 
-#: ckanext/feedback/controllers/admin.py:144
+#: ckanext/feedback/controllers/admin.py:157
 #: ckanext/feedback/templates/admin/approval_and_delete.html:83
 #: ckanext/feedback/templates/admin/approval_and_delete.html:157
 #: ckanext/feedback/templates/header.html:115
@@ -151,13 +165,13 @@ msgstr "リソースコメント"
 msgid "Utilization"
 msgstr "利活用方法"
 
-#: ckanext/feedback/controllers/admin.py:145
+#: ckanext/feedback/controllers/admin.py:158
 #: ckanext/feedback/templates/admin/approval_and_delete.html:92
 #: ckanext/feedback/templates/admin/approval_and_delete.html:166
 msgid "Utilization Comment"
 msgstr "利活用コメント"
 
-#: ckanext/feedback/controllers/admin.py:155
+#: ckanext/feedback/controllers/admin.py:168
 #: ckanext/feedback/services/admin/feedbacks.py:239
 #: ckanext/feedback/templates/admin/approval_and_delete.html:58
 #: ckanext/feedback/templates/admin/approval_and_delete.html:133
@@ -166,33 +180,33 @@ msgstr "利活用コメント"
 msgid "Status"
 msgstr "ステータス"
 
-#: ckanext/feedback/controllers/admin.py:160
+#: ckanext/feedback/controllers/admin.py:173
 #: ckanext/feedback/services/admin/feedbacks.py:241
 #: ckanext/feedback/templates/admin/approval_and_delete.html:56
 #: ckanext/feedback/templates/admin/approval_and_delete.html:131
 msgid "Type"
 msgstr "種類"
 
-#: ckanext/feedback/controllers/admin.py:165
+#: ckanext/feedback/controllers/admin.py:178
 #: ckanext/feedback/services/admin/feedbacks.py:243
 #: ckanext/feedback/templates/utilization/search.html:58
 msgid "Organization"
 msgstr "組織"
 
-#: ckanext/feedback/controllers/admin.py:202
+#: ckanext/feedback/controllers/admin.py:215
 #: ckanext/feedback/tests/controllers/test_admin.py:361
 #: ckanext/feedback/tests/controllers/test_admin.py:402
 msgid "item(s) were approved."
 msgstr "項目を承認しました。"
 
-#: ckanext/feedback/controllers/admin.py:226
+#: ckanext/feedback/controllers/admin.py:239
 #: ckanext/feedback/tests/controllers/test_admin.py:456
 #: ckanext/feedback/tests/controllers/test_admin.py:497
 msgid "item(s) were completely deleted."
 msgstr "項目を完全に削除しました。"
 
-#: ckanext/feedback/controllers/admin.py:318
-#: ckanext/feedback/controllers/admin.py:335
+#: ckanext/feedback/controllers/admin.py:331
+#: ckanext/feedback/controllers/admin.py:348
 #: ckanext/feedback/controllers/resource.py:288
 #: ckanext/feedback/controllers/utilization.py:561
 #: ckanext/feedback/services/common/check.py:13
@@ -209,6 +223,146 @@ msgid ""
 "The requested URL was not found on the server. If you entered the URL "
 "manually please check your spelling and try again."
 msgstr "要求された URL がサーバー上に見つかりませんでした。URL を手動で入力した場合は、綴りを確認してからもう一度お試しください。"
+
+#: ckanext/feedback/controllers/admin.py:359
+#, fuzzy
+#| msgid "Number of Likes"
+msgid "Monthly Number of Likes"
+msgstr "いいね数"
+
+#: ckanext/feedback/controllers/admin.py:359
+msgid "Aggregated data of the total number of 'likes' per month."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:360
+#, fuzzy
+#| msgid "Number of Likes"
+msgid "Annual Number of Likes"
+msgstr "いいね数"
+
+#: ckanext/feedback/controllers/admin.py:360
+msgid "Aggregated data of the total number of 'likes' per year."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:361
+#, fuzzy
+#| msgid "Downloads"
+msgid "Monthly Downloads"
+msgstr "ダウンロード数"
+
+#: ckanext/feedback/controllers/admin.py:361
+msgid "Aggregated data of the number of downloads per month."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:362
+#, fuzzy
+#| msgid "Downloads"
+msgid "Annual Downloads"
+msgstr "ダウンロード数"
+
+#: ckanext/feedback/controllers/admin.py:362
+msgid "Aggregated data of the number of downloads per year."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:363
+#, fuzzy
+#| msgid "Utilizations"
+msgid "Monthly Utilizations"
+msgstr "利活用数"
+
+#: ckanext/feedback/controllers/admin.py:363
+msgid "Aggregated data of the number of data utilizations per month."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:364
+#, fuzzy
+#| msgid "Utilizations"
+msgid "Annual Utilizations"
+msgstr "利活用数"
+
+#: ckanext/feedback/controllers/admin.py:364
+msgid "Aggregated data of the number of data utilizations per year."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:365
+#, fuzzy
+#| msgid "Utilization Comment"
+msgid "Monthly Utilization Comments"
+msgstr "利活用コメント"
+
+#: ckanext/feedback/controllers/admin.py:365
+msgid ""
+"Aggregated data of the number of comments related to data utilization per"
+" month."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:366
+#, fuzzy
+#| msgid "Utilization Comment"
+msgid "Annual Utilization Comments"
+msgstr "利活用コメント"
+
+#: ckanext/feedback/controllers/admin.py:366
+msgid ""
+"Aggregated data of the number of comments related to data utilization per"
+" year."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:367
+#, fuzzy
+#| msgid "Resource Comment"
+msgid "Monthly Resource Comments"
+msgstr "リソースコメント"
+
+#: ckanext/feedback/controllers/admin.py:367
+msgid "Aggregated data of the number of comments on resources per month."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:368
+#, fuzzy
+#| msgid "Resource Comment"
+msgid "Annual Resource Comments"
+msgstr "リソースコメント"
+
+#: ckanext/feedback/controllers/admin.py:368
+msgid "Aggregated data of the number of comments on resources per year."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:369
+msgid "Monthly Ratings"
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:369
+msgid "Aggregated data of the total number of ratings per month."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:370
+msgid "Annual Ratings"
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:370
+msgid "Aggregated data of the total number of ratings per year."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:371
+#, fuzzy
+#| msgid "Issue resolutions"
+msgid "Monthly Issue Resolutions"
+msgstr "課題解決数"
+
+#: ckanext/feedback/controllers/admin.py:371
+msgid "Aggregated data of the number of issue resolutions per month."
+msgstr ""
+
+#: ckanext/feedback/controllers/admin.py:372
+#, fuzzy
+#| msgid "Issue resolutions"
+msgid "Annual Issue Resolutions"
+msgstr "課題解決数"
+
+#: ckanext/feedback/controllers/admin.py:372
+msgid "Aggregated data of the number of issue resolutions per year."
+msgstr ""
 
 #: ckanext/feedback/controllers/resource.py:97
 #: ckanext/feedback/controllers/resource.py:206
@@ -316,6 +470,7 @@ msgstr "グループ"
 #: ckanext/feedback/templates/admin/admin.html:10
 #: ckanext/feedback/templates/admin/admin.html:13
 #: ckanext/feedback/templates/admin/admin.html:19
+#: ckanext/feedback/templates/admin/aggregation.html:11
 #: ckanext/feedback/templates/admin/approval_and_delete.html:11
 #: ckanext/feedback/templates/header.html:118
 msgid "Feedback Admin"
@@ -352,6 +507,18 @@ msgid ""
 " related to feedback management, such as reviewing and approving "
 "feedback."
 msgstr "フィードバックに関する管理機能を提供します。フィードバック管理に関連する様々な画面へアクセスできます。"
+
+#: ckanext/feedback/templates/admin/aggregation.html:11
+#: ckanext/feedback/templates/admin/aggregation.html:14
+#: ckanext/feedback/templates/admin/aggregation.html:19
+#, fuzzy
+#| msgid "Toggle navigation"
+msgid "Aggregation"
+msgstr "トグル ナビゲーション"
+
+#: ckanext/feedback/templates/admin/aggregation.html:38
+msgid "What are Aggregation"
+msgstr ""
 
 #: ckanext/feedback/templates/admin/approval_and_delete.html:21
 msgid "Order by"
@@ -630,19 +797,19 @@ msgstr "コメント内容確認"
 msgid "Would you like to post a comment with the following content?"
 msgstr "以下の内容のコメントを投稿しますか？"
 
-#: ckanext/feedback/templates/resource/comment_check.html:55
+#: ckanext/feedback/templates/resource/comment_check.html:56
 #: ckanext/feedback/templates/resource/expect_suggestion.html:39
 #: ckanext/feedback/templates/resource/suggestion.html:46
-#: ckanext/feedback/templates/utilization/comment_check.html:45
+#: ckanext/feedback/templates/utilization/comment_check.html:59
 #: ckanext/feedback/templates/utilization/expect_suggestion.html:37
 #: ckanext/feedback/templates/utilization/suggestion.html:47
 msgid "Previous"
 msgstr "戻る"
 
-#: ckanext/feedback/templates/resource/comment_check.html:57
-#: ckanext/feedback/templates/resource/comment_check.html:59
-#: ckanext/feedback/templates/utilization/comment_check.html:47
-#: ckanext/feedback/templates/utilization/comment_check.html:49
+#: ckanext/feedback/templates/resource/comment_check.html:58
+#: ckanext/feedback/templates/resource/comment_check.html:60
+#: ckanext/feedback/templates/utilization/comment_check.html:61
+#: ckanext/feedback/templates/utilization/comment_check.html:63
 msgid "Submit comment"
 msgstr "コメントを送信"
 
