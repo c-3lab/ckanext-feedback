@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-02-21 17:14+0900\n"
+"POT-Creation-Date: 2025-03-11 15:00+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -112,7 +112,10 @@ msgstr "承認・削除"
 
 #: ckanext/feedback/controllers/admin.py:35
 #: ckanext/feedback/templates/admin/approval_and_delete.html:201
-msgid "This is the management screen for approving or deleting resource comments, utilization method registration requests, and utilization method comments related to the organization's resources."
+msgid ""
+"This is the management screen for approving or deleting resource "
+"comments, utilization method registration requests, and utilization "
+"method comments related to the organization's resources."
 msgstr "組織のリソースに対するリソースコメント、利活用方法登録申請、利活用方法コメントの承認・削除を行う管理画面です。"
 
 #: ckanext/feedback/controllers/admin.py:138
@@ -627,25 +630,25 @@ msgstr "コメント内容確認"
 msgid "Would you like to post a comment with the following content?"
 msgstr "以下の内容のコメントを投稿しますか？"
 
-#: ckanext/feedback/templates/resource/comment_check.html:56
+#: ckanext/feedback/templates/resource/comment_check.html:55
 #: ckanext/feedback/templates/resource/expect_suggestion.html:39
 #: ckanext/feedback/templates/resource/suggestion.html:46
-#: ckanext/feedback/templates/utilization/comment_check.html:59
+#: ckanext/feedback/templates/utilization/comment_check.html:45
 #: ckanext/feedback/templates/utilization/expect_suggestion.html:37
 #: ckanext/feedback/templates/utilization/suggestion.html:47
 msgid "Previous"
 msgstr "戻る"
 
-#: ckanext/feedback/templates/resource/comment_check.html:58
-#: ckanext/feedback/templates/resource/comment_check.html:60
-#: ckanext/feedback/templates/utilization/comment_check.html:61
-#: ckanext/feedback/templates/utilization/comment_check.html:63
+#: ckanext/feedback/templates/resource/comment_check.html:57
+#: ckanext/feedback/templates/resource/comment_check.html:59
+#: ckanext/feedback/templates/utilization/comment_check.html:47
+#: ckanext/feedback/templates/utilization/comment_check.html:49
 msgid "Submit comment"
 msgstr "コメントを送信"
 
+# | msgid "Comment on Resource"
 #: ckanext/feedback/templates/resource/expect_suggestion.html:12
 #, fuzzy
-#| msgid "Comment on Resource"
 msgid "Comment on resource"
 msgstr "リソースへのコメント"
 
@@ -713,11 +716,11 @@ msgstr "提案コメントを選択"
 msgid "Details"
 msgstr "詳細"
 
+# | msgid "Details on Utilization"
 #: ckanext/feedback/templates/utilization/comment_check.html:15
 #: ckanext/feedback/templates/utilization/expect_suggestion.html:12
 #: ckanext/feedback/templates/utilization/suggestion.html:15
 #, fuzzy
-#| msgid "Details on Utilization"
 msgid "Comment on Utilization"
 msgstr "利活用方法詳細"
 

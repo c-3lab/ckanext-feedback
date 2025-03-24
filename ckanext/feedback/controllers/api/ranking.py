@@ -99,9 +99,11 @@ def validate_input_parameters(data_dict):
     if invalid_keys:
         raise toolkit.ValidationError(
             {
-                "message": f"The following fields are not valid: {invalid_keys}. "
-                "Please review the provided input and ensure only these fields "
-                f"are included: {parameter_list}."
+                "message": (
+                    f"The following fields are not valid: {invalid_keys}. "
+                    "Please review the provided input and ensure only these fields "
+                    f"are included: {parameter_list}."
+                )
             }
         )
 
@@ -281,8 +283,10 @@ def validate_start_year_month_format(pattern, start_year_month):
     if not re.match(pattern, start_year_month):
         raise toolkit.ValidationError(
             {
-                "message": "Invalid format for 'start_year_month'. "
-                "Expected format is YYYY-MM."
+                "message": (
+                    "Invalid format for 'start_year_month'. "
+                    "Expected format is YYYY-MM."
+                )
             }
         )
 
@@ -293,8 +297,9 @@ def validate_start_year_month_not_before_default(
     if start_year_month < START_YEAR_MONTH_DEFAULT:
         raise toolkit.ValidationError(
             {
-                "message": "The start date must be later "
-                f"than {START_YEAR_MONTH_DEFAULT}."
+                "message": (
+                    "The start date must be later " f"than {START_YEAR_MONTH_DEFAULT}."
+                )
             }
         )
 
@@ -303,8 +308,10 @@ def validate_end_year_month_format(pattern, end_year_month):
     if not re.match(pattern, end_year_month):
         raise toolkit.ValidationError(
             {
-                "message": "Invalid format for 'end_year_month'. "
-                "Expected format is YYYY-MM."
+                "message": (
+                    "Invalid format for 'end_year_month'. "
+                    "Expected format is YYYY-MM."
+                )
             }
         )
 
@@ -324,8 +331,10 @@ def validate_period_months_ago(today, period_months_ago):
     ):
         raise toolkit.ValidationError(
             {
-                "message": "The selected period is beyond the allowable range. "
-                f"Only periods up to {START_YEAR_MONTH_DEFAULT} are allowed."
+                "message": (
+                    "The selected period is beyond the allowable range. "
+                    f"Only periods up to {START_YEAR_MONTH_DEFAULT} are allowed."
+                )
             }
         )
 
@@ -334,9 +343,11 @@ def validate_enable_orgs_in_config(enable_orgs):
     if not enable_orgs:
         raise toolkit.ValidationError(
             {
-                "message": "There are no organizations with "
-                "the download feature enabled. "
-                "Please contact the site administrator for assistance."
+                "message": (
+                    "There are no organizations with "
+                    "the download feature enabled. "
+                    "Please contact the site administrator for assistance."
+                )
             }
         )
 
@@ -350,8 +361,10 @@ def validate_organization_name_in_group(organization_name):
     if not group_name_list:
         raise toolkit.ValidationError(
             {
-                "message": "The specified organization name does not exist. "
-                "Please enter a valid organization name."
+                "message": (
+                    "The specified organization name does not exist. "
+                    "Please enter a valid organization name."
+                )
             }
         )
 
@@ -360,9 +373,11 @@ def validate_organization_download_enabled(organization_name, enable_org):
     if organization_name not in enable_org:
         raise toolkit.ValidationError(
             {
-                "message": "A organization with the download feature "
-                "disabled has been selected. "
-                "Please contact the site administrator for assistance."
+                "message": (
+                    "A organization with the download feature "
+                    "disabled has been selected. "
+                    "Please contact the site administrator for assistance."
+                )
             }
         )
 
@@ -371,8 +386,10 @@ def validate_download_function(is_feedback_config):
     if not is_feedback_config and not FeedbackConfig().download.is_enable():
         raise toolkit.ValidationError(
             {
-                "message": "Download function is off. "
-                "Please contact the site administrator for assistance."
+                "message": (
+                    "Download function is off. "
+                    "Please contact the site administrator for assistance."
+                )
             }
         )
 

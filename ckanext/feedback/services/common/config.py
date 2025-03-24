@@ -29,6 +29,10 @@ def download_handler():
     return handler
 
 
+def is_list_of_str(value):
+    return isinstance(value, list) and all(isinstance(x, str) for x in value)
+
+
 class Singleton(object):
     _instance = None
 
@@ -57,26 +61,41 @@ class BaseConfig:
     def get_ckan_conf_str(self):
         return '.'.join(self.ckan_conf_prefix + self.conf_path)
 
-    def set_enable_and_enable_orgs(
+    def set_enable_and_enable_orgs_and_disable_orgs(
         self, feedback_config: dict, fb_conf_path: list = None
     ):
         fb_conf_path = fb_conf_path or self.conf_path
+        key_list = self.fb_conf_prefix + fb_conf_path
 
         conf_tree = feedback_config
-        ckan_conf_str = self.get_ckan_conf_str()
-        for key in self.fb_conf_prefix + fb_conf_path:
-            conf_tree = conf_tree.get(key)
-            if conf_tree is None:
-                conf_tree = {
-                    "enable": self.default,
-                    "enable_orgs": None,
-                    "disable_orgs": None,
-                }
-                break
 
-        config[f"{ckan_conf_str}.enable"] = conf_tree.get("enable")
-        config[f"{ckan_conf_str}.enable_orgs"] = conf_tree.get("enable_orgs")
-        config[f"{ckan_conf_str}.disable_orgs"] = conf_tree.get("disable_orgs")
+        ckan_conf_str = self.get_ckan_conf_str()
+
+        for key in key_list:
+            conf_tree = conf_tree.get(key)
+
+            if conf_tree is None:
+                config.pop(f"{ckan_conf_str}.enable", None)
+                return
+
+            if key == key_list[-1]:
+                enable = conf_tree.get("enable")
+                if enable is None:
+                    message = (
+                        f"The configuration of the \"{key}\" module "
+                        "in \"feedback_config.json\" is incomplete. "
+                        "Please specify the \"enable\" key "
+                        f"(e.g., {{\"modules\": {{\"{key}\": {{\"enable\": true}}}}}})."
+                    )
+                    raise toolkit.ValidationError({"message": message})
+                enable_orgs = conf_tree.get("enable_orgs")
+                disable_orgs = conf_tree.get("disable_orgs")
+
+        config[f"{ckan_conf_str}.enable"] = enable
+        if enable_orgs:
+            config[f"{ckan_conf_str}.enable_orgs"] = enable_orgs
+        if disable_orgs:
+            config[f"{ckan_conf_str}.disable_orgs"] = disable_orgs
 
     def set_config(
         self,
@@ -109,53 +128,93 @@ class BaseConfig:
 
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
+        # Retrieve the on/off value for the feature from the ini file
+        enable = config.get(f"{ck_conf_str}.enable", self.default)
+
         try:
-            enable = toolkit.asbool(config.get(f"{ck_conf_str}.enable", self.default))
+            # Convert the retrieved value to a boolean
+            # (True, yes, on, 1, False, no, off, 0)
+            enable = toolkit.asbool(enable)
         except ValueError:
-            enable = False
-            toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable')
+            # Raise a ValidationError if conversion fails
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "The value of the \"enable\" key is invalid. "
+                        "Please specify a boolean value such as "
+                        "`true` or `false` for the \"enable\" key."
+                    )
+                }
+            )
+
+        # Return the value of the module or feature if it is off, if the
+        # configuration file is missing, or if no organization is specified
+        if not enable or not FeedbackConfig().is_feedback_config_file or not org_id:
             return enable
 
-        if not enable or not FeedbackConfig().is_feedback_config_file:
-            return enable
-
-        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs") or []
-        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs") or []
-
-        if not is_list_of_str(enable_orgs):
-            enable = False
-            toolkit.error_shout(f'Invalid value for {ck_conf_str}.enable_orgs')
-            return enable
-
-        if not is_list_of_str(disable_orgs):
-            enable = False
-            toolkit.error_shout(f'Invalid value for {ck_conf_str}.disable_orgs')
-            return enable
-
-        if not org_id:
-            return enable
-
+        # Retrieve the name of the specified organization
         organization = get_organization(org_id)
-        if organization is None:
-            enable = False
+
+        # Return False if the specified organization cannot be retrieved
+        if not organization:
+            return False
+
+        # Retrieve the list of enabled organizations and disabled
+        # organizations from the ini file
+        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs")
+        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs")
+
+        # Return True if neither the list of enabled organizations
+        # nor the list of disabled organizations exists
+        if not enable_orgs and not disable_orgs:
             return enable
 
-        deplication = set(enable_orgs) & set(disable_orgs)
-        if organization.name in deplication:
-            enable = False
-            toolkit.error_shout('Conflict in organization enable/disable lists.')
-        elif organization.name in enable_orgs:
-            enable = True
-        elif organization.name in disable_orgs:
-            enable = False
+        # Raise a ValidationError if the list of enabled
+        # organizations exists and is not an array of strings
+        if enable_orgs and not is_list_of_str(enable_orgs):
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "The \"enable_orgs\" key must be a string array "
+                        "to specify valid organizations "
+                        "(e.g., \"enable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+                    )
+                }
+            )
 
-        return enable
+        # Raise a ValidationError if the list of disabled
+        # organizations exists and is not an array of strings
+        if disable_orgs and not is_list_of_str(disable_orgs):
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "The \"disable_orgs\" key must be a string array "
+                        "to specify invalid organizations "
+                        "(e.g., \"disable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+                    )
+                }
+            )
+
+        # If both the list of enabled organizations and the list
+        # of disabled organizations exist, turn off the organizations
+        # in the disabled list and turn on the others
+        if enable_orgs and disable_orgs:
+            return organization.name not in disable_orgs
+
+        if enable_orgs:
+            # If only the list of enabled organizations exists,
+            # turn on organizations in the enabled list and turn off the others
+            return organization.name in enable_orgs
+        else:
+            # If only the list of disabled organizations exists,
+            # turn off organizations in the disabled list and turn on the others
+            return organization.name not in disable_orgs
 
     def get_enable_orgs(self):
         ck_conf_str = self.get_ckan_conf_str()
         enable = config.get(f"{ck_conf_str}.enable", self.default)
         if enable:
-            enable = config.get(f"{ck_conf_str}.enable_orgs", [])
+            return config.get(f"{ck_conf_str}.enable_orgs", [])
         return enable
 
 
@@ -165,7 +224,7 @@ class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config)
+        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
 
 class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
@@ -174,6 +233,7 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
         parents = self.conf_path + ['comment']
+        # TODO:Standardize to either repeated_post_limit or　repeat_post_limit
         self.repeat_post_limit = BaseConfig('repeated_post_limit', parents)
         self.repeat_post_limit.default = False
 
@@ -181,15 +241,15 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.rating.default = False
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config)
+        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
         fb_comments_conf_path = self.conf_path + ['comments']
-        self.repeat_post_limit.set_enable_and_enable_orgs(
+        self.repeat_post_limit.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + ['repeat_post_limit'],
         )
 
-        self.rating.set_enable_and_enable_orgs(
+        self.rating.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.rating.name],
         )
@@ -201,7 +261,7 @@ class UtilizationConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config)
+        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
 
 class LikesConfig(BaseConfig, FeedbackConfigInterface):
@@ -210,7 +270,7 @@ class LikesConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config)
+        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
 
 class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
@@ -296,7 +356,7 @@ class MoralKeeperAiConfig(BaseConfig, FeedbackConfigInterface):
         self.default = False
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs(feedback_config)
+        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
 
 class FeedbackConfig(Singleton):
@@ -339,7 +399,3 @@ class FeedbackConfig(Singleton):
             self.is_feedback_config_file = False
         except json.JSONDecodeError:
             toolkit.error_shout('The feedback config file not decoded correctly')
-
-
-def is_list_of_str(value):
-    return isinstance(value, list) and all(isinstance(x, str) for x in value)
