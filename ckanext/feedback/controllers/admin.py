@@ -1,11 +1,18 @@
+import csv
+import io
 import logging
+import urllib.parse
+from datetime import datetime
 
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
+from dateutil.relativedelta import relativedelta
+from flask import Response
 
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
+from ckanext.feedback.services.admin import aggregation as aggregation_service
 from ckanext.feedback.services.admin import feedbacks as feedback_service
 from ckanext.feedback.services.admin import (
     resource_comments as resource_comments_service,
@@ -351,93 +358,67 @@ class AdminController:
     @staticmethod
     @check_administrator
     def aggregation():
-        base_metrics = [
-            (
-                "monthly-number-of-likes",
-                _("Monthly Number of Likes"),
-                _("Aggregated data of the total number of 'likes' per month."),
-            ),
-            (
-                "annual-number-of-likes",
-                _("Annual Number of Likes"),
-                _("Aggregated data of the total number of 'likes' per year."),
-            ),
-            (
-                "monthly-downloads",
-                _("Monthly Downloads"),
-                _("Aggregated data of the number of downloads per month."),
-            ),
-            (
-                "annual-downloads",
-                _("Annual Downloads"),
-                _("Aggregated data of the number of downloads per year."),
-            ),
-            (
-                "monthly-utilizations",
-                _("Monthly Utilizations"),
-                _("Aggregated data of the number of data utilizations per month."),
-            ),
-            (
-                "annual-utilizations",
-                _("Annual Utilizations"),
-                _("Aggregated data of the number of data utilizations per year."),
-            ),
-            (
-                "monthly-utilization-comments",
-                _("Monthly Utilization Comments"),
-                _(
-                    "Aggregated data of the number of comments "
-                    "related to data utilization per month."
-                ),
-            ),
-            (
-                "annual-utilization-comments",
-                _("Annual Utilization Comments"),
-                _(
-                    "Aggregated data of the number of comments "
-                    "related to data utilization per year."
-                ),
-            ),
-            (
-                "monthly-resource-comments",
-                _("Monthly Resource Comments"),
-                _("Aggregated data of the number of comments on resources per month."),
-            ),
-            (
-                "annual-resource-comments",
-                _("Annual Resource Comments"),
-                _("Aggregated data of the number of comments on resources per year."),
-            ),
-            (
-                "monthly-ratings",
-                _("Monthly Ratings"),
-                _("Aggregated data of the total number of ratings per month."),
-            ),
-            (
-                "annual-ratings",
-                _("Annual Ratings"),
-                _("Aggregated data of the total number of ratings per year."),
-            ),
-            (
-                "monthly-issue-resolutions",
-                _("Monthly Issue Resolutions"),
-                _("Aggregated data of the number of issue resolutions per month."),
-            ),
-            (
-                "annual-issue-resolutions",
-                _("Annual Issue Resolutions"),
-                _("Aggregated data of the number of issue resolutions per year."),
-            ),
-        ]
+        today = datetime.now()
 
-        metric_list = [
-            {"name": name, "title": title, "description": description}
-            for name, title, description in base_metrics
-        ]
+        end_date = today - relativedelta(months=1)
+        default_end_month = end_date.strftime('%Y-%m')
 
-        return toolkit.render('admin/aggregation.html', {"metric_list": metric_list})
+        start_date = end_date - relativedelta(years=1) + relativedelta(months=1)
+        default_start_month = start_date.strftime('%Y-%m')
+
+        max_month = today.strftime('%Y-%m')
+
+        return toolkit.render(
+            'admin/aggregation.html',
+            {
+                "max_month": max_month,
+                "default_start_month": default_start_month,
+                "default_end_month": default_end_month,
+            },
+        )
 
     @staticmethod
     @check_administrator
     def download_csv():
-        return
+        start_month_str = request.args.get('start_month')
+        end_month_str = request.args.get('end_month')
+
+        monthly_data = aggregation_service.get_monthly_data(
+            start_month_str, end_month_str
+        )
+        header = list(monthly_data[0].keys())
+        rows = [[row[key] for key in header] for row in monthly_data]
+        data = [header] + rows
+
+        output = io.BytesIO()
+        text_wrapper = io.TextIOWrapper(output, encoding='utf-8-sig', newline='')
+
+        try:
+            writer = csv.writer(text_wrapper)
+            writer.writerows(data)
+            text_wrapper.flush()
+        finally:
+            text_wrapper.detach()
+
+        output.seek(0)
+
+        start_year, start_month = start_month_str.split("-")
+        end_year, end_month = end_month_str.split("-")
+
+        filename = "{}_{}-{}.csv".format(
+            _("feedback_monthly_time_series_report"),
+            f"{start_year}{start_month}",
+            f"{end_year}{end_month}",
+        )
+        encoded_filename = urllib.parse.quote(filename)
+
+        return Response(
+            output,
+            mimetype="text/csv charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename*=UTF-8''{encoded_filename}; "
+                    f"filename={encoded_filename}"
+                )
+            },
+        )
