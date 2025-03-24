@@ -1,6 +1,18 @@
 const targetCheckboxAll = document.getElementById('target-checkbox-all');
 targetCheckboxAll.addEventListener('change', changeAllCheckbox);
 
+function getTranslatedMessage(translationKey, placeholders = {}) {
+    const translationElement = document.querySelector(`[data-key="${translationKey}"]`);
+    const rawMessage = translationElement?.textContent || translationKey;
+
+    let finalMessage = rawMessage;
+    for (const [placeholder, value] of Object.entries(placeholders)) {
+        finalMessage = finalMessage.replace(placeholder, value);
+    }
+
+    return finalMessage;
+}
+
 function changeAllCheckbox(e){
     let rows;
     rows = document.querySelectorAll('.target');
@@ -33,12 +45,14 @@ function processAction(action, isApproval) {
     const checkedRows = waitingRows + approvedRows;
 
     if (checkedRows === 0) {
-        alert(ckan.i18n._('Please select at least one checkbox.'));
+        const message = getTranslatedMessage('Please select at least one checkbox.');
+        alert(message);
         return;
     }
 
     if (isApproval && waitingRows === 0) {
-        alert(ckan.i18n._('Please select the checkbox whose status is Waiting.'));
+        const message = getTranslatedMessage('Please select the checkbox whose status is Waiting.');
+        alert(message);
         return;
     }
 
@@ -52,9 +66,9 @@ function processAction(action, isApproval) {
         [...resourceCommentApproved, ...utilizationApproved, ...utilizationCommentApproved].forEach(checkbox => {
             checkbox.checked = false;
         });
-        message = ckan.i18n.translate('Is it okay to approve checked %d item(s)?').fetch(waitingRows);
+        message = getTranslatedMessage('Is it okay to approve checked WAITING_ROWS item(s)?',{WAITING_ROWS: waitingRows});
     } else {
-        message = ckan.i18n.translate('Completely delete checked %d item(s). This operation cannot be undone, are you sure?').fetch(checkedRows);
+        message = getTranslatedMessage('Completely delete checked CHECKED_ROWS item(s). This operation cannot be undone, are you sure?',{CHECKED_ROWS: checkedRows});
     }
 
     requestAnimationFrame(() => {
