@@ -15,16 +15,18 @@
   <article class="module">
     <div class="module-content">
       <h2>{{ _('Aggregation') }}</h2>
-      <div style="padding: 10px;">
-        <ul class="list-group">
-          {% for metric in metric_list %}
-            <li class="list-group-item">
-              <a href="{{ h.url_for('feedback.download_csv', metric=metric.name)}}">{{ metric.title }}</a>
-              <span>- {{ metric.description }}</span>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
+      <form action="{{ h.url_for('feedback.download_csv') }}" method="get">
+        <div class="container" style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">{{ _('Feedback monthly time series report') }}</span>
+          <input type="month" name="start_month" id="startMonthPicker" style="font-size: 16px;" max="{{ max_month }}" value="{{ default_start_month}}">
+          <span> ~ </span>
+          <input type="month" name="end_month" id="endMonthPicker" style="font-size: 16px;" max="{{ max_month }}" value="{{ default_end_month}}">
+          <button class="btn btn-primary" style="margin-left: auto;">
+            <i class="fa-solid fa-arrow-circle-down"></i>
+            {{ _('Download') }}
+          </button>
+        </div>
+      </form>
     </div>
   </article>
 {% endblock %}
@@ -48,5 +50,4 @@
 
 {%- block scripts %}
   {{ super() }}
-  {% asset 'feedback/feedback-approval-and-delete' %}
 {% endblock %}
