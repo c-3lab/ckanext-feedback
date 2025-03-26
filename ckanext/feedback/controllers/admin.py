@@ -50,9 +50,8 @@ class AdminController:
                 'name': _('aggregation'),
                 'url': 'feedback.aggregation',
                 'description': _(
-                    "This is a management screen where you can download "
-                    "statistical data on the number of 'likes' and downloads "
-                    "on a monthly and yearly basis in CSV format."
+                    "A screen where users can download aggregated feedback data "
+                    "on organizational resources in CSV format."
                 ),
             },
         ]
@@ -360,17 +359,23 @@ class AdminController:
     def aggregation():
         today = datetime.now()
 
+        max_year = today.strftime('%Y')
+        max_month = today.strftime('%Y-%m')
+
+        year = today - relativedelta(years=1)
+        default_year = year.strftime('%Y')
+
         end_date = today - relativedelta(months=1)
         default_end_month = end_date.strftime('%Y-%m')
 
         start_date = end_date - relativedelta(years=1) + relativedelta(months=1)
         default_start_month = start_date.strftime('%Y-%m')
 
-        max_month = today.strftime('%Y-%m')
-
         return toolkit.render(
             'admin/aggregation.html',
             {
+                "max_year": int(max_year),
+                "default_year": default_year,
                 "max_month": max_month,
                 "default_start_month": default_start_month,
                 "default_end_month": default_end_month,
@@ -378,18 +383,15 @@ class AdminController:
         )
 
     @staticmethod
-    @check_administrator
-    def download_csv():
-        start_month_str = request.args.get('start_month')
-        end_month_str = request.args.get('end_month')
-
-        monthly_data = aggregation_service.get_monthly_data(
-            start_month_str, end_month_str
-        )
-        header = list(monthly_data[0].keys())
-        rows = [[row[key] for key in header] for row in monthly_data]
+    def convert_dict_list_to_table(dict_list):
+        header = list(dict_list[0].keys())
+        rows = [[row[key] for key in header] for row in dict_list]
         data = [header] + rows
 
+        return data
+
+    @staticmethod
+    def export_csv_response(data, filename):
         output = io.BytesIO()
         text_wrapper = io.TextIOWrapper(output, encoding='utf-8-sig', newline='')
 
@@ -402,23 +404,76 @@ class AdminController:
 
         output.seek(0)
 
-        start_year, start_month = start_month_str.split("-")
-        end_year, end_month = end_month_str.split("-")
-
-        filename = "{}_{}-{}.csv".format(
-            _("feedback_monthly_time_series_report"),
-            f"{start_year}{start_month}",
-            f"{end_year}{end_month}",
-        )
-        encoded_filename = urllib.parse.quote(filename)
-
         return Response(
             output,
             mimetype="text/csv charset=utf-8",
             headers={
                 "Content-Disposition": (
-                    f"attachment; filename*=UTF-8''{encoded_filename}; "
-                    f"filename={encoded_filename}"
+                    f"attachment; filename*=UTF-8''{filename}; " f"filename={filename}"
                 )
             },
         )
+
+    @staticmethod
+    @check_administrator
+    def download_per_month():
+        start_month_str = request.args.get('start_month')
+        end_month_str = request.args.get('end_month')
+
+        results = aggregation_service.get_per_month_data(start_month_str, end_month_str)
+        data = AdminController.convert_dict_list_to_table(results)
+
+        start_year, start_month = start_month_str.split("-")
+        end_year, end_month = end_month_str.split("-")
+        filename = "{}_{}-{}.csv".format(
+            _("feedback_per_month_report"),
+            f"{start_year}{start_month}",
+            f"{end_year}{end_month}",
+        )
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_csv_response(data, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_monthly():
+        select_month = request.args.get('month')
+
+        results = aggregation_service.get_monthly_data(select_month)
+        data = AdminController.convert_dict_list_to_table(results)
+
+        year, month = select_month.split("-")
+        filename = "{}_{}.csv".format(
+            _("feedback_monthly_report"),
+            f"{year}{month}",
+        )
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_csv_response(data, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_yearly():
+        select_year = request.args.get('year')
+
+        results = aggregation_service.get_yearly_data(select_year)
+        data = AdminController.convert_dict_list_to_table(results)
+
+        filename = "{}_{}.csv".format(
+            _("feedback_yearly_report"),
+            f"{select_year}",
+        )
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_csv_response(data, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_all_time():
+        results = aggregation_service.get_all_time_data()
+        data = AdminController.convert_dict_list_to_table(results)
+
+        filename = "{}.csv".format(_("feedback_all_time_report"))
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_csv_response(data, encoded_filename)

@@ -161,3 +161,9 @@ input[name="tab-menu"] {
 .row {
   margin-bottom: 0px;
 }
+
+.download-item {
+  border-bottom: 1px dotted #ddd;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
