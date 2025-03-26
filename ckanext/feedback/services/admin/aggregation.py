@@ -7,7 +7,8 @@ from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from ckan.plugins import toolkit
-from sqlalchemy import Date, Float, func
+from sqlalchemy import Date, Float, func, literal_column
+from sqlalchemy.sql import text
 
 from ckanext.feedback.models.download import DownloadMonthly
 from ckanext.feedback.models.issue import IssueResolution
@@ -26,10 +27,6 @@ def generate_months(start, end):
         months.append(current)
         current = (current.replace(day=1) + timedelta(days=32)).replace(day=1)
     return months
-
-
-def get_resource_ids():
-    return session.query(Resource.id).filter(Resource.state == "active").all()
 
 
 def get_resource_details(resource_id):
@@ -60,6 +57,8 @@ def get_per_month_data(start_month_str, end_month_str):
     end_date = datetime(end_year, end_month, last_day, 23, 59, 59)
 
     months = generate_months(start_date, end_date)
+    month_rows = ",".join([f"('{m}'::date)" for m in months])
+    month_table = f"(VALUES {month_rows}) AS months(month)"
 
     download_subquery = (
         session.query(
@@ -160,123 +159,230 @@ def get_per_month_data(start_month_str, end_month_str):
         .subquery()
     )
 
-    resource_ids = get_resource_ids()
+    resources_subquery = (
+        session.query(Resource.id.label("resource_id"))
+        .filter(Resource.state == "active")
+        .subquery()
+    )
 
+    query = session.query(
+        resources_subquery.c.resource_id,
+        literal_column("months.month").cast(Date).label("date"),
+        func.coalesce(download_subquery.c.download_count, 0).label("download_count"),
+        func.coalesce(resource_comment_subquery.c.comment_count, 0).label(
+            "comment_count"
+        ),
+        func.coalesce(utilization_subquery.c.utilization_count, 0).label(
+            "utilization_count"
+        ),
+        func.coalesce(
+            utilization_comment_subquery.c.utilization_comment_count, 0
+        ).label("utilization_comment_count"),
+        func.coalesce(issue_resolution_subquery.c.issue_resolution_count, 0).label(
+            "issue_resolution_count"
+        ),
+        func.coalesce(like_subquery.c.like_count, 0).label("like_count"),
+        rating_subquery.c.average_rating,
+    ).from_statement(
+        text(
+            f"""
+                SELECT
+                    r.resource_id,
+                    months.month::date AS date,
+                    COALESCE(dm.download_count, 0) AS download_count,
+                    COALESCE(rc.comment_count, 0) AS comment_count,
+                    COALESCE(u.utilization_count, 0) AS utilization_count,
+                    COALESCE(
+                        uc.utilization_comment_count, 0
+                    ) AS utilization_comment_count,
+                    COALESCE(ir.issue_resolution_count, 0) AS issue_resolution_count,
+                    COALESCE(rlm.like_count, 0) AS like_count,
+                    rt.average_rating
+                FROM {month_table}
+                CROSS JOIN (
+                    SELECT id AS resource_id, package_id
+                    FROM resource
+                    WHERE state = 'active'
+                ) r
+                LEFT JOIN (
+                    SELECT
+                        resource_id,
+                        date_trunc('month', created)::date AS month,
+                        SUM(download_count) AS download_count
+                    FROM download_monthly
+                    GROUP BY resource_id, date_trunc('month', created)
+                ) dm ON dm.resource_id = r.resource_id AND dm.month = months.month
+                LEFT JOIN (
+                    SELECT
+                        resource_id,
+                        date_trunc('month', created)::date AS month,
+                        COUNT(*) AS comment_count
+                    FROM resource_comment
+                    WHERE approval = True
+                    GROUP BY resource_id, date_trunc('month', created)
+                ) rc ON rc.resource_id = r.resource_id AND rc.month = months.month
+                LEFT JOIN (
+                    SELECT
+                        resource_id,
+                        date_trunc('month', created)::date AS month,
+                        COUNT(*) AS utilization_count
+                    FROM utilization
+                    WHERE approval = True
+                    GROUP BY resource_id, date_trunc('month', created)
+                ) u ON u.resource_id = r.resource_id AND u.month = months.month
+                LEFT JOIN (
+                    SELECT
+                        resource_id,
+                        date_trunc('month', utilization_comment.created)::date AS month,
+                        COUNT(*) AS utilization_comment_count
+                    FROM utilization_comment
+                    JOIN utilization
+                    ON utilization_comment.utilization_id = utilization.id
+                    WHERE utilization_comment.approval = True
+                    GROUP BY
+                        resource_id,
+                        date_trunc('month', utilization_comment.created)
+                ) uc ON uc.resource_id = r.resource_id AND uc.month = months.month
+                LEFT JOIN (
+                    SELECT
+                        resource_id,
+                        date_trunc('month', issue_resolution.created)::date AS month,
+                        COUNT(*) AS issue_resolution_count
+                    FROM issue_resolution
+                    JOIN utilization
+                    ON issue_resolution.utilization_id = utilization.id
+                    GROUP BY resource_id, date_trunc('month', issue_resolution.created)
+                ) ir ON ir.resource_id = r.resource_id AND ir.month = months.month
+                LEFT JOIN (
+                    SELECT
+                        resource_id,
+                        date_trunc('month', created)::date AS month,
+                        SUM(like_count) AS like_count
+                    FROM resource_like_monthly
+                    GROUP BY resource_id, date_trunc('month', created)
+                ) rlm ON rlm.resource_id = r.resource_id AND rlm.month = months.month
+                LEFT JOIN (
+                    SELECT
+                        resource_id,
+                        date_trunc('month', created)::date AS month,
+                        AVG(rating::float) AS average_rating
+                    FROM resource_comment
+                    WHERE approval = True AND rating IS NOT NULL
+                    GROUP BY resource_id, date_trunc('month', created)
+                ) rt ON rt.resource_id = r.resource_id AND rt.month = months.month
+                JOIN package ON r.package_id = package.id
+                JOIN "group" g ON package.owner_org = g.id
+                WHERE g.name = 'organization-name-a'
+                ORDER BY r.resource_id, months.month
+            """
+        )
+    )
+
+    # results = [
+    #     {
+    #         _("date"): row.date,
+    #         _("resource_id"): row.resource_id,
+    #         _("group_title"): group_title,
+    #         _("package_title"): package_title,
+    #         _("resource_name"): resource_name,
+    #         _("download_count"): row.download_count,
+    #         _("comment_count"): row.comment_count,
+    #         _("utilization_count"): row.utilization_count,
+    #         _("utilization_comment_count"): row.utilization_comment_count,
+    #         _("issue_resolution_count"): row.issue_resolution_count,
+    #         _("like_count"): row.like_count,
+    #         _("average_rating"): (
+    #             float(row.average_rating)
+    #             if row.average_rating is not None
+    #             else _("Not rated")
+    #         ),
+    #         "url": resource_link,
+    #     }
+    #     for row in query
+    #     for group_title, package_title, resource_name, resource_link in [
+    #         get_resource_details(row.resource_id)
+    #     ]
+    # ]
+
+    # return results
+
+    return query
+
+
+def create_resource_report_query(
+    download_subquery,
+    resource_comment_subquery,
+    utilization_subquery,
+    utilization_comment_subquery,
+    issue_resolution_subquery,
+    like_subquery,
+    rating_subquery,
+):
+    query = (
+        session.query(
+            Resource.id.label("resource_id"),
+            func.coalesce(download_subquery.c.download_count, 0),
+            func.coalesce(resource_comment_subquery.c.comment_count, 0),
+            func.coalesce(utilization_subquery.c.utilization_count, 0),
+            func.coalesce(utilization_comment_subquery.c.utilization_comment_count, 0),
+            func.coalesce(issue_resolution_subquery.c.issue_resolution_count, 0),
+            func.coalesce(like_subquery.c.like_count, 0),
+            rating_subquery.c.average_rating,
+        )
+        .select_from(Group)
+        .join(Package, Group.id == Package.owner_org)
+        .join(Resource, Package.id == Resource.package_id)
+        # TODO: フロントから送信された組織でフィルターを掛けられるようにする
+        .filter(Group.name == 'organization-name-a')
+        .outerjoin(download_subquery, Resource.id == download_subquery.c.resource_id)
+        .outerjoin(
+            resource_comment_subquery,
+            Resource.id == resource_comment_subquery.c.resource_id,
+        )
+        .outerjoin(
+            utilization_subquery, Resource.id == utilization_subquery.c.resource_id
+        )
+        .outerjoin(
+            utilization_comment_subquery,
+            Resource.id == utilization_comment_subquery.c.resource_id,
+        )
+        .outerjoin(
+            issue_resolution_subquery,
+            Resource.id == issue_resolution_subquery.c.resource_id,
+        )
+        .outerjoin(like_subquery, Resource.id == like_subquery.c.resource_id)
+        .outerjoin(rating_subquery, Resource.id == rating_subquery.c.resource_id)
+    )
+
+    return query
+
+
+def get_resource_statistics_with_details(query):
     results = []
-    for (resource_id,) in resource_ids:
+
+    for row in query.all():
         group_title, package_title, resource_name, resource_link = get_resource_details(
-            resource_id
+            row.resource_id
         )
 
-        for month in months:
-            download_row = (
-                session.query(
-                    func.coalesce(download_subquery.c.download_count, 0),
-                )
-                .filter(
-                    download_subquery.c.resource_id == resource_id,
-                    download_subquery.c.month == month,
-                )
-                .first()
-            )
-
-            resource_comment_row = (
-                session.query(
-                    func.coalesce(resource_comment_subquery.c.comment_count, 0),
-                )
-                .filter(
-                    resource_comment_subquery.c.resource_id == resource_id,
-                    resource_comment_subquery.c.month == month,
-                )
-                .first()
-            )
-
-            utilization_row = (
-                session.query(
-                    func.coalesce(utilization_subquery.c.utilization_count, 0),
-                )
-                .filter(
-                    utilization_subquery.c.resource_id == resource_id,
-                    utilization_subquery.c.month == month,
-                )
-                .first()
-            )
-
-            utilization_comment_row = (
-                session.query(
-                    func.coalesce(
-                        utilization_comment_subquery.c.utilization_comment_count, 0
-                    ),
-                )
-                .filter(
-                    utilization_comment_subquery.c.resource_id == resource_id,
-                    utilization_comment_subquery.c.month == month,
-                )
-                .first()
-            )
-
-            issue_resolution_row = (
-                session.query(
-                    func.coalesce(
-                        issue_resolution_subquery.c.issue_resolution_count, 0
-                    ),
-                )
-                .filter(
-                    issue_resolution_subquery.c.resource_id == resource_id,
-                    issue_resolution_subquery.c.month == month,
-                )
-                .first()
-            )
-
-            like_row = (
-                session.query(
-                    func.coalesce(like_subquery.c.like_count, 0),
-                )
-                .filter(
-                    like_subquery.c.resource_id == resource_id,
-                    like_subquery.c.month == month,
-                )
-                .first()
-            )
-
-            rating_row = (
-                session.query(rating_subquery.c.average_rating)
-                .filter(
-                    rating_subquery.c.resource_id == resource_id,
-                    rating_subquery.c.month == month,
-                )
-                .first()
-            )
-
-            results.append(
-                {
-                    _("date"): month,
-                    _("resource_id"): resource_id,
-                    _("group_title"): group_title,
-                    _("package_title"): package_title,
-                    _("resource_name"): resource_name,
-                    _("download_count"): download_row[0] if download_row else 0,
-                    _("comment_count"): (
-                        resource_comment_row[0] if resource_comment_row else 0
-                    ),
-                    _("utilization_count"): (
-                        utilization_row[0] if utilization_row else 0
-                    ),
-                    _("utilization_comment_count"): (
-                        utilization_comment_row[0] if utilization_comment_row else 0
-                    ),
-                    _("issue_resolution_count"): (
-                        issue_resolution_row[0] if issue_resolution_row else 0
-                    ),
-                    _("like_count"): like_row[0] if like_row else 0,
-                    _("average_rating"): (
-                        float(rating_row[0])
-                        if rating_row and rating_row[0] is not None
-                        else _("Not rated")
-                    ),
-                    "url": resource_link,
-                }
-            )
+        results.append(
+            {
+                _("resource_id"): row.resource_id,
+                _("group_title"): group_title,
+                _("package_title"): package_title,
+                _("resource_name"): resource_name,
+                _("download_count"): row[1],
+                _("comment_count"): row[2],
+                _("utilization_count"): row[3],
+                _("utilization_comment_count"): row[4],
+                _("issue_resolution_count"): row[5],
+                _("like_count"): row[6],
+                _("average_rating"): (
+                    float(row[7]) if row[7] is not None else _("Not rated")
+                ),
+                "url": resource_link,
+            }
+        )
 
     return results
 
@@ -392,109 +498,17 @@ def get_monthly_data(select_month):
         .subquery()
     )
 
-    resource_ids = get_resource_ids()
+    query = create_resource_report_query(
+        download_subquery,
+        resource_comment_subquery,
+        utilization_subquery,
+        utilization_comment_subquery,
+        issue_resolution_subquery,
+        like_subquery,
+        rating_subquery,
+    )
 
-    results = []
-
-    for (resource_id,) in resource_ids:
-        group_title, package_title, resource_name, resource_link = get_resource_details(
-            resource_id
-        )
-
-        download_row = (
-            session.query(func.coalesce(download_subquery.c.download_count, 0))
-            .filter(download_subquery.c.resource_id == resource_id)
-            .first()
-        )
-
-        resource_comment_row = (
-            session.query(
-                func.coalesce(resource_comment_subquery.c.comment_count, 0),
-            )
-            .filter(
-                resource_comment_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        utilization_row = (
-            session.query(
-                func.coalesce(utilization_subquery.c.utilization_count, 0),
-            )
-            .filter(
-                utilization_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        utilization_comment_row = (
-            session.query(
-                func.coalesce(
-                    utilization_comment_subquery.c.utilization_comment_count, 0
-                ),
-            )
-            .filter(
-                utilization_comment_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        issue_resolution_row = (
-            session.query(
-                func.coalesce(issue_resolution_subquery.c.issue_resolution_count, 0),
-            )
-            .filter(
-                issue_resolution_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        like_row = (
-            session.query(
-                func.coalesce(like_subquery.c.like_count, 0),
-            )
-            .filter(
-                like_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        rating_row = (
-            session.query(rating_subquery.c.average_rating)
-            .filter(
-                rating_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        results.append(
-            {
-                _("resource_id"): resource_id,
-                _("group_title"): group_title,
-                _("package_title"): package_title,
-                _("resource_name"): resource_name,
-                _("download_count"): download_row[0] if download_row else 0,
-                _("comment_count"): (
-                    resource_comment_row[0] if resource_comment_row else 0
-                ),
-                _("utilization_count"): utilization_row[0] if utilization_row else 0,
-                _("utilization_comment_count"): (
-                    utilization_comment_row[0] if utilization_comment_row else 0
-                ),
-                _("issue_resolution_count"): (
-                    issue_resolution_row[0] if issue_resolution_row else 0
-                ),
-                _("like_count"): like_row[0] if like_row else 0,
-                _("average_rating"): (
-                    float(rating_row[0])
-                    if rating_row and rating_row[0] is not None
-                    else _("Not rated")
-                ),
-                "url": resource_link,
-            }
-        )
-
-    return results
+    return get_resource_statistics_with_details(query)
 
 
 def get_yearly_data(select_year):
@@ -589,109 +603,17 @@ def get_yearly_data(select_year):
         .subquery()
     )
 
-    resource_ids = get_resource_ids()
+    query = create_resource_report_query(
+        download_subquery,
+        resource_comment_subquery,
+        utilization_subquery,
+        utilization_comment_subquery,
+        issue_resolution_subquery,
+        like_subquery,
+        rating_subquery,
+    )
 
-    results = []
-
-    for (resource_id,) in resource_ids:
-        group_title, package_title, resource_name, resource_link = get_resource_details(
-            resource_id
-        )
-
-        download_row = (
-            session.query(func.coalesce(download_subquery.c.download_count, 0))
-            .filter(download_subquery.c.resource_id == resource_id)
-            .first()
-        )
-
-        resource_comment_row = (
-            session.query(
-                func.coalesce(resource_comment_subquery.c.comment_count, 0),
-            )
-            .filter(
-                resource_comment_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        utilization_row = (
-            session.query(
-                func.coalesce(utilization_subquery.c.utilization_count, 0),
-            )
-            .filter(
-                utilization_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        utilization_comment_row = (
-            session.query(
-                func.coalesce(
-                    utilization_comment_subquery.c.utilization_comment_count, 0
-                ),
-            )
-            .filter(
-                utilization_comment_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        issue_resolution_row = (
-            session.query(
-                func.coalesce(issue_resolution_subquery.c.issue_resolution_count, 0),
-            )
-            .filter(
-                issue_resolution_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        like_row = (
-            session.query(
-                func.coalesce(like_subquery.c.like_count, 0),
-            )
-            .filter(
-                like_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        rating_row = (
-            session.query(rating_subquery.c.average_rating)
-            .filter(
-                rating_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        results.append(
-            {
-                _("resource_id"): resource_id,
-                _("group_title"): group_title,
-                _("package_title"): package_title,
-                _("resource_name"): resource_name,
-                _("download_count"): download_row[0] if download_row else 0,
-                _("comment_count"): (
-                    resource_comment_row[0] if resource_comment_row else 0
-                ),
-                _("utilization_count"): utilization_row[0] if utilization_row else 0,
-                _("utilization_comment_count"): (
-                    utilization_comment_row[0] if utilization_comment_row else 0
-                ),
-                _("issue_resolution_count"): (
-                    issue_resolution_row[0] if issue_resolution_row else 0
-                ),
-                _("like_count"): like_row[0] if like_row else 0,
-                _("average_rating"): (
-                    float(rating_row[0])
-                    if rating_row and rating_row[0] is not None
-                    else _("Not rated")
-                ),
-                "url": resource_link,
-            }
-        )
-
-    return results
+    return get_resource_statistics_with_details(query)
 
 
 def get_all_time_data():
@@ -766,106 +688,14 @@ def get_all_time_data():
         .subquery()
     )
 
-    resource_ids = get_resource_ids()
+    query = create_resource_report_query(
+        download_subquery,
+        resource_comment_subquery,
+        utilization_subquery,
+        utilization_comment_subquery,
+        issue_resolution_subquery,
+        like_subquery,
+        rating_subquery,
+    )
 
-    results = []
-
-    for (resource_id,) in resource_ids:
-        group_title, package_title, resource_name, resource_link = get_resource_details(
-            resource_id
-        )
-
-        download_row = (
-            session.query(func.coalesce(download_subquery.c.download_count, 0))
-            .filter(download_subquery.c.resource_id == resource_id)
-            .first()
-        )
-
-        resource_comment_row = (
-            session.query(
-                func.coalesce(resource_comment_subquery.c.comment_count, 0),
-            )
-            .filter(
-                resource_comment_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        utilization_row = (
-            session.query(
-                func.coalesce(utilization_subquery.c.utilization_count, 0),
-            )
-            .filter(
-                utilization_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        utilization_comment_row = (
-            session.query(
-                func.coalesce(
-                    utilization_comment_subquery.c.utilization_comment_count, 0
-                ),
-            )
-            .filter(
-                utilization_comment_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        issue_resolution_row = (
-            session.query(
-                func.coalesce(issue_resolution_subquery.c.issue_resolution_count, 0),
-            )
-            .filter(
-                issue_resolution_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        like_row = (
-            session.query(
-                func.coalesce(like_subquery.c.like_count, 0),
-            )
-            .filter(
-                like_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        rating_row = (
-            session.query(rating_subquery.c.average_rating)
-            .filter(
-                rating_subquery.c.resource_id == resource_id,
-            )
-            .first()
-        )
-
-        results.append(
-            {
-                _("resource_id"): resource_id,
-                _("group_title"): group_title,
-                _("package_title"): package_title,
-                _("resource_name"): resource_name,
-                _("download_count"): download_row[0] if download_row else 0,
-                _("comment_count"): (
-                    resource_comment_row[0] if resource_comment_row else 0
-                ),
-                _("utilization_count"): utilization_row[0] if utilization_row else 0,
-                _("utilization_comment_count"): (
-                    utilization_comment_row[0] if utilization_comment_row else 0
-                ),
-                _("issue_resolution_count"): (
-                    issue_resolution_row[0] if issue_resolution_row else 0
-                ),
-                _("like_count"): like_row[0] if like_row else 0,
-                _("average_rating"): (
-                    float(rating_row[0])
-                    if rating_row and rating_row[0] is not None
-                    else _("Not rated")
-                ),
-                "url": resource_link,
-            }
-        )
-
-    return results
+    return get_resource_statistics_with_details(query)
