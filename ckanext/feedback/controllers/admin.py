@@ -1,11 +1,18 @@
+import csv
+import io
 import logging
+import urllib.parse
+from datetime import datetime
 
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
+from dateutil.relativedelta import relativedelta
+from flask import Response
 
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
+from ckanext.feedback.services.admin import aggregation as aggregation_service
 from ckanext.feedback.services.admin import feedbacks as feedback_service
 from ckanext.feedback.services.admin import (
     resource_comments as resource_comments_service,
@@ -37,6 +44,14 @@ class AdminController:
                     "resource comments, utilization method registration requests, "
                     "and utilization method comments related to "
                     "the organization's resources."
+                ),
+            },
+            {
+                'name': _('aggregation'),
+                'url': 'feedback.aggregation',
+                'description': _(
+                    "A screen where users can download aggregated feedback data "
+                    "on organizational resources in CSV format."
                 ),
             },
         ]
@@ -337,3 +352,193 @@ class AdminController:
                         ' the URL manually please check your spelling and try again.'
                     ),
                 )
+
+    # feedback/admin/aggregation
+    @staticmethod
+    @check_administrator
+    def aggregation():
+        today = datetime.now()
+
+        max_year = today.strftime('%Y')
+        max_month = today.strftime('%Y-%m')
+
+        year = today - relativedelta(years=1)
+        default_year = year.strftime('%Y')
+
+        end_date = today - relativedelta(months=1)
+        default_end_month = end_date.strftime('%Y-%m')
+
+        start_date = end_date - relativedelta(years=1) + relativedelta(months=1)
+        default_start_month = start_date.strftime('%Y-%m')
+
+        return toolkit.render(
+            'admin/aggregation.html',
+            {
+                "max_year": int(max_year),
+                "default_year": default_year,
+                "max_month": max_month,
+                "default_start_month": default_start_month,
+                "default_end_month": default_end_month,
+            },
+        )
+
+    @staticmethod
+    def convert_dict_list_to_table(dict_list):
+        header = list(dict_list[0].keys())
+        rows = [[row[key] for key in header] for row in dict_list]
+        data = [header] + rows
+
+        return data
+
+    @staticmethod
+    def export_csv_response(data, filename):
+        output = io.BytesIO()
+        text_wrapper = io.TextIOWrapper(output, encoding='utf-8-sig', newline='')
+
+        try:
+            writer = csv.writer(text_wrapper)
+            writer.writerows(data)
+            text_wrapper.flush()
+        finally:
+            text_wrapper.detach()
+
+        output.seek(0)
+
+        return Response(
+            output,
+            mimetype="text/csv charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename*=UTF-8''{filename}; " f"filename={filename}"
+                )
+            },
+        )
+
+    @staticmethod
+    @check_administrator
+    def download_per_month():
+        start_month_str = request.args.get('start_month')
+        end_month_str = request.args.get('end_month')
+
+        results = aggregation_service.get_per_month_data(start_month_str, end_month_str)
+        # data = AdminController.convert_dict_list_to_table(results)
+
+        start_year, start_month = start_month_str.split("-")
+        end_year, end_month = end_month_str.split("-")
+        filename = "{}_{}-{}.csv".format(
+            _("feedback_per_month_report"),
+            f"{start_year}{start_month}",
+            f"{end_year}{end_month}",
+        )
+        encoded_filename = urllib.parse.quote(filename)
+
+        output = io.BytesIO()
+        text_wrapper = io.TextIOWrapper(output, encoding='utf-8-sig', newline='')
+
+        try:
+            writer = csv.writer(text_wrapper)
+            writer.writerow(
+                [
+                    "date",
+                    "resource_id",
+                    "group_title",
+                    "package_title",
+                    "resource_name",
+                    "download_count",
+                    "comment_count",
+                    "utilization_count",
+                    "utilization_comment_count",
+                    "issue_resolution_count",
+                    "like_count",
+                    "average_rating",
+                    "url",
+                ]
+            )
+
+            for row in results:
+                group_title, package_title, resource_name, resource_link = (
+                    aggregation_service.get_resource_details(row.resource_id)
+                )
+
+                writer.writerow(
+                    [
+                        row.date,
+                        row.resource_id,
+                        group_title,
+                        package_title,
+                        resource_name,
+                        row.download_count,
+                        row.comment_count,
+                        row.utilization_count,
+                        row.utilization_comment_count,
+                        row.issue_resolution_count,
+                        row.like_count,
+                        (
+                            float(row.average_rating)
+                            if row.average_rating is not None
+                            else "Not rated"
+                        ),
+                        resource_link,
+                    ]
+                )
+            text_wrapper.flush()
+        finally:
+            text_wrapper.detach()
+
+        output.seek(0)
+        return Response(
+            output,
+            mimetype="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename*=UTF-8''{encoded_filename}; "
+                    f"filename={encoded_filename}"
+                )
+            },
+        )
+
+        # return AdminController.export_csv_response(data, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_monthly():
+        select_month = request.args.get('month')
+
+        results = aggregation_service.get_monthly_data(select_month)
+        data = AdminController.convert_dict_list_to_table(results)
+
+        year, month = select_month.split("-")
+        filename = "{}_{}.csv".format(
+            _("feedback_monthly_report"),
+            f"{year}{month}",
+        )
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_csv_response(data, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_yearly():
+        select_year = request.args.get('year')
+
+        results = aggregation_service.get_yearly_data(select_year)
+        data = AdminController.convert_dict_list_to_table(results)
+
+        filename = "{}_{}.csv".format(
+            _("feedback_yearly_report"),
+            f"{select_year}",
+        )
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_csv_response(data, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_all_time():
+        results = aggregation_service.get_all_time_data()
+        data = AdminController.convert_dict_list_to_table(results)
+
+        filename = "{}.csv".format(_("feedback_all_time_report"))
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_csv_response(data, encoded_filename)
