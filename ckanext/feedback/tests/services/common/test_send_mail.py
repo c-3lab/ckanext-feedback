@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock, patch
 
 import ckan.lib.mailer
@@ -7,7 +8,7 @@ from ckan import model
 from ckan.common import config
 from jinja2 import Environment, FileSystemLoader
 
-from ckanext.feedback.services.common.send_mail import DEFAULT_TEMPLATE_DIR, send_email
+from ckanext.feedback.services.common.send_mail import send_email
 
 engine = model.repo.session.get_bind()
 
@@ -90,10 +91,21 @@ class TestSendMail:
     def test_send_email_no_template(self, mock_log_error):
         config['ckan.feedback.notice.email.enable'] = True
 
+        email_template_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                '..',
+                '..',
+                '..',
+                'templates',
+                'email_notification',
+            )
+        )
+
         send_email('no_template.test', '', '')
         mock_log_error.assert_called_once_with(
             'template_file error. %s/%s: No such file or directory',
-            DEFAULT_TEMPLATE_DIR,
+            email_template_dir,
             'no_template.test',
         )
 
