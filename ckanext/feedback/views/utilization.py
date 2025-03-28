@@ -75,6 +75,13 @@ rules = [
         utilization.UtilizationController.create_issue_resolution,
         {'methods': ['POST']},
     ),
+    (
+        '/<utilization_id>/comment/<comment_id>/attached_image/'
+        '<attached_image_filename>',
+        'attached_image',
+        utilization.UtilizationController.attached_image,
+        {'methods': ['GET']},
+    ),
 ]
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})
