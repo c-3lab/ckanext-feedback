@@ -58,7 +58,7 @@
     * メールテンプレート名の設定(必須)  
 
         メールテンプレートの格納ディレクトリ内にあるファイルのファイル名を指定してください。  
-        
+
         独自のテンプレートを使用する場合は、メールテンプレートの格納ディレクトリ内にあるファイルの内容を変更するか、別のテンプレートファイルを作成し、そのファイル名を指定してください。
 
         * データリソースへのコメント投稿通知に使用するテンプレート名
@@ -67,7 +67,7 @@
             ckan.feedback.notice.email.template_resource_comment = template.text
             ```
 
-            ※初期テンプレートを使用したい場合は`resource_comment.text`を設定してください。
+            ※初期テンプレートを使用したい場合は[resource_comment.text](../../ckanext/feedback/templates/email_notification/resource_comment.text) を設定してください。
 
         * 利活用の新規投稿通知に使用するテンプレート名
 
@@ -75,7 +75,7 @@
             ckan.feedback.notice.email.template_utilization = template.text
             ```
 
-            ※初期テンプレートを使用したい場合は`utilization.text`を設定してください。
+            ※初期テンプレートを使用したい場合は[utilization.text](../../ckanext/feedback/templates/email_notification/utilization.text)を設定してください。
 
         * 利活用へのコメント投稿通知に使用するテンプレート名
 
@@ -83,7 +83,7 @@
             ckan.feedback.notice.email.template_utilization_comment = template.text
             ```
 
-            ※初期テンプレートを使用したい場合は`utilization_comment.text`を設定してください。
+            ※初期テンプレートを使用したい場合は[utilization_comment.text](../../ckanext/feedback/templates/email_notification/utilization_comment.text)を設定してください。
 
     * 件名の指定 (任意)
 
