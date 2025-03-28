@@ -87,6 +87,7 @@ Docker環境で本Extensionの開発を行う手順を示します。
 * 以下のDocker環境で CKAN 本体と本Extensionを実行することを想定しています。
   * OS: Linux
   * ディストリビューション: Ubuntu 22.04
+  * Python 3.10.13
   * Docker 27.4.0
 
 ### ビルド方法
@@ -106,23 +107,31 @@ Docker環境で本Extensionの開発を行う手順を示します。
 
 4. `http://localhost:5000`にアクセスする
 
-### LinterとFomatterの設定
+### 開発準備
 
-1. poetryをインストールする
+#### Poetryによるパッケージインストール
+本Extentionの開発を行う際は、Poetryを利用し、必要なパッケージをインストールしてください。  
+1. Poetryをインストールする
 
     ```bash
-    pip install poetry
+    curl -sSL https://install.python-poetry.org | python3 -
     ```
 
-2. LinterとFomatterを使えるようにする
+2. `pyproject.toml` があるプロジェクトルートディレクトリに移動し、パッケージをインストールする
 
     ```bash
     poetry install
-    poetry run pre-commit install
     ```
 
-    * 以後、git commit 時に、staging されているファイルに対して isort, black, pflake8 が実行され、それらによる修正が発生すると、commit されなくなる。
-    * 手動で isort, black, pflake8 を行いたい場合、poetry run pre-commit で可能。
+#### LinterとFomatterの設定
+LinterとFomatterを使えるようにする
+
+```bash
+poetry run pre-commit install
+```
+
+* 以後、git commit 時に、staging されているファイルに対して isort, black, pflake8 が実行され、それらによる修正が発生すると、commit されなくなる。
+* 手動で isort, black, pflake8 を行いたい場合、`poetry run pre-commit` で可能。
 
 ### 参考ドキュメント
 
