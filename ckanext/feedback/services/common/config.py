@@ -306,7 +306,8 @@ class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
 
         parents = self.conf_path
         self.template_directory = BaseConfig('template_directory', parents)
-        # /xxx/xxx/xxxxx/xxxxx/ckanext/feedback/templates/email_notification
+        # e.g., /usr/lib/python3.10/site-packages
+        # /ckanext/feedback/templates/email_notification
         email_template_dir = os.path.abspath(
             os.path.join(
                 os.path.dirname(__file__), '..', '..', 'templates', 'email_notification'
