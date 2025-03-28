@@ -53,30 +53,35 @@
         ckan.feedback.notice.email.template_directory = /path/to/template_dir
         ```
 
-        ※設定されていない場合は`{ckan.iniがあるディレクトリ}/src_extensions/ckanext-feedback/ckanext/feedback/templates/email_notification`が使用される。
+        ※設定されていない場合は`{ckanext-feedbackがインストールされているディレクトリ}/templates/email_notification`が使用される。
 
-    * メールテンプレート名の設定(必須)
+    * メールテンプレート名の設定(必須)  
+        メールテンプレートの格納ディレクトリ内にあるファイルのファイル名を指定してください。  
+        独自のテンプレートを使用する場合は、メールテンプレートの格納ディレクトリ内にあるファイルの内容を変更するか、別のテンプレートファイルを作成し、そのファイル名を指定してください。
 
         * データリソースへのコメント投稿通知に使用するテンプレート名
 
             ```ini
-            ckan.feedback.notice.email.template_resource_comment = resource_comment.text
+            ckan.feedback.notice.email.template_resource_comment = template_resource_comment.text
             ```
+
+            ※初期テンプレートを使用したい場合は`resource_comment.text`を設定してください。
 
         * 利活用の新規投稿通知に使用するテンプレート名
 
             ```ini
-            ckan.feedback.notice.email.template_utilization = utilization.text
+            ckan.feedback.notice.email.template_utilization = template_utilization.text
             ```
+
+            ※初期テンプレートを使用したい場合は`utilization.text`を設定してください。
 
         * 利活用へのコメント投稿通知に使用するテンプレート名
 
             ```ini
-            ckan.feedback.notice.email.template_utilization_comment = utilization_comment.text
+            ckan.feedback.notice.email.template_utilization_comment = template_utilization_comment.text
             ```
 
-        ※ メールテンプレートの格納ディレクトリ内にあるファイルのファイル名を指定してください。  
-        ※ 独自のテンプレートを使用する場合は、メールテンプレートの格納ディレクトリ内にあるファイルの内容を変更するか、別なテンプレートファイルを作成し、そのファイル名を指定してください。
+            ※初期テンプレートを使用したい場合は`utilization_comment.text`を設定してください。
 
     * 件名の指定 (任意)
 
