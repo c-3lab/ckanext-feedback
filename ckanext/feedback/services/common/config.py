@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from abc import ABC, abstractmethod
 
 from ckan.common import config
@@ -305,11 +306,13 @@ class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
 
         parents = self.conf_path
         self.template_directory = BaseConfig('template_directory', parents)
-        self.template_directory.default = (
-            '/srv/app/src_extensions/ckanext-feedback/'
-            'ckanext/feedback/templates/email_notificatio'
+        # /xxx/xxx/xxxxxx/xxxxxx/ckanext/feedback/templates/email_notification
+        EMAIL_TEMPLATE_DIR = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__), '..', '..', 'templates', 'email_notification'
+            )
         )
-
+        self.template_directory.default = EMAIL_TEMPLATE_DIR
         self.template_utilization = BaseConfig('template_utilization', parents)
         self.template_utilization.default = 'utilization.text'
 

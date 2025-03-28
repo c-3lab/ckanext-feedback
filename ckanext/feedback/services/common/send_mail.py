@@ -3,15 +3,12 @@ import os
 
 import ckan.lib.mailer
 import ckan.plugins.toolkit as toolkit
+from ckan.common import config
 from jinja2 import Environment, FileSystemLoader
 
 from ckanext.feedback.services.common.config import FeedbackConfig
 
 log = logging.getLogger(__name__)
-DEFAULT_TEMPLATE_DIR = (
-    '/srv/app'
-    + '/src_extensions/ckanext-feedback/ckanext/feedback/templates/email_notification'
-)
 
 
 def send_email(template_name, organization_id, subject, **kwargs):
@@ -20,9 +17,10 @@ def send_email(template_name, organization_id, subject, **kwargs):
         return
 
     # settings email_template and subject from [feedback_config.json > ckan.ini]
-    template_dir = FeedbackConfig().notice_email.template_directory.get()
-    if not os.path.isfile(f'{template_dir}/{template_name}'):
-        template_dir = DEFAULT_TEMPLATE_DIR
+    template_dir = config.get(
+        'ckan.feedback.notice.email.template_directory',
+        FeedbackConfig().notice_email.template_directory.default,
+    )
 
     if not os.path.isfile(f'{template_dir}/{template_name}'):
         log.error(
