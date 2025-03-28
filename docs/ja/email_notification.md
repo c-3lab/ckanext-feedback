@@ -1,26 +1,34 @@
 # メール通知
 
-* ckanext-feedbackには組織が所有するデータセットに対しての新規投稿を組織管理者にメールで通知する機能があります。
-  * Resourceへのコメント投稿
-  * Utilizationの新規投稿
-  * Utilizationへのコメント投稿
+新規投稿やコメント投稿を組織管理者にメールで通知する機能です。
 
-※ デフォルトでは通知機能はオフになっています
+## 導入の利点
 
-## 設定手順
+* 新規投稿やコメント投稿があったことをメールで知ることができます。
+
+## 機能説明
+
+* 以下の投稿実行時、そのデータセットの組織管理者にメールで通知します。
+    * データリソースへのコメント投稿。
+    * 利活用の新規投稿。
+    * 利活用へのコメント投稿。
+
+    ※ 本機能はデフォルトではオフになっています
+
+## 設定方法
 
 1. SMTPサーバ設定を行う
-    `ckanext-feedback/development/.env.dev`の以下の項目で、使用するSMTPサーバの設定を行う。
 
-    ```dotenv
+    以下の環境変数で、使用するSMTPサーバの設定を行う。
+
+    ```
     CKAN_SMTP_SERVER=smtp.corporateict.domain:25
     CKAN_SMTP_STARTTLS=True
     CKAN_SMTP_USER=user
     CKAN_SMTP_PASSWORD=pass
     ```
 
-    上記の手順で設定を行わない、つまり設定値が空の場合、手順3 以降にて`ckan.ini`内の以下の項目で使用するSMTPサーバの設定を行う。</br>
-    ※設定の反映にはWebアプリケーションサーバの再起動が必要
+    または、`ckan.ini`内の以下の項目で使用するSMTPサーバの設定を行う。  
 
     ```ini
     smtp.server = smtp.corporateict.domain:25
@@ -28,15 +36,15 @@
     smtp.user = user
     smtp.password = pass
     ```
+    
+    ※ 環境変数の設定が優先されます。
 
-2. インストール
-    * [クイックスタート](../../README.md) **1~4番**の手順を参照してください
+2. ckan.ini に以下の行を追記する
 
-3. **各種設定**を行う。`ckan.ini`内の`ckan.plugins`以降に以下の記述を追記する
-    * 通知機能のON
+    * 通知機能のON(必須)
 
         ```ini
-        ckan.feedback.notice.email.enable = True
+        ckan.feedback.notice.email.enable = true
         ```
 
     * メールテンプレートの格納ディレクトリの指定(任意)
@@ -45,55 +53,51 @@
         ckan.feedback.notice.email.template_directory = /path/to/template_dir
         ```
 
-        ※設定されていない場合は`/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/templates/email_notification`が使用される。
+        ※設定されていない場合は`{ckan.iniがあるディレクトリ}/src_extensions/ckanext-feedback/ckanext/feedback/templates/email_notification`が使用される。
 
     * メールテンプレート名の設定(必須)
 
-        * Resourceへのコメント投稿通知に使用するテンプレート名
+        * データリソースへのコメント投稿通知に使用するテンプレート名
 
             ```ini
             ckan.feedback.notice.email.template_resource_comment = resource_comment.text
             ```
 
-        * Utilizationの新規投稿通知に使用するテンプレート名
+        * 利活用の新規投稿通知に使用するテンプレート名
 
             ```ini
             ckan.feedback.notice.email.template_utilization = utilization.text
             ```
 
-        * Utilizationへのコメント投稿通知に使用するテンプレート名
+        * 利活用へのコメント投稿通知に使用するテンプレート名
 
             ```ini
             ckan.feedback.notice.email.template_utilization_comment = utilization_comment.text
             ```
 
-        ※ 独自のテンプレートを使用する場合は任意のテンプレート名に変更可能。
+        ※ メールテンプレートの格納ディレクトリ内にあるファイルのファイル名を指定してください。  
+        ※ 独自のテンプレートを使用する場合は、メールテンプレートの格納ディレクトリ内にあるファイルの内容を変更するか、別なテンプレートファイルを作成し、そのファイル名を指定してください。
 
     * 件名の指定 (任意)
 
-        * Resourceへのコメント投稿通知に使用する件名
+        * データリソースへのコメント投稿通知に使用する件名
 
             ```ini
             ckan.feedback.notice.email.subject_resource_comment = Post a Resource comment
             ```
 
-        * Utilizationの新規投稿通知に使用する件名
+        * 利活用の新規投稿通知に使用する件名
 
             ```ini
             ckan.feedback.notice.email.subject_utilization = Post a Utilization
             ```
 
-        * Utilizationへのコメント投稿通知に使用する件名
+        * 利活用へのコメント投稿通知に使用する件名
 
             ```ini
             ckan.feedback.notice.email.subject_utilization_comment = Post a Utilization comment
             ```
 
-        ※指定がない場合は「New Submission Notification」となる。
+        ※指定がない場合は「New Submission Notification」となります。
 
-4. workerの起動確認
-    * メール送信をバックグラウンドで実行する為のworkerコンテナ:`ckan-docker-ckan-worker-1`が起動している事を確認する。
-
-    ```bash
-    docker ps
-    ```
+3. Webアプリケーションサーバを再起動する
