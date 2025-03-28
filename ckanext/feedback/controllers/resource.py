@@ -1,4 +1,5 @@
 import logging
+import os
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
@@ -7,7 +8,7 @@ from ckan.lib.uploader import get_uploader
 from ckan.logic import get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
-from flask import Response, make_response
+from flask import Response, make_response, send_file
 from werkzeug.datastructures import FileStorage
 
 import ckanext.feedback.services.resource.comment as comment_service
@@ -56,11 +57,7 @@ class ResourceController:
         comments, total_count = comment_service.get_resource_comments(
             resource_id, approval, limit=limit, offset=offset
         )
-        for comment in comments:
-            if comment.attached_image_filename:
-                comment.attached_image_url = comment_service.get_attached_image_url(
-                    comment.attached_image_filename
-                )
+
         categories = comment_service.get_resource_comment_categories()
         cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
@@ -72,11 +69,6 @@ class ResourceController:
             selected_category = ResourceCommentCategory.REQUEST.name
         else:
             selected_category = category
-        attached_image_url = None
-        if attached_image_filename:
-            attached_image_url = comment_service.get_attached_image_url(
-                attached_image_filename
-            )
 
         return toolkit.render(
             'resource/comment.html',
@@ -87,7 +79,6 @@ class ResourceController:
                 'cookie': cookie,
                 'selected_category': selected_category,
                 'content': content,
-                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'page': helpers.Page(
                     collection=comments,
@@ -203,11 +194,6 @@ class ResourceController:
             context, {'id': resource.Resource.package_id}
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
-        attached_image_url = None
-        if attached_image_filename:
-            attached_image_url = comment_service.get_attached_image_url(
-                attached_image_filename
-            )
 
         if softened is None:
             return toolkit.render(
@@ -218,7 +204,6 @@ class ResourceController:
                     'selected_category': category,
                     'rating': rating,
                     'content': content,
-                    'attached_image_url': attached_image_url,
                     'attached_image_filename': attached_image_filename,
                 },
             )
@@ -231,7 +216,6 @@ class ResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
-                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
             },
@@ -269,11 +253,6 @@ class ResourceController:
             except Exception as e:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
-        attached_image_url = None
-        if attached_image_filename:
-            attached_image_url = comment_service.get_attached_image_url(
-                attached_image_filename
-            )
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
@@ -321,7 +300,6 @@ class ResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
-                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
             },
         )
@@ -355,6 +333,37 @@ class ResourceController:
         session.commit()
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
+
+    # resource_comment/<resource_id>/comment/<comment_id>/attached_image/<attached_image_filename>
+    @staticmethod
+    def attached_image(resource_id: str, comment_id: str, attached_image_filename: str):
+        resource = comment_service.get_resource(resource_id)
+        if resource is None:
+            toolkit.abort(404)
+
+        approval = True
+        if not isinstance(current_user, model.User):
+            # if the user is not logged in, display only approved comments
+            approval = True
+        elif (
+            has_organization_admin_role(resource.Resource.package.owner_org)
+            or current_user.sysadmin
+        ):
+            # if the user is an organization admin or a sysadmin, display all comments
+            approval = None
+
+        comment = comment_service.get_resource_comment(
+            comment_id, resource_id, approval, attached_image_filename
+        )
+        if comment is None:
+            toolkit.abort(404)
+        attached_image_path = comment_service.get_attached_image_path(
+            attached_image_filename
+        )
+        if not os.path.exists(attached_image_path):
+            toolkit.abort(404)
+
+        return send_file(attached_image_path)
 
     @staticmethod
     def _check_organization_admin_role(resource_id):

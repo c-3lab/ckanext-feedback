@@ -43,6 +43,12 @@ rules = [
         resource.ResourceController.reply,
         {'methods': ['POST']},
     ),
+    (
+        '/<resource_id>/comment/<comment_id>/attached_image/<attached_image_filename>',
+        'attached_image',
+        resource.ResourceController.attached_image,
+        {'methods': ['GET']},
+    ),
 ]
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})

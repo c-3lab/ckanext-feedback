@@ -42,13 +42,6 @@
         <div class="content-align wrap-text">
               <span class="comment-content" >{{ content }}</span>
         </div>
-        {% if attached_image_url %}
-        <div>
-          <a href="{{ attached_image_url }}" target="_blank">
-            <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
-          </a>
-        </div>
-        {% endif %}
         <hr class="divider">
         <form id="comment_form" name="comment_form" action="{{ h.url_for('resource_comment.create_comment', resource_id=resource.id ) }}" method="post">
           <div style="display: flex; flex-direction: column; align-items: stretch;">
