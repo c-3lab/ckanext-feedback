@@ -232,6 +232,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def get_uploader(
         self, upload_to: str, old_filename: Optional[str]
     ) -> Optional[PUploader]:
-        if upload_to == "feedback_resouce_comment":
+        if upload_to.startswith("feedback_"):
             return FeedbackUpload(upload_to, old_filename)
         return None

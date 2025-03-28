@@ -1,4 +1,5 @@
 import logging
+import os
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
@@ -7,6 +8,7 @@ from ckan.lib.uploader import get_uploader
 from ckan.logic import get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
+from flask import send_file
 from werkzeug.datastructures import FileStorage
 
 import ckanext.feedback.services.resource.comment as comment_service
@@ -236,11 +238,7 @@ class UtilizationController:
         comments, total_count = detail_service.get_utilization_comments(
             utilization_id, approval, limit=limit, offset=offset
         )
-        for comment in comments:
-            if comment.attached_image_filename:
-                comment.attached_image_url = detail_service.get_attached_image_url(
-                    comment.attached_image_filename
-                )
+
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
         g.pkg_dict = {
@@ -256,11 +254,6 @@ class UtilizationController:
             selected_category = UtilizationCommentCategory.REQUEST.name
         else:
             selected_category = category
-        attached_image_url = None
-        if attached_image_filename:
-            attached_image_url = detail_service.get_attached_image_url(
-                attached_image_filename
-            )
 
         return toolkit.render(
             'utilization/details.html',
@@ -271,7 +264,6 @@ class UtilizationController:
                 'issue_resolutions': issue_resolutions,
                 'selected_category': selected_category,
                 'content': content,
-                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'page': helpers.Page(
                     collection=comments,
@@ -390,11 +382,6 @@ class UtilizationController:
                 )
             }
         }
-        attached_image_url = None
-        if attached_image_filename:
-            attached_image_url = detail_service.get_attached_image_url(
-                attached_image_filename
-            )
 
         if softened is None:
             return toolkit.render(
@@ -404,7 +391,6 @@ class UtilizationController:
                     'utilization': utilization,
                     'selected_category': category,
                     'content': content,
-                    'attached_image_url': attached_image_url,
                     'attached_image_filename': attached_image_filename,
                 },
             )
@@ -416,7 +402,6 @@ class UtilizationController:
                 'utilization': utilization,
                 'selected_category': category,
                 'content': content,
-                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
             },
@@ -451,11 +436,6 @@ class UtilizationController:
             except Exception as e:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
-        attached_image_url = None
-        if attached_image_filename:
-            attached_image_url = detail_service.get_attached_image_url(
-                attached_image_filename
-            )
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
@@ -506,7 +486,6 @@ class UtilizationController:
                 'content': content,
                 'selected_category': category,
                 'categories': categories,
-                'attached_image_url': attached_image_url,
                 'attached_image_filename': attached_image_filename,
             },
         )
@@ -628,6 +607,38 @@ class UtilizationController:
         session.commit()
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
+
+    # utilization/<utilization_id>/comment/<comment_id>/attached_image/<attached_image_filename>
+    @staticmethod
+    def attached_image(
+        utilization_id: str, comment_id: str, attached_image_filename: str
+    ):
+        utilization = detail_service.get_utilization(utilization_id)
+        if utilization is None:
+            toolkit.abort(404)
+
+        approval = True
+        if not isinstance(current_user, model.User):
+            # if the user is not logged in, display only approved comments
+            approval = True
+        elif (
+            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
+        ):
+            # if the user is an organization admin or a sysadmin, display all comments
+            approval = None
+
+        comment = detail_service.get_utilization_comment(
+            comment_id, utilization_id, approval, attached_image_filename
+        )
+        if comment is None:
+            toolkit.abort(404)
+        attached_image_path = detail_service.get_attached_image_path(
+            attached_image_filename
+        )
+        if not os.path.exists(attached_image_path):
+            toolkit.abort(404)
+
+        return send_file(attached_image_path)
 
     @staticmethod
     def _check_organization_admin_role(utilization_id):

@@ -1,7 +1,5 @@
 from datetime import datetime
-from urllib.parse import urljoin
 
-from ckan.common import config
 from ckan.lib.uploader import get_uploader
 from ckan.model.package import Package
 from ckan.model.resource import Resource
@@ -43,6 +41,36 @@ def approve_utilization(utilization_id, approval_user_id):
     utilization.approval = True
     utilization.approved = datetime.now()
     utilization.approval_user_id = approval_user_id
+
+
+# Get a comment related to the Utilization record
+def get_utilization_comment(
+    comment_id: str,
+    utilization_id: str = None,
+    approval: bool = None,
+    attached_image_filename: str = None,
+    owner_orgs=None,
+):
+    query = session.query(UtilizationComment).filter(
+        UtilizationComment.id == comment_id
+    )
+    if utilization_id is not None:
+        query = query.filter(UtilizationComment.utilization_id == utilization_id)
+    if approval is not None:
+        query = query.filter(UtilizationComment.approval == approval)
+    if attached_image_filename is not None:
+        query = query.filter(
+            UtilizationComment.attached_image_filename == attached_image_filename
+        )
+    if owner_orgs is not None:
+        query = (
+            query.join(Utilization)
+            .join(Resource)
+            .join(Package)
+            .filter(Package.owner_org.in_(owner_orgs))
+        )
+
+    return query.first()
 
 
 # Get comments related to the Utilization record
@@ -130,14 +158,6 @@ def refresh_utilization_comments(utilization_id):
     utilization = session.query(Utilization).get(utilization_id)
     utilization.comment = count
     utilization.updated = datetime.now()
-
-
-# Get url for attached image
-def get_attached_image_url(attached_image_filename: str) -> str:
-    site_url = config.get('ckan.site_url', '')
-    upload_to = get_upload_destination()
-    uploader: PUploader = get_uploader(upload_to, attached_image_filename)
-    return urljoin(site_url, f'uploads/{upload_to}/{uploader.old_filename}')
 
 
 # Get path for attached image

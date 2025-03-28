@@ -85,14 +85,8 @@
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
             <div>
-              {% if attached_image_url %}
-              <a href="{{ attached_image_url }}" target="_blank">
-                <img src="{{ attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
-              </a>
-              {% else %}
               <label for="image-upload">{{ _('Upload Image') }} {{ _('※ option') }}</label>
               <input type="file" id="image-upload" name="image-upload" accept="image/*">
-              {% endif %}
               {% if attached_image_filename %}
                 <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
               {% endif %}
@@ -139,10 +133,10 @@
             </h4>
             <br>
             <p class="multiple-line wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
-            {% if comment.attached_image_url %}
+            {% if comment.attached_image_filename %}
             <div>
-              <a href="{{ comment.attached_image_url }}" target="_blank">
-                <img src="{{ comment.attached_image_url }}" alt="{{ _('Attached Image') }}" class="attached-image">
+              <a href="{{h.url_for('utilization.attached_image', utilization_id=utilization_id, comment_id=comment.id, attached_image_filename=comment.attached_image_filename ) }}" target="_blank">
+                <img src="{{h.url_for('utilization.attached_image', utilization_id=utilization_id, comment_id=comment.id, attached_image_filename=comment.attached_image_filename ) }}" alt="{{ _('Attached Image') }}" class="attached-image">
               </a>
             </div>
             {% endif %}
