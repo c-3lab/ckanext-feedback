@@ -38,12 +38,6 @@ rules = [
         {'methods': ['GET']},
     ),
     (
-        '/admin/aggregation/download_per_month',
-        'download_per_month',
-        admin.AdminController.download_per_month,
-        {'methods': ['GET']},
-    ),
-    (
         '/admin/aggregation/download_monthly',
         'download_monthly',
         admin.AdminController.download_monthly,

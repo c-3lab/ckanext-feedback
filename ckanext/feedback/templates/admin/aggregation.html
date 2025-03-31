@@ -18,23 +18,6 @@
       <div class="module-title">
         <h2>{{ _('Aggregation') }}</h2>
       </div>
-      <form action="{{ h.url_for('feedback.download_per_month') }}" method="get">
-        <div class="download-item">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 16px;"><strong>{{ _('Feedback Per-Month Report') }}</strong></span>
-              <input type="month" name="start_month" id="startMonthPicker" style="font-size: 16px; margin-left: auto;" max="{{ max_month }}" value="{{ default_start_month }}">
-              <span> ~ </span>
-              <input type="month" name="end_month" id="endMonthPicker" style="font-size: 16px;" max="{{ max_month }}" value="{{ default_end_month }}">
-            </div>
-            <button class="btn btn-primary" style="margin-left: auto;">
-              <i class="fa-solid fa-arrow-circle-down"></i>
-              {{ _('Download') }}
-            </button>
-          </div>
-          <p style="margin-top: 5px;">{{ _('The data is aggregated monthly for the specified period and can be exported. <br>This allows users to track long-term feedback trends.') }}</p>
-        </div>
-      </form>
       <form action="{{ h.url_for('feedback.download_monthly') }}" method="get">
         <div class="download-item">
           <div style="display: flex; align-items: center; gap: 8px;">
