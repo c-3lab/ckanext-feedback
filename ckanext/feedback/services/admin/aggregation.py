@@ -2,7 +2,7 @@ import calendar
 import logging
 from datetime import date
 
-from ckan.common import _, config
+from ckan.common import config
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
@@ -51,13 +51,21 @@ def create_resource_report_query(
     query = (
         session.query(
             Resource.id.label("resource_id"),
-            func.coalesce(download_subquery.c.download_count, 0),
-            func.coalesce(resource_comment_subquery.c.comment_count, 0),
-            func.coalesce(utilization_subquery.c.utilization_count, 0),
-            func.coalesce(utilization_comment_subquery.c.utilization_comment_count, 0),
-            func.coalesce(issue_resolution_subquery.c.issue_resolution_count, 0),
-            func.coalesce(like_subquery.c.like_count, 0),
-            rating_subquery.c.average_rating,
+            func.coalesce(download_subquery.c.download_count, 0).label("download"),
+            func.coalesce(resource_comment_subquery.c.comment_count, 0).label(
+                "resource_comment"
+            ),
+            func.coalesce(utilization_subquery.c.utilization_count, 0).label(
+                "utilization"
+            ),
+            func.coalesce(
+                utilization_comment_subquery.c.utilization_comment_count, 0
+            ).label("utilization_comment"),
+            func.coalesce(issue_resolution_subquery.c.issue_resolution_count, 0).label(
+                "issue_resolution"
+            ),
+            func.coalesce(like_subquery.c.like_count, 0).label("like"),
+            rating_subquery.c.average_rating.label("rating"),
         )
         .select_from(Group)
         .join(Package, Group.id == Package.owner_org)
@@ -85,36 +93,6 @@ def create_resource_report_query(
     )
 
     return query
-
-
-def get_resource_statistics_with_details(query):
-    results = []
-
-    for row in query.all():
-        group_title, package_title, resource_name, resource_link = get_resource_details(
-            row.resource_id
-        )
-
-        results.append(
-            {
-                _("resource_id"): row.resource_id,
-                _("group_title"): group_title,
-                _("package_title"): package_title,
-                _("resource_name"): resource_name,
-                _("download_count"): row[1],
-                _("comment_count"): row[2],
-                _("utilization_count"): row[3],
-                _("utilization_comment_count"): row[4],
-                _("issue_resolution_count"): row[5],
-                _("like_count"): row[6],
-                _("average_rating"): (
-                    float(row[7]) if row[7] is not None else _("Not rated")
-                ),
-                "url": resource_link,
-            }
-        )
-
-    return results
 
 
 def get_monthly_data(select_month):
@@ -238,7 +216,7 @@ def get_monthly_data(select_month):
         rating_subquery,
     )
 
-    return get_resource_statistics_with_details(query)
+    return query
 
 
 def get_yearly_data(select_year):
@@ -343,7 +321,7 @@ def get_yearly_data(select_year):
         rating_subquery,
     )
 
-    return get_resource_statistics_with_details(query)
+    return query
 
 
 def get_all_time_data():
@@ -428,4 +406,4 @@ def get_all_time_data():
         rating_subquery,
     )
 
-    return get_resource_statistics_with_details(query)
+    return query

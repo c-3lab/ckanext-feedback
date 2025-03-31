@@ -383,21 +383,55 @@ class AdminController:
         )
 
     @staticmethod
-    def convert_dict_list_to_table(dict_list):
-        header = list(dict_list[0].keys())
-        rows = [[row[key] for key in header] for row in dict_list]
-        data = [header] + rows
-
-        return data
-
-    @staticmethod
-    def export_csv_response(data, filename):
+    def export_csv_response(results, filename):
         output = io.BytesIO()
         text_wrapper = io.TextIOWrapper(output, encoding='utf-8-sig', newline='')
 
         try:
             writer = csv.writer(text_wrapper)
-            writer.writerows(data)
+            writer.writerow(
+                [
+                    _("resource_id"),
+                    _("group_title"),
+                    _("package_title"),
+                    _("resource_name"),
+                    _("download_count"),
+                    _("comment_count"),
+                    _("utilization_count"),
+                    _("utilization_comment_count"),
+                    _("issue_resolution_count"),
+                    _("like_count"),
+                    _("average_rating"),
+                    _("url"),
+                ]
+            )
+
+            for row in results:
+                group_title, package_title, resource_name, resource_link = (
+                    aggregation_service.get_resource_details(row.resource_id)
+                )
+
+                writer.writerow(
+                    [
+                        row.resource_id,
+                        group_title,
+                        package_title,
+                        resource_name,
+                        row.download,
+                        row.resource_comment,
+                        row.utilization,
+                        row.utilization_comment,
+                        row.issue_resolution,
+                        row.like,
+                        (
+                            float(row.rating)
+                            if row.rating is not None
+                            else _("Not rated")
+                        ),
+                        resource_link,
+                    ]
+                )
+
             text_wrapper.flush()
         finally:
             text_wrapper.detach()
@@ -420,7 +454,6 @@ class AdminController:
         select_month = request.args.get('month')
 
         results = aggregation_service.get_monthly_data(select_month)
-        data = AdminController.convert_dict_list_to_table(results)
 
         year, month = select_month.split("-")
         filename = "{}_{}.csv".format(
@@ -429,7 +462,7 @@ class AdminController:
         )
         encoded_filename = urllib.parse.quote(filename)
 
-        return AdminController.export_csv_response(data, encoded_filename)
+        return AdminController.export_csv_response(results, encoded_filename)
 
     @staticmethod
     @check_administrator
@@ -437,7 +470,6 @@ class AdminController:
         select_year = request.args.get('year')
 
         results = aggregation_service.get_yearly_data(select_year)
-        data = AdminController.convert_dict_list_to_table(results)
 
         filename = "{}_{}.csv".format(
             _("feedback_yearly_report"),
@@ -445,15 +477,14 @@ class AdminController:
         )
         encoded_filename = urllib.parse.quote(filename)
 
-        return AdminController.export_csv_response(data, encoded_filename)
+        return AdminController.export_csv_response(results, encoded_filename)
 
     @staticmethod
     @check_administrator
     def download_all_time():
         results = aggregation_service.get_all_time_data()
-        data = AdminController.convert_dict_list_to_table(results)
 
         filename = "{}.csv".format(_("feedback_all_time_report"))
         encoded_filename = urllib.parse.quote(filename)
 
-        return AdminController.export_csv_response(data, encoded_filename)
+        return AdminController.export_csv_response(results, encoded_filename)
