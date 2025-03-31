@@ -160,30 +160,31 @@ class AdminController:
             "util-comment": _('Utilization Comment'),
         }
 
-        filter_org = {}
+        if org_list:
+            filter_org = {}
+            for org in org_list:
+                filter_org[org['name']] = org['title']
 
-        for org in org_list:
-            filter_org[org['name']] = org['title']
-
-        filters.append(
-            AdminController.create_filter_dict(
-                _('Status'), filter_status, active_filters, org_list
+            filters.append(
+                AdminController.create_filter_dict(
+                    _('Status'), filter_status, active_filters, org_list
+                )
             )
-        )
-        filters.append(
-            AdminController.create_filter_dict(
-                _('Type'), filter_type, active_filters, org_list
+            filters.append(
+                AdminController.create_filter_dict(
+                    _('Type'), filter_type, active_filters, org_list
+                )
             )
-        )
-        filters.append(
-            AdminController.create_filter_dict(
-                _('Organization'), filter_org, active_filters, org_list
+            filters.append(
+                AdminController.create_filter_dict(
+                    _('Organization'), filter_org, active_filters, org_list
+                )
             )
-        )
 
         return toolkit.render(
             'admin/approval_and_delete.html',
             {
+                "org_list": org_list,
                 "filters": filters,
                 "sort": sort,
                 "page": helpers.Page(
@@ -359,26 +360,30 @@ class AdminController:
     def aggregation():
         today = datetime.now()
 
-        max_year = today.strftime('%Y')
         max_month = today.strftime('%Y-%m')
+        end_date = today - relativedelta(months=1)
+        default_month = end_date.strftime('%Y-%m')
 
+        max_year = today.strftime('%Y')
         year = today - relativedelta(years=1)
         default_year = year.strftime('%Y')
 
-        end_date = today - relativedelta(months=1)
-        default_end_month = end_date.strftime('%Y-%m')
-
-        start_date = end_date - relativedelta(years=1) + relativedelta(months=1)
-        default_start_month = start_date.strftime('%Y-%m')
+        if not current_user.sysadmin:
+            owner_orgs = current_user.get_group_ids(
+                group_type='organization', capacity='admin'
+            )
+            org_list = organization_service.get_org_list(owner_orgs)
+        else:
+            org_list = organization_service.get_org_list()
 
         return toolkit.render(
             'admin/aggregation.html',
             {
+                "max_month": max_month,
+                "default_month": default_month,
                 "max_year": int(max_year),
                 "default_year": default_year,
-                "max_month": max_month,
-                "default_start_month": default_start_month,
-                "default_end_month": default_end_month,
+                "org_list": org_list,
             },
         )
 
@@ -451,9 +456,12 @@ class AdminController:
     @staticmethod
     @check_administrator
     def download_monthly():
+        select_organization_name = request.args.get('group_added')
         select_month = request.args.get('month')
 
-        results = aggregation_service.get_monthly_data(select_month)
+        results = aggregation_service.get_monthly_data(
+            select_organization_name, select_month
+        )
 
         year, month = select_month.split("-")
         filename = "{}_{}.csv".format(
@@ -467,9 +475,12 @@ class AdminController:
     @staticmethod
     @check_administrator
     def download_yearly():
+        select_organization_name = request.args.get('group_added')
         select_year = request.args.get('year')
 
-        results = aggregation_service.get_yearly_data(select_year)
+        results = aggregation_service.get_yearly_data(
+            select_organization_name, select_year
+        )
 
         filename = "{}_{}.csv".format(
             _("feedback_yearly_report"),
@@ -482,7 +493,9 @@ class AdminController:
     @staticmethod
     @check_administrator
     def download_all_time():
-        results = aggregation_service.get_all_time_data()
+        select_organization_name = request.args.get('group_added')
+
+        results = aggregation_service.get_all_time_data(select_organization_name)
 
         filename = "{}.csv".format(_("feedback_all_time_report"))
         encoded_filename = urllib.parse.quote(filename)

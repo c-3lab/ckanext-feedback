@@ -47,6 +47,7 @@ def create_resource_report_query(
     issue_resolution_subquery,
     like_subquery,
     rating_subquery,
+    organization_name,
 ):
     query = (
         session.query(
@@ -70,8 +71,7 @@ def create_resource_report_query(
         .select_from(Group)
         .join(Package, Group.id == Package.owner_org)
         .join(Resource, Package.id == Resource.package_id)
-        # TODO: フロントから送信された組織でフィルターを掛けられるようにする
-        .filter(Group.name == 'organization-name-a')
+        .filter(Group.name == organization_name)
         .outerjoin(download_subquery, Resource.id == download_subquery.c.resource_id)
         .outerjoin(
             resource_comment_subquery,
@@ -95,7 +95,7 @@ def create_resource_report_query(
     return query
 
 
-def get_monthly_data(select_month):
+def get_monthly_data(organization_name, select_month):
     year, month = map(int, select_month.split('-'))
     last_day = calendar.monthrange(year, month)[1]
 
@@ -214,12 +214,13 @@ def get_monthly_data(select_month):
         issue_resolution_subquery,
         like_subquery,
         rating_subquery,
+        organization_name,
     )
 
     return query
 
 
-def get_yearly_data(select_year):
+def get_yearly_data(organization_name, select_year):
     year = int(select_year)
 
     download_subquery = (
@@ -319,12 +320,13 @@ def get_yearly_data(select_year):
         issue_resolution_subquery,
         like_subquery,
         rating_subquery,
+        organization_name,
     )
 
     return query
 
 
-def get_all_time_data():
+def get_all_time_data(organization_name):
     download_subquery = (
         session.query(
             DownloadMonthly.resource_id,
@@ -404,6 +406,7 @@ def get_all_time_data():
         issue_resolution_subquery,
         like_subquery,
         rating_subquery,
+        organization_name,
     )
 
     return query

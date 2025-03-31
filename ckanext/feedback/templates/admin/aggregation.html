@@ -15,57 +15,77 @@
 {% block primary_content %}
   <article class="module">
     <div class="module-content">
-      <div class="module-title">
-        <h2>{{ _('Aggregation') }}</h2>
-      </div>
-      <form action="{{ h.url_for('feedback.download_monthly') }}" method="get">
-        <div class="download-item">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 16px;"><strong>{{ _('Feedback Monthly Report') }}</strong></span>
-              <input type="month" name="month" id="monthPicker" style="font-size: 16px; margin-left: auto;" max="{{ max_month }}" value="{{ default_end_month }}">
+      {% if org_list %}
+        <form id="aggregation-form" method="get">
+          <div class="module-title" style="display: flex; align-items: center;">
+            <div>
+              <h2>{{ _('Aggregation') }}</h2>
             </div>
-            <button class="btn btn-primary" style="margin-left: auto;">
-              <i class="fa-solid fa-arrow-circle-down"></i>
-              {{ _('Download') }}
-            </button>
-          </div>
-          <p style="margin-top: 5px;">{{ _('The data is aggregated for the specified month and can be exported.') }}</p>
-        </div>
-      </form>
-      <form action="{{ h.url_for('feedback.download_yearly') }}" method="get">
-        <div class="download-item">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 16px;"><strong>{{ _('Feedback Yearly Report') }}</strong></span>
-              <select id="yearSelect" name="year" style="font-size: 16px; margin-left: auto;">
-                {% for year in range(2024, max_year + 1) %}
-                  <option value="{{ year }}" {% if year == default_year %}selected{% endif %}>{{ year }}年</option>
+            <div class="select-org" style="margin-left: auto; width: 300px;">
+              {{ h.csrf_input() }}
+              <select id="field-add_group" name="group_added" data-module="autocomplete">
+                <option value=""></option>
+                {% for org in org_list %}
+                  <option value="{{ org.name }}">{{ org.title }}</option>
                 {% endfor %}
               </select>
             </div>
-            <button class="btn btn-primary" style="margin-left: auto;">
-              <i class="fa-solid fa-arrow-circle-down"></i>
-              {{ _('Download') }}
-            </button>
           </div>
-          <p style="margin-top: 5px;">{{ _('The data is aggregated for the specified year from January 1 to December 31 and can be exported.') }}</p>
-        </div>
-      </form>
-      <form action="{{ h.url_for('feedback.download_all_time') }}" method="get">
-        <div class="download-item">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 16px;"><strong>{{ _('Feedback All-Time Report') }}</strong></span>
-            <button class="btn btn-primary" style="margin-left: auto;">
-              <i class="fa-solid fa-arrow-circle-down"></i>
-              {{ _('Download') }}
-            </button>
+          <div class="download-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;"><strong>{{ _('Feedback Monthly Report') }}</strong></span>
+                <input type="month" name="month" id="monthPicker" style="font-size: 16px; margin-left: auto;" max="{{ max_month }}" value="{{ default_month }}">
+              </div>
+              {% set monthly_action=h.url_for( 'feedback.download_monthly' ) %}
+              <button class="btn btn-primary" style="margin-left: auto;" onclick="csvDownload('{{ monthly_action }}')">
+                <i class="fa-solid fa-arrow-circle-down"></i>
+                {{ _('Download') }}
+              </button>
+            </div>
+            <p style="margin-top: 5px;">{{ _('The data is aggregated for the specified month and can be exported.') }}</p>
           </div>
-          <p style="margin-top: 5px;">{{ _('The data is aggregated for all available periods and can be exported.') }}</p>
+          <div class="download-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;"><strong>{{ _('Feedback Yearly Report') }}</strong></span>
+                <select id="yearSelect" name="year" style="font-size: 16px; margin-left: auto;">
+                  {% for year in range(2024, max_year + 1) %}
+                    <option value="{{ year }}" {% if year == default_year %}selected{% endif %}>{{ year }}年</option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% set yearly_action=h.url_for( 'feedback.download_yearly' ) %}
+              <button class="btn btn-primary" style="margin-left: auto;" onclick="csvDownload('{{ yearly_action }}')">
+                <i class="fa-solid fa-arrow-circle-down"></i>
+                {{ _('Download') }}
+              </button>
+            </div>
+            <p style="margin-top: 5px;">{{ _('The data is aggregated for the specified year from January 1 to December 31 and can be exported.') }}</p>
+          </div>
+          <div class="download-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;"><strong>{{ _('Feedback All-Time Report') }}</strong></span>
+              {% set all_time_action=h.url_for( 'feedback.download_all_time' ) %}
+              <button class="btn btn-primary" style="margin-left: auto;" onclick="csvDownload('{{ all_time_action }}')">
+                <i class="fa-solid fa-arrow-circle-down"></i>
+                {{ _('Download') }}
+              </button>
+            </div>
+            <p style="margin-top: 5px;">{{ _('The data is aggregated for all available periods and can be exported.') }}</p>
+          </div>
+        </form>
+      {% else %}
+        <div class="module-title">
+          <h2>{{ _('Aggregation') }}</h2>
         </div>
-      </form>
+        <p>{{ _('The organization does not exist.') }}</p>
+      {% endif %}
     </div>
   </article>
+  <div id="translations" hidden>
+    <span data-key="Please select one organization.">{{ _('Please select one organization.') }}</span>
+  </div>
 {% endblock %}
 
 {% block secondary_content %}
@@ -92,4 +112,5 @@
 
 {%- block scripts %}
   {{ super() }}
+  {% asset 'feedback/feedback-aggregation' %}
 {% endblock %}

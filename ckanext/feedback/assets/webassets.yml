@@ -31,6 +31,12 @@ feedback-comment-js:
   contents:
     - js/comment.js
 
+feedback-aggregation:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-aggregation.js
+  contents:
+    - js/aggregation.js
+
 feedback-approval-and-delete:
   filter: rjsmin
   output: ckanext-feedback/%(version)s-approval_and_delete.js
