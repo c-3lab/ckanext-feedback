@@ -32,7 +32,11 @@ def get_utilization_comments_query(org_list):
         .join(Resource)
         .join(Utilization)
         .join(UtilizationComment)
-        .filter(Group.name.in_(org_names))
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
     )
 
     return query
@@ -51,7 +55,11 @@ def get_simple_utilization_comments_query(org_list):
         .join(Resource, Package.id == Resource.package_id)
         .join(Utilization, Resource.id == Utilization.resource_id)
         .join(UtilizationComment, Utilization.id == UtilizationComment.utilization_id)
-        .filter(Group.name.in_(org_names))
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
     )
 
     return query
