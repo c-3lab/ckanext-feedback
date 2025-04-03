@@ -111,3 +111,16 @@ def get_package_like_count(package_id):
         .scalar()
     )
     return count or 0
+
+
+def get_resource_like_count_monthly(resource_id, period):
+    count = (
+        session.query(ResourceLikeMonthly.like_count)
+        .filter(
+            ResourceLikeMonthly.resource_id == resource_id,
+            func.date_trunc('month', ResourceLikeMonthly.created) == func.date(period),
+        )
+        .scalar()
+    )
+
+    return count or 0

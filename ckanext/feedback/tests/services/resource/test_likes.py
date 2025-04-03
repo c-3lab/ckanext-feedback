@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from ckan import model
 from ckan.tests import factories
@@ -10,11 +12,13 @@ from ckanext.feedback.command.feedback import (
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.resource.likes import (
-    create_resource_like,
     decrement_resource_like_count,
-    get_all_resource_ids,
+    decrement_resource_like_count_monthly,
+    get_package_like_count,
     get_resource_like_count,
+    get_resource_like_count_monthly,
     increment_resource_like_count,
+    increment_resource_like_count_monthly,
 )
 
 
@@ -29,43 +33,63 @@ class TestLikes:
         create_resource_tables(engine)
         create_download_tables(engine)
 
-    def test_get_all_resource_ids(self):
+    def test_increment_decrement_resource_like_count(self):
         organization = factories.Organization()
         package = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=package['id'])
 
-        create_resource_like(resource['id'])
-        session.commit()
+        assert get_resource_like_count(resource['id']) == 0
+        assert get_package_like_count(package['id']) == 0
 
-        assert get_all_resource_ids()
-
-    def test_create_resource_like(self):
-        pass
-
-    def test_increment_resource_like_count(self):
-        pass
-
-    def test_decrement_resource_like_count(self):
-        pass
-
-    def test_get_resource_like_count_with_increment(self):
-        organization = factories.Organization()
-        package = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=package['id'])
-
-        create_resource_like(resource['id'])
         increment_resource_like_count(resource['id'])
         session.commit()
 
         assert get_resource_like_count(resource['id']) == 1
+        assert get_package_like_count(package['id']) == 1
 
-    def test_get_resource_like_count_with_decrement(self):
+        increment_resource_like_count(resource['id'])
+        session.commit()
+
+        assert get_resource_like_count(resource['id']) == 2
+        assert get_package_like_count(package['id']) == 2
+
+        decrement_resource_like_count(resource['id'])
+        session.commit()
+
+        assert get_resource_like_count(resource['id']) == 1
+        assert get_package_like_count(package['id']) == 1
+
+        decrement_resource_like_count('resource_id')
+        session.commit()
+
+        assert get_resource_like_count(resource['id']) == 1
+        assert get_package_like_count(package['id']) == 1
+
+    def test_increment_decrement_resource_like_count_monthly(self):
         organization = factories.Organization()
         package = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=package['id'])
 
-        create_resource_like(resource['id'], 1)
-        decrement_resource_like_count(resource['id'])
+        today = datetime.now().strftime('%Y-%m-01')
+
+        assert get_resource_like_count_monthly(resource['id'], today) == 0
+
+        increment_resource_like_count_monthly(resource['id'])
         session.commit()
 
-        assert get_resource_like_count(resource['id']) == 0
+        assert get_resource_like_count_monthly(resource['id'], today) == 1
+
+        increment_resource_like_count_monthly(resource['id'])
+        session.commit()
+
+        assert get_resource_like_count_monthly(resource['id'], today) == 2
+
+        decrement_resource_like_count_monthly(resource['id'])
+        session.commit()
+
+        assert get_resource_like_count_monthly(resource['id'], today) == 1
+
+        decrement_resource_like_count_monthly('resource_id')
+        session.commit()
+
+        assert get_resource_like_count_monthly(resource['id'], today) == 1
