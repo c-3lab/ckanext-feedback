@@ -111,7 +111,6 @@ input[name="tab-menu"] {
 }
 
 .module-title {
-  margin-bottom: 20px;
   padding-bottom: 25px;
   border-bottom: 1px dotted #ddd;
 }
@@ -120,13 +119,16 @@ input[name="tab-menu"] {
 }
 .management-item {
   border-bottom: 1px dotted #ddd;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
+  padding: 10px 20px;
+  border-radius: 3px;
 }
 @media (max-width: 575.98px) {
   .management-item {
     word-wrap: break-word;
   }
+}
+.management-item:hover {
+  background-color: #f0f0f0;
 }
 .management-content {
   min-height: 54px;
@@ -164,6 +166,5 @@ input[name="tab-menu"] {
 
 .download-item {
   border-bottom: 1px dotted #ddd;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
+  padding: 10px 20px;
 }
