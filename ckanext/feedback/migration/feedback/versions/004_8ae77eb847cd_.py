@@ -1,4 +1,4 @@
-"""empty message
+"""Create tables: resource_like_monthly
 
 Revision ID: 8ae77eb847cd
 Revises: 4c5922f300d6
