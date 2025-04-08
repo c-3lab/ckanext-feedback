@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-04-01 10:10+0900\n"
+"POT-Creation-Date: 2025-04-03 14:45+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -104,7 +104,7 @@ msgid "aggregation"
 msgstr "集計"
 
 #: ckanext/feedback/controllers/admin.py:52
-#: ckanext/feedback/templates/admin/aggregation.html:99
+#: ckanext/feedback/templates/admin/aggregation.html:102
 msgid ""
 "A screen where users can download aggregated feedback data on "
 "organizational resources in CSV format."
@@ -167,19 +167,20 @@ msgstr "種類"
 
 #: ckanext/feedback/controllers/admin.py:180
 #: ckanext/feedback/services/admin/feedbacks.py:243
+#: ckanext/feedback/templates/admin/aggregation.html:24
 #: ckanext/feedback/templates/utilization/search.html:58
 msgid "Organization"
 msgstr "組織"
 
 #: ckanext/feedback/controllers/admin.py:218
-#: ckanext/feedback/tests/controllers/test_admin.py:361
-#: ckanext/feedback/tests/controllers/test_admin.py:402
+#: ckanext/feedback/tests/controllers/test_admin.py:421
+#: ckanext/feedback/tests/controllers/test_admin.py:462
 msgid "item(s) were approved."
 msgstr "項目を承認しました。"
 
 #: ckanext/feedback/controllers/admin.py:242
-#: ckanext/feedback/tests/controllers/test_admin.py:456
-#: ckanext/feedback/tests/controllers/test_admin.py:497
+#: ckanext/feedback/tests/controllers/test_admin.py:516
+#: ckanext/feedback/tests/controllers/test_admin.py:557
 msgid "item(s) were completely deleted."
 msgstr "項目を完全に削除しました。"
 
@@ -188,8 +189,8 @@ msgstr "項目を完全に削除しました。"
 #: ckanext/feedback/controllers/resource.py:288
 #: ckanext/feedback/controllers/utilization.py:561
 #: ckanext/feedback/services/common/check.py:13
-#: ckanext/feedback/tests/controllers/test_admin.py:811
-#: ckanext/feedback/tests/controllers/test_admin.py:889
+#: ckanext/feedback/tests/controllers/test_admin.py:871
+#: ckanext/feedback/tests/controllers/test_admin.py:949
 #: ckanext/feedback/tests/controllers/test_resource.py:1002
 #: ckanext/feedback/tests/controllers/test_resource.py:1044
 #: ckanext/feedback/tests/controllers/test_resource.py:1125
@@ -413,17 +414,21 @@ msgstr "フィードバックに関する管理機能を提供します。フィ
 #: ckanext/feedback/templates/admin/aggregation.html:10
 #: ckanext/feedback/templates/admin/aggregation.html:13
 #: ckanext/feedback/templates/admin/aggregation.html:22
-#: ckanext/feedback/templates/admin/aggregation.html:80
+#: ckanext/feedback/templates/admin/aggregation.html:83
 msgid "Aggregation"
 msgstr "集計"
 
-#: ckanext/feedback/templates/admin/aggregation.html:37
+#: ckanext/feedback/templates/admin/aggregation.html:38
 msgid "Feedback Monthly Report"
 msgstr "フィードバック月次レポート"
 
-#: ckanext/feedback/templates/admin/aggregation.html:43
-#: ckanext/feedback/templates/admin/aggregation.html:61
-#: ckanext/feedback/templates/admin/aggregation.html:72
+#: ckanext/feedback/templates/admin/aggregation.html:39
+msgid "Month"
+msgstr "月"
+
+#: ckanext/feedback/templates/admin/aggregation.html:45
+#: ckanext/feedback/templates/admin/aggregation.html:64
+#: ckanext/feedback/templates/admin/aggregation.html:75
 #: ckanext/feedback/templates/package/resource_read.html:43
 #: ckanext/feedback/templates/package/resource_read.html:52
 #: ckanext/feedback/templates/package/resource_read.html:59
@@ -431,42 +436,46 @@ msgstr "フィードバック月次レポート"
 msgid "Download"
 msgstr "ダウンロード"
 
-#: ckanext/feedback/templates/admin/aggregation.html:46
+#: ckanext/feedback/templates/admin/aggregation.html:48
 msgid "The data is aggregated for the specified month and can be exported."
 msgstr "指定した月で集計したデータを出力します。"
 
-#: ckanext/feedback/templates/admin/aggregation.html:51
+#: ckanext/feedback/templates/admin/aggregation.html:53
 msgid "Feedback Yearly Report"
 msgstr "フィードバック年次レポート"
 
-#: ckanext/feedback/templates/admin/aggregation.html:64
+#: ckanext/feedback/templates/admin/aggregation.html:54
+msgid "Year"
+msgstr "年"
+
+#: ckanext/feedback/templates/admin/aggregation.html:67
 msgid ""
 "The data is aggregated for the specified year from January 1 to December "
 "31 and can be exported."
 msgstr "指定した年の1月1日から12月31日の間で集計したデータを出力します。"
 
-#: ckanext/feedback/templates/admin/aggregation.html:68
+#: ckanext/feedback/templates/admin/aggregation.html:71
 msgid "Feedback All-Time Report"
 msgstr "フィードバック全期間レポート"
 
-#: ckanext/feedback/templates/admin/aggregation.html:75
+#: ckanext/feedback/templates/admin/aggregation.html:78
 msgid "The data is aggregated for all available periods and can be exported."
 msgstr "現在集計可能なすべての期間で集計したデータを出力します。"
 
-#: ckanext/feedback/templates/admin/aggregation.html:82
+#: ckanext/feedback/templates/admin/aggregation.html:85
 #: ckanext/feedback/templates/admin/approval_and_delete.html:194
 msgid "The organization does not exist."
 msgstr "組織が存在しません。"
 
-#: ckanext/feedback/templates/admin/aggregation.html:87
+#: ckanext/feedback/templates/admin/aggregation.html:90
 msgid "Please select one organization."
 msgstr "組織を一つ選択してください。"
 
-#: ckanext/feedback/templates/admin/aggregation.html:95
+#: ckanext/feedback/templates/admin/aggregation.html:98
 msgid "What are Aggregation"
 msgstr "集計について"
 
-#: ckanext/feedback/templates/admin/aggregation.html:104
+#: ckanext/feedback/templates/admin/aggregation.html:107
 msgid ""
 "The exported CSV file is in UTF-8 with BOM format, intended to be opened "
 "in Microsoft Excel. If you are using an application other than Excel, "
