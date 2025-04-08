@@ -25,7 +25,9 @@
             <div class="select-org" style="width: 300px;">
               {{ h.csrf_input() }}
               <select id="field-add_group" name="group_added" data-module="autocomplete">
-                <option value=""></option>
+                {% if org_list|length > 1 %}
+                  <option value=""></option>
+                {% endif %}
                 {% for org in org_list %}
                   <option value="{{ org.name }}">{{ org.title }}</option>
                 {% endfor %}
