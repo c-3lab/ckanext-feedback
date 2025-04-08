@@ -382,7 +382,7 @@ class AdminController:
                 "max_month": max_month,
                 "default_month": default_month,
                 "max_year": int(max_year),
-                "default_year": default_year,
+                "default_year": int(default_year),
                 "org_list": org_list,
             },
         )

@@ -17,11 +17,12 @@
     <div class="module-content">
       {% if org_list %}
         <form id="aggregation-form" method="get">
-          <div class="module-title" style="display: flex; align-items: center;">
+          <div class="module-title" style="display: flex; align-items: center; gap: 8px;">
             <div>
               <h2>{{ _('Aggregation') }}</h2>
             </div>
-            <div class="select-org" style="margin-left: auto; width: 300px;">
+            <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;"><strong>{{ _('Organization') }} :</strong></p>
+            <div class="select-org" style="width: 300px;">
               {{ h.csrf_input() }}
               <select id="field-add_group" name="group_added" data-module="autocomplete">
                 <option value=""></option>
@@ -35,7 +36,8 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 16px;"><strong>{{ _('Feedback Monthly Report') }}</strong></span>
-                <input type="month" name="month" id="monthPicker" style="font-size: 16px; margin-left: auto;" max="{{ max_month }}" value="{{ default_month }}">
+                <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;"><strong>{{ _('Month') }} :</strong></p>
+                <input type="month" name="month" id="monthPicker" style="font-size: 16px;" max="{{ max_month }}" min="2023-04" value="{{ default_month }}">
               </div>
               {% set monthly_action=h.url_for( 'feedback.download_monthly' ) %}
               <button class="btn btn-primary" style="margin-left: auto;" onclick="csvDownload('{{ monthly_action }}')">
@@ -49,9 +51,10 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 16px;"><strong>{{ _('Feedback Yearly Report') }}</strong></span>
-                <select id="yearSelect" name="year" style="font-size: 16px; margin-left: auto;">
-                  {% for year in range(2024, max_year + 1) %}
-                    <option value="{{ year }}" {% if year == default_year %}selected{% endif %}>{{ year }}年</option>
+                <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;"><strong>{{ _('Year') }} :</strong></p>
+                <select id="yearSelect" name="year" style="font-size: 16px;">
+                  {% for year in range(2023, max_year + 1) %}
+                    <option value="{{ year }}" {% if year == default_year %}selected{% endif %}>{{ year }}</option>
                   {% endfor %}
                 </select>
               </div>
