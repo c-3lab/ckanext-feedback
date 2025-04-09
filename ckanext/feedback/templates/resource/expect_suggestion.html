@@ -31,6 +31,9 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            {% if attached_image_filename %}
+            <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+            {% endif %}
             <div style="flex: 1;">
               <textarea class="p-2" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
