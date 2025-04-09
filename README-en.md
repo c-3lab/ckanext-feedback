@@ -87,6 +87,7 @@ Here are the steps for developing this extension in a Docker environment.
 * We assume that CKAN and this extension will be run in the following Docker environment:
   * OS: Linux
   * Distribution: Ubuntu 22.04
+  * Python 3.10.13
   * Docker 27.4.0
 
 ### Build Procedure
@@ -106,23 +107,31 @@ Here are the steps for developing this extension in a Docker environment.
 
 4. Access `http://localhost:5000`.
 
-### Linter and Formatter Settings
+### Development Preparation
 
+#### Installing Packages with Poetry
+When developing this extension, please use Poetry to install the required packages.
 1. Install `poetry`:
 
     ```bash
-    pip install poetry
+    curl -sSL https://install.python-poetry.org | python3 -
     ```
 
-2. Enable the Linter and Formatter:
+2. Move to the project root directory, where the `pyproject.toml` file is located, and install the required packages:
 
     ```bash
     poetry install
-    poetry run pre-commit install
     ```
 
-    * From now on, whenever you run `git commit`, `isort`, `black`, and `pflake8` will automatically run on the staged files. If they make any changes, the commit will be aborted.
-    * To run `isort`, `black`, and `pflake8` manually, you can run `poetry run pre-commit`.
+### Linter and Formatter Settings
+Enable the Linter and Formatter:
+
+```bash
+poetry run pre-commit install
+```
+
+* From now on, whenever you run `git commit`, `isort`, `black`, and `pflake8` will automatically run on the staged files. If they make any changes, the commit will be aborted.
+* To run `isort`, `black`, and `pflake8` manually, you can run `poetry run pre-commit`.
 
 ### Reference Documentation
 

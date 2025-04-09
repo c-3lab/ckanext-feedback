@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-03-11 15:00+0900\n"
+"POT-Creation-Date: 2025-04-08 17:00+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -83,26 +83,6 @@ msgstr "評価"
 msgid "Number of Likes"
 msgstr "いいね数"
 
-#: ckanext/feedback/assets/js/approval_and_delete.js:36
-msgid "Please select at least one checkbox."
-msgstr "少なくとも1つのチェックボックスを選択してください。"
-
-#: ckanext/feedback/assets/js/approval_and_delete.js:41
-msgid "Please select the checkbox whose status is Waiting."
-msgstr "ステータスが承認待ちのチェックボックスを選択してください。"
-
-#: ckanext/feedback/assets/js/approval_and_delete.js:55
-#, python-format
-msgid "Is it okay to approve checked %d item(s)?"
-msgstr "チェックした%d項目を承認してもよろしいですか？"
-
-#: ckanext/feedback/assets/js/approval_and_delete.js:57
-#, python-format
-msgid ""
-"Completely delete checked %d item(s). This operation cannot be undone, "
-"are you sure?"
-msgstr "チェックした%d項目を完全に削除します。この操作を元に戻すことはできませんが、よろしいですか？"
-
 #: ckanext/feedback/controllers/admin.py:33
 #: ckanext/feedback/templates/admin/approval_and_delete.html:11
 #: ckanext/feedback/templates/admin/approval_and_delete.html:14
@@ -111,7 +91,7 @@ msgid "Approval and Delete"
 msgstr "承認・削除"
 
 #: ckanext/feedback/controllers/admin.py:35
-#: ckanext/feedback/templates/admin/approval_and_delete.html:201
+#: ckanext/feedback/templates/admin/approval_and_delete.html:207
 msgid ""
 "This is the management screen for approving or deleting resource "
 "comments, utilization method registration requests, and utilization "
@@ -421,7 +401,25 @@ msgstr "投稿内容"
 msgid "There are no applications."
 msgstr "申請はありません。"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:197
+#: ckanext/feedback/templates/admin/approval_and_delete.html:192
+msgid "Please select at least one checkbox."
+msgstr "少なくとも1つのチェックボックスを選択してください。"
+
+#: ckanext/feedback/templates/admin/approval_and_delete.html:193
+msgid "Please select the checkbox whose status is Waiting."
+msgstr "ステータスが承認待ちのチェックボックスを選択してください。"
+
+#: ckanext/feedback/templates/admin/approval_and_delete.html:194
+msgid "Is it okay to approve checked WAITING_ROWS item(s)?"
+msgstr "チェックしたWAITING_ROWS項目を承認してもよろしいですか？"
+
+#: ckanext/feedback/templates/admin/approval_and_delete.html:195
+msgid ""
+"Completely delete checked CHECKED_ROWS item(s). This operation cannot be "
+"undone, are you sure?"
+msgstr "チェックしたCHECKED_ROWS項目を完全に削除します。この操作を元に戻すことはできませんが、よろしいですか？"
+
+#: ckanext/feedback/templates/admin/approval_and_delete.html:203
 msgid "What are Approval and Delete"
 msgstr "承認・削除について"
 
@@ -498,6 +496,7 @@ msgstr "編集"
 
 #: ckanext/feedback/templates/resource/comment.html:18
 #: ckanext/feedback/templates/resource/comment_check.html:12
+#: ckanext/feedback/templates/resource/expect_suggestion.html:12
 #: ckanext/feedback/templates/resource/suggestion.html:12
 msgid "Comment on Resource"
 msgstr "リソースへのコメント"
@@ -670,12 +669,6 @@ msgstr "戻る"
 msgid "Submit comment"
 msgstr "コメントを送信"
 
-# | msgid "Comment on Resource"
-#: ckanext/feedback/templates/resource/expect_suggestion.html:12
-#, fuzzy
-msgid "Comment on resource"
-msgstr "リソースへのコメント"
-
 #: ckanext/feedback/templates/resource/expect_suggestion.html:17
 #: ckanext/feedback/templates/utilization/expect_suggestion.html:17
 msgid "Please confirm"
@@ -740,11 +733,9 @@ msgstr "提案コメントを選択"
 msgid "Details"
 msgstr "詳細"
 
-# | msgid "Details on Utilization"
 #: ckanext/feedback/templates/utilization/comment_check.html:15
 #: ckanext/feedback/templates/utilization/expect_suggestion.html:12
 #: ckanext/feedback/templates/utilization/suggestion.html:15
-#, fuzzy
 msgid "Comment on Utilization"
 msgstr "利活用方法詳細"
 
