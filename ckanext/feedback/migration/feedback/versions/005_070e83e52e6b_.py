@@ -1,8 +1,8 @@
 """Add columns for attached image for resource comment and utilization comment
 
-Revision ID: 6f044c5ed092
-Revises: 4c5922f300d6
-Create Date: 2025-02-28 05:12:22.318915
+Revision ID: 070e83e52e6b
+Revises: 8ae77eb847cd
+Create Date: 2025-04-09 05:57:55.887801
 
 """
 
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '6f044c5ed092'
-down_revision = '4c5922f300d6'
+revision = '070e83e52e6b'
+down_revision = '8ae77eb847cd'
 branch_labels = None
 depends_on = None
 
