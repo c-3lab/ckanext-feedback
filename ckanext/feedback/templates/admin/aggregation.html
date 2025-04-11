@@ -1,0 +1,121 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+  {% asset 'feedback/feedback-admin-css' %}
+{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="{{ h.url_for('feedback.admin') }}">{{ _('Feedback Admin') }}</a> / <a href="{{ h.url_for('feedback.aggregation') }}">{{ _('Aggregation') }}</a></li>
+{% endblock %}
+
+{% block title %}{{ _('Aggregation') }} - CKAN{% endblock %}
+
+{% block primary_content %}
+  <article class="module">
+    <div class="module-content">
+      {% if org_list %}
+        <form id="aggregation-form" method="get">
+          <div class="module-title" style="display: flex; align-items: center; gap: 8px;">
+            <div>
+              <h2>{{ _('Aggregation') }}</h2>
+            </div>
+            <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;"><strong>{{ _('Organization') }} :</strong></p>
+            <div class="select-org" style="width: 300px;">
+              {{ h.csrf_input() }}
+              <select id="field-add_group" name="group_added" data-module="autocomplete">
+                {% if org_list|length > 1 %}
+                  <option value=""></option>
+                {% endif %}
+                {% for org in org_list %}
+                  <option value="{{ org.name }}">{{ org.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="download-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;"><strong>{{ _('Feedback Monthly Report') }}</strong></span>
+                <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;"><strong>{{ _('Month') }} :</strong></p>
+                <input type="month" name="month" id="monthPicker" style="font-size: 16px;" max="{{ max_month }}" min="2023-04" value="{{ default_month }}">
+              </div>
+              {% set monthly_action=h.url_for( 'feedback.download_monthly' ) %}
+              <button class="btn btn-primary" style="margin-left: auto;" onclick="csvDownload('{{ monthly_action }}')">
+                <i class="fa-solid fa-arrow-circle-down"></i>
+                {{ _('Download') }}
+              </button>
+            </div>
+            <p style="margin-top: 5px;">{{ _('The data is aggregated for the specified month and can be exported.') }}</p>
+          </div>
+          <div class="download-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;"><strong>{{ _('Feedback Yearly Report') }}</strong></span>
+                <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;"><strong>{{ _('Year') }} :</strong></p>
+                <select id="yearSelect" name="year" style="font-size: 16px;">
+                  {% for year in range(2023, max_year + 1) %}
+                    <option value="{{ year }}" {% if year == default_year %}selected{% endif %}>{{ year }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% set yearly_action=h.url_for( 'feedback.download_yearly' ) %}
+              <button class="btn btn-primary" style="margin-left: auto;" onclick="csvDownload('{{ yearly_action }}')">
+                <i class="fa-solid fa-arrow-circle-down"></i>
+                {{ _('Download') }}
+              </button>
+            </div>
+            <p style="margin-top: 5px;">{{ _('The data is aggregated for the specified year from January 1 to December 31 and can be exported.') }}</p>
+          </div>
+          <div class="download-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;"><strong>{{ _('Feedback All-Time Report') }}</strong></span>
+              {% set all_time_action=h.url_for( 'feedback.download_all_time' ) %}
+              <button class="btn btn-primary" style="margin-left: auto;" onclick="csvDownload('{{ all_time_action }}')">
+                <i class="fa-solid fa-arrow-circle-down"></i>
+                {{ _('Download') }}
+              </button>
+            </div>
+            <p style="margin-top: 5px;">{{ _('The data is aggregated for all available periods and can be exported.') }}</p>
+          </div>
+        </form>
+      {% else %}
+        <div class="module-title">
+          <h2>{{ _('Aggregation') }}</h2>
+        </div>
+        <p>{{ _('The organization does not exist.') }}</p>
+      {% endif %}
+    </div>
+  </article>
+  <div id="translations" hidden>
+    <span data-key="Please select one organization.">{{ _('Please select one organization.') }}</span>
+  </div>
+{% endblock %}
+
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-info-circle"></i>
+      {{ _('What are Aggregation') }}
+    </h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+          A screen where users can download aggregated feedback data on organizational resources in CSV format.
+        {% endtrans %}
+        <br>
+        <br>
+        {% trans %}
+          The exported CSV file is in UTF-8 with BOM format, intended to be opened in Microsoft Excel. If you are using an application other than Excel, please convert the format as needed.
+        {% endtrans %}
+      </p>
+    </div>
+  </div>
+{% endblock %}
+
+
+{%- block scripts %}
+  {{ super() }}
+  {% asset 'feedback/feedback-aggregation' %}
+{% endblock %}

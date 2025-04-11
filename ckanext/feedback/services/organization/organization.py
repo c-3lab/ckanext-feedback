@@ -10,7 +10,10 @@ def get_organization(owner_org):
 
 
 def get_org_list(id=None):
-    query = session.query(Group.name, Group.title)
+    query = session.query(Group.name, Group.title).filter(
+        Group.state == "active",
+        Group.is_organization.is_(True),
+    )
 
     if id is not None:
         query = query.filter(Group.id.in_(id))

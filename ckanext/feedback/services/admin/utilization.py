@@ -31,7 +31,11 @@ def get_utilizations_query(org_list):
         .join(Group, Package.owner_org == Group.id)
         .join(Resource)
         .join(Utilization)
-        .filter(Group.name.in_(org_names))
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
     )
 
     return query
@@ -49,7 +53,11 @@ def get_simple_utilizations_query(org_list):
         .join(Package, Group.id == Package.owner_org)
         .join(Resource, Package.id == Resource.package_id)
         .join(Utilization, Resource.id == Utilization.resource_id)
-        .filter(Group.name.in_(org_names))
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
     )
 
     return query

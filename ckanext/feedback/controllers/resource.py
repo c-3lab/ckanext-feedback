@@ -302,15 +302,12 @@ class ResourceController:
         data = request.get_json()
         like_status = data.get('likeStatus')
 
-        resource_id_list = likes_service.get_all_resource_ids()
-
-        if resource_id not in resource_id_list:
-            likes_service.create_resource_like(resource_id)
-
         if like_status:
             likes_service.increment_resource_like_count(resource_id)
+            likes_service.increment_resource_like_count_monthly(resource_id)
         else:
             likes_service.decrement_resource_like_count(resource_id)
+            likes_service.decrement_resource_like_count_monthly(resource_id)
 
         session.commit()
 

@@ -31,11 +31,23 @@ feedback-comment-js:
   contents:
     - js/comment.js
 
+feedback-aggregation:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-aggregation.js
+  contents:
+    - js/aggregation.js
+
 feedback-approval-and-delete:
   filter: rjsmin
   output: ckanext-feedback/%(version)s-approval_and_delete.js
   contents:
     - js/approval_and_delete.js
+
+feedback-feedback-status-list-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-feedback_status_list.js
+  contents:
+    - js/feedback_status_list.js
 
 feedback-recaptcha-js:
   filter: rjsmin

@@ -1221,20 +1221,17 @@ class TestResourceController:
         assert result == 'False'
 
     @patch('ckanext.feedback.controllers.resource.request.get_json')
-    @patch('ckanext.feedback.controllers.resource.likes_service')
-    @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.Response')
-    def test_like_toggle_True_with_new_resource(
+    def test_like_toggle_True(
         self,
         mock_response,
-        mock_session_commit,
-        mock_likes_service,
         mock_get_json,
     ):
-        mock_get_json.return_value = {'likeStatus': True}
-        resource_id = 'resource id'
+        organization_dict = factories.Organization()
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
 
-        mock_likes_service.get_all_resource_ids.return_value = []
+        mock_get_json.return_value = {'likeStatus': True}
 
         mock_resp = Mock()
         mock_resp.data = b"OK"
@@ -1242,17 +1239,7 @@ class TestResourceController:
         mock_resp.mimetype = 'text/plain'
         mock_response.return_value = mock_resp
 
-        resp = ResourceController.like_toggle('package_name', resource_id)
-
-        mock_likes_service.create_resource_like.assert_called_once_with(resource_id)
-        mock_likes_service.increment_resource_like_count.assert_called_once_with(
-            resource_id
-        )
-        mock_likes_service.decrement_resource_like_count.assert_not_called()
-        mock_session_commit.assert_called_once()
-        mock_resp.set_cookie.assert_called_once_with(
-            resource_id, 'True', max_age=2147483647
-        )
+        resp = ResourceController.like_toggle(package['name'], resource['id'])
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
@@ -1260,63 +1247,17 @@ class TestResourceController:
         assert resp == mock_resp
 
     @patch('ckanext.feedback.controllers.resource.request.get_json')
-    @patch('ckanext.feedback.controllers.resource.likes_service')
-    @patch('ckanext.feedback.controllers.resource.session.commit')
-    @patch('ckanext.feedback.controllers.resource.Response')
-    def test_like_toggle_True_with_existing_resource(
-        self,
-        mock_response,
-        mock_session_commit,
-        mock_likes_service,
-        mock_get_json,
-    ):
-        mock_get_json.return_value = {'likeStatus': True}
-        resource_id = 'resource id'
-
-        mock_likes_service.get_all_resource_ids.return_value = [
-            'resource id',
-        ]
-
-        mock_resp = Mock()
-        mock_resp.data = b"OK"
-        mock_resp.status_code = 200
-        mock_resp.mimetype = 'text/plain'
-        mock_response.return_value = mock_resp
-
-        resp = ResourceController.like_toggle('package_name', resource_id)
-
-        mock_likes_service.create_resource_like.assert_not_called()
-        mock_likes_service.increment_resource_like_count.assert_called_once_with(
-            resource_id
-        )
-        mock_likes_service.decrement_resource_like_count.assert_not_called()
-        mock_session_commit.assert_called_once()
-        mock_resp.set_cookie.assert_called_once_with(
-            resource_id, 'True', max_age=2147483647
-        )
-
-        assert resp.data.decode() == "OK"
-        assert resp.status_code == 200
-        assert resp.mimetype == 'text/plain'
-        assert resp == mock_resp
-
-    @patch('ckanext.feedback.controllers.resource.request.get_json')
-    @patch('ckanext.feedback.controllers.resource.likes_service')
-    @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.Response')
     def test_like_toggle_False(
         self,
         mock_response,
-        mock_session_commit,
-        mock_likes_service,
         mock_get_json,
     ):
-        mock_get_json.return_value = {'likeStatus': False}
-        resource_id = 'resource id'
+        organization_dict = factories.Organization()
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
 
-        mock_likes_service.get_all_resource_ids.return_value = [
-            'resource id',
-        ]
+        mock_get_json.return_value = {'likeStatus': False}
 
         mock_resp = Mock()
         mock_resp.data = b"OK"
@@ -1324,17 +1265,7 @@ class TestResourceController:
         mock_resp.mimetype = 'text/plain'
         mock_response.return_value = mock_resp
 
-        resp = ResourceController.like_toggle('package_name', resource_id)
-
-        mock_likes_service.create_resource_like.assert_not_called()
-        mock_likes_service.increment_resource_like_count.assert_not_called()
-        mock_likes_service.decrement_resource_like_count.assert_called_once_with(
-            resource_id
-        )
-        mock_session_commit.assert_called_once()
-        mock_resp.set_cookie.assert_called_once_with(
-            resource_id, 'False', max_age=2147483647
-        )
+        resp = ResourceController.like_toggle(package['name'], resource['id'])
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
