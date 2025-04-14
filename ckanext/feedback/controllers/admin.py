@@ -249,8 +249,10 @@ class AdminController:
     @check_administrator
     def approve_utilization_comments(target):
         target = utilization_comments_service.get_utilization_comment_ids(target)
-        utilizations = utilization_service.get_utilizations(target)
-        AdminController._check_organization_admin_role_with_utilization(utilizations)
+        utilizations = utilization_service.get_utilizations_by_comment_ids(target)
+        AdminController._check_organization_admin_role_with_utilization_comment(
+            utilizations
+        )
         utilization_comments_service.approve_utilization_comments(
             target, current_user.id
         )
@@ -263,9 +265,11 @@ class AdminController:
     @check_administrator
     def approve_utilization(target):
         target = utilization_service.get_utilization_ids(target)
-        utilizations = utilization_service.get_utilizations(target)
-        AdminController._check_organization_admin_role_with_resource(utilizations)
+        utilizations = utilization_service.get_utilization_details_by_ids(target)
+        AdminController._check_organization_admin_role_with_utilization(utilizations)
+        resource_ids = utilization_service.get_utilization_resource_ids(target)
         utilization_service.approve_utilization(target, current_user.id)
+        utilization_service.refresh_utilization_summary(resource_ids)
         session.commit()
 
         return len(target)
@@ -289,8 +293,10 @@ class AdminController:
     @staticmethod
     @check_administrator
     def delete_utilization_comments(target):
-        utilizations = utilization_service.get_utilizations(target)
-        AdminController._check_organization_admin_role_with_utilization(utilizations)
+        utilizations = utilization_service.get_utilizations_by_comment_ids(target)
+        AdminController._check_organization_admin_role_with_utilization_comment(
+            utilizations
+        )
         utilization_comments_service.delete_utilization_comments(target)
         utilization_comments_service.refresh_utilizations_comments(utilizations)
         session.commit()
@@ -300,9 +306,11 @@ class AdminController:
     @staticmethod
     @check_administrator
     def delete_utilization(target):
-        utilizations = utilization_service.get_utilizations(target)
+        utilizations = utilization_service.get_utilization_details_by_ids(target)
         AdminController._check_organization_admin_role_with_utilization(utilizations)
+        resource_ids = utilization_service.get_utilization_resource_ids(target)
         utilization_service.delete_utilization(target)
+        utilization_service.refresh_utilization_summary(resource_ids)
         session.commit()
 
         return len(target)
@@ -323,7 +331,7 @@ class AdminController:
         return len(target)
 
     @staticmethod
-    def _check_organization_admin_role_with_utilization(utilizations):
+    def _check_organization_admin_role_with_utilization_comment(utilizations):
         for utilization in utilizations:
             if (
                 not has_organization_admin_role(utilization.resource.package.owner_org)
@@ -334,6 +342,22 @@ class AdminController:
                     _(
                         'The requested URL was not found on the server. If you entered'
                         ' the URL manually please check your spelling and try again.'
+                    ),
+                )
+
+    @staticmethod
+    def _check_organization_admin_role_with_utilization(utilizations):
+        for utilization in utilizations:
+            if (
+                not has_organization_admin_role(utilization)
+                and not current_user.sysadmin
+            ):
+                toolkit.abort(
+                    404,
+                    _(
+                        'The requested URL was not found on the server. '
+                        'If you entered the URL manually please check '
+                        'your spelling and try again.'
                     ),
                 )
 

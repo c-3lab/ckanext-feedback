@@ -16,7 +16,10 @@ def get_package_utilizations(package_id):
     count = (
         session.query(func.sum(UtilizationSummary.utilization))
         .join(Resource)
-        .filter(Resource.package_id == package_id)
+        .filter(
+            Resource.package_id == package_id,
+            Resource.state == "active",
+        )
         .scalar()
     )
     return count or 0
@@ -77,7 +80,10 @@ def get_package_issue_resolutions(package_id):
         session.query(func.sum(IssueResolutionSummary.issue_resolution))
         .join(Utilization)
         .join(Resource)
-        .filter(Resource.package_id == package_id)
+        .filter(
+            Resource.package_id == package_id,
+            Resource.state == "active",
+        )
         .scalar()
     )
     return count or 0
