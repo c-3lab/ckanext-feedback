@@ -518,8 +518,8 @@ class TestRankingApi:
         error_message = error_dict.get('message')
 
         assert (
-            error_message == "The specified organization name does not exist. "
-            "Please enter a valid organization name."
+            error_message == "The specified organization does not exist or "
+            "may have been deleted. Please enter a valid organization name."
         )
 
     @patch('ckanext.feedback.controllers.api.ranking.get_group_service.get_group_names')
