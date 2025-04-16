@@ -44,7 +44,10 @@ def get_package_rating(package_id):
             func.sum(ResourceCommentSummary.rating_comment).label('rating_comment'),
         )
         .join(Resource)
-        .filter(Resource.package_id == package_id)
+        .filter(
+            Resource.package_id == package_id,
+            Resource.state == "active",
+        )
         .first()
     )
     if row and row.rating_comment and row.rating_comment > 0:
