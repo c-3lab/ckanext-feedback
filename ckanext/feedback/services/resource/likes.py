@@ -107,7 +107,10 @@ def get_package_like_count(package_id):
     count = (
         session.query(func.sum(ResourceLike.like_count))
         .join(Resource)
-        .filter(Resource.package_id == package_id)
+        .filter(
+            Resource.package_id == package_id,
+            Resource.state == "active",
+        )
         .scalar()
     )
     return count or 0

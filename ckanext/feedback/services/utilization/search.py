@@ -39,6 +39,7 @@ def get_utilizations(
         .join(Package)
         .join(Group, Package.owner_org == Group.id)
         .outerjoin(IssueResolutionSummary)
+        .filter(Resource.state == 'active')
         .order_by(Utilization.created.desc())
     )
     if id:

@@ -584,7 +584,9 @@ class TestAdminController:
         utilization.resource.package.owner_org = 'owner_org'
         utilizations = [utilization]
 
-        mock_utilization_service.get_utilizations.return_value = utilizations
+        mock_utilization_service.get_utilizations_by_comment_ids.return_value = (
+            utilizations
+        )
 
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -597,7 +599,8 @@ class TestAdminController:
         # Disable automatic formatting by Black
         mock_utilization_comments_service.get_utilization_comment_ids.\
             assert_called_once_with(target)
-        mock_utilization_service.get_utilizations.assert_called_once_with(target)
+        mock_utilization_service.get_utilizations_by_comment_ids.\
+            assert_called_once_with(target)
         mock_utilization_comments_service.approve_utilization_comments.\
             assert_called_once_with(target, user_dict['id'])
         mock_utilization_comments_service.refresh_utilizations_comments.\
@@ -626,7 +629,9 @@ class TestAdminController:
         utilization.resource.package.owner_org = 'owner_org'
         utilizations = [utilization]
 
-        mock_utilization_service.get_utilizations.return_value = utilizations
+        mock_utilization_service.get_utilization_details_by_ids.return_value = (
+            utilizations
+        )
 
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -635,11 +640,15 @@ class TestAdminController:
             g.userobj = current_user
             AdminController.approve_utilization(target)
 
-        mock_utilization_service.get_utilization_ids.assert_called_once_with(target)
-        mock_utilization_service.get_utilizations.assert_called_once_with(target)
-        mock_utilization_service.approve_utilization.assert_called_once_with(
-            target, user_dict['id']
-        )
+        # fmt: off
+        # Disable automatic formatting by Black
+        mock_utilization_service.get_utilization_ids.\
+            assert_called_once_with(target)
+        mock_utilization_service.get_utilization_details_by_ids.\
+            assert_called_once_with(target)
+        mock_utilization_service.approve_utilization.\
+            assert_called_once_with(target, user_dict['id'])
+        # fmt: on
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
@@ -674,11 +683,10 @@ class TestAdminController:
             g.userobj = current_user
             AdminController.approve_resource_comments(target)
 
-        mock_resource_comments_service.get_resource_comment_ids.assert_called_once_with(
-            target
-        )
         # fmt: off
         # Disable automatic formatting by Black
+        mock_resource_comments_service.get_resource_comment_ids.\
+            assert_called_once_with(target)
         mock_resource_comments_service.get_resource_comment_summaries.\
             assert_called_once_with(target)
         mock_resource_comments_service.approve_resource_comments.\
@@ -709,7 +717,9 @@ class TestAdminController:
         utilization.resource.package.owner_org = 'owner_org'
         utilizations = [utilization]
 
-        mock_utilization_service.get_utilizations.return_value = utilizations
+        mock_utilization_service.get_utilizations_by_comment_ids.return_value = (
+            utilizations
+        )
 
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -718,9 +728,10 @@ class TestAdminController:
             g.userobj = current_user
             AdminController.delete_utilization_comments(target)
 
-        mock_utilization_service.get_utilizations.assert_called_once_with(target)
         # fmt: off
         # Disable automatic formatting by Black
+        mock_utilization_service.get_utilizations_by_comment_ids.\
+            assert_called_once_with(target)
         mock_utilization_comments_service.delete_utilization_comments.\
             assert_called_once_with(target)
         mock_utilization_comments_service.refresh_utilizations_comments.\
@@ -747,7 +758,9 @@ class TestAdminController:
         utilization.resource.package.owner_org = 'owner_org'
         utilizations = [utilization]
 
-        mock_utilization_service.get_utilizations.return_value = utilizations
+        mock_utilization_service.get_utilization_details_by_ids.return_value = (
+            utilizations
+        )
 
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
@@ -756,8 +769,13 @@ class TestAdminController:
             g.userobj = current_user
             AdminController.delete_utilization(target)
 
-        mock_utilization_service.get_utilizations.assert_called_once_with(target)
-        mock_utilization_service.delete_utilization.assert_called_once_with(target)
+        # fmt: off
+        # Disable automatic formatting by Black
+        mock_utilization_service.get_utilization_details_by_ids.\
+            assert_called_once_with(target)
+        mock_utilization_service.delete_utilization.\
+            assert_called_once_with(target)
+        # fmt: on
         mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
@@ -818,7 +836,7 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_utilization_using_org_admin(
+    def test_check_organization_admin_role_with_utilization_comment_using_org_admin(
         self, mock_toolkit_abort, current_user
     ):
         mocked_utilization = MagicMock()
@@ -843,14 +861,40 @@ class TestAdminController:
         model.Session.add(member)
         model.Session.commit()
 
-        AdminController._check_organization_admin_role_with_utilization(
+        AdminController._check_organization_admin_role_with_utilization_comment(
             [mocked_utilization]
         )
         mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_utilization_using_user(
+    def test_check_organization_admin_role_with_utilization_comment_using_user(
+        self, mock_toolkit_abort, current_user
+    ):
+        mocked_utilization = MagicMock()
+
+        user_dict = factories.User()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        organization_dict = factories.Organization()
+
+        mocked_utilization.resource.package.owner_org = organization_dict['id']
+
+        AdminController._check_organization_admin_role_with_utilization_comment(
+            [mocked_utilization]
+        )
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            _(
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    def test_check_organization_admin_role_with_utilization(
         self, mock_toolkit_abort, current_user
     ):
         mocked_utilization = MagicMock()
@@ -869,8 +913,9 @@ class TestAdminController:
         mock_toolkit_abort.assert_called_once_with(
             404,
             _(
-                'The requested URL was not found on the server. If you entered the URL'
-                ' manually please check your spelling and try again.'
+                'The requested URL was not found on the server. '
+                'If you entered the URL manually please check '
+                'your spelling and try again.'
             ),
         )
 
