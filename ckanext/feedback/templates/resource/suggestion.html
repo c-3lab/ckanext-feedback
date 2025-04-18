@@ -19,7 +19,7 @@
         <div>
           <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
           <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
-        </div>  
+        </div>
         <br>
         <p class="wrap-text" style="white-space: pre-line;">
           {{ _("Your input may be considered inappropriate.\n"
@@ -32,13 +32,16 @@
           <h5 class="p-2" style="flex: 1;">{{ _('Input Comments') }}</h5>
           <h5 class="p-2" style="flex: 1;">{{ _('Proposal Comments') }}</h5>
         </div>
-        
+
         <div class="comment-contents" style="display: flex; gap: 10px;">
           <form name="input_comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post" style="flex: 1;">
             <input type="hidden" name="package_name" value="{{ pkg_dict.name }}">
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            {% if attached_image_filename %}
+            <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+            {% endif %}
             <div style="flex: 1;">
               <textarea class="p-2" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
@@ -58,6 +61,9 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" id="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            {% if attached_image_filename %}
+            <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+            {% endif %}
             <div style="flex: 1;">
               <textarea class="p-2" id="proposal-comment-content" name="comment-content" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ softened }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
