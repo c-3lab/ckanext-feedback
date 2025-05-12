@@ -137,3 +137,13 @@ def get_attached_image_path(attached_image_filename: str) -> str:
 # Get directory name to save attached image
 def get_upload_destination() -> str:
     return "feedback_resouce_comment"
+
+
+def get_comment_attached_image_files():
+    image_files = (
+        session.query(ResourceComment.attached_image_filename)
+        .filter(ResourceComment.attached_image_filename.isnot(None))
+        .all()
+    )
+
+    return [filename for (filename,) in image_files]
