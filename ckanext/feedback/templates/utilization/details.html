@@ -68,7 +68,7 @@
           <h4>{{ _('Comments') }}</h4>
           <p>{{ row.comment }}</p>
           <hr>
-          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post">
+          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post" enctype="multipart/form-data">
             <h4>{{ _('Comment') }}</h4>
             {% for category in categories %}
             <label class="radio">
@@ -84,7 +84,29 @@
               <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
-            <br>
+            <div class="comment-form-footer">
+              <div class="image-upload-section">
+                <button id="uploadBtn" type="button" class="btn btn-default" onclick="uploadClicked();">
+                  <i class="fa-solid fa-image"></i>
+                  {{ _('Image Attachment') }}
+                </button>
+                <div id="previewContainer"></div>
+                <input type="file" id="imageUpload" name="attached_image" accept="image/*" hidden>
+              </div>
+              <div class="form-actions">
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  {{ _('Send') }}
+                </button>
+                {% else %}
+                <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  {{ _('Send') }}
+                </button>
+                {% endif %}
+              </div>
+            </div>
             <div class="notice-container">
               <h3>
                 <span><i class="fa-solid fa-triangle-exclamation"></i></span>
@@ -97,12 +119,6 @@
                 <li><strong>{{ _('Positive Feedback') }}: </strong>{{ _('Positive comments contribute more to the motivation of data providers and provide valuable deta than aggressive negative comments.') }}</li>
               </ul>
             </div>
-            <br>
-            {% if h.is_base_public_folder_bs3() %}
-            <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
-            {% else %}
-            <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
-            {% endif %}
             <br>
             <br>
           </form>
@@ -125,7 +141,16 @@
               {% endif %}
             </h4>
             <br>
-            <p class="multiple-line wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
+            <div class="comment-container {{'unapproved' if not comment.approval }}">
+              <span class="comment-content" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
+              {% if comment.attached_image_filename %}
+              <div>
+                <a href="{{h.url_for('utilization.attached_image', utilization_id=utilization_id, comment_id=comment.id, attached_image_filename=comment.attached_image_filename ) }}" target="_blank">
+                  <img src="{{h.url_for('utilization.attached_image', utilization_id=utilization_id, comment_id=comment.id, attached_image_filename=comment.attached_image_filename ) }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                </a>
+              </div>
+              {% endif %}
+            </div>
             <hr class="divider">
           {% endfor %}
           {% block page_pagination %}
