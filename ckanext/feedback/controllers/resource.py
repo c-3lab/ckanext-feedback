@@ -240,8 +240,7 @@ class ResourceController:
                 'resource_comment.comment', resource_id=resource_id
             )
 
-        attached_image_filename = None
-        attached_image: FileStorage = request.files.get("image-upload")
+        attached_image: FileStorage = request.files.get("attached_image")
         if attached_image:
             try:
                 attached_image_filename = ResourceController._upload_image(

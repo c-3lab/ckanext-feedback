@@ -40,8 +40,8 @@
 }
 
 .attached-image {
-  max-width: 64px;
-  max-height: 64px;
+  max-width: 100%;
+  max-height: 400px;
 }
 
 .unapproved {
@@ -51,6 +51,10 @@
 
 .wrap-text {
   word-wrap: break-word;
+}
+
+.comment-container {
+  margin-bottom: 10px;
 }
 
 .comment-content {
@@ -80,6 +84,7 @@
   background-color: blanchedalmond;
   padding: 10px;
   border-radius: 10px;
+  margin-top: 10px;
 }
 
 .char-count {
@@ -101,4 +106,58 @@ textarea {
 label.radio {
   margin-right: 24px;
   display: inline-block;
+}
+
+.image-preview-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.image-preview {
+  max-width: 100px;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  display: block;
+}
+
+.close-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.image-preview-wrapper:hover .close-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.comment-form-footer {
+  position: relative;
+  height: 68px;
+}
+
+.image-upload-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.form-actions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
