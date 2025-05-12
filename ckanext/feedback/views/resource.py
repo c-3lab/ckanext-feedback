@@ -32,6 +32,12 @@ rules = [
         {'methods': ['GET', 'POST']},
     ),
     (
+        '/<resource_id>/comment/check/attached_image/<attached_image_filename>',
+        'check_attached_image',
+        resource.ResourceController.check_attached_image,
+        {'methods': ['GET']},
+    ),
+    (
         '/<resource_id>/comment/approve',
         'approve_comment',
         resource.ResourceController.approve_comment,

@@ -303,6 +303,14 @@ class ResourceController:
             },
         )
 
+    # resource_comment/<resource_id>/comment/check/attached_image/<attached_image_filename>
+    @staticmethod
+    def check_attached_image(resource_id: str, attached_image_filename: str):
+        attached_image_path = comment_service.get_attached_image_path(
+            attached_image_filename
+        )
+        return send_file(attached_image_path)
+
     # resource_comment/<resource_id>/comment/approve
     @staticmethod
     @check_administrator
