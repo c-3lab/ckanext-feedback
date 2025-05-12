@@ -1,6 +1,108 @@
 const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
 const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
 
+document.addEventListener('DOMContentLoaded', () => {
+  const textareas = document.getElementsByName('comment-content');
+  const charCounts = document.getElementsByName('comment-count');
+  const imageUpload = document.getElementById('imageUpload');
+
+  imageUpload.addEventListener('change', handleImageChange);
+
+  function updateCharCount(textarea, charCount) {
+    const currentLength = textarea.value.length;
+    charCount.textContent = currentLength;
+  }
+
+  textareas.forEach(textarea, index => {
+    updateCharCount(textarea, charCounts[index]);
+    textarea.addEventListener('input', () => {
+      const currentLength = textarea.value.length;
+      charCounts[index].textContent = currentLength;
+    });
+  });
+});
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted || performance.getEntriesByType("navigation")[0]?.type === "back_forward") {
+    resetFileInput();
+  }
+
+  const sendButtons = document.getElementsByName('send-button');
+  sendButtons.forEach(sendButton => {
+    sendButton.style.pointerEvents = "auto";
+    sendButton.style.background = "#206b82";
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
+  });
+});
+
+function handleImageChange(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      createPreview(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function uploadClicked() {
+  const imageUpload = document.getElementById('imageUpload');
+  imageUpload.value = '';
+  imageUpload.click();
+}
+
+function createPreview(src) {
+  const uploadBtn = document.getElementById('uploadBtn');
+  const previewContainer = document.getElementById('previewContainer');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'image-preview-wrapper';
+
+  const img = document.createElement('img');
+  img.className = 'image-preview';
+  img.src = src;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'close-button';
+  closeBtn.innerHTML = '✖';
+
+  closeBtn.addEventListener('click', () => {
+    const imageUpload = document.getElementById('imageUpload');
+    imageUpload.value = '';
+    previewContainer.innerHTML = '';
+    uploadBtn.style.display = 'inline-block';
+  });
+
+  wrapper.appendChild(img);
+  wrapper.appendChild(closeBtn);
+
+  previewContainer.innerHTML = '';
+  previewContainer.appendChild(wrapper);
+  uploadBtn.style.display = 'none';
+}
+
+function resetFileInput() {
+  const oldInput = document.getElementById('imageUpload');
+
+  const oldInputName = oldInput.name;
+  const parent = oldInput.parentNode;
+
+  parent.removeChild(oldInput);
+
+  const newInput = document.createElement('input');
+  newInput.type = 'file';
+  newInput.id = 'imageUpload';
+  newInput.name = oldInputName;
+  newInput.accept = 'image/*';
+  newInput.hidden = true;
+
+  newInput.addEventListener('change', handleImageChange);
+
+  parent.insertBefore(newInput, parent.firstChild);
+}
+
 function checkCommentExists(button, bs3=false) {
   let comment
   if ( button.id === "comment-button" ) {
@@ -54,32 +156,3 @@ function checkDescriptionExists(button) {
 function setButtonDisable(button) {
   button.style.pointerEvents = "none"
 }
-
-//文字数カウント
-document.addEventListener('DOMContentLoaded', () => {
-  const textareas = document.getElementsByName('comment-content');
-  const charCounts = document.getElementsByName('comment-count');
-
-  function updateCharCount(textarea, charCount) {
-    const currentLength = textarea.value.length;
-    charCount.textContent = currentLength;
-  }
-
-  textareas.forEach(textarea, index => {
-    updateCharCount(textarea, charCounts[index]);
-    textarea.addEventListener('input', () => {
-      const currentLength = textarea.value.length;
-      charCounts[index].textContent = currentLength;
-    });
-  });
-});
-
-window.addEventListener('pageshow', () => {
-  const sendButtons = document.getElementsByName('send-button');
-  sendButtons.forEach(sendButton => {
-    sendButton.style.pointerEvents = "auto";
-    sendButton.style.background = "#206b82";
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
-  });
-});

@@ -46,6 +46,12 @@ rules = [
         {'methods': ['GET', 'POST']},
     ),
     (
+        '<utilization_id>/comment/check/attached_image/<attached_image_filename>',
+        'check_attached_image',
+        utilization.UtilizationController.check_attached_image,
+        {'methods': ['GET']},
+    ),
+    (
         '/<utilization_id>/comment/<comment_id>/approve',
         'approve_comment',
         utilization.UtilizationController.approve_comment,

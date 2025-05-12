@@ -423,8 +423,7 @@ class UtilizationController:
                 'utilization.details', utilization_id=utilization_id
             )
 
-        attached_image_filename = None
-        attached_image: FileStorage = request.files.get("image-upload")
+        attached_image: FileStorage = request.files.get("attached_image")
         if attached_image:
             try:
                 attached_image_filename = UtilizationController._upload_image(
@@ -489,6 +488,14 @@ class UtilizationController:
                 'attached_image_filename': attached_image_filename,
             },
         )
+
+    # <utilization_id>/comment/check/attached_image/<attached_image_filename>
+    @staticmethod
+    def check_attached_image(utilization_id: str, attached_image_filename: str):
+        attached_image_path = detail_service.get_attached_image_path(
+            attached_image_filename
+        )
+        return send_file(attached_image_path)
 
     # utilization/<utilization_id>/comment/<comment_id>/approve
     @staticmethod
