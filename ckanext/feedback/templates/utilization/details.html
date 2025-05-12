@@ -21,9 +21,15 @@
         <div class="centered-content">
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
-              <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">{{ _('Edit') }}</a>
+              <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">
+                <i class="fa-solid fa-pen"></i>
+                {{ _('Edit') }}
+              </a>
               {% if row.approval == false %}
-                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
+                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
+                  <i class="fa-solid fa-check"></i>
+                  {{ _('Approve') }}
+                </button>
               {% endif %}
               <br>
             </form>
@@ -58,9 +64,15 @@
           </a>
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             {% if h.is_base_public_folder_bs3() %}
-              <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
+              <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">
+                <i class="fa-solid fa-award"></i>
+                {{ _('Resolve issue') }}
+              </button>
             {% else %}
-              <button class="btn btn-primary right-aligned" data-bs-toggle="modal" data-bs-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
+              <button class="btn btn-primary right-aligned" data-bs-toggle="modal" data-bs-target="#issue-resolution-form">
+                <i class="fa-solid fa-award"></i>
+                {{ _('Resolve issue') }}
+              </button>
             {% endif %}
           {% endif %}
           <br>
@@ -128,7 +140,10 @@
           {% for comment in page.collection %}
             {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
               <form name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
-                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
+                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
+                  <i class="fa-solid fa-check"></i>
+                  {{ _('Approve') }}
+                </button>
               </form>
             {% endif %}
             <h4>
@@ -190,7 +205,10 @@
             </div>
             <br>
             <div class="modal-footer">
-              <button class="btn btn-primary" onclick="return checkDescriptionExists(this)">{{ _('Certificate') }}</button>
+              <button class="btn btn-primary" onclick="return checkDescriptionExists(this)">
+                <i class="fa-solid fa-award"></i>
+                {{ _('Certificate') }}
+              </button>
             </div>
           </form>
         </div>

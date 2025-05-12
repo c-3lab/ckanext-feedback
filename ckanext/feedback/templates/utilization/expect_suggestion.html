@@ -37,11 +37,20 @@
               <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
               <br>
               <div class="d-flex justify-content-between">
-                <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                <button class="btn btn-default" type="button" onclick="window.history.back();">
+                  <i class="fa-solid fa-chevron-left"></i>
+                  {{ _('Previous') }}
+                </button>
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
+                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  {{ _('Send') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  {{ _('Send') }}
+                </button>
                 {% endif %}
               </div>
             </div>

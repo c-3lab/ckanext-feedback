@@ -47,11 +47,20 @@
               <textarea class="p-2" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-flex justify-content-between">
-                <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                <button class="btn btn-default" type="button" onclick="window.history.back();">
+                  <i class="fa-solid fa-chevron-left"></i>
+                  {{ _('Previous') }}
+                </button>
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select input Comment') }}</button>
+                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-hand-pointer"></i>
+                  {{ _('Select input Comment') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Select input Comment') }}</button>
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-hand-pointer"></i>
+                  {{ _('Select input Comment') }}
+                </button>
                 {% endif %}
               </div>
             </div>
@@ -68,9 +77,15 @@
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary right-aligned" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select proposal Comment') }}</button>
+                <button class="btn btn-primary right-aligned" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-hand-pointer"></i>
+                  {{ _('Select proposal Comment') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">{{ _('Select proposal Comment') }}</button>
+                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-hand-pointer"></i>
+                  {{ _('Select proposal Comment') }}
+                </button>
                 {% endif %}
               </div>
             </div>

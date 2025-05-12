@@ -55,11 +55,17 @@
             <p id="description-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the description length below 2000') }}</p>
           </div>
           <br>
-          <button class="btn btn-primary float-end" onclick="return checkTitleAndDescriptionExists(this);">{{ _('Update') }}</button>
+          <button class="btn btn-primary float-end" onclick="return checkTitleAndDescriptionExists(this);">
+            <i class="fa-solid fa-pen"></i>
+            {{ _('Update') }}
+          </button>
         </form>
         <form name="delete_form" action="{{ h.url_for('utilization.delete', utilization_id=utilization_details.id) }}" method="post">
           <input type="hidden" id="resource_id" name="resource_id" value="{{ resource_details.resource_id }}"/>
-          <button class="btn btn-danger pull-left" onclick="return confirmDelete()">{{ _('Delete') }}</button>
+          <button class="btn btn-danger pull-left" onclick="return confirmDelete()">
+            <i class="fa-solid fa-trash"></i>
+            {{ _('Delete') }}
+          </button>
         </form>
       </div>
     </article>
