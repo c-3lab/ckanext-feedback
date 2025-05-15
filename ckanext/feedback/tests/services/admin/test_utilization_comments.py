@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from ckan import model
@@ -227,34 +227,57 @@ class TestUtilizationComments:
 
         assert mock_mappings.call_args[0] == expected_args
 
-    @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_delete_utilization_comments(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
+    @patch('ckanext.feedback.services.admin.utilization_comments.session')
+    @patch('ckanext.feedback.services.admin.utilization_comments.detail_service')
+    @patch('ckanext.feedback.services.admin.utilization_comments.os.path.exists')
+    @patch('ckanext.feedback.services.admin.utilization_comments.os.remove')
+    def test_delete_utilization_comments(
+        self,
+        mock_remove,
+        mock_exists,
+        mock_detail_service,
+        mock_session,
+    ):
+        comment_id_list = [1, 2, 3]
 
-        utilization_id = str(uuid.uuid4())
-        title = 'test title'
-        description = 'test description'
+        mock_comment1 = MagicMock()
+        mock_comment1.attached_image_filename = "image1.png"
+        mock_comment2 = MagicMock()
+        mock_comment2.attached_image_filename = "image2.png"
+        mock_comment3 = MagicMock()
+        mock_comment3.attached_image_filename = None
 
-        comment_id = str(uuid.uuid4())
-        category = UtilizationCommentCategory.QUESTION
-        content = 'test content'
-        created = datetime.now()
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_filter.all.return_value = [mock_comment1, mock_comment2, mock_comment3]
+        mock_query.filter.return_value = mock_filter
+        mock_session.query.return_value = mock_query
 
-        register_utilization(utilization_id, resource['id'], title, description, True)
-        register_utilization_comment(
-            comment_id, utilization_id, category, content, created, False, None, None
+        mock_detail_service.get_attached_image_path.side_effect = [
+            "/fake/path/image1.png",
+            "/fake/path/image2.png",
+            None,
+        ]
+        mock_exists.side_effect = [True, False]
+
+        utilization_comments.delete_utilization_comments(comment_id_list)
+
+        mock_session.query.assert_called()
+        mock_filter.all.assert_called_once()
+        mock_detail_service.get_attached_image_path.assert_has_calls(
+            [
+                call("image1.png"),
+                call("image2.png"),
+            ]
         )
-
-        session.commit()
-
-        utilization_comment = get_registered_utilization_comment(utilization_id)
-        assert len(utilization_comment) == 1
-
-        utilization_comments.delete_utilization_comments([comment_id])
-
-        utilization_comment = get_registered_utilization_comment(utilization_id)
-        assert len(utilization_comment) == 0
+        mock_exists.assert_has_calls(
+            [
+                call("/fake/path/image1.png"),
+                call("/fake/path/image2.png"),
+            ]
+        )
+        mock_remove.assert_called_once_with("/fake/path/image1.png")
+        mock_filter.delete.assert_called_once_with(synchronize_session='fetch')
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch(
