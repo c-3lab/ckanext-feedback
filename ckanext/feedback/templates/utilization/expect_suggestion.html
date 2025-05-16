@@ -43,13 +43,13 @@
                 </button>
                 {% if h.is_base_public_folder_bs3() %}
                 <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">
-                  <i class="fa-solid fa-paper-plane"></i>
-                  {{ _('Send') }}
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review') }}
                 </button>
                 {% else %}
                 <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">
-                  <i class="fa-solid fa-paper-plane"></i>
-                  {{ _('Send') }}
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review') }}
                 </button>
                 {% endif %}
               </div>

@@ -80,13 +80,13 @@
                 <div class="form-actions">
                   {% if h.is_base_public_folder_bs3() %}
                   <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    {{ _('Send') }}
+                    <i class="fa-solid fa-chevron-right"></i>
+                    {{ _('Review') }}
                   </button>
                   {% else %}
                   <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    {{ _('Send') }}
+                    <i class="fa-solid fa-chevron-right"></i>
+                    {{ _('Review') }}
                   </button>
                   {% endif %}
                 </div>
@@ -230,9 +230,15 @@
             </div>
             <div class="modal-footer">
               {% if h.is_base_public_folder_bs3() %}
-              <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">{{ _('Send') }}</button>
+              <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
               {% else %}
-              <button class="btn btn-primary" onclick="return checkReplyExists(this);">{{ _('Send') }}</button>
+              <button class="btn btn-primary" onclick="return checkReplyExists(this);">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
               {% endif %}
             </div>
           </form>

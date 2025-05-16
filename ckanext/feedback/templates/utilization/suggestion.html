@@ -53,13 +53,13 @@
                 </button>
                 {% if h.is_base_public_folder_bs3() %}
                 <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">
-                  <i class="fa-solid fa-hand-pointer"></i>
-                  {{ _('Select input Comment') }}
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the input comment') }}
                 </button>
                 {% else %}
                 <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">
-                  <i class="fa-solid fa-hand-pointer"></i>
-                  {{ _('Select input Comment') }}
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the input comment') }}
                 </button>
                 {% endif %}
               </div>
@@ -78,13 +78,13 @@
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 {% if h.is_base_public_folder_bs3() %}
                 <button class="btn btn-primary right-aligned" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">
-                  <i class="fa-solid fa-hand-pointer"></i>
-                  {{ _('Select proposal Comment') }}
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the proposal comment') }}
                 </button>
                 {% else %}
                 <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">
-                  <i class="fa-solid fa-hand-pointer"></i>
-                  {{ _('Select proposal Comment') }}
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the proposal comment') }}
                 </button>
                 {% endif %}
               </div>
