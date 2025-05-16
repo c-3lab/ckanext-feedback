@@ -156,46 +156,45 @@ def clean_files(dry_run):
     valid_utilization_comment_files = detail_service.get_comment_attached_image_files()
 
     # Calculate orphan files
-    orphaned_resource_comment_files = all_resource_comment_files - set(
+    invalid_resource_comment_files = all_resource_comment_files - set(
         valid_resource_comment_files
     )
-    orphaned_utilization_comment_files = all_utilization_comment_files - set(
+    invalid_utilization_comment_files = all_utilization_comment_files - set(
         valid_utilization_comment_files
     )
 
     # Delete orphan files (if dry_run=True, do not run, only show target for deletion)
-    delete_orphaned_files(
-        resource_comment_dir, orphaned_resource_comment_files, dry_run
-    )
-    delete_orphaned_files(
-        utilization_comment_dir, orphaned_utilization_comment_files, dry_run
+    delete_invalid_files(dry_run, resource_comment_dir, invalid_resource_comment_files)
+    delete_invalid_files(
+        dry_run, utilization_comment_dir, invalid_utilization_comment_files
     )
 
 
-def delete_orphaned_files(dir_path, orphaned_files, dry_run):
+def delete_invalid_files(dry_run, dir_path, invalid_files):
     # If there are no orphan files to delete, do nothing and exit
-    if not orphaned_files:
-        click.secho(
-            f"No files for deletion were found in {orphaned_files}.", fg='green'
-        )
+    if not invalid_files:
+        click.secho("No files for deletion were found.", fg='green')
         return
 
     # of files to be deleted
-    click.secho(f"{len(orphaned_files)} found unwanted files.", fg='yellow')
+    click.secho(f"{len(invalid_files)} found unwanted files.", fg='yellow')
 
     # Sort by file name
-    for filename in sorted(orphaned_files):
+    for filename in sorted(invalid_files):
         file_path = os.path.join(dir_path, filename)
+        handle_file_deletion(dry_run, file_path)
 
-        if dry_run:
-            # Dry-run mode: shows the file path to be deleted
-            # without actually deleting the file.
-            click.secho(f"[DRY RUN] Deletion Schedule: {file_path}", fg='blue')
-        else:
-            try:
-                # Normal mode: Deletes files and displays completion log
-                os.remove(file_path)
-                click.secho(f"Deleted: {file_path}", fg='green')
-            except Exception as e:
-                # Exception handling when deletion fails
-                click.secho(f"Deletion failure: {file_path}. {e}", fg='red', err=True)
+
+def handle_file_deletion(dry_run, file_path):
+    if dry_run:
+        # Dry-run mode: shows the file path to be deleted
+        # without actually deleting the file.
+        click.secho(f"[DRY RUN] Deletion Schedule: {file_path}", fg='blue')
+    else:
+        try:
+            # Normal mode: Deletes files and displays completion log
+            os.remove(file_path)
+            click.secho(f"Deleted: {file_path}", fg='green')
+        except Exception as e:
+            # Exception handling when deletion fails
+            click.secho(f"Deletion failure: {file_path}. {e}", fg='red', err=True)
