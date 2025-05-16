@@ -7,7 +7,6 @@ from ckan.model.resource import Resource
 from sqlalchemy import func, literal
 
 import ckanext.feedback.services.resource.comment as comment_service
-import ckanext.feedback.services.utilization.details as detail_service
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentSummary,
