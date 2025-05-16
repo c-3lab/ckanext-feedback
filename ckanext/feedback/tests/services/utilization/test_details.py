@@ -1,9 +1,12 @@
 import uuid
 from datetime import datetime
+from unittest.mock import MagicMock, call, patch
 
 import ckan.tests.factories as factories
 import pytest
 from ckan import model
+from ckan.model.package import Package
+from ckan.model.resource import Resource
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -23,8 +26,12 @@ from ckanext.feedback.services.utilization.details import (
     approve_utilization_comment,
     create_issue_resolution,
     create_utilization_comment,
+    get_attached_image_path,
+    get_comment_attached_image_files,
     get_issue_resolutions,
+    get_upload_destination,
     get_utilization,
+    get_utilization_comment,
     get_utilization_comment_categories,
     get_utilization_comments,
     refresh_utilization_comments,
@@ -176,6 +183,51 @@ class TestUtilizationDetailsService:
         result = get_registered_utilization(resource['id'])
         approved_utilization = (id, True, test_datetime, user['id'])
         assert result == approved_utilization
+
+    @patch('ckanext.feedback.services.utilization.details.session')
+    def test_get_utilization_comment(self, mock_session):
+        comment_id = 'comment_id'
+        utilization_id = 'utilization_id'
+        approval = True
+        attached_image_filename = 'attached_image_filename'
+        owner_orgs = ['org1', 'org2']
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.join.return_value = mock_query
+        mock_query.first.return_value = 'mock_comment'
+        mock_session.query.return_value = mock_query
+
+        get_utilization_comment(
+            comment_id, utilization_id, approval, attached_image_filename, owner_orgs
+        )
+
+        mock_session.query.assert_called_once_with(UtilizationComment)
+        assert mock_query.filter.call_count == 5
+        mock_query.join.assert_has_calls(
+            [
+                call(Resource),
+                call(Package),
+            ]
+        )
+        mock_query.first.assert_called_once()
+
+    @patch('ckanext.feedback.services.utilization.details.session')
+    def test_get_utilization_comment_with_none_args(self, mock_session):
+        comment_id = 'comment_id'
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.join.return_value = mock_query
+        mock_query.first.return_value = 'mock_comment'
+        mock_session.query.return_value = mock_query
+
+        get_utilization_comment(comment_id)
+
+        mock_session.query.assert_called_once_with(UtilizationComment)
+        assert mock_query.filter.call_count == 1
+        mock_query.join.assert_not_called()
+        mock_query.first.assert_called_once()
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilization_comments_utilization_id_and_approval_are_None(self):
@@ -650,3 +702,41 @@ class TestUtilizationDetailsService:
         result = get_utilization(utilization_id)
 
         assert result.comment == 1
+
+    @patch('ckanext.feedback.services.utilization.details.get_upload_destination')
+    @patch('ckanext.feedback.services.utilization.details.get_uploader')
+    def test_get_attached_image_path(
+        self, mock_get_uploader, mock_get_upload_destination
+    ):
+        attached_image_filename = 'attached_image_filename'
+
+        mock_get_upload_destination.return_value = '/test/upload/path'
+
+        mock_uploader = MagicMock()
+        mock_get_uploader.return_value = mock_uploader
+
+        get_attached_image_path(attached_image_filename)
+
+        mock_get_upload_destination.assert_called_once()
+        mock_get_uploader.assert_called_once()
+
+    def test_get_upload_destination(self):
+        assert get_upload_destination() == 'feedback_utilization_comment'
+
+    @patch('ckanext.feedback.services.utilization.details.session')
+    def test_get_comment_attached_image_files(self, mock_session):
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.all.return_value = [
+            ('attached_image_filename1',),
+            ('attached_image_filename2',),
+        ]
+        mock_session.query.return_value = mock_query
+
+        get_comment_attached_image_files()
+
+        mock_session.query.assert_called_once_with(
+            UtilizationComment.attached_image_filename
+        )
+        assert mock_query.filter.call_count == 1
+        mock_query.all.assert_called_once()
