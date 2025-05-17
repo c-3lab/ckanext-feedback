@@ -35,9 +35,9 @@
           <h4>{{ _('Comment') }}</h4>
           {% if h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org) %}
             <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
+            <br>
+            <br>
           {% endif %}
-          <br>
-          <br>
           {% if not cookie or not (h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org)) %}
             {% if h.is_enabled_rating(pkg_dict.owner_org) %}
               {{ _('Rating') }}
@@ -108,7 +108,6 @@
             </form>
           {% else %}
             <p class="comment-disallowed">{{ _('* You have already commented on this data resource') }}</p>
-            <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
           {% endif %}
           <br>
           {% if page.collection|length %}
