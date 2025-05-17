@@ -1,6 +1,6 @@
 # resource モジュール
 
-データリソースに対してコメントや評価ができるモジュールです。
+データリソースに対してコメントすることができ、コメント数を可視化するモジュールです。
 
 ## 導入の利点
 
@@ -13,26 +13,48 @@
 
 ## 機能説明
 
-【resource モジュール　コメント登録画面　イメージ図】  
-![resource モジュール　コメント登録画面　イメージ図](../assets/register_resource_comment.jpg)
+【リソース画面　イメージ図】  
+![リソースごとのコメント数表示　イメージ図](../assets/resource_comment_num.jpg) 
+![データセットのコメント数表示　イメージ図](../assets/resource_details_comment_num.jpg)
 
-【resource モジュール　データセット詳細画面　イメージ図】  
-![resource モジュール　データセット詳細画面　イメージ図](../assets/comments_rating_image.jpg)  
+【リソース詳細画面　イメージ図】
+![リソースのコメント数表示　イメージ図](../assets/resource_detail_details_comment_num.jpg)
 
-* データリソースに対して以下のことが出来ます
-  * データリソースごとへのコメント
+【コメント画面　イメージ図】  
+![コメント画面　イメージ図](../assets/resource_comment.jpg)
 
-* 以下の集計情報を可視化することが出来ます
-  * データリソースへのコメント数
+ 
+
+* データリソースに対して以下のことができます
+  * データリソースへのコメント（画像を添付することもできます）
+
+* 以下の集計情報を可視化することができます
+  * データセットごとのコメント数
+  * データリソースごとのコメント数
 
 ## オプション
 
 ### repeat post limit 機能
 
+【コメント画面　イメージ図】  
+![コメント投稿前　イメージ図](../assets/repeat-post-limit_before_post_comment.jpg)
+![コメント投稿後　イメージ図](../assets/repeat-post-limit_after_post_comment.jpg)
+
+
 1つのリソースに対してコメントできる回数を各ユーザーごと、１回に制限することができます。(ユーザーのCookie情報を利用)  
 ※ 不正な投稿を防ぐため
 
 ### rating 機能
+
+【リソース画面　イメージ図】  
+![リソースごとの平均評価数表示　イメージ図](../assets/resource_rating_avg.jpg) 
+![データセットの平均評価数表示　イメージ図](../assets/resource_details_rating_avg.jpg)
+
+【リソース詳細画面　イメージ図】
+![リソースの平均評価数表示　イメージ図](../assets/resource_detail_details_rating_avg.jpg)
+
+【コメント画面　イメージ図】 
+![rating　イメージ図](../assets/rating.jpg)
 
 データリソースごとへの評価を星5つで表現することができます。
 
