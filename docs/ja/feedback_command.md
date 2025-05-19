@@ -2,24 +2,22 @@
 
 運用・保守を目的とした専用の CLI コマンドを提供しています。  
 フィードバック機能に関するデータの 初期化・整備・クリーンアップ を柔軟に行うことができます。  
-**本ドキュメントでは、`ckan feedback` サブコマンドの使い方を体系的にまとめています。**
-
 
 ※ ckanコマンドを実行する際は設定ファイル（`ckan.ini`）を指定する必要があります。
 
 ## 目次
 
-- [ckan feedback init](#ckan-feedback-init)
+- [init](#init)
   - [実行](#実行)
   - [オプション](#オプション)
   - [実行例](#実行例)
-- [ckan feedback clean files](#ckan-feedback-clean-files)
+- [clean-files](#clean-files)
   - [実行](#実行-1)
   - [オプション](#オプション-1)
   - [実行例](#実行例-1)
   - [補足：削除対象の判定基準](#補足削除対象の判定基準)
 
-## ckan feedback init
+## init
 
 指定した機能に関係する PostgreSQLのテーブルを初期化 します。  
 初期化の対象はオプションで制御でき、指定がない場合は すべてのテーブル が対象となります。
@@ -27,7 +25,7 @@
 ### 実行
 
 ```bash
-ckan feedback init [options]
+ckan ckan.ini feedback init [options]
 ```
 
 ### オプション
@@ -136,7 +134,7 @@ ckan ckan.ini feedback init -P root
 ckan ckan.ini feedback init -h postgresdb -u root -P root
 ```
 
-## ckan feedback clean-files
+## clean-files
 
 コメント投稿時にアップロードされた画像ファイルのうち、実際にはコメントに添付されなかった不要なファイルを検索・削除します。  
 フィードバック投稿中に一時的にアップロードされたものの、投稿が完了せずに残ったファイルなどが対象です。
@@ -144,7 +142,7 @@ ckan ckan.ini feedback init -h postgresdb -u root -P root
 ### 実行
 
 ```bash
-ckan feedback clean-files [options]
+ckan ckan.ini feedback clean-files [options]
 ```
 
 ### オプション
@@ -171,5 +169,5 @@ ckan ckan.ini feedback clean-files --dry-run
 - 投稿完了したコメントに **関連付けられていないファイル**
 - サーバーに一時的に保存されたまま **孤立した画像ファイル**
 
-※ 意図せず消してしまわないよう、`--dry-run` での事前確認を推奨します。
+※ 意図せず消してしまわないよう、`--dry-run` での事前確認を推奨します。  
 ※ 本コマンドは、cronなどで定期的に実行することを推奨します。
