@@ -31,6 +31,30 @@ rules = [
         admin.AdminController.delete_target,
         {'methods': ['POST']},
     ),
+    (
+        '/admin/aggregation',
+        'aggregation',
+        admin.AdminController.aggregation,
+        {'methods': ['GET']},
+    ),
+    (
+        '/admin/aggregation/download_monthly',
+        'download_monthly',
+        admin.AdminController.download_monthly,
+        {'methods': ['GET']},
+    ),
+    (
+        '/admin/aggregation/download_yearly',
+        'download_yearly',
+        admin.AdminController.download_yearly,
+        {'methods': ['GET']},
+    ),
+    (
+        '/admin/aggregation/download_all_time',
+        'download_all_time',
+        admin.AdminController.download_all_time,
+        {'methods': ['GET']},
+    ),
 ]
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})

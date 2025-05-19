@@ -1,51 +1,94 @@
 import logging
+import uuid
 from datetime import datetime
 
 from ckan.model import Resource
-from sqlalchemy import func
+from sqlalchemy import extract, func
 
-from ckanext.feedback.models.likes import ResourceLike
+from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.session import session
 
 log = logging.getLogger(__name__)
 
 
-def get_all_resource_ids():
-    resource_ids = session.query(ResourceLike.resource_id).with_for_update().all()
-
-    resource_id_list = [r.resource_id for r in resource_ids]
-
-    return resource_id_list
-
-
-def create_resource_like(
-    resource_id, like_count=0, created=datetime.now(), updated=datetime.now()
-):
-    resource_like = ResourceLike(
-        resource_id=resource_id,
-        like_count=like_count,
-        created=created,
-        updated=updated,
-    )
-    session.add(resource_like)
-
-
 def increment_resource_like_count(resource_id):
-    session.query(ResourceLike).filter(ResourceLike.resource_id == resource_id).update(
-        {
-            ResourceLike.like_count: ResourceLike.like_count + 1,
-            ResourceLike.updated: datetime.now(),
-        }
+    resource_like = (
+        session.query(ResourceLike)
+        .filter(ResourceLike.resource_id == resource_id)
+        .first()
     )
+
+    if resource_like is None:
+        resource_like = ResourceLike(
+            id=str(uuid.uuid4()),
+            resource_id=resource_id,
+            like_count=1,
+            created=datetime.now(),
+            updated=datetime.now(),
+        )
+        session.add(resource_like)
+    else:
+        resource_like.like_count = resource_like.like_count + 1
+        resource_like.updated = datetime.now()
 
 
 def decrement_resource_like_count(resource_id):
-    session.query(ResourceLike).filter(ResourceLike.resource_id == resource_id).update(
-        {
-            ResourceLike.like_count: ResourceLike.like_count - 1,
-            ResourceLike.updated: datetime.now(),
-        }
+    resource_like = (
+        session.query(ResourceLike)
+        .filter(ResourceLike.resource_id == resource_id)
+        .first()
     )
+
+    if resource_like is not None:
+        resource_like.like_count = resource_like.like_count - 1
+        resource_like.updated = datetime.now()
+
+
+def increment_resource_like_count_monthly(resource_id):
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+
+    resource_like_monthly = (
+        session.query(ResourceLikeMonthly)
+        .filter(
+            ResourceLikeMonthly.resource_id == resource_id,
+            extract('year', ResourceLikeMonthly.created) == current_year,
+            extract('month', ResourceLikeMonthly.created) == current_month,
+        )
+        .first()
+    )
+
+    if resource_like_monthly is None:
+        resource_like_monthly = ResourceLikeMonthly(
+            id=str(uuid.uuid4()),
+            resource_id=resource_id,
+            like_count=1,
+            created=datetime.now(),
+            updated=datetime.now(),
+        )
+        session.add(resource_like_monthly)
+    else:
+        resource_like_monthly.like_count = resource_like_monthly.like_count + 1
+        resource_like_monthly.updated = datetime.now()
+
+
+def decrement_resource_like_count_monthly(resource_id):
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+
+    resource_like_monthly = (
+        session.query(ResourceLikeMonthly)
+        .filter(
+            ResourceLikeMonthly.resource_id == resource_id,
+            extract('year', ResourceLikeMonthly.created) == current_year,
+            extract('month', ResourceLikeMonthly.created) == current_month,
+        )
+        .first()
+    )
+
+    if resource_like_monthly is not None:
+        resource_like_monthly.like_count = resource_like_monthly.like_count - 1
+        resource_like_monthly.updated = datetime.now()
 
 
 def get_resource_like_count(resource_id):
@@ -64,7 +107,23 @@ def get_package_like_count(package_id):
     count = (
         session.query(func.sum(ResourceLike.like_count))
         .join(Resource)
-        .filter(Resource.package_id == package_id)
+        .filter(
+            Resource.package_id == package_id,
+            Resource.state == "active",
+        )
         .scalar()
     )
+    return count or 0
+
+
+def get_resource_like_count_monthly(resource_id, period):
+    count = (
+        session.query(ResourceLikeMonthly.like_count)
+        .filter(
+            ResourceLikeMonthly.resource_id == resource_id,
+            func.date_trunc('month', ResourceLikeMonthly.created) == func.date(period),
+        )
+        .scalar()
+    )
+
     return count or 0

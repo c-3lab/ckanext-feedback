@@ -362,8 +362,8 @@ def validate_organization_name_in_group(organization_name):
         raise toolkit.ValidationError(
             {
                 "message": (
-                    "The specified organization name does not exist. "
-                    "Please enter a valid organization name."
+                    "The specified organization does not exist or "
+                    "may have been deleted. Please enter a valid organization name."
                 )
             }
         )

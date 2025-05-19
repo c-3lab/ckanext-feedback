@@ -36,7 +36,11 @@ def get_resource_comments_query(org_list):
         .join(Group, Package.owner_org == Group.id)
         .join(Resource)
         .join(ResourceComment)
-        .filter(Group.name.in_(org_names))
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
     )
 
     return query
@@ -54,7 +58,11 @@ def get_simple_resource_comments_query(org_list):
         .join(Package, Group.id == Package.owner_org)
         .join(Resource, Package.id == Resource.package_id)
         .join(ResourceComment, Resource.id == ResourceComment.resource_id)
-        .filter(Group.name.in_(org_names))
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
     )
 
     return query

@@ -17,6 +17,7 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentCategory,
+    UtilizationSummary,
 )
 from ckanext.feedback.services.admin import utilization as utilization_service
 
@@ -58,6 +59,14 @@ def get_registered_utilization(resource_id):
         )
         .filter(Utilization.resource_id == resource_id)
         .all()
+    )
+
+
+def get_registered_utilization_summary(resource_id):
+    return (
+        session.query(UtilizationSummary)
+        .filter(UtilizationSummary.resource_id == resource_id)
+        .first()
     )
 
 
@@ -108,7 +117,7 @@ class TestUtilization:
         assert "is_approved" in sql_str
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilizations(self):
+    def test_get_utilizations_by_comment_ids(self):
         dataset = factories.Dataset()
         resource = factories.Resource(package_id=dataset['id'])
 
@@ -147,17 +156,52 @@ class TestUtilization:
         session.commit()
 
         assert (
-            len(utilization_service.get_utilizations([comment_id, another_comment_id]))
+            len(
+                utilization_service.get_utilizations_by_comment_ids(
+                    [comment_id, another_comment_id]
+                )
+            )
             == 2
         )
         assert (
-            utilization_service.get_utilizations([comment_id, another_comment_id])[0].id
+            utilization_service.get_utilizations_by_comment_ids(
+                [comment_id, another_comment_id]
+            )[0].id
             == utilization_id
         )
         assert (
-            utilization_service.get_utilizations([comment_id, another_comment_id])[1].id
+            utilization_service.get_utilizations_by_comment_ids(
+                [comment_id, another_comment_id]
+            )[1].id
             == another_utilization_id
         )
+
+    def test_get_utilization_details_by_ids(self):
+        package = factories.Dataset()
+        resource = factories.Resource(package_id=package['id'])
+
+        utilization_id = str(uuid.uuid4())
+        title = 'test title'
+        description = 'test description'
+
+        register_utilization(utilization_id, resource['id'], title, description, True)
+
+        utilization_id_list = [utilization_id]
+
+        utilizations = utilization_service.get_utilization_details_by_ids(
+            utilization_id_list
+        )
+
+        assert len(utilizations) == 1
+        assert utilizations[0].title == title
+        assert utilizations[0].url is None
+        assert utilizations[0].description == description
+        assert utilizations[0].comment == 0
+        assert utilizations[0].approval
+        assert utilizations[0].resource_name == resource['name']
+        assert utilizations[0].resource_id == resource['id']
+        assert utilizations[0].package_name == package['name']
+        assert utilizations[0].owner_org == package['owner_org']
 
     def test_get_utilization_ids(self):
         resource = factories.Resource()
@@ -179,6 +223,29 @@ class TestUtilization:
         utilization_ids = utilization_service.get_utilization_ids(utilization_id_list)
 
         assert utilization_ids == [utilization_id]
+
+    def test_get_utilization_resource_ids(self):
+        resource = factories.Resource()
+
+        utilization_id = str(uuid.uuid4())
+        another_utilization_id = str(uuid.uuid4())
+        title = 'test title'
+        description = 'test description'
+
+        register_utilization(utilization_id, resource['id'], title, description, False)
+        register_utilization(
+            another_utilization_id, resource['id'], title, description, True
+        )
+
+        session.commit()
+
+        utilization_id_list = [utilization_id]
+
+        resource_ids = utilization_service.get_utilization_resource_ids(
+            utilization_id_list
+        )
+
+        assert resource_ids == [resource['id']]
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch('ckanext.feedback.services.admin.utilization.session.bulk_update_mappings')
@@ -230,3 +297,33 @@ class TestUtilization:
 
         utilization = get_registered_utilization(resource['id'])
         assert len(utilization) == 0
+
+    def test_refresh_utilization_summary(self):
+        resource = factories.Resource()
+
+        utilization_id = str(uuid.uuid4())
+        title = 'test title'
+        description = 'test description'
+
+        register_utilization(utilization_id, resource['id'], title, description, True)
+
+        session.commit()
+
+        resource_ids = [resource['id']]
+        utilization_service.refresh_utilization_summary(resource_ids)
+
+        utilization_summary = get_registered_utilization_summary(resource['id'])
+
+        assert utilization_summary.utilization == 1
+
+        another_utilization_id = str(uuid.uuid4())
+
+        register_utilization(
+            another_utilization_id, resource['id'], title, description, True
+        )
+
+        utilization_service.refresh_utilization_summary(resource_ids)
+
+        utilization_summary = get_registered_utilization_summary(resource['id'])
+
+        assert utilization_summary.utilization == 2

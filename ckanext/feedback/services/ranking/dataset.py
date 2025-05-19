@@ -38,6 +38,10 @@ def get_download_ranking(
         )
         .join(total_download_count, Package.id == total_download_count.c.package_id)
         .join(Group, Package.owner_org == Group.id)
+        .filter(
+            Package.state == 'active',
+            Group.state == 'active',
+        )
     )
 
     if enable_org and enable_org != [None]:
@@ -71,6 +75,7 @@ def get_download_count_by_period(start_year_month, end_year_month):
         )
         .join(DownloadMonthly, Resource.id == DownloadMonthly.resource_id, isouter=True)
         .filter(
+            Resource.state == 'active',
             func.date(DownloadMonthly.created) >= start_date,
             func.date(DownloadMonthly.created) <= end_date,
         )
@@ -87,6 +92,7 @@ def get_total_download_count():
             func.sum(DownloadSummary.download).label('download_count'),
         )
         .join(DownloadSummary, Resource.id == DownloadSummary.resource_id)
+        .filter(Resource.state == 'active')
         .group_by(Resource.package_id)
         .subquery()
     )
