@@ -214,7 +214,7 @@ class TestFeedbackCommand:
         delete_invalid_files(dry_run, dir_path, invalid_files)
 
         mock_secho.assert_called_once_with(
-            f"{len(invalid_files)} found unwanted files.", fg='yellow'
+            f"Found {len(invalid_files)} unwanted files in: {dir_path}", fg='yellow'
         )
         mock_handle_file_deletion.assert_called_once_with(
             dry_run, '/test/upload/path/feedback_resource_comment/image3.png'
@@ -229,7 +229,7 @@ class TestFeedbackCommand:
         delete_invalid_files(dry_run, dir_path, invalid_files)
 
         mock_secho.assert_called_once_with(
-            "No files for deletion were found.", fg='green'
+            f"No files for deletion were found: {dir_path}", fg='green'
         )
 
     @patch('ckanext.feedback.command.feedback.os.remove')
