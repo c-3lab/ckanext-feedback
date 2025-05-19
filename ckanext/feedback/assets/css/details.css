@@ -125,3 +125,7 @@ label.radio {
   bottom: 0;
   right: 0;
 }
+
+input[type="file"].imageUpload {
+  display: none;
+}
