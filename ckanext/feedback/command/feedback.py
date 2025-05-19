@@ -183,11 +183,13 @@ def clean_files(dry_run):
 def delete_invalid_files(dry_run, dir_path, invalid_files):
     # If there are no orphan files to delete, do nothing and exit
     if not invalid_files:
-        click.secho("No files for deletion were found.", fg='green')
+        click.secho(f"No files for deletion were found: {dir_path}", fg='green')
         return
 
     # of files to be deleted
-    click.secho(f"{len(invalid_files)} found unwanted files.", fg='yellow')
+    click.secho(
+        f"Found {len(invalid_files)} unwanted files in: {dir_path}", fg='yellow'
+    )
 
     # Sort by file name
     for filename in sorted(invalid_files):
