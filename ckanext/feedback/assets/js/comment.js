@@ -102,17 +102,21 @@ function createPreview(src) {
 function resetFileInput() {
   const oldInput = document.getElementById('imageUpload');
 
+  const oldInputType = oldInput.type;
+  const oldInputId = oldInput.id;
+  const oldInputClassName = oldInput.className;
   const oldInputName = oldInput.name;
+  const oldInputAccept = oldInput.accept;
   const parent = oldInput.parentNode;
 
   parent.removeChild(oldInput);
 
   const newInput = document.createElement('input');
-  newInput.type = 'file';
-  newInput.id = 'imageUpload';
+  newInput.type = oldInputType;
+  newInput.id = oldInputId;
+  newInput.className = oldInputClassName;
   newInput.name = oldInputName;
-  newInput.accept = 'image/*';
-  newInput.hidden = true;
+  newInput.accept = oldInputAccept;
 
   newInput.addEventListener('change', handleImageChange);
 
