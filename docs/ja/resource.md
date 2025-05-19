@@ -17,7 +17,7 @@
 ![リソースごとのコメント数表示　イメージ図](../assets/resource_comment_num.jpg) 
 ![データセットのコメント数表示　イメージ図](../assets/resource_details_comment_num.jpg)
 
-【リソース詳細画面　イメージ図】
+【リソース詳細画面　イメージ図】  
 ![リソースのコメント数表示　イメージ図](../assets/resource_detail_details_comment_num.jpg)
 
 【コメント画面　イメージ図】  
@@ -41,8 +41,8 @@
 ![コメント投稿後　イメージ図](../assets/repeat-post-limit_after_post_comment.jpg)
 
 
-1つのリソースに対してコメントできる回数を各ユーザーごと、１回に制限することができます。(ユーザーのCookie情報を利用)  
-※ 不正な投稿を防ぐため
+不正な投稿を防ぐため、1つのリソースに対してコメントできる回数を各ユーザーごと、１回に制限することができます。  
+設定することで、専用のメッセージが表示されます。
 
 ### rating 機能
 
@@ -50,10 +50,10 @@
 ![リソースごとの平均評価数表示　イメージ図](../assets/resource_rating_avg.jpg) 
 ![データセットの平均評価数表示　イメージ図](../assets/resource_details_rating_avg.jpg)
 
-【リソース詳細画面　イメージ図】
+【リソース詳細画面　イメージ図】  
 ![リソースの平均評価数表示　イメージ図](../assets/resource_detail_details_rating_avg.jpg)
 
-【コメント画面　イメージ図】 
+【コメント画面　イメージ図】  
 ![rating　イメージ図](../assets/rating.jpg)
 
 データリソースごとへの評価を星5つで表現することができます。

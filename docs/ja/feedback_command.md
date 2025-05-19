@@ -5,7 +5,19 @@
 **本ドキュメントでは、`ckan feedback` サブコマンドの使い方を体系的にまとめています。**
 
 
-※ ckanコマンドを実行する際は```--config=/etc/ckan/production.ini```と記述して、configファイルを指定する必要があります。
+※ ckanコマンドを実行する際は設定ファイル（`ckan.ini`）を指定する必要があります。
+
+## 目次
+
+- [ckan feedback init](#ckan-feedback-init)
+  - [実行](#実行)
+  - [オプション](#オプション)
+  - [実行例](#実行例)
+- [ckan feedback clean files](#ckan-feedback-clean-files)
+  - [実行](#実行-1)
+  - [オプション](#オプション-1)
+  - [実行例](#実行例-1)
+  - [補足：削除対象の判定基準](#補足削除対象の判定基準)
 
 ## ckan feedback init
 
@@ -20,19 +32,19 @@ ckan feedback init [options]
 
 ### オプション
 
-```
--m, --modules < utilization/ resource/ download >
+```bash
+-m, --modules < utilization resource download >
 ```
 
 対象機能を限定して初期化処理を実行（任意）
-- 複数指定可（カンマ区切りなどで対応）
-- 指定なしの場合： すべてのテーブルに対して初期化処理を実行
-- 利用可能なモジュール：
-  - utilization
-  - resource
-  - download
 
-```
+指定なし： すべてのテーブルに対して初期化処理を実行  
+モジュール指定：以下のモジュール名を複数指定可能
+- utilization
+- resource
+- download
+
+```bash
 -h, --host <host_name>
 ```
 
@@ -43,8 +55,8 @@ PostgreSQLホスト名の指定（任意）
 ２．環境変数 POSTGRES_HOST  
 ３．CKANのデフォルト：db
 
-```
--p, --port \<port\>
+```bash
+-p, --port <port>
 ```
 
 PostgreSQLポート番号の指定（任意）
@@ -54,7 +66,7 @@ PostgreSQLポート番号の指定（任意）
 ２．環境変数 POSTGRES_PORT  
 ３．CKANのデフォルト：5432
 
-```
+```bash
 -d, --dbname <db_name>
 ```
 
@@ -65,7 +77,7 @@ PostgreSQLデータベース名の指定（任意）
 ２．環境変数 POSTGRES_DB  
 ３．CKANのデフォルト：ckan
 
-```
+```bash
 -u, --user <user_name>
 ```
 
@@ -76,8 +88,8 @@ PostgreSQL接続ユーザ名の指定（任意）
 ２．環境変数 POSTGRES_USER  
 ３．CKANのデフォルト：ckan
 
-```
--P, --password \<password\>
+```bash
+-P, --password <password>
 ```
 
 PostgreSQL接続パスワードの指定（任意）
@@ -91,37 +103,37 @@ PostgreSQL接続パスワードの指定（任意）
 
 ```bash
 # ckanext-feedback plugins に関わる全てのテーブルに対して初期化を行う
-ckan --config=/etc/ckan/production.ini feedback init
+ckan ckan.ini feedback init
 
 # utilization(利活用方法)機能に関わるテーブルに対して初期化を行う
-ckan --config=/etc/ckan/production.ini feedback init -m utilization
+ckan ckan.ini feedback init -m utilization
 
 # resource(データリソース)機能に関わるテーブルに対して初期化を行う
-ckan --config=/etc/ckan/production.ini feedback init -m resource
+ckan ckan.ini feedback init -m resource
 
 # download(ダウンロード)機能に関わるテーブルに対して初期化を行う
-ckan --config=/etc/ckan/production.ini feedback init -m download
+ckan ckan.ini feedback init -m download
 
 # resource(データリソース)機能とdownload(ダウンロード)機能に関わるテーブルに対して初期化を行う
-ckan --config=/etc/ckan/production.ini feedback init -m resource -m download
+ckan ckan.ini feedback init -m resource -m download
 
 # ホスト名として"postgresdb"を指定する
-ckan --config=/etc/ckan/production.ini feedback init -h postgresdb
+ckan ckan.ini feedback init -h postgresdb
 
 # ポート番号として"5000"を指定する
-ckan --config=/etc/ckan/production.ini feedback init -p 5000
+ckan ckan.ini feedback init -p 5000
 
 # データベース名として"ckandb"を指定する
-ckan --config=/etc/ckan/production.ini feedback init -d ckandb
+ckan ckan.ini feedback init -d ckandb
 
 # ユーザ名として"root"を指定する
-ckan --config=/etc/ckan/production.ini feedback init -u root
+ckan ckan.ini feedback init -u root
 
 # パスワードとして"root"を指定する
-ckan --config=/etc/ckan/production.ini feedback init -P root
+ckan ckan.ini feedback init -P root
 
 # ホスト名として"postgresdb", ユーザ名として"root", パスワードとして"root"を指定する
-ckan --config=/etc/ckan/production.ini feedback init -h postgresdb -u root -P root
+ckan ckan.ini feedback init -h postgresdb -u root -P root
 ```
 
 ## ckan feedback clean-files
@@ -137,7 +149,7 @@ ckan feedback clean-files [options]
 
 ### オプション
 
-```
+```bash
 -d, --dry-run
 ```
 
@@ -146,12 +158,12 @@ ckan feedback clean-files [options]
 
 ### 実行例
 
-```
+```bash
 # 不要ファイルを削除する
-ckan --config=/etc/ckan/production.ini feedback clean-files
+ckan ckan.ini feedback clean-files
 
 # 実際には削除せず、削除対象となるファイルの一覧を表示する
-ckan --config=/etc/ckan/production.ini feedback clean-files --dry-run
+ckan ckan.ini feedback clean-files --dry-run
 ```
 
 ### 補足：削除対象の判定基準
@@ -160,3 +172,4 @@ ckan --config=/etc/ckan/production.ini feedback clean-files --dry-run
 - サーバーに一時的に保存されたまま **孤立した画像ファイル**
 
 ※ 意図せず消してしまわないよう、`--dry-run` での事前確認を推奨します。
+※ 本コマンドは、cronなどで定期的に実行することを推奨します。
