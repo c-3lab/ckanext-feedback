@@ -529,7 +529,7 @@ msgstr "コメントは1000文字以下にしてください"
 #: ckanext/feedback/templates/resource/comment.html:75
 #: ckanext/feedback/templates/utilization/details.html:103
 msgid "Image Attachment"
-msgstr ""
+msgstr "画像添付"
 
 #: ckanext/feedback/templates/resource/comment.html:84
 #: ckanext/feedback/templates/resource/comment.html:89
