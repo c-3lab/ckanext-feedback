@@ -162,6 +162,6 @@ label.radio {
   right: 0;
 }
 
-.imageUpload {
+input[type="file"].imageUpload {
   display: none;
 }
