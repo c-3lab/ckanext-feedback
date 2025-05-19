@@ -1,8 +1,10 @@
 from datetime import datetime
 
+from ckan.lib.uploader import get_uploader
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
+from ckan.types import PUploader
 from flask import request
 
 from ckanext.feedback.models.resource_comment import (
@@ -26,6 +28,31 @@ def get_resource(resource_id):
         .filter(Resource.id == resource_id)
         .first()
     )
+
+
+# Get a comment related to the dataset or resource
+def get_resource_comment(
+    comment_id: str,
+    resource_id: str = None,
+    approval: bool = None,
+    attached_image_filename: str = None,
+    owner_orgs=None,
+):
+    query = session.query(ResourceComment).filter(ResourceComment.id == comment_id)
+    if resource_id is not None:
+        query = query.filter(ResourceComment.resource_id == resource_id)
+    if approval is not None:
+        query = query.filter(ResourceComment.approval == approval)
+    if attached_image_filename is not None:
+        query = query.filter(
+            ResourceComment.attached_image_filename == attached_image_filename
+        )
+    if owner_orgs is not None:
+        query = (
+            query.join(Resource).join(Package).filter(Package.owner_org.in_(owner_orgs))
+        )
+
+    return query.first()
 
 
 # Get comments related to the dataset or resource
@@ -55,12 +82,15 @@ def get_resource_comment_categories():
 
 
 # Create new comment
-def create_resource_comment(resource_id, category, content, rating):
+def create_resource_comment(
+    resource_id, category, content, rating, attached_image_filename=None
+):
     comment = ResourceComment(
         resource_id=resource_id,
         category=category,
         content=content,
         rating=rating,
+        attached_image_filename=attached_image_filename,
     )
     session.add(comment)
 
@@ -95,3 +125,25 @@ def create_reply(resource_comment_id, content, creator_user_id):
 # Get cookie
 def get_cookie(resource_id):
     return request.cookies.get(resource_id)
+
+
+# Get path for attached image
+def get_attached_image_path(attached_image_filename: str) -> str:
+    upload_to = get_upload_destination()
+    uploader: PUploader = get_uploader(upload_to, attached_image_filename)
+    return uploader.old_filepath
+
+
+# Get directory name to save attached image
+def get_upload_destination() -> str:
+    return "feedback_resouce_comment"
+
+
+def get_comment_attached_image_files():
+    image_files = (
+        session.query(ResourceComment.attached_image_filename)
+        .filter(ResourceComment.attached_image_filename.isnot(None))
+        .all()
+    )
+
+    return [filename for (filename,) in image_files]

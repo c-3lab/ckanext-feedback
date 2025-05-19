@@ -28,17 +28,29 @@
         <div class="comment-contents" style="display: flex; gap: 10px;">
           <form name="input_comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post" style="flex: 1;">
             <input type="hidden" name="category" value="{{ selected_category }}">
+            {% if attached_image_filename %}
+            <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+            {% endif %}
             <input type="hidden" name="comment-suggested" value="True">
             <div style="flex: 1;">
               <textarea class="p-2" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
               <br>
               <div class="d-flex justify-content-between">
-                <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                <button class="btn btn-default" type="button" onclick="window.history.back();">
+                  <i class="fa-solid fa-chevron-left"></i>
+                  {{ _('Previous') }}
+                </button>
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
+                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review') }}
+                </button>
                 {% endif %}
               </div>
             </div>

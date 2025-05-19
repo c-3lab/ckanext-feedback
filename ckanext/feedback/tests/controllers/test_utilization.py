@@ -5,9 +5,11 @@ from ckan import model
 from ckan.common import _, config
 from ckan.logic import get_action
 from ckan.model import Session, User
+from ckan.plugins import toolkit
 from ckan.tests import factories
 from flask import Flask, g
 from flask_babel import Babel
+from werkzeug.exceptions import NotFound
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -1049,6 +1051,7 @@ class TestUtilizationController:
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': 'REQUEST',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -1151,6 +1154,7 @@ class TestUtilizationController:
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': 'REQUEST',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -1233,6 +1237,7 @@ class TestUtilizationController:
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': 'REQUEST',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -1321,6 +1326,7 @@ class TestUtilizationController:
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': 'REQUEST',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -1332,7 +1338,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    def test_details_thnak_with_user(
+    def test_details_thank_with_user(
         self,
         mock_render,
         mock_detail_service,
@@ -1410,6 +1416,7 @@ class TestUtilizationController:
                 'issue_resolutions': 'issue resolutions',
                 'selected_category': 'THANK',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -1453,6 +1460,10 @@ class TestUtilizationController:
         )
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
@@ -1463,24 +1474,104 @@ class TestUtilizationController:
         mock_flash_success,
         mock_session_commit,
         mock_detail_service,
+        mock_upload_image,
+        mock_files,
         mock_form,
     ):
         utilization_id = 'utilization id'
         category = 'category'
         content = 'content'
+        attached_image_filename = 'attached_image_filename'
 
-        mock_form.get.side_effect = [category, content, True]
+        mock_form.get.side_effect = [category, content, attached_image_filename]
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.return_value = attached_image_filename
 
         UtilizationController.create_comment(utilization_id)
 
         mock_detail_service.create_utilization_comment.assert_called_once_with(
-            utilization_id, category, content
+            utilization_id, category, content, attached_image_filename
         )
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
+    def test_create_comment_with_bad_image(
+        self,
+        mock_details,
+        mock_flash_error,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+    ):
+        utilization_id = 'utilization id'
+        category = 'category'
+        content = 'content'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_form.get.side_effect = [category, content, attached_image_filename]
+
+        mock_file = MagicMock()
+        mock_file.filename = 'bad_image.txt'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = toolkit.ValidationError(
+            {'upload': ['Invalid image file type']}
+        )
+
+        UtilizationController.create_comment(utilization_id)
+
+        mock_flash_error.assert_called_once_with(
+            {'Upload': 'Invalid image file type'},
+            allow_html=True,
+        )
+        mock_details.assert_called_once_with(utilization_id, category, content)
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
+    def test_create_comment_with_bad_image_exception(
+        self,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+    ):
+        utilization_id = 'utilization id'
+        category = 'category'
+        content = 'content'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_form.get.side_effect = [category, content, attached_image_filename]
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = Exception('Unexpected error')
+
+        with pytest.raises(Exception):
+            UtilizationController.create_comment(utilization_id)
+
+        mock_upload_image.assert_called_once_with(mock_file)
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -1496,20 +1587,23 @@ class TestUtilizationController:
         utilization_id = 'utilization id'
         category = ''
         content = ''
+        attached_image_filename = None
 
-        mock_form.get.side_effect = [category, content, True, True]
+        mock_form.get.side_effect = [category, content, attached_image_filename]
 
         UtilizationController.create_comment(utilization_id)
 
         mock_toolkit_abort.assert_called_once_with(400)
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     def test_create_comment_without_comment_length(
         self,
         mock_flash_flash_error,
         mock_redirect_to,
+        mock_files,
         mock_form,
     ):
         utilization_id = 'utilization id'
@@ -1519,8 +1613,11 @@ class TestUtilizationController:
             content += content
             if 1000 < len(content):
                 break
+        attached_image_filename = None
 
-        mock_form.get.side_effect = [category, content, True, True]
+        mock_form.get.side_effect = [category, content, attached_image_filename]
+
+        mock_files.return_value = None
 
         UtilizationController.create_comment(utilization_id)
 
@@ -1532,9 +1629,11 @@ class TestUtilizationController:
             'utilization.details',
             utilization_id=utilization_id,
             category=category,
+            attached_image_filename=attached_image_filename,
         )
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
@@ -1543,20 +1642,27 @@ class TestUtilizationController:
         mock_flash_error,
         mock_is_recaptcha_verified,
         mock_details,
+        mock_files,
         mock_form,
     ):
         utilization_id = 'utilization_id'
         category = 'category'
         content = 'content'
+        attached_image_filename = None
 
         mock_form.get.side_effect = [
             category,
             content,
+            attached_image_filename,
         ]
+
+        mock_files.return_value = None
 
         mock_is_recaptcha_verified.return_value = False
         UtilizationController.create_comment(utilization_id)
-        mock_details.assert_called_once_with(utilization_id, category, content)
+        mock_details.assert_called_once_with(
+            utilization_id, category, content, attached_image_filename
+        )
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
@@ -1572,6 +1678,7 @@ class TestUtilizationController:
         utilization_id = 'utilization_id'
         category = 'category'
         content = 'comment_content'
+        attached_image_filename = None
         softened = 'mock_softened'
 
         mock_suggest_ai_comment.return_value = softened
@@ -1592,6 +1699,7 @@ class TestUtilizationController:
                 'utilization': mock_utilization,
                 'selected_category': category,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
                 'softened': softened,
             },
         )
@@ -1610,6 +1718,7 @@ class TestUtilizationController:
         utilization_id = 'utilization_id'
         category = 'category'
         content = 'comment_content'
+        attached_image_filename = None
         softened = None
 
         mock_suggest_ai_comment.return_value = softened
@@ -1630,6 +1739,7 @@ class TestUtilizationController:
                 'utilization': mock_utilization,
                 'selected_category': category,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
             },
         )
 
@@ -1651,6 +1761,10 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.request.method')
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch(
         'ckanext.feedback.controllers.utilization.'
@@ -1668,21 +1782,33 @@ class TestUtilizationController:
         mock_get_utilization,
         mock_get_utilization_comment_categories,
         mock_is_recaptcha_verified,
+        mock_upload_image,
+        mock_files,
         mock_form,
         mock_method,
     ):
         utilization_id = 'resource_id'
         category = 'category'
         content = 'comment_content'
+        attached_image_filename = 'attached_image_filename'
 
         config['ckan.feedback.moral_keeper_ai.enable'] = False
 
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
-            'comment-content': content,
             'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': False,
         }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.return_value = attached_image_filename
 
         mock_utilization = MagicMock()
         mock_utilization.resource_id = 'mock_resource_id'
@@ -1708,11 +1834,95 @@ class TestUtilizationController:
                 'content': content,
                 'selected_category': category,
                 'categories': 'mock_categories',
+                'attached_image_filename': attached_image_filename,
             },
         )
 
     @patch('ckanext.feedback.controllers.utilization.request.method')
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
+    def test_check_comment_with_bad_image(
+        self,
+        mock_details,
+        mock_flash_error,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'utilization id'
+        category = 'category'
+        content = 'content'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
+        }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = 'bad_image.txt'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = toolkit.ValidationError(
+            {'upload': ['Invalid image file type']}
+        )
+
+        UtilizationController.check_comment(utilization_id)
+
+        mock_flash_error.assert_called_once_with(
+            {'Upload': 'Invalid image file type'}, allow_html=True
+        )
+        mock_details.assert_called_once_with(utilization_id, category, content)
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
+    def test_check_comment_with_bad_image_exception(
+        self,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+        mock_method,
+    ):
+        utilization_id = 'utilization id'
+        category = 'category'
+        content = 'content'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
+        }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = Exception('Bad image')
+
+        with pytest.raises(Exception):
+            UtilizationController.check_comment(utilization_id)
+
+        mock_upload_image.assert_called_once_with(mock_file)
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch(
         'ckanext.feedback.controllers.utilization.'
@@ -1732,22 +1942,27 @@ class TestUtilizationController:
         mock_get_utilization,
         mock_get_utilization_comment_categories,
         mock_is_recaptcha_verified,
+        mock_files,
         mock_form,
         mock_method,
     ):
         utilization_id = 'resource_id'
         category = 'category'
         content = 'comment_content'
+        attached_image_filename = None
         judgement = True
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
 
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
-            'comment-content': content,
             'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': False,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_check_ai_comment.return_value = judgement
 
@@ -1775,11 +1990,13 @@ class TestUtilizationController:
                 'content': content,
                 'selected_category': category,
                 'categories': 'mock_categories',
+                'attached_image_filename': attached_image_filename,
             },
         )
 
     @patch('ckanext.feedback.controllers.utilization.request.method')
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
     @patch(
@@ -1802,22 +2019,27 @@ class TestUtilizationController:
         mock_suggested_comment,
         mock_check_ai_comment,
         mock_is_recaptcha_verified,
+        mock_files,
         mock_form,
         mock_method,
     ):
         utilization_id = 'resource_id'
         category = 'category'
         content = 'comment_content'
+        attached_image_filename = None
         judgement = False
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
 
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
-            'comment-content': content,
             'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': False,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_check_ai_comment.return_value = judgement
 
@@ -1840,10 +2062,12 @@ class TestUtilizationController:
             utilization_id=utilization_id,
             category=category,
             content=content,
+            attached_image_filename=attached_image_filename,
         )
 
     @patch('ckanext.feedback.controllers.utilization.request.method')
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch(
         'ckanext.feedback.controllers.utilization.'
@@ -1861,19 +2085,24 @@ class TestUtilizationController:
         mock_get_utilization,
         mock_get_utilization_comment_categories,
         mock_is_recaptcha_verified,
+        mock_files,
         mock_form,
         mock_method,
     ):
         utilization_id = 'resource_id'
         category = 'category'
         content = 'comment_content'
+        attached_image_filename = None
 
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
-            'comment-content': content,
             'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_utilization = MagicMock()
         mock_utilization.resource_id = 'mock_resource_id'
@@ -1899,6 +2128,7 @@ class TestUtilizationController:
                 'content': content,
                 'selected_category': category,
                 'categories': 'mock_categories',
+                'attached_image_filename': attached_image_filename,
             },
         )
 
@@ -1922,6 +2152,7 @@ class TestUtilizationController:
 
     @patch('ckanext.feedback.controllers.utilization.request.method')
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
@@ -1930,19 +2161,24 @@ class TestUtilizationController:
         mock_details,
         mock_flash_error,
         mock_is_recaptcha_verified,
+        mock_files,
         mock_form,
         mock_method,
     ):
         utilization_id = 'utilization_id'
         category = 'category'
         content = 'comment_content'
+        attached_image_filename = None
 
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
-            'comment-content': content,
             'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_is_recaptcha_verified.return_value = False
 
@@ -1950,10 +2186,13 @@ class TestUtilizationController:
         mock_flash_error.assert_called_once_with(
             'Bad Captcha. Please try again.', allow_html=True
         )
-        mock_details.assert_called_once_with(utilization_id, category, content)
+        mock_details.assert_called_once_with(
+            utilization_id, category, content, attached_image_filename
+        )
 
     @patch('ckanext.feedback.controllers.utilization.request.method')
     @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
@@ -1962,6 +2201,7 @@ class TestUtilizationController:
         mock_redirect_to,
         mock_flash_error,
         mock_is_recaptcha_verified,
+        mock_files,
         mock_form,
         mock_method,
     ):
@@ -1970,15 +2210,19 @@ class TestUtilizationController:
         content = 'comment_content'
         while len(content) < 1000:
             content += content
+        attached_image_filename = None
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
 
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
-            'comment-content': content,
             'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_is_recaptcha_verified.return_value = True
 
@@ -1991,7 +2235,29 @@ class TestUtilizationController:
             'utilization.details',
             utilization_id=utilization_id,
             category=category,
+            attached_image_filename=attached_image_filename,
         )
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.send_file')
+    def test_check_attached_image(
+        self,
+        mock_send_file,
+        mock_detail_service,
+    ):
+        utilization_id = 'utilization id'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_detail_service.get_attached_image_path.return_value = 'attached_image_path'
+
+        UtilizationController.check_attached_image(
+            utilization_id, attached_image_filename
+        )
+
+        mock_detail_service.get_attached_image_path.assert_called_once_with(
+            attached_image_filename
+        )
+        mock_send_file.assert_called_once_with('attached_image_path')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
@@ -2377,6 +2643,176 @@ class TestUtilizationController:
         mock_abort.assert_called_once_with(400)
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.os.path.exists')
+    @patch('ckanext.feedback.controllers.utilization.send_file')
+    def test_attached_image_with_sysadmin(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_detail_service,
+        current_user,
+    ):
+        utilization_id = 'utilization id'
+        comment_id = 'comment id'
+        attached_image_filename = 'attached_image_filename'
+
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_detail_service.get_utilization.return_value = MagicMock()
+        mock_detail_service.get_utilization_comment.return_value = 'mock_comment'
+        mock_detail_service.get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = True
+
+        UtilizationController.attached_image(
+            utilization_id, comment_id, attached_image_filename
+        )
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comment.assert_called_once_with(
+            comment_id, utilization_id, None, attached_image_filename
+        )
+        mock_detail_service.get_attached_image_path.assert_called_once_with(
+            attached_image_filename
+        )
+        mock_exists.assert_called_once_with('attached_image_path')
+        mock_send_file.assert_called_once_with('attached_image_path')
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.os.path.exists')
+    @patch('ckanext.feedback.controllers.utilization.send_file')
+    def test_attached_image_with_user(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_detail_service,
+        current_user,
+    ):
+        utilization_id = 'utilization id'
+        comment_id = 'comment id'
+        attached_image_filename = 'attached_image_filename'
+
+        user_dict = factories.User()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_detail_service.get_utilization.return_value = MagicMock()
+        mock_detail_service.get_utilization_comment.return_value = 'mock_comment'
+        mock_detail_service.get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = True
+
+        UtilizationController.attached_image(
+            utilization_id, comment_id, attached_image_filename
+        )
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comment.assert_called_once_with(
+            comment_id, utilization_id, True, attached_image_filename
+        )
+        mock_detail_service.get_attached_image_path.assert_called_once_with(
+            attached_image_filename
+        )
+        mock_exists.assert_called_once_with('attached_image_path')
+        mock_send_file.assert_called_once_with('attached_image_path')
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.os.path.exists')
+    @patch('ckanext.feedback.controllers.utilization.send_file')
+    def test_attached_image_with_not_found_attached_image(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_detail_service,
+    ):
+        utilization_id = 'utilization id'
+        comment_id = 'comment id'
+        attached_image_filename = 'attached_image_filename'
+
+        g.userobj = None
+
+        mock_detail_service.get_utilization.return_value = MagicMock()
+        mock_detail_service.get_utilization_comment.return_value = 'mock_comment'
+        mock_detail_service.get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = False
+
+        with pytest.raises(NotFound):
+            UtilizationController.attached_image(
+                utilization_id, comment_id, attached_image_filename
+            )
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comment.assert_called_once_with(
+            comment_id, utilization_id, True, attached_image_filename
+        )
+        mock_detail_service.get_attached_image_path.assert_called_once_with(
+            attached_image_filename
+        )
+        mock_exists.assert_called_once_with('attached_image_path')
+        mock_send_file.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.os.path.exists')
+    @patch('ckanext.feedback.controllers.utilization.send_file')
+    def test_attached_image_with_not_found_comment(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_detail_service,
+    ):
+        utilization_id = 'utilization id'
+        comment_id = 'comment id'
+        attached_image_filename = 'attached_image_filename'
+
+        g.userobj = None
+
+        mock_detail_service.get_utilization.return_value = MagicMock()
+        mock_detail_service.get_utilization_comment.return_value = None
+
+        with pytest.raises(NotFound):
+            UtilizationController.attached_image(
+                utilization_id, comment_id, attached_image_filename
+            )
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comment.assert_called_once_with(
+            comment_id, utilization_id, True, attached_image_filename
+        )
+        mock_detail_service.get_attached_image_path.assert_not_called()
+        mock_exists.assert_not_called()
+        mock_send_file.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.os.path.exists')
+    @patch('ckanext.feedback.controllers.utilization.send_file')
+    def test_attached_image_with_not_found_utilization(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_detail_service,
+    ):
+        utilization_id = 'utilization id'
+        comment_id = 'comment id'
+        attached_image_filename = 'attached_image_filename'
+
+        g.userobj = None
+
+        mock_detail_service.get_utilization.return_value = None
+
+        with pytest.raises(NotFound):
+            UtilizationController.attached_image(
+                utilization_id, comment_id, attached_image_filename
+            )
+
+        mock_detail_service.get_utilization.assert_called_once_with(utilization_id)
+        mock_detail_service.get_utilization_comment.assert_not_called()
+        mock_detail_service.get_attached_image_path.assert_not_called()
+        mock_exists.assert_not_called()
+        mock_send_file.assert_not_called()
+
+    @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_check_organization_adimn_role_with_sysadmin(
@@ -2442,3 +2878,32 @@ class TestUtilizationController:
                 ' manually please check your spelling and try again.'
             ),
         )
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service.get_upload_destination'
+    )
+    @patch('ckanext.feedback.controllers.utilization.get_uploader')
+    def test_upload_image(
+        self,
+        mock_get_uploader,
+        mock_get_upload_destination,
+    ):
+        mock_image = MagicMock()
+        mock_image.filename = 'test.png'
+
+        mock_get_upload_destination.return_value = '/test/upload/path'
+
+        mock_uploader = MagicMock()
+        mock_get_uploader.return_value = mock_uploader
+
+        def mock_update_data_dict(data_dict, url_field, file_field, clear_field):
+            data_dict['image_url'] = 'test_image.png'
+
+        mock_uploader.update_data_dict.side_effect = mock_update_data_dict
+
+        UtilizationController._upload_image(mock_image)
+
+        mock_get_upload_destination.assert_called_once()
+        mock_get_uploader.assert_called_once_with('/test/upload/path')
+        mock_uploader.update_data_dict.assert_called_once()
+        mock_uploader.upload.assert_called_once()
