@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch
 
+from ckan.common import config
+
 from ckanext.feedback.services.common.upload import (
     FeedbackUpload,
     get_feedback_storage_path,
@@ -9,26 +11,27 @@ from ckanext.feedback.services.common.upload import (
 
 class TestUpload(unittest.TestCase):
 
-    @patch('ckanext.feedback.services.common.upload.config')
-    def test_get_feedback_storage_path(self, mock_config):
-        mock_config.get.return_value = "/fake/storage_path"
+    @patch('ckanext.feedback.services.common.upload.os.path.abspath')
+    def test_get_feedback_storage_path(self, mock_abspath):
+        config['ckan.feedback.storage_path'] = '/test/upload/path'
 
-        get_feedback_storage_path()
+        mock_abspath.return_value = '/test/upload/default_path'
 
-        mock_config.get.assert_called_once_with('ckan.feedback.storage_path')
+        storage_path = get_feedback_storage_path()
 
-    @patch('ckanext.feedback.services.common.upload.config')
-    @patch('ckanext.feedback.services.common.upload.log')
-    def test_get_feedback_storage_path_no_config(self, mock_log, mock_config):
-        mock_config.get.return_value = None
+        assert storage_path == '/test/upload/path'
 
-        get_feedback_storage_path()
+        config.pop('ckan.feedback.storage_path', None)
 
-        mock_config.get.assert_called_once_with('ckan.feedback.storage_path')
-        mock_log.critical.assert_called_once_with(
-            'Please specify a ckan.feedback.storage_path'
-            'in your config for your uploads'
-        )
+    @patch('ckanext.feedback.services.common.upload.os.path.abspath')
+    def test_get_feedback_storage_path_no_config(self, mock_abspath):
+        config.pop('ckan.feedback.storage_path', None)
+
+        mock_abspath.return_value = '/test/upload/default_path'
+
+        storage_path = get_feedback_storage_path()
+
+        assert storage_path == '/test/upload/default_path'
 
     @patch('ckanext.feedback.services.common.upload.Upload.__init__')
     @patch('ckanext.feedback.services.common.upload.get_feedback_storage_path')

@@ -2,10 +2,10 @@ import os
 import sys
 
 import click
-from ckan.common import config
 from ckan.model import meta
 from ckan.plugins import toolkit
 
+import ckanext.feedback.services.common.upload as upload_service
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.utilization.details as detail_service
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
@@ -145,7 +145,7 @@ def create_resource_like_monthly_tables(engine):
 )
 def clean_files(dry_run):
     # Get base destination directory for uploaded files
-    base_storage_path = config.get('ckan.feedback.storage_path')
+    base_storage_path = upload_service.get_feedback_storage_path()
 
     # Get relative paths for resource_comment and utilization_comment
     resource_comment_relpath = comment_service.get_upload_destination()

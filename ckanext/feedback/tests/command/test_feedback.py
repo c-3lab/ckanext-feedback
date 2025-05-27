@@ -141,7 +141,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceLike.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)
 
-    @patch('ckanext.feedback.command.feedback.config')
+    @patch('ckanext.feedback.command.feedback.upload_service')
     @patch('ckanext.feedback.command.feedback.comment_service')
     @patch('ckanext.feedback.command.feedback.detail_service')
     @patch('ckanext.feedback.command.feedback.os.listdir')
@@ -152,11 +152,11 @@ class TestFeedbackCommand:
         mock_listdir,
         mock_detail_service,
         mock_comment_service,
-        mock_config,
+        mock_upload_service,
     ):
         dry_run = False
 
-        mock_config.get.return_value = '/test/upload/path'
+        mock_upload_service.get_feedback_storage_path.return_value = '/test/upload/path'
         mock_comment_service.get_upload_destination.return_value = (
             'feedback_resource_comment'
         )
@@ -175,7 +175,7 @@ class TestFeedbackCommand:
 
         self.runner.invoke(feedback, ['clean-files'])
 
-        mock_config.get.assert_called_once_with('ckan.feedback.storage_path')
+        mock_upload_service.get_feedback_storage_path.assert_called_once_with()
         mock_comment_service.get_upload_destination.assert_called_once_with()
         mock_detail_service.get_upload_destination.assert_called_once_with()
         mock_listdir.assert_has_calls(
