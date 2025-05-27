@@ -8,14 +8,13 @@ from ckan.lib.uploader import Upload
 log = logging.getLogger(__name__)
 
 
+DEFAULT_FEEDBACK_STORAGE_PATH = '/var/lib/ckan/feedback'
+
+
 def get_feedback_storage_path():
     '''Function to get the storage path from config file.'''
-    default_feedback_storage_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..')
-    )
-
     storage_path = config.get(
-        'ckan.feedback.storage_path', default_feedback_storage_path
+        'ckan.feedback.storage_path', DEFAULT_FEEDBACK_STORAGE_PATH
     )
 
     return storage_path

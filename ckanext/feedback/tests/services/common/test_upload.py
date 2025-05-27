@@ -11,11 +11,8 @@ from ckanext.feedback.services.common.upload import (
 
 class TestUpload(unittest.TestCase):
 
-    @patch('ckanext.feedback.services.common.upload.os.path.abspath')
-    def test_get_feedback_storage_path(self, mock_abspath):
+    def test_get_feedback_storage_path(self):
         config['ckan.feedback.storage_path'] = '/test/upload/path'
-
-        mock_abspath.return_value = '/test/upload/default_path'
 
         storage_path = get_feedback_storage_path()
 
@@ -23,15 +20,12 @@ class TestUpload(unittest.TestCase):
 
         config.pop('ckan.feedback.storage_path', None)
 
-    @patch('ckanext.feedback.services.common.upload.os.path.abspath')
-    def test_get_feedback_storage_path_no_config(self, mock_abspath):
+    def test_get_feedback_storage_path_no_config(self):
         config.pop('ckan.feedback.storage_path', None)
-
-        mock_abspath.return_value = '/test/upload/default_path'
 
         storage_path = get_feedback_storage_path()
 
-        assert storage_path == '/test/upload/default_path'
+        assert storage_path == '/var/lib/ckan/feedback'
 
     @patch('ckanext.feedback.services.common.upload.Upload.__init__')
     @patch('ckanext.feedback.services.common.upload.get_feedback_storage_path')

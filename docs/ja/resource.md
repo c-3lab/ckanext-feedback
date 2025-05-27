@@ -39,10 +39,10 @@
 画像を格納するディレクトリを指定したい場合は、`ckan.ini`に以下の設定を追加してください。
 
 ```ini
-ckan.feedback.storage_path = /var/lib/ckan/feedback
+ckan.feedback.storage_path = /path/to/storage
 ```
-・ 上記のパス`/var/lib/ckan/feedback`は、ご利用の環境に合わせて 適宜置き換えてください。  
-・ この設定が未指定の場合、`ckanext-feedback`がインストールされているディレクトリがデフォルトの保存先として使用されます。
+・ 上記のパス`/path/to/storage`は、ご利用の環境に合わせて 適宜置き換えてください。  
+・ この設定が未指定の場合、`/var/lib/ckan/feedback`ディレクトリがデフォルトの保存先として使用されます。
 
 ## オプション
 
