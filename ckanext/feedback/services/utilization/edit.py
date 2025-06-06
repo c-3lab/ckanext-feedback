@@ -16,6 +16,7 @@ def get_resource_details(resource_id):
         session.query(
             Resource.name.label('resource_name'),
             Resource.id.label('resource_id'),
+            Package.title.label('package_title'),
             Package.name.label('package_name'),
         )
         .join(Package)

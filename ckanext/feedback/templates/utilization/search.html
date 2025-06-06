@@ -82,7 +82,7 @@
               <td>
                 {{ h.get_organization(row.owner_org).display_name|truncate(20) }}
               </td>
-              <td>{{ row.package_name|truncate(30) }}</td>
+              <td>{{ row.package_title|truncate(30) }}</td>
               <td>{{ row.resource_name|truncate(20) }}</td>
               <td>{{ row.comment }}</td>
               <td>{{ row.created.strftime('%Y/%m/%d') }}</td>
