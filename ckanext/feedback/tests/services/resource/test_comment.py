@@ -1,5 +1,9 @@
+from unittest.mock import MagicMock, call, patch
+
 import pytest
 from ckan import model
+from ckan.model.package import Package
+from ckan.model.resource import Resource
 from ckan.model.user import User
 from ckan.tests import factories
 
@@ -18,11 +22,15 @@ from ckanext.feedback.services.resource.comment import (
     approve_resource_comment,
     create_reply,
     create_resource_comment,
+    get_attached_image_path,
+    get_comment_attached_image_files,
     get_comment_reply,
     get_cookie,
     get_resource,
+    get_resource_comment,
     get_resource_comment_categories,
     get_resource_comments,
+    get_upload_destination,
 )
 
 
@@ -47,6 +55,51 @@ class TestComments:
         assert get_resource(resource['id'])
         assert get_resource(resource['id']).organization_id == package['id']
         assert get_resource(resource['id']).organization_name == "org_name"
+
+    @patch('ckanext.feedback.services.resource.comment.session')
+    def test_get_resource_comment(self, mock_session):
+        comment_id = 'comment_id'
+        resource_id = 'resource_id'
+        approval = True
+        attached_image_filename = 'attached_image_filename'
+        owner_orgs = ['org1', 'org2']
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.join.return_value = mock_query
+        mock_query.first.return_value = 'mock_comment'
+        mock_session.query.return_value = mock_query
+
+        get_resource_comment(
+            comment_id, resource_id, approval, attached_image_filename, owner_orgs
+        )
+
+        mock_session.query.assert_called_once_with(ResourceComment)
+        assert mock_query.filter.call_count == 5
+        mock_query.join.assert_has_calls(
+            [
+                call(Resource),
+                call(Package),
+            ]
+        )
+        mock_query.first.assert_called_once()
+
+    @patch('ckanext.feedback.services.resource.comment.session')
+    def test_get_resource_comment_with_none_args(self, mock_session):
+        comment_id = 'comment_id'
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.join.return_value = mock_query
+        mock_query.first.return_value = 'mock_comment'
+        mock_session.query.return_value = mock_query
+
+        get_resource_comment(comment_id)
+
+        mock_session.query.assert_called_once_with(ResourceComment)
+        assert mock_query.filter.call_count == 1
+        mock_query.join.assert_not_called()
+        mock_query.first.assert_called_once()
 
     def test_get_resource_comments(self):
         assert not get_resource_comments()
@@ -106,3 +159,41 @@ class TestComments:
     def test_get_cookie(self):
         resource = factories.Resource()
         assert not get_cookie(resource['id'])
+
+    @patch('ckanext.feedback.services.resource.comment.get_upload_destination')
+    @patch('ckanext.feedback.services.resource.comment.get_uploader')
+    def test_get_attached_image_path(
+        self, mock_get_uploader, mock_get_upload_destination
+    ):
+        attached_image_filename = 'attached_image_filename'
+
+        mock_get_upload_destination.return_value = '/test/upload/path'
+
+        mock_uploader = MagicMock()
+        mock_get_uploader.return_value = mock_uploader
+
+        get_attached_image_path(attached_image_filename)
+
+        mock_get_upload_destination.assert_called_once()
+        mock_get_uploader.assert_called_once()
+
+    def test_get_upload_destination(self):
+        assert get_upload_destination() == 'feedback_resouce_comment'
+
+    @patch('ckanext.feedback.services.resource.comment.session')
+    def test_get_comment_attached_image_files(self, mock_session):
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.all.return_value = [
+            ('attached_image_filename1',),
+            ('attached_image_filename2',),
+        ]
+        mock_session.query.return_value = mock_query
+
+        get_comment_attached_image_files()
+
+        mock_session.query.assert_called_once_with(
+            ResourceComment.attached_image_filename
+        )
+        assert mock_query.filter.call_count == 1
+        mock_query.all.assert_called_once()
