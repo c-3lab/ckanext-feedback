@@ -71,6 +71,7 @@ class TestUtilizationDetailsService:
 
         assert result.resource_name == resource['name']
         assert result.resource_id == resource['id']
+        assert result.package_title == dataset['title']
         assert result.package_name == dataset['name']
 
     def test_update_utilization(self):

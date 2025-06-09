@@ -22,7 +22,7 @@
       <div class="module-content">
         <div class="wrap-text">
           <h4>{{ _('Dataset') }}</h4>
-          <a href="{{ h.url_for('dataset.read', id=pkg_dict.name) }}">{{ pkg_dict.name }}</a>
+          <a href="{{ h.url_for('dataset.read', id=pkg_dict.name) }}">{{ pkg_dict.title }}</a>
           <hr>
           <h4>{{ _('Resource') }}</h4>
           <a href="{{ h.url_for('resource.read', id=pkg_dict.name, resource_id=resource.id) }}">{{ resource.name }}</a>
