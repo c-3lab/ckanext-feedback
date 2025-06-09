@@ -42,17 +42,23 @@ function checkCommentExists(button, bs3=false) {
 }
 
 function checkReplyExists(button) {
+  button.style.pointerEvents = 'none';
+
   const errorElement = document.getElementById('reply-error');
   const reply = document.getElementById('reply_content').value;
-  button.style.pointerEvents = "none"
 
-  if (reply) {
-    errorElement.style.display = 'none';
-    return true;
-  } else {
-    errorElement.style.display = '';
-    return false;
+  errorElement.style.display = 'none';
+  
+  let is_reply_exists = true;
+
+  if (!reply) {
+    errorElement.style.display = 'block';
+    is_reply_exists = false;
   }
+
+  button.style.pointerEvents = 'auto';
+
+  return is_reply_exists;
 }
 
 function selectRating(selectedStar) {
