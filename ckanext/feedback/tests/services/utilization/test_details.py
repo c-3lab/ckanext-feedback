@@ -156,6 +156,7 @@ class TestUtilizationDetailsService:
             False,
             resource['name'],
             resource['id'],
+            dataset['title'],
             dataset['name'],
             organization['id'],
         )

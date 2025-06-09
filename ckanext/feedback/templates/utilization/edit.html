@@ -22,7 +22,7 @@
         <input type="hidden" id="message" name="message" value="{{ message }}">
         <div class="wrap-text">
           <h4>{{ _('Dataset') }}</h4>
-          <a href="{{ h.url_for('dataset.read', id=resource_details.package_name) }}">{{ resource_details.package_name }}</a>
+          <a href="{{ h.url_for('dataset.read', id=resource_details.package_name) }}">{{ resource_details.package_title }}</a>
           <hr>
           <h4>{{ _('Resource') }}</h4>
           <a href="{{ h.url_for('resource.read', id=resource_details.package_name, resource_id=resource_details.resource_id) }}">{{ resource_details.resource_name }}</a>

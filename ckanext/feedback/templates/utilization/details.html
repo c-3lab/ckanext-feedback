@@ -39,7 +39,7 @@
             <h1>{{ row.title }}</h1>
             <hr>
             <h4>{{ _('Dataset') }}</h4>
-            <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_name }}</a>
+            <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}">{{ row.package_title }}</a>
             <hr>
             <h4>{{ _('Resource') }}</h4>
             <a href="{{ h.url_for('dataset.search') }}{{ row.package_name }}/resource/{{ row.resource_id }}">{{ row.resource_name }}</a>

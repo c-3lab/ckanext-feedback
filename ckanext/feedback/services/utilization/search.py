@@ -27,6 +27,7 @@ def get_utilizations(
             Utilization.approval,
             Resource.name.label('resource_name'),
             Resource.id.label('resource_id'),
+            Package.title.label('package_title'),
             Package.name.label('package_name'),
             Package.owner_org,
             Group.title.label('organization_name'),
