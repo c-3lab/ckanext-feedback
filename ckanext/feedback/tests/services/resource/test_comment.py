@@ -205,7 +205,7 @@ class TestComments:
 
 class TestResourceComment:
     def test_create_resource_comment(self, resource):
-        resource_id = resource.id
+        resource_id = resource['id']
         category = ResourceCommentCategory.REQUEST
         content = 'test_content'
         rating = 3

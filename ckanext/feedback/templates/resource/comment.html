@@ -118,7 +118,6 @@
           {% endif %}
           {% for comment in page.collection %}
             <div class="rounded p-2 {{'unapproved' if not comment.approval }}">
-              {% set created = comment.created.strftime('%Y/%m/%d %H:%M') %}
               {% set reply = h.get_comment_reply(comment.id) %}
               <div class="comment-top-section">
                 <div id="comment-header-{{ comment.id }}" class="d-flex align-items-center">
@@ -143,7 +142,9 @@
                       </span>
                     {% endif %}
                   {% endif %}
-                  <span id="comment-created-{{ comment.id }}" class="me-2">{{ created }}</span>
+                  <span id="comment-created-{{ comment.id }}" class="automatic-local-datetime me-2" data-datetime="{{ h.render_datetime(comment.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                    {{ h.render_datetime(comment.created, with_hours=True) }}
+                  </span>
                   {% if comment.reactions %}
                     {% set resource_comment_component = h.ResourceCommentComponent(comment.id) %}
                     {{ resource_comment_component.create_status_badge(comment.reactions.response_status.value) | safe }}
@@ -225,8 +226,9 @@
                     <div class="comment-top-section">
                       <i class="fa-solid fa-reply"></i>
                       <span class="font-bold">返信</span>
-                      <span id="reply-created-{{ reply.id }}" hidden>[{{ h.render_datetime(reply.created) }} {{ h.xxxx(reply.created) }}]</span>
-                      <span>{{ reply.created.strftime('%Y/%m/%d %H:%M') }}</span>
+                      <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(reply.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                        {{ h.render_datetime(reply.created, with_hours=True) }}
+                      </span>
                     </div>
                     <div class="comment-container">
                       <span class="comment-content">{{ reply.content }}</span>

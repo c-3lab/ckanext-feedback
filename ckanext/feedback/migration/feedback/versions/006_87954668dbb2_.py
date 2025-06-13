@@ -29,14 +29,6 @@ class ResourceCommentResponseStatus(enum.Enum):
     REJECTED = 'Rejected'
 
 
-class UtilizationCommentResponseStatus(enum.Enum):
-    STATUS_NONE = 'StatusNone'
-    NOT_STARTED = 'NotStarted'
-    IN_PROGRESS = 'InProgress'
-    COMPLETED = 'Completed'
-    REJECTED = 'Rejected'
-
-
 def upgrade():
     op.create_table(
         'resource_comment_reactions',
@@ -61,33 +53,8 @@ def upgrade():
             sa.ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
         ),
     )
-    op.create_table(
-        'utilization_comment_reactions',
-        sa.Column('id', sa.Text, default=uuid.uuid4, primary_key=True, nullable=False),
-        sa.Column(
-            'utilization_comment_id',
-            sa.Text,
-            sa.ForeignKey(
-                'utilization_comment.id', onupdate='CASCADE', ondelete='CASCADE'
-            ),
-            nullable=False,
-        ),
-        sa.Column(
-            'response_status', sa.Enum(UtilizationCommentResponseStatus), nullable=False
-        ),
-        sa.Column('admin_liked', sa.BOOLEAN, default=False),
-        sa.Column('created', sa.TIMESTAMP, default=datetime.now),
-        sa.Column('updated', sa.TIMESTAMP),
-        sa.Column(
-            'updater_user_id',
-            sa.Text,
-            sa.ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-        ),
-    )
 
 
 def downgrade():
     op.drop_table('resource_comment_reactions')
-    op.drop_table('utilization_comment_reactions')
     op.execute('DROP TYPE IF EXISTS resourcecommentresponsestatus;')
-    op.execute('DROP TYPE IF EXISTS utilizationcommentresponsestatus;')
