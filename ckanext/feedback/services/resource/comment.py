@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from ckan.lib.uploader import get_uploader
@@ -6,11 +7,14 @@ from ckan.model.package import Package
 from ckan.model.resource import Resource
 from ckan.types import PUploader
 from flask import request
+from sqlalchemy.orm import joinedload
 
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
+    ResourceCommentReactions,
     ResourceCommentReply,
+    ResourceCommentResponseStatus,
 )
 from ckanext.feedback.models.session import session
 
@@ -32,10 +36,10 @@ def get_resource(resource_id):
 
 # Get a comment related to the dataset or resource
 def get_resource_comment(
-    comment_id: str,
-    resource_id: str = None,
-    approval: bool = None,
-    attached_image_filename: str = None,
+    comment_id,
+    resource_id=None,
+    approval=None,
+    attached_image_filename=None,
     owner_orgs=None,
 ):
     query = session.query(ResourceComment).filter(ResourceComment.id == comment_id)
@@ -59,7 +63,11 @@ def get_resource_comment(
 def get_resource_comments(
     resource_id=None, approval=None, owner_orgs=None, limit=None, offset=None
 ):
-    query = session.query(ResourceComment).order_by(ResourceComment.created.desc())
+    query = (
+        session.query(ResourceComment)
+        .options(joinedload(ResourceComment.reactions))
+        .order_by(ResourceComment.created.desc())
+    )
     if resource_id is not None:
         query = query.filter(ResourceComment.resource_id == resource_id)
     if approval is not None:
@@ -85,6 +93,8 @@ def get_resource_comment_categories():
 def create_resource_comment(
     resource_id, category, content, rating, attached_image_filename=None
 ):
+    now = datetime.now()
+
     comment = ResourceComment(
         resource_id=resource_id,
         category=category,
@@ -93,6 +103,18 @@ def create_resource_comment(
         attached_image_filename=attached_image_filename,
     )
     session.add(comment)
+    session.flush()
+
+    reactions = ResourceCommentReactions(
+        id=str(uuid.uuid4()),
+        resource_comment_id=comment.id,
+        response_status=ResourceCommentResponseStatus.STATUS_NONE,
+        admin_liked=False,
+        created=now,
+        updated=now,
+        updater_user_id=None,
+    )
+    session.add(reactions)
 
 
 # Approve selected resource comment
@@ -147,3 +169,47 @@ def get_comment_attached_image_files():
     )
 
     return [filename for (filename,) in image_files]
+
+
+def get_resource_comment_reactions(resource_comment_id):
+    result = (
+        session.query(ResourceCommentReactions)
+        .filter(ResourceCommentReactions.resource_comment_id == resource_comment_id)
+        .first()
+    )
+
+    return result
+
+
+def create_resource_comment_reactions(
+    resource_comment_id,
+    response_status,
+    admin_liked,
+    updater_user_id,
+):
+    now = datetime.now()
+
+    reactions = ResourceCommentReactions(
+        id=str(uuid.uuid4()),
+        resource_comment_id=resource_comment_id,
+        response_status=response_status,
+        admin_liked=admin_liked,
+        created=now,
+        updated=now,
+        updater_user_id=updater_user_id,
+    )
+    session.add(reactions)
+    return
+
+
+def update_resource_comment_reactions(
+    reactions,
+    response_status,
+    admin_liked,
+    updater_user_id,
+):
+    reactions.response_status = response_status
+    reactions.admin_liked = admin_liked
+    reactions.updated = datetime.now()
+    reactions.updater_user_id = updater_user_id
+    return

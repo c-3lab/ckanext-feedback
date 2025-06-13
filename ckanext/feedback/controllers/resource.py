@@ -16,7 +16,10 @@ import ckanext.feedback.services.resource.likes as likes_service
 import ckanext.feedback.services.resource.summary as summary_service
 import ckanext.feedback.services.resource.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
-from ckanext.feedback.models.resource_comment import ResourceCommentCategory
+from ckanext.feedback.models.resource_comment import (
+    ResourceCommentCategory,
+    ResourceCommentResponseStatus,
+)
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common.ai_functions import (
     check_ai_comment,
@@ -37,9 +40,7 @@ class ResourceController:
     # Render HTML pages
     # resource_comment/<resource_id>
     @staticmethod
-    def comment(
-        resource_id, category='', content='', attached_image_filename: str | None = None
-    ):
+    def comment(resource_id, category='', content='', attached_image_filename=None):
         approval = True
         resource = comment_service.get_resource(resource_id)
         if not isinstance(current_user, model.User):
@@ -424,3 +425,43 @@ class ResourceController:
         attached_image_filename = data_dict["image_url"]
         uploader.upload()
         return attached_image_filename
+
+    # resource_comment/<resource_id>/comment/reactions
+    @staticmethod
+    @check_administrator
+    def reactions(resource_id):
+        ResourceController._check_organization_admin_role(resource_id)
+
+        comment_id = request.form.get('resource_comment_id')
+        response_status = request.form.get('response_status')
+        response_status_map = {
+            'status-none': ResourceCommentResponseStatus.STATUS_NONE.name,
+            'not-started': ResourceCommentResponseStatus.NOT_STARTED.name,
+            'in-progress': ResourceCommentResponseStatus.IN_PROGRESS.name,
+            'completed': ResourceCommentResponseStatus.COMPLETED.name,
+            'rejected': ResourceCommentResponseStatus.REJECTED.name,
+        }
+        admin_liked = request.form.get('admin_liked') == 'on'
+
+        resource_comment_reactions = comment_service.get_resource_comment_reactions(
+            comment_id
+        )
+
+        if resource_comment_reactions:
+            comment_service.update_resource_comment_reactions(
+                resource_comment_reactions,
+                response_status_map[response_status],
+                admin_liked,
+                current_user.id,
+            )
+        else:
+            comment_service.create_resource_comment_reactions(
+                comment_id,
+                response_status_map[response_status],
+                admin_liked,
+                current_user.id,
+            )
+
+        session.commit()
+
+        return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)

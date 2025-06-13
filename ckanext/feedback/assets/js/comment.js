@@ -164,28 +164,54 @@ function checkCommentExists(button, bs3=false) {
 }
 
 function checkReplyExists(button) {
+  button.style.pointerEvents = 'none';
+
   const errorElement = document.getElementById('reply-error');
   const reply = document.getElementById('reply_content').value;
-  button.style.pointerEvents = "none"
 
-  if (reply) {
-    errorElement.style.display = 'none';
-    return true;
-  } else {
-    errorElement.style.display = '';
-    return false;
+  errorElement.style.display = 'none';
+  
+  let is_reply_exists = true;
+
+  if (!reply) {
+    errorElement.style.display = 'block';
+    is_reply_exists = false;
   }
+
+  button.style.pointerEvents = 'auto';
+
+  return is_reply_exists;
 }
 
 function setReplyFormContent(resourceCommentId) {
   // Set values of modal screen elements
-  const category = document.getElementById('comment-category-' + resourceCommentId).textContent;
-  const approved = document.getElementById('comment-created-' + resourceCommentId).textContent;
+  const commentHeader = document.getElementById('comment-header-' + resourceCommentId);
+  const replyCommentHeader = document.getElementById('reply-comment-header');
   const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
 
-  document.getElementById('selected_comment_header').innerHTML = approved + ' ' + category;
-  document.getElementById('selected_comment').innerHTML = content;
-  document.getElementById('selected_resource_comment_id').value = resourceCommentId;
+  const commentHeaderClone = commentHeader.cloneNode(true);
+  replyCommentHeader.innerHTML = '';
+  replyCommentHeader.appendChild(commentHeaderClone);
+  document.getElementById('reply-comment').innerHTML = content;
+  document.getElementById('reply-comment-id').value = resourceCommentId;
+}
+
+function setReactionsFormContent(resourceCommentId) {
+  const commentHeader = document.getElementById('comment-header-' + resourceCommentId);
+  const reactionsCommentHeader = document.getElementById('reactions-comment-header');
+  const commentStatus = document.getElementById('comment-badge-' + resourceCommentId);
+  const adminLikeIndicator = document.getElementById('admin-liked-' + resourceCommentId);
+  const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
+
+  const commentHeaderClone = commentHeader.cloneNode(true);
+  reactionsCommentHeader.innerHTML = '';
+  reactionsCommentHeader.appendChild(commentHeaderClone);
+  if (commentStatus) {
+    document.getElementById(commentStatus.dataset.status).checked = true;
+  }
+  document.getElementById('admin-liked').checked = adminLikeIndicator ? true : false;
+  document.getElementById('reactions-comment').innerHTML = content;
+  document.getElementById('reactions-comment-id').value = resourceCommentId;
 }
 
 function setButtonDisable(button) {

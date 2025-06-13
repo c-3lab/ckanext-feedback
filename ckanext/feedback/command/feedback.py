@@ -13,6 +13,7 @@ from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummar
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
+    ResourceCommentReactions,
     ResourceCommentReply,
     ResourceCommentSummary,
 )
@@ -94,12 +95,14 @@ def drop_resource_tables(engine):
     ResourceCommentSummary.__table__.drop(engine, checkfirst=True)
     ResourceCommentReply.__table__.drop(engine, checkfirst=True)
     ResourceComment.__table__.drop(engine, checkfirst=True)
+    ResourceCommentReactions.__table__.drop(engine, checkfirst=True)
 
 
 def create_resource_tables(engine):
     ResourceComment.__table__.create(engine, checkfirst=True)
     ResourceCommentReply.__table__.create(engine, checkfirst=True)
     ResourceCommentSummary.__table__.create(engine, checkfirst=True)
+    ResourceCommentReactions.__table__.create(engine, checkfirst=True)
 
 
 def drop_download_tables(engine):

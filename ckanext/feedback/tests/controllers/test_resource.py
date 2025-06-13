@@ -18,6 +18,7 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
 )
 from ckanext.feedback.controllers.resource import ResourceController
+from ckanext.feedback.models.resource_comment import ResourceCommentResponseStatus
 from ckanext.feedback.models.session import session
 
 engine = model.repo.session.get_bind()
@@ -1820,3 +1821,149 @@ class TestResourceController:
         mock_get_uploader.assert_called_once_with('/test/upload/path')
         mock_uploader.update_data_dict.assert_called_once()
         mock_uploader.upload.assert_called_once()
+
+
+@pytest.mark.usefixtures('with_request_context')
+class TestResourceCommentReactions:
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.resource.ResourceController.'
+        '_check_organization_admin_role'
+    )
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_reactions_existing_reaction_sysadmin_updates_reaction(
+        self,
+        mock_redirect_to,
+        mock_session_commit,
+        mock_comment_service,
+        mock_form,
+        mock_check_organization_admin_role,
+        current_user,
+        sysadmin,
+        resource_comment,
+    ):
+        resource_id = resource_comment.resource_id
+        comment_id = resource_comment.id
+        response_status = 'completed'
+        admin_liked = False
+
+        mock_current_user(current_user, sysadmin)
+        g.userobj = current_user
+
+        mock_check_organization_admin_role.return_value = None
+        mock_form.get.side_effect = [
+            comment_id,
+            response_status,
+            admin_liked,
+        ]
+        mock_comment_service.get_resource_comment_reactions.return_value = (
+            'resource_comment_reactions'
+        )
+        mock_comment_service.update_resource_comment_reactions.return_value = None
+
+        ResourceController.reactions(resource_id)
+
+        mock_check_organization_admin_role.assert_called_once_with(resource_id)
+        mock_comment_service.get_resource_comment_reactions.assert_called_once_with(
+            comment_id,
+        )
+        mock_comment_service.update_resource_comment_reactions.assert_called_once_with(
+            'resource_comment_reactions',
+            ResourceCommentResponseStatus.COMPLETED.name,
+            admin_liked,
+            sysadmin['id'],
+        )
+        mock_comment_service.create_resource_comment_reactions.assert_not_called()
+        mock_session_commit.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'resource_comment.comment',
+            resource_id=resource_id,
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_reactions_no_existing_reaction_sysadmin_creates_reaction(
+        self,
+        mock_redirect_to,
+        mock_session_commit,
+        mock_comment_service,
+        mock_form,
+        current_user,
+        sysadmin,
+        resource_comment,
+    ):
+        resource_id = resource_comment.resource_id
+        comment_id = resource_comment.id
+        response_status = 'completed'
+        admin_liked = False
+
+        mock_current_user(current_user, sysadmin)
+        g.userobj = current_user
+
+        mock_form.get.side_effect = [
+            comment_id,
+            response_status,
+            admin_liked,
+        ]
+        mock_comment_service.get_resource_comment_reactions.return_value = None
+        mock_comment_service.create_resource_comment_reactions.return_value = None
+
+        ResourceController.reactions(resource_id)
+
+        mock_comment_service.get_resource_comment_reactions.assert_called_once_with(
+            comment_id,
+        )
+        mock_comment_service.update_resource_comment_reactions.assert_not_called()
+        mock_comment_service.create_resource_comment_reactions.assert_called_once_with(
+            comment_id,
+            ResourceCommentResponseStatus.COMPLETED.name,
+            admin_liked,
+            sysadmin['id'],
+        )
+        mock_session_commit.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'resource_comment.comment',
+            resource_id=resource_id,
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_reactions_user_access_returns_404(
+        self,
+        mock_redirect_to,
+        mock_session_commit,
+        mock_comment_service,
+        mock_form,
+        mock_toolkit_abort,
+        current_user,
+        user,
+        resource_comment,
+    ):
+        resource_id = resource_comment.resource_id
+
+        mock_current_user(current_user, user)
+        g.userobj = current_user
+
+        ResourceController.reactions(resource_id)
+
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            'The requested URL was not found on the server. If you entered the '
+            'URL manually please check your spelling and try again.',
+        )
+        mock_form.get.assert_not_called()
+        mock_comment_service.get_resource_comment_reactions.assert_not_called()
+        mock_comment_service.update_resource_comment_reactions.assert_not_called()
+        mock_comment_service.create_resource_comment_reactions.assert_not_called()
+        mock_session_commit.assert_not_called()
+        mock_redirect_to.assert_not_called()
