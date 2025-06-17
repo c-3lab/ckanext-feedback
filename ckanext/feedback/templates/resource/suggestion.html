@@ -19,7 +19,7 @@
         <div>
           <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
           <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
-        </div>  
+        </div>
         <br>
         <p class="wrap-text" style="white-space: pre-line;">
           {{ _("Your input may be considered inappropriate.\n"
@@ -32,7 +32,7 @@
           <h5 class="p-2" style="flex: 1;">{{ _('Input Comments') }}</h5>
           <h5 class="p-2" style="flex: 1;">{{ _('Proposal Comments') }}</h5>
         </div>
-        
+
         <div class="comment-contents" style="display: flex; gap: 10px;">
           <form name="input_comment_form" action="{{ h.url_for('resource_comment.check_comment', resource_id=resource.id ) }}" method="post" style="flex: 1;">
             <input type="hidden" name="package_name" value="{{ pkg_dict.name }}">
@@ -43,11 +43,20 @@
               <textarea class="p-2" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-flex justify-content-between">
-                <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                <button class="btn btn-default" type="button" onclick="window.history.back();">
+                  <i class="fa-solid fa-chevron-left"></i>
+                  {{ _('Previous') }}
+                </button>
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary pull-right" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select input Comment') }}</button>
+                <button class="btn btn-primary pull-right" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the input comment') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Select input Comment') }}</button>
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the input comment') }}
+                </button>
                 {% endif %}
               </div>
             </div>
@@ -63,9 +72,15 @@
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary pull-right" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select proposal Comment') }}</button>
+                <button class="btn btn-primary pull-right" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the proposal comment') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">{{ _('Select proposal Comment') }}</button>
+                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the proposal comment') }}
+                </button>
                 {% endif %}
               </div>
             </div>

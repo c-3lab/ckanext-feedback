@@ -1,6 +1,51 @@
 const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
 const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
 
+//文字数カウント
+document.addEventListener('DOMContentLoaded', () => {
+  const textareas = document.getElementsByName('comment-content');
+  const charCounts = document.getElementsByName('comment-count');
+
+  function updateCharCount(textarea, charCount) {
+    const currentLength = textarea.value.length;
+    charCount.textContent = currentLength;
+  }
+
+  textareas.forEach((textarea, index) => {
+    updateCharCount(textarea, charCounts[index]);
+    textarea.addEventListener('input', () => {
+      const currentLength = textarea.value.length;
+      charCounts[index].textContent = currentLength;
+    });
+  });
+});
+
+function selectRating(selectedStar) {
+  // Set rating = to clicked star's value
+  document.getElementById('rating').value = selectedStar.dataset.rating;
+
+  const stars = document.querySelectorAll('#rateable .rating-star');
+
+  // Loop through each star and set the appropriate star icon
+  stars.forEach(star => {
+    if(star.dataset.rating <= selectedStar.dataset.rating) {
+      star.className = 'rating-star fa-solid fa-star';
+    } else {
+      star.className = 'rating-star fa-regular fa-star';
+    }
+  });
+}
+
+window.addEventListener('pageshow', () => {
+  const sendButtons = document.getElementsByName('send-button');
+  sendButtons.forEach(sendButton => {
+    sendButton.style.pointerEvents = "auto";
+    sendButton.style.background = "#206b82";
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
+  });
+});
+
 function checkCommentExists(button, bs3=false) {
   let comment
   if ( button.id === "comment-button" ) {
@@ -61,22 +106,6 @@ function checkReplyExists(button) {
   return is_reply_exists;
 }
 
-function selectRating(selectedStar) {
-  // Set rating = to clicked star's value
-  document.getElementById('rating').value = selectedStar.dataset.rating;
-
-  const stars = document.querySelectorAll('#rateable .rating-star');
-
-  // Loop through each star and set the appropriate star icon
-  stars.forEach(star => {
-    if(star.dataset.rating <= selectedStar.dataset.rating) {
-      star.className = 'rating-star fa-solid fa-star';
-    } else {
-      star.className = 'rating-star fa-regular fa-star';
-    }
-  });
-}
-
 function setReplyFormContent(resourceCommentId) {
   // Set values of modal screen elements
   const category = document.getElementById('comment-category-' + resourceCommentId).textContent;
@@ -91,32 +120,3 @@ function setReplyFormContent(resourceCommentId) {
 function setButtonDisable(button) {
   button.style.pointerEvents = "none"
 }
-
-//文字数カウント
-document.addEventListener('DOMContentLoaded', () => {
-  const textareas = document.getElementsByName('comment-content');
-  const charCounts = document.getElementsByName('comment-count');
-
-  function updateCharCount(textarea, charCount) {
-    const currentLength = textarea.value.length;
-    charCount.textContent = currentLength;
-  }
-
-  textareas.forEach((textarea, index) => {
-    updateCharCount(textarea, charCounts[index]);
-    textarea.addEventListener('input', () => {
-      const currentLength = textarea.value.length;
-      charCounts[index].textContent = currentLength;
-    });
-  });
-});
-
-window.addEventListener('pageshow', () => {
-  const sendButtons = document.getElementsByName('send-button');
-  sendButtons.forEach(sendButton => {
-    sendButton.style.pointerEvents = "auto";
-    sendButton.style.background = "#206b82";
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
-  });
-});
