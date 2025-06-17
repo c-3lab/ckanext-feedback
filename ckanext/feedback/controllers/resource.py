@@ -16,11 +16,9 @@ import ckanext.feedback.services.resource.likes as likes_service
 import ckanext.feedback.services.resource.summary as summary_service
 import ckanext.feedback.services.resource.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
-from ckanext.feedback.models.resource_comment import (
-    ResourceCommentCategory,
-    ResourceCommentResponseStatus,
-)
+from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 from ckanext.feedback.services.common.ai_functions import (
     check_ai_comment,
     suggest_ai_comment,

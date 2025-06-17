@@ -1,22 +1,19 @@
-from ckanext.feedback.components.resource.comment import ResourceCommentComponent
-from ckanext.feedback.models.resource_comment import (
-    ResourceCommentCategory,
-    ResourceCommentResponseStatus,
-)
+from ckanext.feedback.components.comment import CommentComponent
+from ckanext.feedback.models.types import CommentCategory, ResourceCommentResponseStatus
 
 
-class TestResourceCommentComponent:
+class TestCommentComponent:
     def test_create_category_icon(self):
-        category = ResourceCommentCategory.REQUEST.value
+        category = CommentCategory.REQUEST.value
 
-        icon = ResourceCommentComponent.create_category_icon(category)
+        icon = CommentComponent.create_category_icon(category)
 
         assert icon == '<i class="fas fa-lightbulb" style="color: #f0ad4e;"></i>'
 
     def test_create_status_badge(self):
         status = ResourceCommentResponseStatus.COMPLETED.value
         comment_id = 'comment-id'
-        component = ResourceCommentComponent(comment_id)
+        component = CommentComponent(comment_id)
 
         badge = component.create_status_badge(status)
 

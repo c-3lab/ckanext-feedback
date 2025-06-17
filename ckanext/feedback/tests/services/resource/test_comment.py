@@ -15,9 +15,9 @@ from ckanext.feedback.command.feedback import (
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
-    ResourceCommentResponseStatus,
 )
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 from ckanext.feedback.services.resource.comment import (
     approve_resource_comment,
     create_reply,

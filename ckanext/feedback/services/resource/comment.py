@@ -14,9 +14,9 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentCategory,
     ResourceCommentReactions,
     ResourceCommentReply,
-    ResourceCommentResponseStatus,
 )
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 
 
 # Get resource from the selected resource_id

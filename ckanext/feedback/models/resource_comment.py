@@ -17,20 +17,15 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from ckanext.feedback.models.session import Base
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 
 
+# TODO: Organize and consolidate Enum definitions and sa.Enum wrappers.
+# 'https://github.com/c-3lab/ckanext-feedback/issues/286'
 class ResourceCommentCategory(enum.Enum):
     REQUEST = 'Request'
     QUESTION = 'Question'
     THANK = 'Thank'
-
-
-class ResourceCommentResponseStatus(enum.Enum):
-    STATUS_NONE = 'StatusNone'
-    NOT_STARTED = 'NotStarted'
-    IN_PROGRESS = 'InProgress'
-    COMPLETED = 'Completed'
-    REJECTED = 'Rejected'
 
 
 class ResourceComment(Base):

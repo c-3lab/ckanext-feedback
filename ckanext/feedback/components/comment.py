@@ -1,20 +1,17 @@
 from ckan.common import _
 
-from ckanext.feedback.models.resource_comment import (
-    ResourceCommentCategory,
-    ResourceCommentResponseStatus,
-)
+from ckanext.feedback.models.types import CommentCategory, ResourceCommentResponseStatus
 
 
-class ResourceCommentComponent:
+class CommentComponent:
     category_icon = {
-        ResourceCommentCategory.REQUEST.value: (
+        CommentCategory.REQUEST.value: (
             '<i class="fas fa-lightbulb" style="color: #f0ad4e;"></i>'
         ),
-        ResourceCommentCategory.QUESTION.value: (
+        CommentCategory.QUESTION.value: (
             '<i class="fas fa-question-circle" style="color: #007bff;"></i>'
         ),
-        ResourceCommentCategory.THANK.value: (
+        CommentCategory.THANK.value: (
             '<i class="fas fa-heart" style="color: #e83e8c;"></i>'
         ),
     }
@@ -53,7 +50,7 @@ class ResourceCommentComponent:
 
     @staticmethod
     def create_category_icon(category):
-        return ResourceCommentComponent.category_icon[category]
+        return CommentComponent.category_icon[category]
 
     def create_status_badge(self, status):
         return self.status_badge[status]

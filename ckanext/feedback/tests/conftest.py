@@ -7,9 +7,9 @@ from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
     ResourceCommentReactions,
-    ResourceCommentResponseStatus,
 )
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 
 
 @pytest.fixture(autouse=True)

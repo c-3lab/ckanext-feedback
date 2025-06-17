@@ -129,3 +129,33 @@ label.radio {
 input[type="file"].imageUpload {
   display: none;
 }
+
+.content-align > p {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.wrap-text {
+  word-wrap: break-word;
+}
+
+.comment-top-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.comment-action-buttons { 
+  margin-left: auto;
+}
+
+.inline-form {
+  display: inline-block;
+}

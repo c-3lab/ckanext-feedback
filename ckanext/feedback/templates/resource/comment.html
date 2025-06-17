@@ -112,7 +112,6 @@
             <p class="comment-disallowed">{{ _('* You have already commented on this data resource') }}</p>
           {% endif %}
           <br>
-          <input type="hidden" id="comment-timezone">
           {% if page.collection|length %}
             <hr class="divider">
           {% endif %}
@@ -146,7 +145,7 @@
                     {{ h.render_datetime(comment.created, with_hours=True) }}
                   </span>
                   {% if comment.reactions %}
-                    {% set resource_comment_component = h.ResourceCommentComponent(comment.id) %}
+                    {% set resource_comment_component = h.CommentComponent(comment.id) %}
                     {{ resource_comment_component.create_status_badge(comment.reactions.response_status.value) | safe }}
                     {% if comment.reactions.admin_liked %}
                       <span id="admin-liked-{{ comment.id }}" class="fa-stack bubble me-2">
