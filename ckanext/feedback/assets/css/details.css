@@ -27,7 +27,11 @@
   background-color: #EEEEEE;
 }
 
-.comment-content {
+.wrap-text {
+  word-wrap: break-word;
+}
+
+.multiple-line {
   white-space: pre-wrap;
   word-wrap: break-word;
 }

@@ -157,7 +157,7 @@
             </h4>
             <br>
             <div class="comment-container {{'unapproved' if not comment.approval }}">
-              <span class="comment-content" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
+              <span class="multiple-line" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
               {% if comment.attached_image_filename %}
               <div>
                 <a href="{{h.url_for('utilization.attached_image', utilization_id=utilization_id, comment_id=comment.id, attached_image_filename=comment.attached_image_filename ) }}" target="_blank">

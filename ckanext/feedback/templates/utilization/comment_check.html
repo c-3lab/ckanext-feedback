@@ -30,7 +30,7 @@
           {% endfor %}
         </h4>
         <div class="content-align wrap-text comment-container">
-          <span class="comment-content" >{{ content }}</span>
+          <span class="multiple-line" >{{ content }}</span>
         </div>
         {% if attached_image_filename %}
           <div>
@@ -47,7 +47,6 @@
               <input type="hidden" name="comment-content" value="{{ content }}">
               <input type="hidden" name="comment-suggested" value="True">
               <input type="hidden" name="comment-checked" value="True">
-              <input type="hidden" name="comment-content" value="{{ content }}">
               {% if attached_image_filename %}
               <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
               {% endif %}
