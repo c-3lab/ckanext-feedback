@@ -10,6 +10,8 @@ from sqlalchemy.orm import relationship
 from ckanext.feedback.models.session import Base
 
 
+# TODO: Organize and consolidate Enum definitions and sa.Enum wrappers.
+# 'https://github.com/c-3lab/ckanext-feedback/issues/286'
 class UtilizationCommentCategory(enum.Enum):
     REQUEST = 'Request'
     QUESTION = 'Question'

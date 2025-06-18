@@ -8,6 +8,7 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 
 from ckanext.feedback.command import feedback
+from ckanext.feedback.components.comment import CommentComponent
 from ckanext.feedback.controllers.api import ranking as get_action_controllers
 from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.services.common import check
@@ -116,6 +117,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 FeedbackConfig().recaptcha.publickey.get
             ),
             'like_status': ResourceController.like_status,
+            'create_category_icon': CommentComponent.create_category_icon,
         }
 
     # IPackageController

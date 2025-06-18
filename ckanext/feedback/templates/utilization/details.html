@@ -85,6 +85,7 @@
             {% for category in categories %}
             <label class="radio">
               <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
+              {{ h.create_category_icon(category.value) | safe }}
               {{ _(category.value) }}
             </label>
             {% endfor %}
@@ -130,26 +131,40 @@
             <hr class="divider">
           {% endif %}
           {% for comment in page.collection %}
-            {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
-              <form name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
-                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
-                  <i class="fa-solid fa-check"></i>
-                  {{ _('Approve') }}
-                </button>
-              </form>
-            {% endif %}
-            <h4>
-              <span id="comment-created-{{ comment.id }}">{{ comment.created.strftime('%Y/%m/%d %H:%M') }}</span>
-              {% if comment.category %}
-                <span id="comment-category-{{ comment.id }}">{{ _(comment.category.value) }}</span>
-              {% endif %}
-              {% if not comment.approval %}
-                {{ _('Unapproved') }}
-              {% endif %}
-            </h4>
-            <br>
-            <div class="comment-container {{'unapproved' if not comment.approval }}">
-              <span class="multiple-line" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
+            <div class="rounded p-2 {{'unapproved' if not comment.approval }}">
+              <div class="comment-top-section">
+                <div id="comment-header-{{ comment.id }}" class="d-flex align-items-center">
+                  {% if not comment.approval %}
+                    <span class="font-bold me-2">({{ _('Unapproved') }})</span>
+                  {% endif %}
+                  {% if comment.category %}
+                    <span id="comment-category-{{ comment.id }}" class="font-bold me-2">
+                      {{ h.create_category_icon(comment.category.value) | safe }}
+                      {{ _(comment.category.value) }}
+                    </span>
+                  {% endif %}
+                  <span id="comment-created-{{ comment.id }}" class="automatic-local-datetime me-2" data-datetime="{{ h.render_datetime(comment.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                    {{ h.render_datetime(comment.created, with_hours=True) }}
+                  </span>
+                </div>
+                {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
+                  <div id="comment-action-buttons" class="comment-action-buttons">
+                    <form class="inline-form" name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
+                      <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
+                        <i class="fa-solid fa-check"></i>
+                        {{ _('Approve') }}
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="wrap-text">
+                {% if comment.content %}
+                  <div class="comment-container">
+                    <span class="multiple-line" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <hr class="divider">
           {% endfor %}

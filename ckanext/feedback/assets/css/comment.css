@@ -3,13 +3,6 @@
   padding-top: 5px;
 }
 
-.content-align > p {
-  margin-top: 15px;
-  margin-bottom: 15px;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
 .comment-disallowed {
   color: red;
 }
@@ -36,7 +29,7 @@
 }
 
 .reply {
-  margin-left: 30px;
+  padding-left: 30px;
 }
 
 .unapproved {
@@ -112,4 +105,23 @@ label.radio {
   position: absolute;
   bottom: 0;
   right: 0;
+}
+
+.comment-top-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.comment-action-buttons { 
+  margin-left: auto;
+}
+
+.inline-form {
+  display: inline-block;
 }

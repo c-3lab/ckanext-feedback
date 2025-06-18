@@ -108,13 +108,15 @@ function checkReplyExists(button) {
 
 function setReplyFormContent(resourceCommentId) {
   // Set values of modal screen elements
-  const category = document.getElementById('comment-category-' + resourceCommentId).textContent;
-  const approved = document.getElementById('comment-created-' + resourceCommentId).textContent;
+  const commentHeader = document.getElementById('comment-header-' + resourceCommentId);
+  const replyCommentHeader = document.getElementById('reply-comment-header');
   const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
 
-  document.getElementById('selected_comment_header').innerHTML = approved + ' ' + category;
-  document.getElementById('selected_comment').innerHTML = content;
-  document.getElementById('selected_resource_comment_id').value = resourceCommentId;
+  const commentHeaderClone = commentHeader.cloneNode(true);
+  replyCommentHeader.innerHTML = '';
+  replyCommentHeader.appendChild(commentHeaderClone);
+  document.getElementById('reply-comment').innerHTML = content;
+  document.getElementById('reply-comment-id').value = resourceCommentId;
 }
 
 function setButtonDisable(button) {

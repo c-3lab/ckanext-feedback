@@ -25,11 +25,14 @@
         <h4>
           {% for category in categories %}
             {% if category.name == selected_category %}
-              <span>{{ _(category.value) }}</span>
+              <span>
+                {{ h.create_category_icon(category.value) | safe }}
+                {{ _(category.value) }}
+              </span>
             {% endif %}
           {% endfor %}
         </h4>
-        <div class="content-align wrap-text comment-container">
+        <div class="wrap-text comment-container">
           <span class="multiple-line" >{{ content }}</span>
         </div>
         <hr class="divider">
