@@ -11,7 +11,6 @@ from flask_babel import Babel
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
-    create_resource_like_tables,
     create_resource_tables,
     create_utilization_tables,
 )
@@ -45,7 +44,6 @@ class TestUtilizationController:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
-        create_resource_like_tables(engine)
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)

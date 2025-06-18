@@ -6,7 +6,6 @@ from ckan.tests import factories
 
 import ckanext.feedback.services.ranking.dataset as dataset_ranking_service
 from ckanext.feedback.command.feedback import (
-    create_download_monthly_tables,
     create_download_tables,
     create_resource_tables,
     create_utilization_tables,
@@ -26,7 +25,6 @@ class TestRankingDataset:
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
-        create_download_monthly_tables(engine)
 
     def test_get_download_ranking(self):
         organization = factories.Organization()
