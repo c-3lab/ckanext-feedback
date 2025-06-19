@@ -119,6 +119,24 @@ function setReplyFormContent(resourceCommentId) {
   document.getElementById('reply-comment-id').value = resourceCommentId;
 }
 
+function setReactionsFormContent(resourceCommentId) {
+  const commentHeader = document.getElementById('comment-header-' + resourceCommentId);
+  const reactionsCommentHeader = document.getElementById('reactions-comment-header');
+  const commentStatus = document.getElementById('comment-badge-' + resourceCommentId);
+  const adminLikeIndicator = document.getElementById('admin-liked-' + resourceCommentId);
+  const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
+
+  const commentHeaderClone = commentHeader.cloneNode(true);
+  reactionsCommentHeader.innerHTML = '';
+  reactionsCommentHeader.appendChild(commentHeaderClone);
+  if (commentStatus) {
+    document.getElementById(commentStatus.dataset.status).checked = true;
+  }
+  document.getElementById('admin-liked').checked = adminLikeIndicator ? true : false;
+  document.getElementById('reactions-comment').innerHTML = content;
+  document.getElementById('reactions-comment-id').value = resourceCommentId;
+}
+
 function setButtonDisable(button) {
   button.style.pointerEvents = "none"
 }

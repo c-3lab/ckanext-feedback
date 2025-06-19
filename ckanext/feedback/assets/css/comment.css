@@ -125,3 +125,39 @@ label.radio {
 .inline-form {
   display: inline-block;
 }
+
+.badge-pill {
+  border-radius: 10em;
+}
+
+.badge-none {
+  color: #333333;
+  padding: 0.35em 0;
+}
+.badge-not-started {
+  background-color: #A0A0A0;
+}
+.badge-in-progress {
+  background-color: #3B82F6;
+}
+.badge-completed {
+  background-color: #22C55E;
+}
+.badge-rejected {
+  background-color: #f0ad4e;
+}
+
+.status-controls, .like-controls {
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.status-option, .like-option {
+  display: flex;
+  height: 24px;
+  align-items: center;
+  gap: 8px;
+}
