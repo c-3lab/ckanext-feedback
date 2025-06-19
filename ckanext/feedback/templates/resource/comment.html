@@ -107,7 +107,7 @@
             <hr class="divider">
           {% endif %}
           {% for comment in page.collection %}
-            <div class="rounded p-2 {{'unapproved' if not comment.approval }}">
+            <div class="custom-rounded-padding {{'unapproved' if not comment.approval }}">
               {% set reply = h.get_comment_reply(comment.id) %}
               <div class="comment-top-section">
                 <div id="comment-header-{{ comment.id }}" class="d-flex align-items-center">

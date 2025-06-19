@@ -32,6 +32,11 @@
   padding-left: 30px;
 }
 
+.custom-rounded-padding {
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
 .unapproved {
   color: #808080;
   background-color: #EEEEEE;
