@@ -137,6 +137,7 @@ label.radio {
 
 .badge-none {
   color: #333333;
+  background-color: transparent;
   padding: 0.35em 0;
 }
 .badge-not-started {
