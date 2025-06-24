@@ -1,7 +1,6 @@
 const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
 const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
 
-//文字数カウント
 document.addEventListener('DOMContentLoaded', () => {
   const textareas = document.getElementsByName('comment-content');
   const charCounts = document.getElementsByName('comment-count');
