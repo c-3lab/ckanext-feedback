@@ -108,6 +108,10 @@ label.radio {
   display: inline-block;
 }
 
+.resize-vertical {
+  resize: vertical;
+}
+
 .image-preview-wrapper {
   position: relative;
   display: inline-block;

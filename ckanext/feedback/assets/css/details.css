@@ -72,6 +72,10 @@ label.radio {
   display: inline-block;
 }
 
+.resize-vertical {
+  resize: vertical;
+}
+
 .comment-container {
   margin-bottom: 10px;
 }

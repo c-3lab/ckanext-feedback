@@ -10,3 +10,7 @@
 .comment-count {
   color: #808080;
 }
+
+.resize-vertical {
+  resize: vertical;
+}
