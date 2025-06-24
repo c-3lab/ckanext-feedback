@@ -19,3 +19,6 @@
   float: right;
 }
 
+.resize-vertical {
+  resize: vertical;
+}

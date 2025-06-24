@@ -57,7 +57,7 @@
               {% endfor %}
               <br>
               <br>
-              <textarea class="form-control" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
+              <textarea class="form-control resize-vertical" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
               <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
               <div>
                 <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
@@ -183,7 +183,7 @@
               <div class="form-group control-full">
                 <label class="control-label" for="code">{{ _('Input') }}</label>
                 <div class="controls">
-                  <textarea id="reply_content" name="reply_content" cols="20" rows="3" placeholder="" class="form-control"></textarea>
+                  <textarea id="reply_content" name="reply_content" cols="20" rows="3" placeholder="" class="form-control resize-vertical"></textarea>
                 </div>
                 <div>
                   <p id="reply-error" class="alert alert-error" style="display: none;">{{ _('Please enter your reply') }}</p>
