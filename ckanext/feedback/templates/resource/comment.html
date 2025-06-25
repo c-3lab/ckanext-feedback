@@ -31,14 +31,14 @@
             <hr>
           </div>
           <h4>{{ _('Comments') }}</h4>
+          <p>{{ h.get_resource_comments(resource.id) }}</p>
+          <hr>
+          <h4>{{ _('Comment') }}</h4>
           {% if h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org) %}
               <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
               <br>
               <br>
           {% endif %}
-          <p>{{ h.get_resource_comments(resource.id) }}</p>
-          <hr>
-          <h4>{{ _('Comment') }}</h4>
           {% if not cookie or not (h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org)) %}
             {% if h.is_enabled_rating(pkg_dict.owner_org) %}
               {{ _('Rating') }}
