@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-06-18 19:59+0900\n"
+"POT-Creation-Date: 2025-06-26 11:05+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -23,9 +23,9 @@ msgstr ""
 #: ckanext/feedback/plugin.py:186
 #: ckanext/feedback/templates/package/snippets/resource_item.html:32
 #: ckanext/feedback/templates/snippets/package_item.html:30
-#: ckanext/feedback/tests/test_plugin.py:146
-#: ckanext/feedback/tests/test_plugin.py:160
-#: ckanext/feedback/tests/test_plugin.py:221
+#: ckanext/feedback/tests/test_plugin.py:142
+#: ckanext/feedback/tests/test_plugin.py:156
+#: ckanext/feedback/tests/test_plugin.py:217
 msgid "Downloads"
 msgstr "ダウンロード数"
 
@@ -33,9 +33,9 @@ msgstr "ダウンロード数"
 #: ckanext/feedback/plugin.py:193
 #: ckanext/feedback/templates/package/snippets/resource_item.html:41
 #: ckanext/feedback/templates/snippets/package_item.html:39
-#: ckanext/feedback/tests/test_plugin.py:147
-#: ckanext/feedback/tests/test_plugin.py:161
-#: ckanext/feedback/tests/test_plugin.py:222
+#: ckanext/feedback/tests/test_plugin.py:143
+#: ckanext/feedback/tests/test_plugin.py:157
+#: ckanext/feedback/tests/test_plugin.py:218
 msgid "Utilizations"
 msgstr "利活用数"
 
@@ -44,9 +44,9 @@ msgstr "利活用数"
 #: ckanext/feedback/templates/package/snippets/resource_item.html:68
 #: ckanext/feedback/templates/snippets/package_item.html:70
 #: ckanext/feedback/templates/utilization/details.html:54
-#: ckanext/feedback/tests/test_plugin.py:148
-#: ckanext/feedback/tests/test_plugin.py:162
-#: ckanext/feedback/tests/test_plugin.py:223
+#: ckanext/feedback/tests/test_plugin.py:144
+#: ckanext/feedback/tests/test_plugin.py:158
+#: ckanext/feedback/tests/test_plugin.py:219
 msgid "Issue Resolutions"
 msgstr "課題解決数"
 
@@ -57,9 +57,9 @@ msgstr "課題解決数"
 #: ckanext/feedback/templates/snippets/package_item.html:49
 #: ckanext/feedback/templates/utilization/details.html:80
 #: ckanext/feedback/templates/utilization/search.html:61
-#: ckanext/feedback/tests/test_plugin.py:149
-#: ckanext/feedback/tests/test_plugin.py:163
-#: ckanext/feedback/tests/test_plugin.py:224
+#: ckanext/feedback/tests/test_plugin.py:145
+#: ckanext/feedback/tests/test_plugin.py:159
+#: ckanext/feedback/tests/test_plugin.py:220
 msgid "Comments"
 msgstr "コメント数"
 
@@ -68,8 +68,8 @@ msgstr "コメント数"
 #: ckanext/feedback/templates/package/snippets/resource_item.html:58
 #: ckanext/feedback/templates/resource/comment.html:43
 #: ckanext/feedback/templates/snippets/package_item.html:60
-#: ckanext/feedback/tests/test_plugin.py:164
-#: ckanext/feedback/tests/test_plugin.py:231
+#: ckanext/feedback/tests/test_plugin.py:160
+#: ckanext/feedback/tests/test_plugin.py:227
 msgid "Rating"
 msgstr "評価"
 
@@ -77,9 +77,9 @@ msgstr "評価"
 #: ckanext/feedback/plugin.py:218
 #: ckanext/feedback/templates/package/snippets/resource_item.html:23
 #: ckanext/feedback/templates/snippets/package_item.html:21
-#: ckanext/feedback/tests/test_plugin.py:150
-#: ckanext/feedback/tests/test_plugin.py:165
-#: ckanext/feedback/tests/test_plugin.py:225
+#: ckanext/feedback/tests/test_plugin.py:146
+#: ckanext/feedback/tests/test_plugin.py:161
+#: ckanext/feedback/tests/test_plugin.py:221
 msgid "Number of Likes"
 msgstr "いいね数"
 
@@ -173,14 +173,14 @@ msgid "Organization"
 msgstr "組織"
 
 #: ckanext/feedback/controllers/admin.py:218
-#: ckanext/feedback/tests/controllers/test_admin.py:421
-#: ckanext/feedback/tests/controllers/test_admin.py:462
+#: ckanext/feedback/tests/controllers/test_admin.py:419
+#: ckanext/feedback/tests/controllers/test_admin.py:460
 msgid "item(s) were approved."
 msgstr "項目を承認しました。"
 
 #: ckanext/feedback/controllers/admin.py:242
-#: ckanext/feedback/tests/controllers/test_admin.py:516
-#: ckanext/feedback/tests/controllers/test_admin.py:557
+#: ckanext/feedback/tests/controllers/test_admin.py:514
+#: ckanext/feedback/tests/controllers/test_admin.py:555
 msgid "item(s) were completely deleted."
 msgstr "項目を完全に削除しました。"
 
@@ -190,16 +190,16 @@ msgstr "項目を完全に削除しました。"
 #: ckanext/feedback/controllers/resource.py:288
 #: ckanext/feedback/controllers/utilization.py:561
 #: ckanext/feedback/services/common/check.py:13
-#: ckanext/feedback/tests/controllers/test_admin.py:889
-#: ckanext/feedback/tests/controllers/test_admin.py:915
-#: ckanext/feedback/tests/controllers/test_admin.py:994
-#: ckanext/feedback/tests/controllers/test_resource.py:1002
-#: ckanext/feedback/tests/controllers/test_resource.py:1044
-#: ckanext/feedback/tests/controllers/test_resource.py:1125
-#: ckanext/feedback/tests/controllers/test_resource.py:1166
-#: ckanext/feedback/tests/controllers/test_utilization.py:2440
-#: ckanext/feedback/tests/services/common/test_check.py:112
-#: ckanext/feedback/tests/services/common/test_check.py:132
+#: ckanext/feedback/tests/controllers/test_admin.py:887
+#: ckanext/feedback/tests/controllers/test_admin.py:913
+#: ckanext/feedback/tests/controllers/test_admin.py:992
+#: ckanext/feedback/tests/controllers/test_resource.py:1000
+#: ckanext/feedback/tests/controllers/test_resource.py:1042
+#: ckanext/feedback/tests/controllers/test_resource.py:1123
+#: ckanext/feedback/tests/controllers/test_resource.py:1164
+#: ckanext/feedback/tests/controllers/test_utilization.py:2438
+#: ckanext/feedback/tests/services/common/test_check.py:110
+#: ckanext/feedback/tests/services/common/test_check.py:130
 msgid ""
 "The requested URL was not found on the server. If you entered the URL "
 "manually please check your spelling and try again."
@@ -521,7 +521,7 @@ msgstr "承認"
 
 #: ckanext/feedback/templates/admin/approval_and_delete.html:48
 #: ckanext/feedback/templates/admin/approval_and_delete.html:123
-#: ckanext/feedback/templates/utilization/edit.html:67
+#: ckanext/feedback/templates/utilization/edit.html:74
 msgid "Delete"
 msgstr "削除"
 
@@ -607,7 +607,7 @@ msgstr "利活用方法登録申請"
 #: ckanext/feedback/templates/package/resource_read.html:98
 #: ckanext/feedback/templates/package/snippets/resource_item.html:152
 #: ckanext/feedback/templates/resource/comment.html:15
-#: ckanext/feedback/templates/resource/comment.html:40
+#: ckanext/feedback/templates/resource/comment.html:35
 #: ckanext/feedback/templates/utilization/details.html:84
 msgid "Comment"
 msgstr "コメント"
@@ -647,7 +647,7 @@ msgstr "編集"
 msgid "Comment on Resource"
 msgstr "リソースへのコメント"
 
-#: ckanext/feedback/templates/resource/comment.html:34
+#: ckanext/feedback/templates/resource/comment.html:37
 msgid ""
 "(In order to prevent potential spam, only a single comment is allowed per"
 " data resouce)"
@@ -769,7 +769,8 @@ msgstr "返信を入力してください。"
 #: ckanext/feedback/templates/utilization/comment_check.html:55
 #: ckanext/feedback/templates/utilization/comment_check.html:60
 #: ckanext/feedback/templates/utilization/details.html:210
-#: ckanext/feedback/templates/utilization/edit.html:60
+#: ckanext/feedback/templates/utilization/edit.html:61
+#: ckanext/feedback/templates/utilization/edit.html:66
 #: ckanext/feedback/templates/utilization/new.html:64
 msgid "Send"
 msgstr "送信"

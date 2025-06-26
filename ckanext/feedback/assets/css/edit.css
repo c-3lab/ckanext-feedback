@@ -10,3 +10,15 @@
 .comment-count {
   color: #808080;
 }
+
+.margin-0 {
+  margin: 0;
+}
+
+.float-right {
+  float: right;
+}
+
+.resize-vertical {
+  resize: vertical;
+}

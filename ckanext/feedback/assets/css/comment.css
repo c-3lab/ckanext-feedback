@@ -130,3 +130,7 @@ label.radio {
 .inline-form {
   display: inline-block;
 }
+
+.resize-vertical {
+  resize: vertical;
+}
