@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ckanext-feedback"
-version = "1.4.3"
+version = "1.4.4"
 description = "The extension to feedback on CKAN datasets such as review, number of downloads,use-cases,resolved-problems, and way of use"
 authors = ["C3Lab <info.c3lab@gmail.com>"]
 license = "GNU Affero General Public License v3.0"
