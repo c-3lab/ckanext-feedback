@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-06-30 11:21+0900\n"
+"POT-Creation-Date: 2025-06-30 16:23+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -193,11 +193,11 @@ msgstr "項目を完全に削除しました。"
 #: ckanext/feedback/tests/controllers/test_admin.py:889
 #: ckanext/feedback/tests/controllers/test_admin.py:915
 #: ckanext/feedback/tests/controllers/test_admin.py:994
-#: ckanext/feedback/tests/controllers/test_resource.py:1283
-#: ckanext/feedback/tests/controllers/test_resource.py:1325
-#: ckanext/feedback/tests/controllers/test_resource.py:1406
-#: ckanext/feedback/tests/controllers/test_resource.py:1447
-#: ckanext/feedback/tests/controllers/test_utilization.py:2876
+#: ckanext/feedback/tests/controllers/test_resource.py:1003
+#: ckanext/feedback/tests/controllers/test_resource.py:1045
+#: ckanext/feedback/tests/controllers/test_resource.py:1126
+#: ckanext/feedback/tests/controllers/test_resource.py:1167
+#: ckanext/feedback/tests/controllers/test_utilization.py:2441
 #: ckanext/feedback/tests/services/common/test_check.py:112
 #: ckanext/feedback/tests/services/common/test_check.py:132
 msgid ""
