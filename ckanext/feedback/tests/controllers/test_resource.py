@@ -16,6 +16,7 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
 )
 from ckanext.feedback.controllers.resource import ResourceController
+from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
 
 engine = model.repo.session.get_bind()
@@ -372,7 +373,7 @@ class TestResourceController:
         mock_form,
     ):
         resource_id = 'resource id'
-        category = 'category'
+        category = ResourceCommentCategory.REQUEST.name
         comment_content = 'content'
         rating = '1'
         package_name = 'ota'
@@ -449,7 +450,7 @@ class TestResourceController:
         mock_form,
     ):
         resource_id = 'resource id'
-        category = 'category'
+        category = ResourceCommentCategory.REQUEST.name
         content = 'ex'
         while True:
             content += content
@@ -484,7 +485,7 @@ class TestResourceController:
     ):
         resource_id = 'resource_id'
         comment_content = 'comment_content'
-        category = 'category'
+        category = ResourceCommentCategory.REQUEST.name
         package_name = 'ota'
         mock_form.get.side_effect = lambda x, default: {
             'package_name': package_name,
