@@ -1,6 +1,6 @@
 Dear Organization Administrator,
 
-We are writing to notify you that a new submission related to {{ target }} has been received. Please review the details of the submission below:
+We are writing to notify you that a new submission related to {{ target_name }} has been received. Please review the details of the submission below:
 
 Submission Title: {{ content_title }}
 
