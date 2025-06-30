@@ -332,6 +332,12 @@ class UtilizationController:
 
         session.commit()
 
+        category_map = {
+            UtilizationCommentCategory.REQUEST.name: _('Request'),
+            UtilizationCommentCategory.QUESTION.name: _('Question'),
+            UtilizationCommentCategory.THANK.name: _('Thank'),
+        }
+
         try:
             utilization = detail_service.get_utilization(utilization_id)
             send_email(
@@ -343,7 +349,7 @@ class UtilizationController:
                 ).Resource.package.owner_org,
                 subject=FeedbackConfig().notice_email.subject_utilization_comment.get(),
                 target_name=utilization.title,
-                category=category,
+                category=category_map[category],
                 content=content,
                 url=toolkit.url_for(
                     'utilization.details', utilization_id=utilization_id, _external=True

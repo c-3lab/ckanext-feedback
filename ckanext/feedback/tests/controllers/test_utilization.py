@@ -18,6 +18,7 @@ from ckanext.feedback.command.feedback import (
     create_utilization_tables,
 )
 from ckanext.feedback.controllers.utilization import UtilizationController
+from ckanext.feedback.models.utilization import UtilizationCommentCategory
 
 engine = model.repo.session.get_bind()
 
@@ -1479,7 +1480,7 @@ class TestUtilizationController:
         mock_form,
     ):
         utilization_id = 'utilization id'
-        category = 'category'
+        category = UtilizationCommentCategory.REQUEST.name
         content = 'content'
         attached_image_filename = 'attached_image_filename'
 
@@ -1607,7 +1608,7 @@ class TestUtilizationController:
         mock_form,
     ):
         utilization_id = 'utilization id'
-        category = 'category'
+        category = UtilizationCommentCategory.REQUEST.name
         content = 'ex'
         while True:
             content += content
@@ -1646,7 +1647,7 @@ class TestUtilizationController:
         mock_form,
     ):
         utilization_id = 'utilization_id'
-        category = 'category'
+        category = UtilizationCommentCategory.REQUEST.name
         content = 'content'
         attached_image_filename = None
 

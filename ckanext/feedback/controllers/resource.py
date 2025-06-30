@@ -140,6 +140,12 @@ class ResourceController:
 
         session.commit()
 
+        category_map = {
+            ResourceCommentCategory.REQUEST.name: _('Request'),
+            ResourceCommentCategory.QUESTION.name: _('Question'),
+            ResourceCommentCategory.THANK.name: _('Thank'),
+        }
+
         try:
             resource = comment_service.get_resource(resource_id)
             send_email(
@@ -149,7 +155,7 @@ class ResourceController:
                 organization_id=resource.Resource.package.owner_org,
                 subject=FeedbackConfig().notice_email.subject_resource_comment.get(),
                 target_name=resource.Resource.name,
-                category=category,
+                category=category_map[category],
                 content=content,
                 url=toolkit.url_for(
                     'resource_comment.comment', resource_id=resource_id, _external=True
