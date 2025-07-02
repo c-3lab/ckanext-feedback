@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-06-26 16:10+0900\n"
+"POT-Creation-Date: 2025-07-02 11:47+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -208,17 +208,17 @@ msgstr "項目を完全に削除しました。"
 #: ckanext/feedback/controllers/admin.py:342
 #: ckanext/feedback/controllers/admin.py:357
 #: ckanext/feedback/controllers/admin.py:375
-#: ckanext/feedback/controllers/resource.py:289
-#: ckanext/feedback/controllers/utilization.py:561
+#: ckanext/feedback/controllers/resource.py:295
+#: ckanext/feedback/controllers/utilization.py:567
 #: ckanext/feedback/services/common/check.py:13
 #: ckanext/feedback/tests/controllers/test_admin.py:887
 #: ckanext/feedback/tests/controllers/test_admin.py:913
 #: ckanext/feedback/tests/controllers/test_admin.py:992
-#: ckanext/feedback/tests/controllers/test_resource.py:1001
-#: ckanext/feedback/tests/controllers/test_resource.py:1043
-#: ckanext/feedback/tests/controllers/test_resource.py:1124
-#: ckanext/feedback/tests/controllers/test_resource.py:1165
-#: ckanext/feedback/tests/controllers/test_utilization.py:2438
+#: ckanext/feedback/tests/controllers/test_resource.py:1002
+#: ckanext/feedback/tests/controllers/test_resource.py:1044
+#: ckanext/feedback/tests/controllers/test_resource.py:1125
+#: ckanext/feedback/tests/controllers/test_resource.py:1166
+#: ckanext/feedback/tests/controllers/test_utilization.py:2439
 #: ckanext/feedback/tests/services/common/test_check.py:110
 #: ckanext/feedback/tests/services/common/test_check.py:130
 msgid ""
@@ -291,15 +291,36 @@ msgid "feedback_all_time_report"
 msgstr "フィードバック全期間レポート"
 
 #: ckanext/feedback/controllers/resource.py:98
-#: ckanext/feedback/controllers/resource.py:207
+#: ckanext/feedback/controllers/resource.py:213
 #: ckanext/feedback/controllers/utilization.py:167
 #: ckanext/feedback/controllers/utilization.py:286
-#: ckanext/feedback/controllers/utilization.py:387
+#: ckanext/feedback/controllers/utilization.py:393
 msgid "Bad Captcha. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
-#: ckanext/feedback/controllers/resource.py:134
-#: ckanext/feedback/controllers/utilization.py:324
+#: ckanext/feedback/controllers/resource.py:116
+#: ckanext/feedback/controllers/utilization.py:304
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:27
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:33
+msgid "Request"
+msgstr "要望"
+
+#: ckanext/feedback/controllers/resource.py:117
+#: ckanext/feedback/controllers/utilization.py:305
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:28
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:34
+msgid "Question"
+msgstr "質問"
+
+#: ckanext/feedback/controllers/resource.py:118
+#: ckanext/feedback/controllers/utilization.py:306
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:29
+#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:35
+msgid "Thank"
+msgstr "感謝"
+
+#: ckanext/feedback/controllers/resource.py:140
+#: ckanext/feedback/controllers/utilization.py:330
 msgid ""
 "Your comment has been sent.<br>The comment will not be displayed until "
 "approved by an administrator."
@@ -311,28 +332,13 @@ msgid ""
 "until approved by an administrator."
 msgstr "登録申請が完了しました。<br>管理者に申請が承認されるまで表示されません。"
 
-#: ckanext/feedback/controllers/utilization.py:511
+#: ckanext/feedback/controllers/utilization.py:517
 msgid "The utilization has been successfully updated."
 msgstr "利活用方法の更新に成功しました。"
 
-#: ckanext/feedback/controllers/utilization.py:529
+#: ckanext/feedback/controllers/utilization.py:535
 msgid "The utilization has been successfully deleted."
 msgstr "利活用方法の削除に成功しました。"
-
-#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:27
-#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:33
-msgid "Request"
-msgstr "要望"
-
-#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:28
-#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:34
-msgid "Question"
-msgstr "質問"
-
-#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:29
-#: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:35
-msgid "Thank"
-msgstr "感謝"
 
 #: ckanext/feedback/templates/header.html:11
 msgid "Sysadmin settings"

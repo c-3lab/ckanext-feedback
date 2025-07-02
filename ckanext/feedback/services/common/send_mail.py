@@ -43,11 +43,15 @@ def send_email(template_name, organization_id, subject, **kwargs):
     )
 
     # Retrieving organization administrators and sending emails
+    context = {'ignore_auth': True, 'keep_email': True}
+
     get_members = toolkit.get_action('member_list')
     show_user = toolkit.get_action('user_show')
 
     condition = {'id': organization_id, 'object_type': 'user', 'capacity': 'admin'}
-    users = [show_user(None, {'id': id}) for (id, _, _) in get_members(None, condition)]
+    users = [
+        show_user(context, {'id': id}) for (id, _, _) in get_members(context, condition)
+    ]
 
     for user in users:
         try:

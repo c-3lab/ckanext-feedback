@@ -1,6 +1,6 @@
 Dear Organization Administrator,
 
-We have received a new comment regarding {{ target }}. Please review the details of the comment below:
+We have received a new comment regarding {{ target_name }}. Please review the details of the comment below:
 
 Comment Category: {{ category }}
 
