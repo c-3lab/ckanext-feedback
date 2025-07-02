@@ -69,14 +69,16 @@
                 <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
               </div>
               <div class="comment-form-footer">
-                <div class="image-upload-section">
-                  <button id="uploadBtn" type="button" class="btn btn-default" onclick="uploadClicked();">
-                    <i class="fa-solid fa-image"></i>
-                    {{ _('Image Attachment') }}
-                  </button>
-                  <div id="previewContainer"></div>
-                  <input type="file" id="imageUpload" class="imageUpload" name="attached_image" accept="image/*">
-                </div>
+                {% if h.is_enabled_image_attachment(pkg_dict.owner_org) %}
+                  <div class="image-upload-section">
+                    <button id="uploadBtn" type="button" class="btn btn-default" onclick="uploadClicked();">
+                      <i class="fa-solid fa-image"></i>
+                      {{ _('Image Attachment') }}
+                    </button>
+                    <div id="previewContainer"></div>
+                    <input type="file" id="imageUpload" class="imageUpload" name="attached_image" accept="image/*">
+                  </div>
+                {% endif %}
                 <div class="form-actions">
                   {% if h.is_base_public_folder_bs3() %}
                   <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">

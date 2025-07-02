@@ -89,6 +89,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 FeedbackConfig().resource_comment.repeat_post_limit.is_enable
             ),
             'is_enabled_rating': FeedbackConfig().resource_comment.rating.is_enable,
+            'is_enabled_image_attachment': (
+                FeedbackConfig().resource_comment.image_attachment.is_enable
+            ),
             'is_organization_admin': check.is_organization_admin,
             'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
