@@ -13,15 +13,19 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentCategory,
 )
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 from ckanext.feedback.services.resource.comment import (
     approve_resource_comment,
     create_reply,
     create_resource_comment,
+    create_resource_comment_reactions,
     get_comment_reply,
     get_cookie,
     get_resource,
     get_resource_comment_categories,
+    get_resource_comment_reactions,
     get_resource_comments,
+    update_resource_comment_reactions,
 )
 
 
@@ -104,3 +108,86 @@ class TestComments:
     def test_get_cookie(self):
         resource = factories.Resource()
         assert not get_cookie(resource['id'])
+
+
+class TestResourceComment:
+    def test_create_resource_comment(self, resource):
+        resource_id = resource['id']
+        category = ResourceCommentCategory.REQUEST
+        content = 'test_content'
+        rating = 3
+
+        create_resource_comment(resource_id, category, content, rating)
+
+
+class TestResourceCommentReactions:
+    def test_get_resource_comment_reactions_exists_returns_reaction(
+        self, resource_comment
+    ):
+        create_resource_comment_reactions(
+            resource_comment_id=resource_comment.id,
+            response_status=ResourceCommentResponseStatus.STATUS_NONE,
+            admin_liked=False,
+            updater_user_id=None,
+        )
+        session.flush()
+
+        result = get_resource_comment_reactions(resource_comment.id)
+
+        assert result is not None
+        assert result.resource_comment_id == resource_comment.id
+        assert result.response_status is ResourceCommentResponseStatus.STATUS_NONE
+        assert result.admin_liked is False
+        assert result.updater_user_id is None
+
+    def test_get_resource_comment_reactions_not_exists_returns_none(
+        self, resource_comment
+    ):
+        result = get_resource_comment_reactions(resource_comment.id)
+
+        assert result is None
+
+    def test_create_resource_comment_reactions(self, user, resource_comment):
+        create_resource_comment_reactions(
+            resource_comment_id=resource_comment.id,
+            response_status=ResourceCommentResponseStatus.STATUS_NONE,
+            admin_liked=False,
+            updater_user_id=user['id'],
+        )
+        session.flush()
+
+        result = get_resource_comment_reactions(resource_comment.id)
+
+        assert result is not None
+        assert result.resource_comment_id == resource_comment.id
+        assert result.response_status is ResourceCommentResponseStatus.STATUS_NONE
+        assert result.admin_liked is False
+        assert result.updater_user_id == user['id']
+
+    def test_update_resource_comment_reactions(
+        self,
+        user,
+        resource_comment_reactions,
+    ):
+        assert (
+            resource_comment_reactions.response_status
+            is ResourceCommentResponseStatus.STATUS_NONE
+        )
+        assert resource_comment_reactions.admin_liked is False
+        assert resource_comment_reactions.updater_user_id is None
+
+        update_resource_comment_reactions(
+            reactions=resource_comment_reactions,
+            response_status=ResourceCommentResponseStatus.COMPLETED,
+            admin_liked=True,
+            updater_user_id=user['id'],
+        )
+        session.flush()
+
+        result = get_resource_comment_reactions(
+            resource_comment_reactions.resource_comment_id
+        )
+
+        assert result.response_status is ResourceCommentResponseStatus.COMPLETED
+        assert result.admin_liked is True
+        assert result.updater_user_id == user['id']

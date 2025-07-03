@@ -5,6 +5,7 @@
   {% block styles %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-css' %}
+    {% asset 'feedback/feedback-tooltip-css' %}
   {% endblock %}
 
   {% block breadcrumb_content_selected %} class="inactive"{% endblock %}
@@ -135,9 +136,31 @@
                   <span id="comment-created-{{ comment.id }}" class="automatic-local-datetime me-2" data-datetime="{{ h.render_datetime(comment.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
                     {{ h.render_datetime(comment.created, with_hours=True) }}
                   </span>
+                  {% if comment.reactions %}
+                    {% set resource_comment_component = h.CommentComponent(comment.id) %}
+                    {{ resource_comment_component.create_status_badge(comment.reactions.response_status.value) | safe }}
+                    {% if comment.reactions.admin_liked %}
+                      <span id="admin-liked-{{ comment.id }}" class="fa-stack bubble me-2">
+                        <i class="fas fa-user-tie fa-stack-1x"></i>
+                        <i class="fas fa-heart fa-stack-1x" style="color: #e83e8c; position: absolute; bottom: 15%; left: 25%; font-size: 10px;"></i>
+                        <div class="bubbleText">{{ _('Highly rated by organization administrators') }}</div>
+                      </span>
+                    {% endif %}
+                  {% endif %}
                 </div>
                 {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
                   <div id="comment-action-buttons" class="comment-action-buttons">
+                    {% if h.is_base_public_folder_bs3() %}
+                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reactions-form-window" onclick="setReactionsFormContent('{{ comment.id }}')">
+                        <i class="fa-solid fa-rotate"></i>
+                        {{ _('Status Change') }}
+                      </button>
+                    {% else %}
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reactions-form-window" onclick="setReactionsFormContent('{{ comment.id }}')">
+                        <i class="fa-solid fa-rotate"></i>
+                        {{ _('Status Change') }}
+                      </button>
+                    {% endif %}
                     {% if comment.approval %}
                       {% if not reply %}
                         {% if h.is_base_public_folder_bs3() %}
@@ -206,6 +229,71 @@
         </div>
       </div>
     </article>
+
+    <div id="reactions-form-window" class="modal fade" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="reactions-form" action="{{ h.url_for('resource_comment.reactions', resource_id=resource.id) }}" method="post">
+            <input type="hidden" id="reactions-comment-id" name="resource_comment_id">
+            <div class="modal-header">
+              {% if h.is_base_public_folder_bs3() %}
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              {% else %}
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              {% endif %}
+            </div>
+            <div class="modal-body">
+              <div id="reactions-comment-header"></div>
+              <div class="comment-container">
+                <span class="comment-content" id="reactions-comment"></span>
+              </div>
+              <hr>
+              <div>
+                <label class="control-label" for="code">{{ _('Status') }}</label>
+                <div class="status-controls" style="font-size: large;">
+                  <div class="status-option">
+                    <input id="status-none" type="radio" name="response_status" value="status-none" checked>
+                    <span class="badge badge-pill badge-none">{{ _('Status None') }}</span>
+                  </div>
+                  <div class="status-option">
+                    <input id="status-not-started" type="radio" name="response_status" value="not-started">
+                    <span class="badge badge-pill badge-not-started">{{ _('Not Started') }}</span>
+                  </div>
+                  <div class="status-option">
+                    <input id="status-in-progress" type="radio" name="response_status" value="in-progress">
+                    <span class="badge badge-pill badge-in-progress">{{ _('In Progress') }}</span>
+                  </div>
+                  <div class="status-option">
+                    <input id="status-completed" type="radio" name="response_status" value="completed">
+                    <span class="badge badge-pill badge-completed">{{ _('Completed') }}</span>
+                  </div>
+                  <div class="status-option">
+                    <input id="status-rejected" type="radio" name="response_status" value="rejected">
+                    <span class="badge badge-pill badge-rejected">{{ _('Rejected') }}</span>
+                  </div>
+                </div>
+                <label class="control-label" for="code">{{ _('Highly rated by organization administrators') }}</label>
+                <div class="like-controls" style="font-size: large;">
+                  <div class="like-option">
+                    <input type="checkbox" id="admin-liked" name="admin_liked">
+                    <span class="fa-stack">
+                      <i class="fas fa-user-tie fa-stack-1x"></i>
+                      <i class="fas fa-heart fa-stack-1x" style="color: #e83e8c; position: absolute; bottom: 15%; left: 28%; font-size: 10px;"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
     <div id="reply-form-window" class="modal fade" tabindex="-1">
       <div class="modal-dialog">

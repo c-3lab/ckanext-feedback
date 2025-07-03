@@ -10,6 +10,7 @@ from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummar
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
+    ResourceCommentReactions,
     ResourceCommentReply,
     ResourceCommentSummary,
 )
@@ -49,6 +50,7 @@ class TestFeedbackCommand:
                 ResourceCommentSummary.__table__,
                 ResourceLike.__table__,
                 ResourceLikeMonthly.__table__,
+                ResourceCommentReactions.__table__,
                 DownloadSummary.__table__,
                 DownloadMonthly.__table__,
             ],
@@ -68,6 +70,7 @@ class TestFeedbackCommand:
         assert engine.has_table(ResourceCommentSummary.__table__)
         assert engine.has_table(ResourceLike.__table__)
         assert engine.has_table(ResourceLikeMonthly.__table__)
+        assert engine.has_table(ResourceCommentReactions.__table__)
         assert engine.has_table(DownloadSummary.__table__)
         assert engine.has_table(DownloadMonthly.__table__)
 
@@ -87,6 +90,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentSummary.__table__)
         assert not engine.has_table(ResourceLike.__table__)
         assert not engine.has_table(ResourceLikeMonthly.__table__)
+        assert not engine.has_table(ResourceCommentReactions.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)
 
@@ -103,6 +107,7 @@ class TestFeedbackCommand:
         assert engine.has_table(ResourceCommentSummary.__table__)
         assert engine.has_table(ResourceLike.__table__)
         assert engine.has_table(ResourceLikeMonthly.__table__)
+        assert engine.has_table(ResourceCommentReactions.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)
 
@@ -119,6 +124,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentSummary.__table__)
         assert not engine.has_table(ResourceLike.__table__)
         assert not engine.has_table(ResourceLikeMonthly.__table__)
+        assert not engine.has_table(ResourceCommentReactions.__table__)
         assert engine.has_table(DownloadSummary.__table__)
         assert engine.has_table(DownloadMonthly.__table__)
 
@@ -140,5 +146,6 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentSummary.__table__)
         assert not engine.has_table(ResourceLike.__table__)
         assert not engine.has_table(ResourceLikeMonthly.__table__)
+        assert not engine.has_table(ResourceCommentReactions.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)

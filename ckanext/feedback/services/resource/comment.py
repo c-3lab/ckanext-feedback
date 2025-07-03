@@ -1,16 +1,20 @@
+import uuid
 from datetime import datetime
 
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from flask import request
+from sqlalchemy.orm import joinedload
 
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
+    ResourceCommentReactions,
     ResourceCommentReply,
 )
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 
 
 # Get resource from the selected resource_id
@@ -32,7 +36,11 @@ def get_resource(resource_id):
 def get_resource_comments(
     resource_id=None, approval=None, owner_orgs=None, limit=None, offset=None
 ):
-    query = session.query(ResourceComment).order_by(ResourceComment.created.desc())
+    query = (
+        session.query(ResourceComment)
+        .options(joinedload(ResourceComment.reactions))
+        .order_by(ResourceComment.created.desc())
+    )
     if resource_id is not None:
         query = query.filter(ResourceComment.resource_id == resource_id)
     if approval is not None:
@@ -56,6 +64,8 @@ def get_resource_comment_categories():
 
 # Create new comment
 def create_resource_comment(resource_id, category, content, rating):
+    now = datetime.now()
+
     comment = ResourceComment(
         resource_id=resource_id,
         category=category,
@@ -63,6 +73,18 @@ def create_resource_comment(resource_id, category, content, rating):
         rating=rating,
     )
     session.add(comment)
+    session.flush()
+
+    reactions = ResourceCommentReactions(
+        id=str(uuid.uuid4()),
+        resource_comment_id=comment.id,
+        response_status=ResourceCommentResponseStatus.STATUS_NONE,
+        admin_liked=False,
+        created=now,
+        updated=None,
+        updater_user_id=None,
+    )
+    session.add(reactions)
 
 
 # Approve selected resource comment
@@ -95,3 +117,47 @@ def create_reply(resource_comment_id, content, creator_user_id):
 # Get cookie
 def get_cookie(resource_id):
     return request.cookies.get(resource_id)
+
+
+def get_resource_comment_reactions(resource_comment_id):
+    result = (
+        session.query(ResourceCommentReactions)
+        .filter(ResourceCommentReactions.resource_comment_id == resource_comment_id)
+        .first()
+    )
+
+    return result
+
+
+def create_resource_comment_reactions(
+    resource_comment_id,
+    response_status,
+    admin_liked,
+    updater_user_id,
+):
+    now = datetime.now()
+
+    reactions = ResourceCommentReactions(
+        id=str(uuid.uuid4()),
+        resource_comment_id=resource_comment_id,
+        response_status=response_status,
+        admin_liked=admin_liked,
+        created=now,
+        updated=now,
+        updater_user_id=updater_user_id,
+    )
+    session.add(reactions)
+    return
+
+
+def update_resource_comment_reactions(
+    reactions,
+    response_status,
+    admin_liked,
+    updater_user_id,
+):
+    reactions.response_status = response_status
+    reactions.admin_liked = admin_liked
+    reactions.updated = datetime.now()
+    reactions.updater_user_id = updater_user_id
+    return
