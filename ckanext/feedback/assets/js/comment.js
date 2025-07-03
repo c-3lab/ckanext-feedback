@@ -1,6 +1,50 @@
 const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
 const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
 
+document.addEventListener('DOMContentLoaded', () => {
+  const textareas = document.getElementsByName('comment-content');
+  const charCounts = document.getElementsByName('comment-count');
+
+  function updateCharCount(textarea, charCount) {
+    const currentLength = textarea.value.length;
+    charCount.textContent = currentLength;
+  }
+
+  textareas.forEach((textarea, index) => {
+    updateCharCount(textarea, charCounts[index]);
+    textarea.addEventListener('input', () => {
+      const currentLength = textarea.value.length;
+      charCounts[index].textContent = currentLength;
+    });
+  });
+});
+
+function selectRating(selectedStar) {
+  // Set rating = to clicked star's value
+  document.getElementById('rating').value = selectedStar.dataset.rating;
+
+  const stars = document.querySelectorAll('#rateable .rating-star');
+
+  // Loop through each star and set the appropriate star icon
+  stars.forEach(star => {
+    if(star.dataset.rating <= selectedStar.dataset.rating) {
+      star.className = 'rating-star fa-solid fa-star';
+    } else {
+      star.className = 'rating-star fa-regular fa-star';
+    }
+  });
+}
+
+window.addEventListener('pageshow', () => {
+  const sendButtons = document.getElementsByName('send-button');
+  sendButtons.forEach(sendButton => {
+    sendButton.style.pointerEvents = "auto";
+    sendButton.style.background = "#206b82";
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
+    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
+  });
+});
+
 function checkCommentExists(button, bs3=false) {
   let comment
   if ( button.id === "comment-button" ) {
@@ -61,62 +105,19 @@ function checkReplyExists(button) {
   return is_reply_exists;
 }
 
-function selectRating(selectedStar) {
-  // Set rating = to clicked star's value
-  document.getElementById('rating').value = selectedStar.dataset.rating;
-
-  const stars = document.querySelectorAll('#rateable .rating-star');
-
-  // Loop through each star and set the appropriate star icon
-  stars.forEach(star => {
-    if(star.dataset.rating <= selectedStar.dataset.rating) {
-      star.className = 'rating-star fa-solid fa-star';
-    } else {
-      star.className = 'rating-star fa-regular fa-star';
-    }
-  });
-}
-
 function setReplyFormContent(resourceCommentId) {
   // Set values of modal screen elements
-  const category = document.getElementById('comment-category-' + resourceCommentId).textContent;
-  const approved = document.getElementById('comment-created-' + resourceCommentId).textContent;
+  const commentHeader = document.getElementById('comment-header-' + resourceCommentId);
+  const replyCommentHeader = document.getElementById('reply-comment-header');
   const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
 
-  document.getElementById('selected_comment_header').innerHTML = approved + ' ' + category;
-  document.getElementById('selected_comment').innerHTML = content;
-  document.getElementById('selected_resource_comment_id').value = resourceCommentId;
+  const commentHeaderClone = commentHeader.cloneNode(true);
+  replyCommentHeader.innerHTML = '';
+  replyCommentHeader.appendChild(commentHeaderClone);
+  document.getElementById('reply-comment').innerHTML = content;
+  document.getElementById('reply-comment-id').value = resourceCommentId;
 }
 
 function setButtonDisable(button) {
   button.style.pointerEvents = "none"
 }
-
-//文字数カウント
-document.addEventListener('DOMContentLoaded', () => {
-  const textareas = document.getElementsByName('comment-content');
-  const charCounts = document.getElementsByName('comment-count');
-
-  function updateCharCount(textarea, charCount) {
-    const currentLength = textarea.value.length;
-    charCount.textContent = currentLength;
-  }
-
-  textareas.forEach((textarea, index) => {
-    updateCharCount(textarea, charCounts[index]);
-    textarea.addEventListener('input', () => {
-      const currentLength = textarea.value.length;
-      charCounts[index].textContent = currentLength;
-    });
-  });
-});
-
-window.addEventListener('pageshow', () => {
-  const sendButtons = document.getElementsByName('send-button');
-  sendButtons.forEach(sendButton => {
-    sendButton.style.pointerEvents = "auto";
-    sendButton.style.background = "#206b82";
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
-  });
-});

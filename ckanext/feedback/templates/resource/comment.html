@@ -33,6 +33,11 @@
           <p>{{ h.get_resource_comments(resource.id) }}</p>
           <hr>
           <h4>{{ _('Comment') }}</h4>
+          {% if h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org) %}
+              <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
+              <br>
+              <br>
+          {% endif %}
           {% if not cookie or not (h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org)) %}
             {% if h.is_enabled_rating(pkg_dict.owner_org) %}
               {{ _('Rating') }}
@@ -52,21 +57,33 @@
               {% for category in categories %}
               <label class="radio">
                 <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
+                {{ h.create_category_icon(category.value) | safe }}
                 {{ _(category.value) }}
               </label>
               {% endfor %}
               <br>
               <br>
-              <textarea class="form-control resize-vertical" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000">{{ content }}</textarea>
+              <textarea class="form-control resize-vertical" cols="20" rows="5" id="comment-content" name="comment-content" maxlength="1000"></textarea>
               <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
               <div>
                 <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
                 <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
               </div>
-              {% if h.is_disabled_repeat_post_on_resource(pkg_dict.owner_org) %}
-                <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
-              {% endif %}
-              <br>
+              <div class="comment-form-footer">
+                <div class="form-actions">
+                  {% if h.is_base_public_folder_bs3() %}
+                  <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">
+                    <i class="fa-solid fa-chevron-right"></i>
+                    {{ _('Review') }}
+                  </button>
+                  {% else %}
+                  <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">
+                    <i class="fa-solid fa-chevron-right"></i>
+                    {{ _('Review') }}
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
               <div class="notice-container">
                 <h3>
                   <span><i class="fa-solid fa-triangle-exclamation"></i></span>
@@ -80,81 +97,106 @@
                 </ul>
               </div>
               <br>
-              <div class="form-actions">
-                {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
-                {% else %}
-                <button class="btn btn-primary" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
-                {% endif %}
-              </div>
-              <br>
               <br>
             </form>
           {% else %}
             <p class="comment-disallowed">{{ _('* You have already commented on this data resource') }}</p>
-            <p class="comment-explanation">{{ _('(In order to prevent potential spam, only a single comment is allowed per data resouce)') }}</p>
           {% endif %}
           <br>
           {% if page.collection|length %}
             <hr class="divider">
           {% endif %}
           {% for comment in page.collection %}
-            {% set created = comment.created.strftime('%Y/%m/%d %H:%M') %}
-            {% set reply = h.get_comment_reply(comment.id) %}
-            {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
-              {% if comment.approval %}
-                {% if not reply %}
-                  {% if h.is_base_public_folder_bs3() %}
-                    <input type="button" class="btn btn-primary pull-right" data-toggle='modal' data-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
-                  {% else %}
-                    <input type="button" class="btn btn-primary float-end" data-bs-toggle='modal' data-bs-target='#reply-form-window' onclick="setReplyFormContent('{{ comment.id }}')" value="{{ _('Reply') }}"/>
+            <div class="custom-rounded-padding {{'unapproved' if not comment.approval }}">
+              {% set reply = h.get_comment_reply(comment.id) %}
+              <div class="comment-top-section">
+                <div id="comment-header-{{ comment.id }}" class="d-flex align-items-center">
+                  {% if not comment.approval %}
+                    <span class="font-bold me-2">({{ _('Unapproved') }})</span>
                   {% endif %}
-                {% else %}
-                  <input type="button" class="btn btn-primary float-end" value="{{ _('Reply') }}" disabled/>
-                {% endif %}
-              {% else %}
-                <form name="approval_form" action="{{h.url_for('resource_comment.approve_comment', resource_id=resource.id ) }}" method="post">
-                  {% if h.is_base_public_folder_bs3() %}
-                    <button class="btn btn-primary pull-right" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
-                  {% else %}
-                    <button class="btn btn-primary float-end" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
+                  {% if comment.category %}
+                    <span id="comment-category-{{ comment.id }}" class="font-bold me-2">
+                      {{ h.create_category_icon(comment.category.value) | safe }}
+                      {{ _(comment.category.value) }}
+                    </span>
                   {% endif %}
-                </form>
-              {% endif %}
-            {% endif %}
-            <h4>
-              <span id="comment-created-{{ comment.id }}">{{ created }}</span>
-              {% if comment.category %}
-                <span id="comment-category-{{ comment.id }}">{{ _(comment.category.value) }}</span>
-              {% endif %}
-              {% if h.is_enabled_rating(pkg_dict.owner_org) %}
-                {% if comment.rating %}
-                  <span class="group-stars">
-                    {% for i in range(comment.rating) %}
-                      <i class="rating-star fa-solid fa-star"></i>
-                    {% endfor %}
-                    {% for i in range(5 - comment.rating) %}
-                      <i class="rating-star fa-regular fa-star"></i>
-                    {% endfor %}
+                  {% if h.is_enabled_rating(pkg_dict.owner_org) %}
+                    {% if comment.rating %}
+                      <span class="group-stars">
+                        {% for i in range(comment.rating) %}
+                          <i class="rating-star fa-solid fa-star"></i>
+                        {% endfor %}
+                        {% for i in range(5 - comment.rating) %}
+                          <i class="rating-star fa-regular fa-star"></i>
+                        {% endfor %}
+                      </span>
+                    {% endif %}
+                  {% endif %}
+                  <span id="comment-created-{{ comment.id }}" class="automatic-local-datetime me-2" data-datetime="{{ h.render_datetime(comment.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                    {{ h.render_datetime(comment.created, with_hours=True) }}
                   </span>
-                {% endif %}
-              {% endif %}
-              {% if not comment.approval %}
-                {{ _('Unapproved') }}
-              {% endif %}
-            </h4>
-            <br>
-            <div class="content-align wrap-text {{'unapproved' if not comment.approval }}">
-              {% if comment.content %}
-                <div class="{{'unapproved' if not comment.approval }}">
-                  <span class="comment-content" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
                 </div>
-              {% endif %}
-              {% if reply %}
-                <hr>
-                <h4 class="reply">{{ reply.created.strftime('%Y/%m/%d %H:%M') }}</h4>
-                <p class="comment-content reply">{{ reply.content }}</p>
-              {% endif %}
+                {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
+                  <div id="comment-action-buttons" class="comment-action-buttons">
+                    {% if comment.approval %}
+                      {% if not reply %}
+                        {% if h.is_base_public_folder_bs3() %}
+                          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
+                            <i class="fa-solid fa-reply"></i>
+                            {{ _('Reply') }}
+                          </button>
+                        {% else %}
+                          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
+                            <i class="fa-solid fa-reply"></i>
+                            {{ _('Reply') }}
+                          </button>
+                        {% endif %}
+                      {% else %}
+                        <button type="button" class="btn btn-primary" disabled>
+                          <i class="fa-solid fa-reply"></i>
+                          {{ _('Reply') }}
+                        </button>
+                      {% endif %}
+                    {% else %}
+                      <form class="inline-form" name="approval_form" action="{{ h.url_for('resource_comment.approve_comment', resource_id=resource.id) }}" method="post">
+                        {% if h.is_base_public_folder_bs3() %}
+                          <button class="btn btn-primary" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}" onclick="setButtonDisable(this);">
+                            <i class="fa-solid fa-check"></i>
+                            {{ _('Approve') }}
+                          </button>
+                        {% else %}
+                          <button class="btn btn-primary" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}" onclick="setButtonDisable(this);">
+                            <i class="fa-solid fa-check"></i>
+                            {{ _('Approve') }}
+                          </button>
+                        {% endif %}
+                      </form>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="wrap-text">
+                {% if comment.content %}
+                  <div class="comment-container">
+                    <span class="comment-content" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
+                  </div>
+                {% endif %}
+                {% if reply %}
+                  <hr>
+                  <div class="reply">
+                    <div class="comment-top-section">
+                      <i class="fa-solid fa-reply"></i>
+                      <span class="font-bold">返信</span>
+                      <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(reply.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                        {{ h.render_datetime(reply.created, with_hours=True) }}
+                      </span>
+                    </div>
+                    <div class="comment-container">
+                      <span class="comment-content">{{ reply.content }}</span>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <hr class="divider">
           {% endfor %}
@@ -169,7 +211,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <form id="reply-form" class="top-centered-content" action="{{h.url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
-            <input type="hidden" id="selected_resource_comment_id" name="resource_comment_id">
+            <input type="hidden" id="reply-comment-id" name="resource_comment_id">
             <div class="modal-header">
               {% if h.is_base_public_folder_bs3() %}
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -178,8 +220,11 @@
               {% endif %}
             </div>
             <div class="modal-body">
-              <h4 id="selected_comment_header"></h4>
-              <p class="content-align wrap-text" id="selected_comment"></p>
+              <div id="reply-comment-header"></div>
+              <div class="comment-container">
+                <span class="comment-content" id="reply-comment"></span>
+              </div>
+              <hr>
               <div class="form-group control-full">
                 <label class="control-label" for="code">{{ _('Input') }}</label>
                 <div class="controls">
@@ -192,9 +237,15 @@
             </div>
             <div class="modal-footer">
               {% if h.is_base_public_folder_bs3() %}
-              <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">{{ _('Send') }}</button>
+              <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
               {% else %}
-              <button class="btn btn-primary" onclick="return checkReplyExists(this);">{{ _('Send') }}</button>
+              <button class="btn btn-primary" onclick="return checkReplyExists(this);">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
               {% endif %}
             </div>
           </form>

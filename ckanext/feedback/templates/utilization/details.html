@@ -21,9 +21,15 @@
         <div class="centered-content">
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
-              <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">{{ _('Edit') }}</a>
+              <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">
+                <i class="fa-solid fa-pen"></i>
+                {{ _('Edit') }}
+              </a>
               {% if row.approval == false %}
-                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
+                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
+                  <i class="fa-solid fa-check"></i>
+                  {{ _('Approve') }}
+                </button>
               {% endif %}
               <br>
             </form>
@@ -58,9 +64,15 @@
           </a>
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             {% if h.is_base_public_folder_bs3() %}
-              <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
+              <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">
+                <i class="fa-solid fa-award"></i>
+                {{ _('Resolve issue') }}
+              </button>
             {% else %}
-              <button class="btn btn-primary right-aligned" data-bs-toggle="modal" data-bs-target="#issue-resolution-form">{{ _('Resolve issue') }}</button>
+              <button class="btn btn-primary right-aligned" data-bs-toggle="modal" data-bs-target="#issue-resolution-form">
+                <i class="fa-solid fa-award"></i>
+                {{ _('Resolve issue') }}
+              </button>
             {% endif %}
           {% endif %}
           <br>
@@ -73,6 +85,7 @@
             {% for category in categories %}
             <label class="radio">
               <input type="radio" name="category" value="{{ category.name }}" {% if category.name == selected_category %}checked{% endif %}>
+              {{ h.create_category_icon(category.value) | safe }}
               {{ _(category.value) }}
             </label>
             {% endfor %}
@@ -84,7 +97,21 @@
               <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
-            <br>
+            <div class="comment-form-footer">
+              <div class="form-actions">
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review') }}
+                </button>
+                {% else %}
+                <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review') }}
+                </button>
+                {% endif %}
+              </div>
+            </div>
             <div class="notice-container">
               <h3>
                 <span><i class="fa-solid fa-triangle-exclamation"></i></span>
@@ -98,34 +125,47 @@
               </ul>
             </div>
             <br>
-            {% if h.is_base_public_folder_bs3() %}
-            <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Send') }}</button>
-            {% else %}
-            <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this);">{{ _('Send') }}</button>
-            {% endif %}
-            <br>
             <br>
           </form>
           {% if page.collection|length %}
             <hr class="divider">
           {% endif %}
           {% for comment in page.collection %}
-            {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
-              <form name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
-                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">{{ _('Approve') }}</button>
-              </form>
-            {% endif %}
-            <h4>
-              <span id="comment-created-{{ comment.id }}">{{ comment.created.strftime('%Y/%m/%d %H:%M') }}</span>
-              {% if comment.category %}
-                <span id="comment-category-{{ comment.id }}">{{ _(comment.category.value) }}</span>
-              {% endif %}
-              {% if not comment.approval %}
-                {{ _('Unapproved') }}
-              {% endif %}
-            </h4>
-            <br>
-            <p class="multiple-line wrap-text {{'unapproved' if not comment.approval }}">{{ comment.content }}</p>
+            <div class="custom-rounded-padding {{'unapproved' if not comment.approval }}">
+              <div class="comment-top-section">
+                <div id="comment-header-{{ comment.id }}" class="d-flex align-items-center">
+                  {% if not comment.approval %}
+                    <span class="font-bold me-2">({{ _('Unapproved') }})</span>
+                  {% endif %}
+                  {% if comment.category %}
+                    <span id="comment-category-{{ comment.id }}" class="font-bold me-2">
+                      {{ h.create_category_icon(comment.category.value) | safe }}
+                      {{ _(comment.category.value) }}
+                    </span>
+                  {% endif %}
+                  <span id="comment-created-{{ comment.id }}" class="automatic-local-datetime me-2" data-datetime="{{ h.render_datetime(comment.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                    {{ h.render_datetime(comment.created, with_hours=True) }}
+                  </span>
+                </div>
+                {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
+                  <div id="comment-action-buttons" class="comment-action-buttons">
+                    <form class="inline-form" name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
+                      <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
+                        <i class="fa-solid fa-check"></i>
+                        {{ _('Approve') }}
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="wrap-text">
+                {% if comment.content %}
+                  <div class="comment-container">
+                    <span class="multiple-line" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
             <hr class="divider">
           {% endfor %}
           {% block page_pagination %}
@@ -165,7 +205,10 @@
             </div>
             <br>
             <div class="modal-footer">
-              <button class="btn btn-primary" onclick="return checkDescriptionExists(this)">{{ _('Certificate') }}</button>
+              <button class="btn btn-primary" onclick="return checkDescriptionExists(this)">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
             </div>
           </form>
         </div>

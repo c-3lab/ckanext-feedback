@@ -25,12 +25,15 @@
         <h4>
           {% for category in categories %}
             {% if category.name == selected_category %}
-              <span>{{ _(category.value) }}</span>
+              <span>
+                {{ h.create_category_icon(category.value) | safe }}
+                {{ _(category.value) }}
+              </span>
             {% endif %}
           {% endfor %}
         </h4>
-        <div class="content-align wrap-text">
-              <span class="comment-content" >{{ content }}</span>
+        <div class="wrap-text comment-container">
+          <span class="multiple-line" >{{ content }}</span>
         </div>
         <hr class="divider">
         <form name="comment_form" action="{{ h.url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
@@ -42,11 +45,20 @@
               <input type="hidden" name="comment-checked" value="True">
             </div>
             <div class="d-flex justify-content-between">
-              <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+              <button class="btn btn-default" type="button" onclick="window.history.back();">
+                <i class="fa-solid fa-chevron-left"></i>
+                {{ _('Previous') }}
+              </button>
               {% if h.is_base_public_folder_bs3() %}
-              <button class="btn btn-primary ms-2 right-aligned" id="comment-button">{{ _('Submit comment') }}</button>
+              <button class="btn btn-primary ms-2 right-aligned" id="comment-button">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
               {% else%}
-              <button class="btn btn-primary ms-2" id="comment-button">{{ _('Submit comment') }}</button>
+              <button class="btn btn-primary ms-2" id="comment-button">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ _('Send') }}
+              </button>
               {% endif%}
             </div>
           </div>

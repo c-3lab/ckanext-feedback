@@ -5,7 +5,6 @@ from ckan.tests import factories
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
-    create_resource_like_tables,
     create_resource_tables,
     create_utilization_tables,
 )
@@ -32,7 +31,6 @@ class TestComments:
     def setup_class(cls):
         model.repo.init_db()
         engine = model.meta.engine
-        create_resource_like_tables(engine)
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)

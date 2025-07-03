@@ -44,7 +44,6 @@ function confirmDelete() {
   return confirm(message)
 }
 
-//文字数カウント
 document.addEventListener('DOMContentLoaded', function() {
   const titleArea = document.getElementById('title');
   const titleCount = document.getElementById('title-count');
@@ -60,12 +59,10 @@ document.addEventListener('DOMContentLoaded', function() {
     charCount.textContent = currentLength;
   }
 
-  //初期値の文字数カウント
   updateCharCount(titleArea, titleCount);
   updateCharCount(urlArea, urlCount);
   updateCharCount(descriptionArea, descriptionCount);
 
-  //入力時の文字数カウント
   titleArea.addEventListener('input', function() {
     updateCharCount(titleArea, titleCount);
   });

@@ -17,6 +17,11 @@
   margin-left: 10px;
 }
 
+.custom-rounded-padding {
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
 .unapproved {
   color: #808080;
   background-color: #EEEEEE;
@@ -50,6 +55,7 @@
   background-color: blanchedalmond;
   padding: 10px;
   border-radius: 10px;
+  margin-top: 10px;
 }
 
 .char-count {
@@ -66,6 +72,43 @@ label.radio {
   display: inline-block;
 }
 
+.comment-container {
+  margin-bottom: 10px;
+}
+
+.comment-form-footer {
+  position: relative;
+  height: 68px;
+}
+
+.form-actions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.wrap-text {
+  word-wrap: break-word;
+}
+
+.comment-top-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.comment-action-buttons { 
+  margin-left: auto;
+}
+
+.inline-form {
+  display: inline-block;
+}
 .resize-vertical {
   resize: vertical;
 }

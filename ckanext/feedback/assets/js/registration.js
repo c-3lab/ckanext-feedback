@@ -39,7 +39,6 @@ function checkTitleAndDescriptionExists(button) {
   return true;
 }
 
-//文字数カウント
 document.addEventListener('DOMContentLoaded', function() {
   const titleArea = document.getElementById('title');
   const titleCount = document.getElementById('title-count');

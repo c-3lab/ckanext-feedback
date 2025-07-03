@@ -22,7 +22,7 @@
         <div>
           <p id="comment-none-error" class="alert alert-error" style="display: none;">{{ _('Please enter your comment') }}</p>
           <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
-        </div>  
+        </div>
         <br>
         <p class="wrap-text" style="white-space: pre-line;">
           {{ _("Your input may be considered inappropriate.\n"
@@ -44,11 +44,20 @@
               <textarea class="p-2 resize-vertical" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-flex justify-content-between">
-                <button class="btn btn-default" type="button" onclick="window.history.back();">{{ _('Previous') }}</button>
+                <button class="btn btn-default" type="button" onclick="window.history.back();">
+                  <i class="fa-solid fa-chevron-left"></i>
+                  {{ _('Previous') }}
+                </button>
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select input Comment') }}</button>
+                <button class="btn btn-primary right-aligned" id="comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the input comment') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">{{ _('Select input Comment') }}</button>
+                <button class="btn btn-primary" id="comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the input comment') }}
+                </button>
                 {% endif %}
               </div>
             </div>
@@ -62,9 +71,15 @@
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary right-aligned" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">{{ _('Select proposal Comment') }}</button>
+                <button class="btn btn-primary right-aligned" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the proposal comment') }}
+                </button>
                 {% else %}
-                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">{{ _('Select proposal Comment') }}</button>
+                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">
+                  <i class="fa-solid fa-chevron-right"></i>
+                  {{ _('Review the proposal comment') }}
+                </button>
                 {% endif %}
               </div>
             </div>
