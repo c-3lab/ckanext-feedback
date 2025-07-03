@@ -33,11 +33,13 @@
   </li>
   <li>
     {% if h.is_enabled_utilizations(package.owner_org) %}
-      <div class="utilization-data bubble">
-        <i class="fa-solid fa-seedling" style="vertical-align: middle;"></i>
-        <a href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">{{ h.get_package_utilizations(package.id) }}</a>
-        <div class="bubbleText">{{ _('Utilizations') }}</div>
-      </div>
+      <a style="color: inherit; text-decoration: none; background-color: transparent;" href="{{ h.url_for('utilization.search', id=package.id, disable_keyword=true) }}">
+        <div class="utilization-data bubble">
+          <i class="fa-solid fa-seedling" style="vertical-align: middle;"></i>
+            {{ h.get_package_utilizations(package.id) }}
+          <div class="bubbleText">{{ _('Utilizations') }}</div>
+        </div>
+      </a>
     {% endif %}
   </li>
   <li>
