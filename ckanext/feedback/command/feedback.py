@@ -13,6 +13,7 @@ from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummar
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
+    ResourceCommentReactions,
     ResourceCommentReply,
     ResourceCommentSummary,
 )
@@ -52,8 +53,6 @@ def init(modules):
         elif 'download' in modules:
             drop_download_tables(engine)
             create_download_tables(engine)
-            drop_download_monthly_tables(engine)
-            create_download_monthly_tables(engine)
             click.secho('Initialize download: SUCCESS', fg='green', bold=True)
         else:
             drop_utilization_tables(engine)
@@ -62,12 +61,6 @@ def init(modules):
             create_resource_tables(engine)
             drop_download_tables(engine)
             create_download_tables(engine)
-            drop_resource_like_tables(engine)
-            create_resource_like_tables(engine)
-            drop_download_monthly_tables(engine)
-            create_download_monthly_tables(engine)
-            drop_resource_like_monthly_tables(engine)
-            create_resource_like_monthly_tables(engine)
             click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
     except Exception as e:
         toolkit.error_shout(e)
@@ -91,6 +84,9 @@ def create_utilization_tables(engine):
 
 
 def drop_resource_tables(engine):
+    ResourceCommentReactions.__table__.drop(engine, checkfirst=True)
+    ResourceLikeMonthly.__table__.drop(engine, checkfirst=True)
+    ResourceLike.__table__.drop(engine, checkfirst=True)
     ResourceCommentSummary.__table__.drop(engine, checkfirst=True)
     ResourceCommentReply.__table__.drop(engine, checkfirst=True)
     ResourceComment.__table__.drop(engine, checkfirst=True)
@@ -100,38 +96,19 @@ def create_resource_tables(engine):
     ResourceComment.__table__.create(engine, checkfirst=True)
     ResourceCommentReply.__table__.create(engine, checkfirst=True)
     ResourceCommentSummary.__table__.create(engine, checkfirst=True)
+    ResourceLike.__table__.create(engine, checkfirst=True)
+    ResourceLikeMonthly.__table__.create(engine, checkfirst=True)
+    ResourceCommentReactions.__table__.create(engine, checkfirst=True)
 
 
 def drop_download_tables(engine):
+    DownloadMonthly.__table__.drop(engine, checkfirst=True)
     DownloadSummary.__table__.drop(engine, checkfirst=True)
 
 
 def create_download_tables(engine):
     DownloadSummary.__table__.create(engine, checkfirst=True)
-
-
-def drop_resource_like_tables(engine):
-    ResourceLike.__table__.drop(engine, checkfirst=True)
-
-
-def create_resource_like_tables(engine):
-    ResourceLike.__table__.create(engine, checkfirst=True)
-
-
-def drop_download_monthly_tables(engine):
-    DownloadMonthly.__table__.drop(engine, checkfirst=True)
-
-
-def create_download_monthly_tables(engine):
     DownloadMonthly.__table__.create(engine, checkfirst=True)
-
-
-def drop_resource_like_monthly_tables(engine):
-    ResourceLikeMonthly.__table__.drop(engine, checkfirst=True)
-
-
-def create_resource_like_monthly_tables(engine):
-    ResourceLikeMonthly.__table__.create(engine, checkfirst=True)
 
 
 @feedback.command(

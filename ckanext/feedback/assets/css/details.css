@@ -17,6 +17,11 @@
   margin-left: 10px;
 }
 
+.custom-rounded-padding {
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
 .attached-image {
   max-width: 100%;
   max-height: 400px;
@@ -80,6 +85,36 @@ label.radio {
   margin-bottom: 10px;
 }
 
+.comment-form-footer {
+  position: relative;
+  height: 68px;
+}
+
+.form-actions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.comment-top-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.comment-action-buttons { 
+  margin-left: auto;
+}
+
+.inline-form {
+  display: inline-block;
+}
+
 .image-preview-wrapper {
   position: relative;
   display: inline-block;
@@ -117,21 +152,10 @@ label.radio {
   pointer-events: auto;
 }
 
-.comment-form-footer {
-  position: relative;
-  height: 68px;
-}
-
 .image-upload-section {
   position: absolute;
   top: 0;
   left: 0;
-}
-
-.form-actions {
-  position: absolute;
-  bottom: 0;
-  right: 0;
 }
 
 input[type="file"].imageUpload {

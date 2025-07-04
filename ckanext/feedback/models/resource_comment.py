@@ -17,8 +17,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from ckanext.feedback.models.session import Base
+from ckanext.feedback.models.types import ResourceCommentResponseStatus
 
 
+# TODO: Organize and consolidate Enum definitions and sa.Enum wrappers.
+# 'https://github.com/c-3lab/ckanext-feedback/issues/286'
 class ResourceCommentCategory(enum.Enum):
     REQUEST = 'Request'
     QUESTION = 'Question'
@@ -47,6 +50,7 @@ class ResourceComment(Base):
     resource = relationship(Resource)
     approval_user = relationship(User)
     reply = relationship('ResourceCommentReply', uselist=False)
+    reactions = relationship('ResourceCommentReactions', uselist=False)
 
 
 class ResourceCommentReply(Base):
@@ -84,3 +88,23 @@ class ResourceCommentSummary(Base):
     updated = Column(TIMESTAMP)
 
     resource = relationship(Resource)
+
+
+class ResourceCommentReactions(Base):
+    __tablename__ = 'resource_comment_reactions'
+    id = Column(Text, default=uuid.uuid4, primary_key=True, nullable=False)
+    resource_comment_id = Column(
+        Text,
+        ForeignKey('resource_comment.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    )
+    response_status = Column(Enum(ResourceCommentResponseStatus))
+    admin_liked = Column(BOOLEAN, default=False)
+    created = Column(TIMESTAMP, default=datetime.now)
+    updated = Column(TIMESTAMP)
+    updater_user_id = Column(
+        Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
+    )
+
+    resource_comment = relationship('ResourceComment', back_populates='reactions')
+    updater_user = relationship(User)

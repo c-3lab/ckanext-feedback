@@ -185,13 +185,33 @@ function checkReplyExists(button) {
 
 function setReplyFormContent(resourceCommentId) {
   // Set values of modal screen elements
-  const category = document.getElementById('comment-category-' + resourceCommentId).textContent;
-  const approved = document.getElementById('comment-created-' + resourceCommentId).textContent;
+  const commentHeader = document.getElementById('comment-header-' + resourceCommentId);
+  const replyCommentHeader = document.getElementById('reply-comment-header');
   const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
 
-  document.getElementById('selected_comment_header').innerHTML = approved + ' ' + category;
-  document.getElementById('selected_comment').innerHTML = content;
-  document.getElementById('selected_resource_comment_id').value = resourceCommentId;
+  const commentHeaderClone = commentHeader.cloneNode(true);
+  replyCommentHeader.innerHTML = '';
+  replyCommentHeader.appendChild(commentHeaderClone);
+  document.getElementById('reply-comment').innerHTML = content;
+  document.getElementById('reply-comment-id').value = resourceCommentId;
+}
+
+function setReactionsFormContent(resourceCommentId) {
+  const commentHeader = document.getElementById('comment-header-' + resourceCommentId);
+  const reactionsCommentHeader = document.getElementById('reactions-comment-header');
+  const commentStatus = document.getElementById('comment-badge-' + resourceCommentId);
+  const adminLikeIndicator = document.getElementById('admin-liked-' + resourceCommentId);
+  const content = document.getElementById('comment-content-' + resourceCommentId).textContent;
+
+  const commentHeaderClone = commentHeader.cloneNode(true);
+  reactionsCommentHeader.innerHTML = '';
+  reactionsCommentHeader.appendChild(commentHeaderClone);
+  if (commentStatus) {
+    document.getElementById(commentStatus.dataset.status).checked = true;
+  }
+  document.getElementById('admin-liked').checked = adminLikeIndicator ? true : false;
+  document.getElementById('reactions-comment').innerHTML = content;
+  document.getElementById('reactions-comment-id').value = resourceCommentId;
 }
 
 function setButtonDisable(button) {

@@ -50,6 +50,12 @@ rules = [
         {'methods': ['POST']},
     ),
     (
+        '/<resource_id>/comment/reactions',
+        'reactions',
+        resource.ResourceController.reactions,
+        {'methods': ['POST']},
+    ),
+    (
         '/<resource_id>/comment/<comment_id>/attached_image/<attached_image_filename>',
         'attached_image',
         resource.ResourceController.attached_image,

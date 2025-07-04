@@ -7,7 +7,6 @@ from ckan import model
 from ckan.plugins.toolkit import ValidationError
 
 from ckanext.feedback.command.feedback import (
-    create_download_monthly_tables,
     create_download_tables,
     create_resource_tables,
     create_utilization_tables,
@@ -25,7 +24,6 @@ class TestRankingApi:
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
-        create_download_monthly_tables(engine)
 
     @patch('ckanext.feedback.controllers.api.ranking.get_year_months')
     @patch('ckanext.feedback.controllers.api.ranking.get_dataset_download_ranking')
