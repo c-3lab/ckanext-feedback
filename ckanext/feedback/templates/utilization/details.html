@@ -159,8 +159,8 @@
                 </div>
                 {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
                   <div id="comment-action-buttons" class="comment-action-buttons">
-                    <form class="inline-form" name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
-                      <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
+                    <form class="inline-form" name="approval_form" style="margin-bottom: 0;" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
+                      <button class="btn btn-primary" onclick="setButtonDisable(this);">
                         <i class="fa-solid fa-check"></i>
                         {{ _('Approve') }}
                       </button>
