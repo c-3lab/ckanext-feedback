@@ -62,9 +62,9 @@
             </button>
           {% else %}
             <button class="btn btn-primary float-end" onclick="return checkTitleAndDescriptionExists(this);">
-            <i class="fa-solid fa-paper-plane"></i>
-            {{ _('Send') }}
-          </button>
+              <i class="fa-solid fa-paper-plane"></i>
+              {{ _('Send') }}
+            </button>
           {% endif %}
         </form>
         <form name="delete_form" action="{{ h.url_for('utilization.delete', utilization_id=utilization_details.id) }}" method="post">

@@ -16,7 +16,7 @@
 
   {% block primary %}
     <div class="module-content">
-      <div class="centered-content">
+      <div>
         <h1 class="p-2">{{ _('Check comment content') }}</h1>
         <br>
         <p class="wrap-text">{{ _('Would you like to post a comment with the following content?') }}</p>
@@ -35,6 +35,13 @@
         <div class="wrap-text comment-container">
           <span class="multiple-line" >{{ content }}</span>
         </div>
+        {% if attached_image_filename %}
+          <div>
+            <a href="{{ h.url_for('utilization.check_attached_image', utilization_id=utilization_id, attached_image_filename=attached_image_filename) }}" target="_blank">
+              <img src="{{ h.url_for('utilization.check_attached_image', utilization_id=utilization_id, attached_image_filename=attached_image_filename) }}" alt="{{ _('Attached Image') }}" class="attached-image">
+            </a>
+          </div>
+        {% endif %}
         <hr class="divider">
         <form name="comment_form" action="{{ h.url_for('utilization.create_comment', utilization_id=utilization_id ) }}" method="post">
           <div style="display: flex; flex-direction: column; align-items: stretch;">
@@ -43,6 +50,9 @@
               <input type="hidden" name="comment-content" value="{{ content }}">
               <input type="hidden" name="comment-suggested" value="True">
               <input type="hidden" name="comment-checked" value="True">
+              {% if attached_image_filename %}
+              <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+              {% endif %}
             </div>
             <div class="d-flex justify-content-between">
               <button class="btn btn-default" type="button" onclick="window.history.back();">

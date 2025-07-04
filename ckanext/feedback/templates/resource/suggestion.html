@@ -13,7 +13,7 @@
 
   {% block primary %}
     <div class="module-content">
-      <div class="centered-content">
+      <div>
         <h1 class="p-2">{{ _('Suggested comment content') }}</h1>
         <br>
         <div>
@@ -39,6 +39,9 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            {% if attached_image_filename %}
+            <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+            {% endif %}
             <div style="flex: 1;">
               <textarea class="p-2 resize-vertical" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
@@ -67,6 +70,9 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" id="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            {% if attached_image_filename %}
+            <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
+            {% endif %}
             <div style="flex: 1;">
               <textarea class="p-2 resize-vertical" id="proposal-comment-content" name="comment-content" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ softened }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>

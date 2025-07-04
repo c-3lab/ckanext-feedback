@@ -1,11 +1,12 @@
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import ckan.model as model
 from ckan import plugins
 from ckan.common import _, config
 from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
+from ckan.types import PUploader
 
 from ckanext.feedback.command import feedback
 from ckanext.feedback.components.comment import CommentComponent
@@ -13,6 +14,7 @@ from ckanext.feedback.controllers.api import ranking as get_action_controllers
 from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
+from ckanext.feedback.services.common.upload import FeedbackUpload
 from ckanext.feedback.services.download import summary as download_summary_service
 from ckanext.feedback.services.organization import organization as organization_service
 from ckanext.feedback.services.resource import comment as comment_service
@@ -34,6 +36,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IUploader, inherit=True)
 
     # IConfigurer
 
@@ -87,6 +90,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 FeedbackConfig().resource_comment.repeat_post_limit.is_enable
             ),
             'is_enabled_rating': FeedbackConfig().resource_comment.rating.is_enable,
+            'is_enabled_image_attachment': (
+                FeedbackConfig().resource_comment.image_attachment.is_enable
+            ),
             'is_organization_admin': check.is_organization_admin,
             'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
@@ -226,3 +232,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
         }
+
+    # IUploader
+
+    def get_uploader(
+        self, upload_to: str, old_filename: Optional[str]
+    ) -> Optional[PUploader]:
+        if upload_to.startswith("feedback_"):
+            return FeedbackUpload(upload_to, old_filename)
+        return None

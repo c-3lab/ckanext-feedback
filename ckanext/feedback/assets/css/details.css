@@ -1,9 +1,3 @@
-.centered-content {
-  margin-left: 5%;
-  margin-right: auto;
-  width: 90%
-}
-
 .divider {
   background: #000000;
   height: 1px;
@@ -20,6 +14,11 @@
 .custom-rounded-padding {
   border-radius: 0.25rem;
   padding: 0.5rem;
+}
+
+.attached-image {
+  max-width: 100%;
+  max-height: 400px;
 }
 
 .unapproved {
@@ -72,6 +71,10 @@ label.radio {
   display: inline-block;
 }
 
+.resize-vertical {
+  resize: vertical;
+}
+
 .comment-container {
   margin-bottom: 10px;
 }
@@ -85,10 +88,6 @@ label.radio {
   position: absolute;
   bottom: 0;
   right: 0;
-}
-
-.wrap-text {
-  word-wrap: break-word;
 }
 
 .comment-top-section {
@@ -109,6 +108,50 @@ label.radio {
 .inline-form {
   display: inline-block;
 }
-.resize-vertical {
-  resize: vertical;
+
+.image-preview-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.image-preview {
+  max-width: 100px;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  display: block;
+}
+
+.close-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.image-preview-wrapper:hover .close-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.image-upload-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+input[type="file"].imageUpload {
+  display: none;
 }

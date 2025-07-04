@@ -68,6 +68,7 @@ class UtilizationComment(Base):
     approval_user_id = Column(
         Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
     )
+    attached_image_filename = Column(Text)
 
     utilization = relationship('Utilization', back_populates='comments')
     approval_user = relationship(User)
