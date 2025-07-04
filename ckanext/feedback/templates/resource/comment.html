@@ -21,7 +21,7 @@
   {% block primary %}
     <article class="module" role="main">
       <div class="module-content">
-        <div class="centered-content">
+        <div>
           <div class="wrap-text">
             <h4>{{ _('Dataset') }}</h4>
             <a href="{{ h.url_for('dataset.search') }}{{ pkg_dict.name }}">{{ pkg_dict.title }}</a>
@@ -315,7 +315,7 @@
     <div id="reply-form-window" class="modal fade" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
-          <form id="reply-form" class="top-centered-content" action="{{h.url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
+          <form id="reply-form" action="{{h.url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
             <input type="hidden" id="reply-comment-id" name="resource_comment_id">
             <div class="modal-header">
               {% if h.is_base_public_folder_bs3() %}
