@@ -32,6 +32,12 @@ rules = [
         {'methods': ['GET', 'POST']},
     ),
     (
+        '/<resource_id>/comment/check/attached_image/<attached_image_filename>',
+        'check_attached_image',
+        resource.ResourceController.check_attached_image,
+        {'methods': ['GET']},
+    ),
+    (
         '/<resource_id>/comment/approve',
         'approve_comment',
         resource.ResourceController.approve_comment,
@@ -48,6 +54,12 @@ rules = [
         'reactions',
         resource.ResourceController.reactions,
         {'methods': ['POST']},
+    ),
+    (
+        '/<resource_id>/comment/<comment_id>/attached_image/<attached_image_filename>',
+        'attached_image',
+        resource.ResourceController.attached_image,
+        {'methods': ['GET']},
     ),
 ]
 for rule, endpoint, view_func, *others in rules:

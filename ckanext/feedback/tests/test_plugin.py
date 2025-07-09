@@ -245,3 +245,25 @@ class TestPlugin:
 
         instance.before_resource_show(resource)
         assert before_resource == resource
+
+    @patch('ckanext.feedback.plugin.FeedbackUpload')
+    def test_get_uploader(self, mock_feedback_upload):
+        upload_to = 'feedback_storage_path'
+        old_filename = 'image.png'
+
+        mock_feedback_upload.return_value = 'feedback_upload'
+
+        instance = FeedbackPlugin()
+        instance.get_uploader(upload_to, old_filename)
+
+        mock_feedback_upload.assert_called_once_with(upload_to, old_filename)
+
+    @patch('ckanext.feedback.plugin.FeedbackUpload')
+    def test_get_uploader_not_feedback_storage_path(self, mock_feedback_upload):
+        upload_to = 'not_feedback_storage_path'
+        old_filename = 'image.png'
+
+        instance = FeedbackPlugin()
+        instance.get_uploader(upload_to, old_filename)
+
+        mock_feedback_upload.assert_not_called()

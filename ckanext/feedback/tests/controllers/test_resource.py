@@ -5,8 +5,10 @@ from ckan import model
 from ckan.common import _, config
 from ckan.logic import get_action
 from ckan.model import User
+from ckan.plugins import toolkit
 from ckan.tests import factories
 from flask import Flask, g
+from werkzeug.exceptions import NotFound
 
 import ckanext.feedback.services.resource.comment as comment_service
 from ckanext.feedback.command.feedback import (
@@ -131,6 +133,7 @@ class TestResourceController:
                 'cookie': cookie,
                 'selected_category': 'REQUEST',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -206,6 +209,7 @@ class TestResourceController:
                 'cookie': cookie,
                 'selected_category': 'REQUEST',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -281,6 +285,7 @@ class TestResourceController:
                 'cookie': cookie,
                 'selected_category': 'QUESTION',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
@@ -346,11 +351,14 @@ class TestResourceController:
                 'cookie': cookie,
                 'selected_category': 'REQUEST',
                 'content': '',
+                'attached_image_filename': None,
                 'page': 'mock_page',
             },
         )
 
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
@@ -369,28 +377,45 @@ class TestResourceController:
         mock_flash_success,
         mock_comment_service,
         mock_summary_service,
+        mock_upload_image,
+        mock_files,
         mock_form,
     ):
         resource_id = 'resource id'
+        package_name = 'package_name'
         category = ResourceCommentCategory.REQUEST.name
         comment_content = 'content'
         rating = '1'
-        package_name = 'ota'
+        attached_image_filename = 'attached_image_filename'
+
         mock_form.get.side_effect = lambda x, default: {
             'package_name': package_name,
             'comment-content': comment_content,
             'category': category,
             'rating': rating,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
             'comment-checked': True,
         }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.return_value = attached_image_filename
 
         mock_send_email.side_effect = Exception("Mock Exception")
         mock_url_for.return_value = 'resource comment'
         resp = ResourceController.create_comment(resource_id)
 
         mock_comment_service.create_resource_comment.assert_called_once_with(
-            resource_id, category, comment_content, int(rating)
+            resource_id,
+            category,
+            comment_content,
+            int(rating),
+            attached_image_filename,
         )
         mock_summary_service.create_resource_summary.assert_called_once_with(
             resource_id
@@ -438,6 +463,91 @@ class TestResourceController:
         mock_toolkit_abort.assert_called_once_with(400)
 
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    def test_create_comment_with_bad_image(
+        self,
+        mock_comment,
+        mock_flash_error,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+    ):
+        resource_id = 'resource id'
+        package_name = 'package_name'
+        comment_content = 'content'
+        category = 'category'
+        rating = '1'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_form.get.side_effect = lambda x, default: {
+            'package_name': package_name,
+            'comment-content': comment_content,
+            'category': category,
+            'rating': rating,
+            'attached_image_filename': attached_image_filename,
+            'comment-suggested': True,
+            'comment-checked': True,
+        }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = 'bad_image.txt'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = toolkit.ValidationError(
+            {'upload': ['Invalid image file type']}
+        )
+
+        ResourceController.create_comment(resource_id)
+
+        mock_flash_error.assert_called_once_with(
+            {'Upload': 'Invalid image file type'}, allow_html=True
+        )
+        mock_comment.assert_called_once_with(resource_id, category, comment_content)
+
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
+    def test_create_comment_with_bad_image_exception(
+        self,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+    ):
+        resource_id = 'resource id'
+        package_name = 'package_name'
+        comment_content = 'content'
+        category = 'category'
+        rating = '1'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_form.get.side_effect = lambda x, default: {
+            'package_name': package_name,
+            'comment-content': comment_content,
+            'category': category,
+            'rating': rating,
+            'attached_image_filename': attached_image_filename,
+            'comment-suggested': True,
+            'comment-checked': True,
+        }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = Exception('Unexpected error')
+
+        with pytest.raises(Exception):
+            ResourceController.create_comment(resource_id)
+
+        mock_upload_image.assert_called_once_with(mock_file)
+
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
@@ -446,6 +556,7 @@ class TestResourceController:
         mock_flash_flash_error,
         mock_redirect_to,
         mock_comment,
+        mock_files,
         mock_form,
     ):
         resource_id = 'resource id'
@@ -455,13 +566,17 @@ class TestResourceController:
             content += content
             if 1000 < len(content):
                 break
+        attached_image_filename = None
 
         mock_form.get.side_effect = lambda x, default: {
             'comment-content': content,
             'category': category,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
             'comment-checked': True,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         ResourceController.create_comment(resource_id)
 
@@ -469,9 +584,12 @@ class TestResourceController:
             'Please keep the comment length below 1000',
             allow_html=True,
         )
-        mock_comment.assert_called_once_with(resource_id, category, content)
+        mock_comment.assert_called_once_with(
+            resource_id, category, content, attached_image_filename
+        )
 
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
@@ -480,23 +598,30 @@ class TestResourceController:
         mock_flash_error,
         mock_is_recaptcha_verified,
         mock_comment,
+        mock_files,
         mock_form,
     ):
         resource_id = 'resource_id'
+        package_name = 'package_name'
         comment_content = 'comment_content'
         category = ResourceCommentCategory.REQUEST.name
-        package_name = 'ota'
+        attached_image_filename = None
         mock_form.get.side_effect = lambda x, default: {
             'package_name': package_name,
             'comment-content': comment_content,
             'category': category,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
             'comment-checked': True,
         }.get(x, default)
 
+        mock_files.return_value = None
+
         mock_is_recaptcha_verified.return_value = False
         ResourceController.create_comment(resource_id)
-        mock_comment.assert_called_once_with(resource_id, category, comment_content)
+        mock_comment.assert_called_once_with(
+            resource_id, category, comment_content, attached_image_filename
+        )
 
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.get_action')
@@ -513,6 +638,7 @@ class TestResourceController:
         category = 'category'
         content = 'comment_content'
         rating = '3'
+        attached_image_filename = None
         softened = 'mock_softened'
 
         mock_suggest_ai_comment.return_value = softened
@@ -539,6 +665,7 @@ class TestResourceController:
                 'rating': rating,
                 'content': content,
                 'softened': softened,
+                'attached_image_filename': attached_image_filename,
             },
         )
 
@@ -557,6 +684,7 @@ class TestResourceController:
         category = 'category'
         content = 'comment_content'
         rating = '3'
+        attached_image_filename = None
         softened = None
 
         mock_suggest_ai_comment.return_value = softened
@@ -582,6 +710,7 @@ class TestResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
             },
         )
 
@@ -603,6 +732,8 @@ class TestResourceController:
 
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch(
         'ckanext.feedback.controllers.resource.'
@@ -618,6 +749,8 @@ class TestResourceController:
         mock_get_resource,
         mock_get_resource_comment_categories,
         mock_is_recaptcha_verified,
+        mock_upload_image,
+        mock_files,
         mock_form,
         mock_method,
     ):
@@ -625,6 +758,7 @@ class TestResourceController:
         category = 'category'
         content = 'comment_content'
         rating = '3'
+        attached_image_filename = 'attached_image_filename'
 
         config['ckan.feedback.moral_keeper_ai.enable'] = False
 
@@ -633,8 +767,15 @@ class TestResourceController:
             'comment-content': content,
             'category': category,
             'rating': rating,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': False,
         }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
 
         mock_resource = MagicMock()
         mock_resource.Resource.package_id = 'mock_package_id'
@@ -644,6 +785,8 @@ class TestResourceController:
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
         mock_get_action.return_value = mock_package_show
+
+        mock_upload_image.return_value = attached_image_filename
 
         mock_get_resource_comment_categories.return_value = 'mock_categories'
 
@@ -657,11 +800,13 @@ class TestResourceController:
                 'selected_category': category,
                 'rating': int(rating),
                 'content': content,
+                'attached_image_filename': attached_image_filename,
             },
         )
 
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.check_ai_comment')
@@ -683,6 +828,7 @@ class TestResourceController:
         mock_check_ai_comment,
         mock_is_recaptcha_verified,
         mock_redirect_to,
+        mock_files,
         mock_form,
         mock_method,
     ):
@@ -690,6 +836,7 @@ class TestResourceController:
         category = 'category'
         content = 'comment_content'
         rating = '3'
+        attached_image_filename = None
         judgement = True
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
@@ -701,6 +848,8 @@ class TestResourceController:
             'rating': rating,
             'comment-suggested': False,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_check_ai_comment.return_value = judgement
 
@@ -725,11 +874,13 @@ class TestResourceController:
                 'selected_category': category,
                 'rating': int(rating),
                 'content': content,
+                'attached_image_filename': attached_image_filename,
             },
         )
 
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.check_ai_comment')
@@ -751,6 +902,7 @@ class TestResourceController:
         mock_check_ai_comment,
         mock_is_recaptcha_verified,
         mock_redirect_to,
+        mock_files,
         mock_form,
         mock_method,
     ):
@@ -758,6 +910,7 @@ class TestResourceController:
         category = 'category'
         content = 'comment_content'
         rating = '3'
+        attached_image_filename = None
         judgement = False
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
@@ -767,8 +920,11 @@ class TestResourceController:
             'comment-content': content,
             'category': category,
             'rating': rating,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': False,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_check_ai_comment.return_value = judgement
 
@@ -789,10 +945,12 @@ class TestResourceController:
             rating=int(rating),
             category=category,
             content=content,
+            attached_image_filename=attached_image_filename,
         )
 
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch(
@@ -810,6 +968,7 @@ class TestResourceController:
         mock_get_resource_comment_categories,
         mock_is_recaptcha_verified,
         mock_redirect_to,
+        mock_files,
         mock_form,
         mock_method,
     ):
@@ -817,6 +976,7 @@ class TestResourceController:
         category = 'category'
         content = 'comment_content'
         rating = '3'
+        attached_image_filename = None
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
 
@@ -825,8 +985,11 @@ class TestResourceController:
             'comment-content': content,
             'category': category,
             'rating': rating,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_resource = MagicMock()
         mock_resource.Resource.package_id = 'mock_package_id'
@@ -849,6 +1012,7 @@ class TestResourceController:
                 'selected_category': category,
                 'rating': int(rating),
                 'content': content,
+                'attached_image_filename': attached_image_filename,
             },
         )
 
@@ -872,6 +1036,90 @@ class TestResourceController:
 
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    def test_check_comment_with_bad_image(
+        self,
+        mock_comment,
+        mock_flash_error,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'attached_image_filename': attached_image_filename,
+            'comment-suggested': True,
+        }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = 'bad_image.txt'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = toolkit.ValidationError(
+            {'upload': ['Invalid image file type']}
+        )
+
+        ResourceController.check_comment(resource_id)
+
+        mock_flash_error.assert_called_once_with(
+            {'Upload': 'Invalid image file type'}, allow_html=True
+        )
+        mock_comment.assert_called_once_with(resource_id, category, content)
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
+    def test_check_comment_with_bad_image_exception(
+        self,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+        mock_method,
+    ):
+        resource_id = 'resource_id'
+        category = 'category'
+        content = 'comment_content'
+        rating = '3'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'comment-content': content,
+            'category': category,
+            'rating': rating,
+            'attached_image_filename': attached_image_filename,
+        }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_file.read.return_value = b'fake image data'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = Exception('Unexpected error')
+
+        with pytest.raises(Exception):
+            ResourceController.check_comment(resource_id)
+
+        mock_upload_image.assert_called_once_with(mock_file)
+
+    @patch('ckanext.feedback.controllers.resource.request.method')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
@@ -882,6 +1130,7 @@ class TestResourceController:
         mock_flash_error,
         mock_is_recaptcha_verified,
         mock_redirect_to,
+        mock_files,
         mock_form,
         mock_method,
     ):
@@ -889,6 +1138,7 @@ class TestResourceController:
         category = 'category'
         content = 'comment_content'
         rating = '3'
+        attached_image_filename = None
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
 
@@ -897,8 +1147,11 @@ class TestResourceController:
             'comment-content': content,
             'category': category,
             'rating': rating,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_is_recaptcha_verified.return_value = False
 
@@ -906,10 +1159,13 @@ class TestResourceController:
         mock_flash_error.assert_called_once_with(
             'Bad Captcha. Please try again.', allow_html=True
         )
-        mock_comment.assert_called_once_with(resource_id, category, content)
+        mock_comment.assert_called_once_with(
+            resource_id, category, content, attached_image_filename
+        )
 
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
@@ -920,6 +1176,7 @@ class TestResourceController:
         mock_flash_error,
         mock_is_recaptcha_verified,
         mock_redirect_to,
+        mock_files,
         mock_form,
         mock_method,
     ):
@@ -929,6 +1186,7 @@ class TestResourceController:
         while len(content) < 1000:
             content += content
         rating = '3'
+        attached_image_filename = None
 
         config['ckan.feedback.moral_keeper_ai.enable'] = True
 
@@ -937,8 +1195,11 @@ class TestResourceController:
             'comment-content': content,
             'category': category,
             'rating': rating,
+            'attached_image_filename': attached_image_filename,
             'comment-suggested': True,
         }.get(x, default)
+
+        mock_files.return_value = None
 
         mock_is_recaptcha_verified.return_value = True
 
@@ -947,7 +1208,27 @@ class TestResourceController:
             'Please keep the comment length below 1000',
             allow_html=True,
         )
-        mock_comment.assert_called_once_with(resource_id, category, content)
+        mock_comment.assert_called_once_with(
+            resource_id, category, content, attached_image_filename
+        )
+
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path'
+    )
+    @patch('ckanext.feedback.controllers.resource.send_file')
+    def test_check_attached_image(
+        self,
+        mock_send_file,
+        mock_get_attached_image_path,
+    ):
+        resource_id = 'resource_id'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_get_attached_image_path.return_value = 'attached_image_path'
+
+        ResourceController.check_attached_image(resource_id, attached_image_filename)
+
+        mock_send_file.assert_called_once_with('attached_image_path')
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.request.form')
@@ -1196,6 +1477,245 @@ class TestResourceController:
         ResourceController.reply(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
 
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path'
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists')
+    @patch('ckanext.feedback.controllers.resource.send_file')
+    def test_attached_image_with_sysadmin(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_get_attached_image_path,
+        mock_get_resource_comment,
+        mock_get_resource,
+        current_user,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'owner_org'
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_resource_comment.return_value = 'mock_comment'
+
+        mock_get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = True
+
+        mock_send_file.return_value = 'mock_response'
+
+        response = ResourceController.attached_image(
+            resource_id, comment_id, attached_image_filename
+        )
+
+        mock_get_resource.assert_called_once_with(resource_id)
+        mock_get_resource_comment.assert_called_once_with(
+            comment_id, resource_id, None, attached_image_filename
+        )
+        mock_get_attached_image_path.assert_called_once_with(attached_image_filename)
+        mock_exists.assert_called_once_with('attached_image_path')
+        mock_send_file.assert_called_once_with('attached_image_path')
+
+        assert response == 'mock_response'
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path'
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists')
+    @patch('ckanext.feedback.controllers.resource.send_file')
+    def test_attached_image_without_user(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_get_attached_image_path,
+        mock_get_resource_comment,
+        mock_get_resource,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        g.userobj = None
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'owner_org'
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_resource_comment.return_value = 'mock_comment'
+        mock_get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = True
+        mock_send_file.return_value = 'mock_response'
+
+        response = ResourceController.attached_image(
+            resource_id, comment_id, attached_image_filename
+        )
+
+        mock_get_resource.assert_called_once_with(resource_id)
+        mock_get_resource_comment.assert_called_once_with(
+            comment_id, resource_id, True, attached_image_filename
+        )
+        mock_get_attached_image_path.assert_called_once_with(attached_image_filename)
+        mock_exists.assert_called_once_with('attached_image_path')
+        mock_send_file.assert_called_once_with('attached_image_path')
+
+        assert response == 'mock_response'
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path'
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists')
+    @patch('ckanext.feedback.controllers.resource.send_file')
+    def test_attached_image_with_user(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_get_attached_image_path,
+        mock_get_resource_comment,
+        mock_get_resource,
+        current_user,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        user_dict = factories.User()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'owner_org'
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_resource_comment.return_value = 'mock_comment'
+
+        mock_get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = True
+
+        mock_send_file.return_value = 'mock_response'
+
+        response = ResourceController.attached_image(
+            resource_id, comment_id, attached_image_filename
+        )
+
+        mock_get_resource.assert_called_once_with(resource_id)
+        mock_get_resource_comment.assert_called_once_with(
+            comment_id, resource_id, True, attached_image_filename
+        )
+        mock_get_attached_image_path.assert_called_once_with(attached_image_filename)
+        mock_exists.assert_called_once_with('attached_image_path')
+        mock_send_file.assert_called_once_with('attached_image_path')
+
+        assert response == 'mock_response'
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    def test_attached_image_without_resource(
+        self,
+        mock_get_resource,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_get_resource.return_value = None
+
+        with pytest.raises(NotFound):
+            ResourceController.attached_image(
+                resource_id, comment_id, attached_image_filename
+            )
+
+        mock_get_resource.assert_called_once_with(resource_id)
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
+    def test_attached_image_without_comment(
+        self,
+        mock_get_resource_comment,
+        mock_get_resource,
+        current_user,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        user_dict = factories.User()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'owner_org'
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_resource_comment.return_value = None
+
+        with pytest.raises(NotFound):
+            ResourceController.attached_image(
+                resource_id, comment_id, attached_image_filename
+            )
+
+        mock_get_resource.assert_called_once_with(resource_id)
+        mock_get_resource_comment.assert_called_once_with(
+            comment_id, resource_id, True, attached_image_filename
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path'
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists')
+    def test_attached_image_without_image_file(
+        self,
+        mock_exists,
+        mock_get_attached_image_path,
+        mock_get_resource_comment,
+        mock_get_resource,
+        current_user,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        user_dict = factories.User()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'owner_org'
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_resource_comment.return_value = 'mock_comment'
+
+        mock_get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = False
+
+        with pytest.raises(NotFound):
+            ResourceController.attached_image(
+                resource_id, comment_id, attached_image_filename
+            )
+
+        mock_get_resource.assert_called_once_with(resource_id)
+        mock_get_resource_comment.assert_called_once_with(
+            comment_id, resource_id, True, attached_image_filename
+        )
+        mock_get_attached_image_path.assert_called_once_with(attached_image_filename)
+        mock_exists.assert_called_once_with('attached_image_path')
+
     @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
     def test_like_status_return_True(self, mock_get_cookie):
         mock_get_cookie.return_value = 'True'
@@ -1417,3 +1937,32 @@ class TestResourceCommentReactions:
         mock_comment_service.create_resource_comment_reactions.assert_not_called()
         mock_session_commit.assert_not_called()
         mock_redirect_to.assert_not_called()
+
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_upload_destination'
+    )
+    @patch('ckanext.feedback.controllers.resource.get_uploader')
+    def test_upload_image(
+        self,
+        mock_get_uploader,
+        mock_get_upload_destination,
+    ):
+        mock_image = MagicMock()
+        mock_image.filename = 'test.png'
+
+        mock_get_upload_destination.return_value = '/test/upload/path'
+
+        mock_uploader = MagicMock()
+        mock_get_uploader.return_value = mock_uploader
+
+        def mock_update_data_dict(data_dict, url_field, file_field, clear_field):
+            data_dict['image_url'] = 'test_image.png'
+
+        mock_uploader.update_data_dict.side_effect = mock_update_data_dict
+
+        ResourceController._upload_image(mock_image)
+
+        mock_get_upload_destination.assert_called_once()
+        mock_get_uploader.assert_called_once_with('/test/upload/path')
+        mock_uploader.update_data_dict.assert_called_once()
+        mock_uploader.upload.assert_called_once()

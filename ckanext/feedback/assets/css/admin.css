@@ -2,14 +2,6 @@
   width: 25%;
 }
 
-.bottom-centered-content {
-  margin-top: 5px;
-  margin-left: 5%;
-  margin-right: auto;
-  width: 90%;
-  display: block;
-}
-
 .centered-text {
   text-align: center;
 }
@@ -53,12 +45,6 @@ label:after {
 
 .spaced-left {
   margin-left: 10px;
-}
-
-.top-centered-content {
-  margin-left: 5%;
-  margin-right: auto;
-  width: 70%;
 }
 
 td, th {

@@ -37,6 +37,11 @@
   padding: 0.5rem;
 }
 
+.attached-image {
+  max-width: 100%;
+  max-height: 400px;
+}
+
 .unapproved {
   color: #808080;
   background-color: #EEEEEE;
@@ -53,20 +58,6 @@
 .comment-content {
   white-space: pre-wrap;
   word-wrap: break-word;
-}
-
-.char-count {
-  text-align: right;
-  color: #808080;
-}
-
-.comment-count {
-  color: #808080;
-}
-
-.char-count {
-  text-align: right;
-  color: #808080;
 }
 
 .comment-count {
@@ -99,6 +90,10 @@ textarea {
 label.radio {
   margin-right: 24px;
   display: inline-block;
+}
+
+.resize-vertical {
+  resize: vertical;
 }
 
 .comment-form-footer {
@@ -168,6 +163,50 @@ label.radio {
   gap: 8px;
 }
 
-.resize-vertical {
-  resize: vertical;
+.image-preview-wrapper {
+  position: relative;
+  display: inline-block;
 }
+
+.image-preview {
+  max-width: 100px;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  display: block;
+}
+
+.close-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.image-preview-wrapper:hover .close-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.image-upload-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+input[type="file"].imageUpload {
+  display: none;
+}
+

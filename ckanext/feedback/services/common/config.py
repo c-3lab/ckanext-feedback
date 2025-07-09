@@ -241,6 +241,9 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.rating = BaseConfig('rating', parents)
         self.rating.default = False
 
+        self.image_attachment = BaseConfig('image_attachment', parents)
+        self.image_attachment.default = False
+
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
@@ -253,6 +256,11 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.rating.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.rating.name],
+        )
+
+        self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=fb_comments_conf_path + [self.image_attachment.name],
         )
 
 

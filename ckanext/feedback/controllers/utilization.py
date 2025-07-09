@@ -1,10 +1,15 @@
 import logging
+import os
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
+from ckan.lib.uploader import get_uploader
 from ckan.logic import get_action
 from ckan.plugins import toolkit
+from ckan.types import PUploader
+from flask import send_file
+from werkzeug.datastructures import FileStorage
 
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.utilization.details as detail_service
@@ -212,7 +217,12 @@ class UtilizationController:
 
     # utilization/<utilization_id>
     @staticmethod
-    def details(utilization_id, category='', content=''):
+    def details(
+        utilization_id,
+        category='',
+        content='',
+        attached_image_filename: str | None = None,
+    ):
         approval = True
         utilization = detail_service.get_utilization(utilization_id)
         if not isinstance(current_user, model.User):
@@ -228,6 +238,7 @@ class UtilizationController:
         comments, total_count = detail_service.get_utilization_comments(
             utilization_id, approval, limit=limit, offset=offset
         )
+
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
         g.pkg_dict = {
@@ -253,6 +264,7 @@ class UtilizationController:
                 'issue_resolutions': issue_resolutions,
                 'selected_category': selected_category,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
                 'page': helpers.Page(
                     collection=comments,
                     page=page,
@@ -279,12 +291,28 @@ class UtilizationController:
     def create_comment(utilization_id):
         category = request.form.get('category', '')
         content = request.form.get('comment-content', '')
+        attached_image_filename = request.form.get('attached_image_filename', None)
         if not (category and content):
             toolkit.abort(400)
 
+        attached_image: FileStorage = request.files.get("image-upload")
+        if attached_image:
+            try:
+                attached_image_filename = UtilizationController._upload_image(
+                    attached_image
+                )
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return UtilizationController.details(utilization_id, category, content)
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                toolkit.abort(500)
+
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return UtilizationController.details(utilization_id, category, content)
+            return UtilizationController.details(
+                utilization_id, category, content, attached_image_filename
+            )
 
         if message := validate_service.validate_comment(content):
             helpers.flash_error(
@@ -295,9 +323,13 @@ class UtilizationController:
                 'utilization.details',
                 utilization_id=utilization_id,
                 category=category,
+                attached_image_filename=attached_image_filename,
             )
 
-        detail_service.create_utilization_comment(utilization_id, category, content)
+        detail_service.create_utilization_comment(
+            utilization_id, category, content, attached_image_filename
+        )
+
         session.commit()
 
         category_map = {
@@ -338,7 +370,12 @@ class UtilizationController:
 
     # utilization/<utilization_id>/comment/suggested
     @staticmethod
-    def suggested_comment(utilization_id, category, content):
+    def suggested_comment(
+        utilization_id,
+        category,
+        content,
+        attached_image_filename: str | None = None,
+    ):
         softened = suggest_ai_comment(comment=content)
 
         utilization = detail_service.get_utilization(utilization_id)
@@ -360,6 +397,7 @@ class UtilizationController:
                     'utilization': utilization,
                     'selected_category': category,
                     'content': content,
+                    'attached_image_filename': attached_image_filename,
                 },
             )
 
@@ -370,6 +408,7 @@ class UtilizationController:
                 'utilization': utilization,
                 'selected_category': category,
                 'content': content,
+                'attached_image_filename': attached_image_filename,
                 'softened': softened,
             },
         )
@@ -384,14 +423,30 @@ class UtilizationController:
 
         category = request.form.get('category', '')
         content = request.form.get('comment-content', '')
+        attached_image_filename = request.form.get('attached_image_filename', None)
         if not (category and content):
             return toolkit.redirect_to(
                 'utilization.details', utilization_id=utilization_id
             )
 
+        attached_image: FileStorage = request.files.get("attached_image")
+        if attached_image:
+            try:
+                attached_image_filename = UtilizationController._upload_image(
+                    attached_image
+                )
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return UtilizationController.details(utilization_id, category, content)
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                toolkit.abort(500)
+
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return UtilizationController.details(utilization_id, category, content)
+            return UtilizationController.details(
+                utilization_id, category, content, attached_image_filename
+            )
 
         if message := validate_service.validate_comment(content):
             helpers.flash_error(
@@ -402,6 +457,7 @@ class UtilizationController:
                 'utilization.details',
                 utilization_id=utilization_id,
                 category=category,
+                attached_image_filename=attached_image_filename,
             )
 
         categories = detail_service.get_utilization_comment_categories()
@@ -423,6 +479,7 @@ class UtilizationController:
                     utilization_id=utilization_id,
                     category=category,
                     content=content,
+                    attached_image_filename=attached_image_filename,
                 )
 
         return toolkit.render(
@@ -434,8 +491,17 @@ class UtilizationController:
                 'content': content,
                 'selected_category': category,
                 'categories': categories,
+                'attached_image_filename': attached_image_filename,
             },
         )
+
+    # <utilization_id>/comment/check/attached_image/<attached_image_filename>
+    @staticmethod
+    def check_attached_image(utilization_id: str, attached_image_filename: str):
+        attached_image_path = detail_service.get_attached_image_path(
+            attached_image_filename
+        )
+        return send_file(attached_image_path)
 
     # utilization/<utilization_id>/comment/<comment_id>/approve
     @staticmethod
@@ -555,6 +621,38 @@ class UtilizationController:
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
+    # utilization/<utilization_id>/comment/<comment_id>/attached_image/<attached_image_filename>
+    @staticmethod
+    def attached_image(
+        utilization_id: str, comment_id: str, attached_image_filename: str
+    ):
+        utilization = detail_service.get_utilization(utilization_id)
+        if utilization is None:
+            toolkit.abort(404)
+
+        approval = True
+        if not isinstance(current_user, model.User):
+            # if the user is not logged in, display only approved comments
+            approval = True
+        elif (
+            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
+        ):
+            # if the user is an organization admin or a sysadmin, display all comments
+            approval = None
+
+        comment = detail_service.get_utilization_comment(
+            comment_id, utilization_id, approval, attached_image_filename
+        )
+        if comment is None:
+            toolkit.abort(404)
+        attached_image_path = detail_service.get_attached_image_path(
+            attached_image_filename
+        )
+        if not os.path.exists(attached_image_path):
+            toolkit.abort(404)
+
+        return send_file(attached_image_path)
+
     @staticmethod
     def _check_organization_admin_role(utilization_id):
         utilization = detail_service.get_utilization(utilization_id)
@@ -569,3 +667,17 @@ class UtilizationController:
                     ' URL manually please check your spelling and try again.'
                 ),
             )
+
+    @staticmethod
+    def _upload_image(image: FileStorage) -> str:
+        upload_to = detail_service.get_upload_destination()
+        uploader: PUploader = get_uploader(upload_to)
+        data_dict = {
+            "image_upload": image,
+        }
+        uploader.update_data_dict(
+            data_dict, 'image_url', 'image_upload', 'clear_upload'
+        )
+        attached_image_filename = data_dict["image_url"]
+        uploader.upload()
+        return attached_image_filename

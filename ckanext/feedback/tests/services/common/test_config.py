@@ -676,6 +676,93 @@ class TestCheck:
         assert FeedbackConfig().resource_comment.rating.is_enable(org_name_d) is False
         os.remove('/srv/app/feedback_config.json')
 
+        # image_attachment(ckan.ini)
+        config.pop('ckan.feedback.resources.comment.image_attachment.enable', None)
+        config.pop('ckan.feedback.resources.comment.image_attachment.enable_orgs', None)
+        config.pop(
+            'ckan.feedback.resources.comment.image_attachment.disable_orgs', None
+        )
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get('ckan.feedback.resources.comment.image_attachment.enable', None)
+            is None
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.image_attachment.enable_orgs', None
+            )
+            is None
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.image_attachment.disable_orgs', None
+            )
+            is None
+        )
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().resource_comment.image_attachment.is_enable() is False
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_a)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_b)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_c)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_d)
+            is False
+        )
+
+        # image_attachment(feedback_config.json)
+        feedback_config = {"modules": {}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get('ckan.feedback.resources.comment.image_attachment.enable', None)
+            is None
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.image_attachment.enable_orgs', None
+            )
+            is None
+        )
+        assert (
+            config.get(
+                'ckan.feedback.resources.comment.image_attachment.disable_orgs', None
+            )
+            is None
+        )
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.image_attachment.is_enable() is False
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_a)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_b)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_c)
+            is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_d)
+            is False
+        )
+        os.remove('/srv/app/feedback_config.json')
+
         # downloads(ckan.ini)
         config.pop('ckan.feedback.downloads.enable', None)
         config.pop('ckan.feedback.downloads.enable_orgs', None)

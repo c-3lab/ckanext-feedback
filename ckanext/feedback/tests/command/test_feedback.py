@@ -1,10 +1,14 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 from ckan import model
 from click.testing import CliRunner
 
-from ckanext.feedback.command.feedback import feedback
+from ckanext.feedback.command.feedback import (
+    delete_invalid_files,
+    feedback,
+    handle_file_deletion,
+)
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
@@ -149,3 +153,130 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceCommentReactions.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)
+
+    @patch('ckanext.feedback.command.feedback.upload_service')
+    @patch('ckanext.feedback.command.feedback.comment_service')
+    @patch('ckanext.feedback.command.feedback.detail_service')
+    @patch('ckanext.feedback.command.feedback.os.listdir')
+    @patch('ckanext.feedback.command.feedback.delete_invalid_files')
+    def test_clean_files(
+        self,
+        mock_delete_invalid_files,
+        mock_listdir,
+        mock_detail_service,
+        mock_comment_service,
+        mock_upload_service,
+    ):
+        dry_run = False
+
+        mock_upload_service.get_feedback_storage_path.return_value = '/test/upload/path'
+        mock_comment_service.get_upload_destination.return_value = (
+            'feedback_resource_comment'
+        )
+        mock_detail_service.get_upload_destination.return_value = (
+            'feedback_utilization_comment'
+        )
+        mock_listdir.return_value = ['image1.png', 'image2.png', 'image3.png']
+        mock_comment_service.get_comment_attached_image_files.return_value = [
+            'image1.png',
+            'image2.png',
+        ]
+        mock_detail_service.get_comment_attached_image_files.return_value = [
+            'image1.png'
+        ]
+        mock_delete_invalid_files.return_value = None
+
+        self.runner.invoke(feedback, ['clean-files'])
+
+        mock_upload_service.get_feedback_storage_path.assert_called_once_with()
+        mock_comment_service.get_upload_destination.assert_called_once_with()
+        mock_detail_service.get_upload_destination.assert_called_once_with()
+        mock_listdir.assert_has_calls(
+            [
+                call('/test/upload/path/feedback_resource_comment'),
+                call('/test/upload/path/feedback_utilization_comment'),
+            ]
+        )
+        mock_comment_service.get_comment_attached_image_files.assert_called_once_with()
+        mock_detail_service.get_comment_attached_image_files.assert_called_once_with()
+        print(mock_delete_invalid_files.call_args_list)
+        mock_delete_invalid_files.assert_has_calls(
+            [
+                call(
+                    dry_run,
+                    '/test/upload/path/feedback_resource_comment',
+                    {'image3.png'},
+                ),
+                call(
+                    dry_run,
+                    '/test/upload/path/feedback_utilization_comment',
+                    {'image2.png', 'image3.png'},
+                ),
+            ]
+        )
+
+    @patch('ckanext.feedback.command.feedback.click.secho')
+    @patch('ckanext.feedback.command.feedback.handle_file_deletion')
+    def test_delete_invalid_files(self, mock_handle_file_deletion, mock_secho):
+        dry_run = False
+        dir_path = '/test/upload/path/feedback_resource_comment'
+        invalid_files = {'image3.png'}
+
+        mock_handle_file_deletion.return_value = None
+
+        delete_invalid_files(dry_run, dir_path, invalid_files)
+
+        mock_secho.assert_called_once_with(
+            f"Found {len(invalid_files)} unwanted files in: {dir_path}", fg='yellow'
+        )
+        mock_handle_file_deletion.assert_called_once_with(
+            dry_run, '/test/upload/path/feedback_resource_comment/image3.png'
+        )
+
+    @patch('ckanext.feedback.command.feedback.click.secho')
+    def test_delete_invalid_files_with_none_invalid_files(self, mock_secho):
+        dry_run = False
+        dir_path = '/test/upload/path/feedback_resource_comment'
+        invalid_files = None
+
+        delete_invalid_files(dry_run, dir_path, invalid_files)
+
+        mock_secho.assert_called_once_with(
+            f"No files for deletion were found: {dir_path}", fg='green'
+        )
+
+    @patch('ckanext.feedback.command.feedback.os.remove')
+    @patch('ckanext.feedback.command.feedback.click.secho')
+    def test_handle_file_deletion(self, mock_secho, mock_remove):
+        dry_run = False
+        file_path = '/test/upload/path/feedback_resource_comment/image3.png'
+
+        handle_file_deletion(dry_run, file_path)
+
+        mock_remove.assert_called_once_with(file_path)
+        mock_secho.assert_called_once_with(f"Deleted: {file_path}", fg='green')
+
+    @patch('ckanext.feedback.command.feedback.os.remove')
+    @patch('ckanext.feedback.command.feedback.click.secho')
+    def test_handle_file_deletion_with_exception(self, mock_secho, mock_remove):
+        dry_run = False
+        file_path = '/test/upload/path/feedback_resource_comment/image3.png'
+
+        mock_remove.side_effect = Exception('Error message')
+
+        handle_file_deletion(dry_run, file_path)
+
+        mock_secho.assert_called_once_with(
+            f"Deletion failure: {file_path}. Error message", fg='red', err=True
+        )
+
+    @patch('ckanext.feedback.command.feedback.click.secho')
+    def test_handle_file_deletion_dry_run(self, mock_secho):
+        dry_run = True
+        file_path = '/test/upload/path/feedback_resource_comment/image3.png'
+
+        handle_file_deletion(dry_run, file_path)
+
+        mock_secho.assert_called_once_with(
+            f"[DRY RUN] Deletion Schedule: {file_path}", fg='blue'
+        )

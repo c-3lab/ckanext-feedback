@@ -18,7 +18,7 @@
     <article class="module" role="main">
       <div class="module-content">
         {% set row = utilization %}
-        <div class="centered-content">
+        <div>
           {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
             <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
               <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">
@@ -80,7 +80,7 @@
           <h4>{{ _('Comments') }}</h4>
           <p>{{ row.comment }}</p>
           <hr>
-          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post">
+          <form id="comment_form" name="comment_form" action="{{ h.url_for('utilization.check_comment', utilization_id=utilization_id ) }}" method="post" enctype="multipart/form-data">
             <h4>{{ _('Comment') }}</h4>
             {% for category in categories %}
             <label class="radio">
@@ -98,6 +98,16 @@
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
             <div class="comment-form-footer">
+              {% if h.is_enabled_image_attachment(utilization.owner_org) %}
+                <div class="image-upload-section">
+                  <button id="uploadBtn" type="button" class="btn btn-default" onclick="uploadClicked();">
+                    <i class="fa-solid fa-image"></i>
+                    {{ _('Image Attachment') }}
+                  </button>
+                  <div id="previewContainer"></div>
+                  <input type="file" id="imageUpload" class="imageUpload" name="attached_image" accept="image/*">
+                </div>
+              {% endif %}
               <div class="form-actions">
                 {% if h.is_base_public_folder_bs3() %}
                 <button class="btn btn-primary right-aligned" id="comment-button" name="send-button" onclick="return checkCommentExists(this, bs3=true);">
@@ -149,8 +159,8 @@
                 </div>
                 {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
                   <div id="comment-action-buttons" class="comment-action-buttons">
-                    <form class="inline-form" name="approval_form" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
-                      <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
+                    <form class="inline-form" name="approval_form" style="margin-bottom: 0;" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
+                      <button class="btn btn-primary" onclick="setButtonDisable(this);">
                         <i class="fa-solid fa-check"></i>
                         {{ _('Approve') }}
                       </button>
@@ -162,6 +172,13 @@
                 {% if comment.content %}
                   <div class="comment-container">
                     <span class="multiple-line" id="comment-content-{{ comment.id }}">{{ comment.content }}</span>
+                  </div>
+                {% endif %}
+                {% if comment.attached_image_filename %}
+                  <div>
+                    <a href="{{h.url_for('utilization.attached_image', utilization_id=utilization_id, comment_id=comment.id, attached_image_filename=comment.attached_image_filename ) }}" target="_blank">
+                      <img src="{{h.url_for('utilization.attached_image', utilization_id=utilization_id, comment_id=comment.id, attached_image_filename=comment.attached_image_filename ) }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                    </a>
                   </div>
                 {% endif %}
               </div>
@@ -178,7 +195,7 @@
     <div id="issue-resolution-form" class="modal fade" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
-          <form name="issue_resolution_form" class="top-centered-content" action="{{h.url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
+          <form name="issue_resolution_form" action="{{h.url_for('utilization.create_issue_resolution', utilization_id=utilization_id ) }}" method="post">
             <div class="modal-header">
               {% if h.is_base_public_folder_bs3() %}
                 <button type="button" class="close" data-dismiss="modal">&times;</button>

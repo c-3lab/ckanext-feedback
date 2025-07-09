@@ -46,6 +46,12 @@ rules = [
         {'methods': ['GET', 'POST']},
     ),
     (
+        '<utilization_id>/comment/check/attached_image/<attached_image_filename>',
+        'check_attached_image',
+        utilization.UtilizationController.check_attached_image,
+        {'methods': ['GET']},
+    ),
+    (
         '/<utilization_id>/comment/<comment_id>/approve',
         'approve_comment',
         utilization.UtilizationController.approve_comment,
@@ -74,6 +80,13 @@ rules = [
         'create_issue_resolution',
         utilization.UtilizationController.create_issue_resolution,
         {'methods': ['POST']},
+    ),
+    (
+        '/<utilization_id>/comment/<comment_id>/attached_image/'
+        '<attached_image_filename>',
+        'attached_image',
+        utilization.UtilizationController.attached_image,
+        {'methods': ['GET']},
     ),
 ]
 for rule, endpoint, view_func, *others in rules:
