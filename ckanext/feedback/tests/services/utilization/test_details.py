@@ -702,6 +702,8 @@ class TestUtilizationDetailsService:
 
         assert result.comment == 1
 
+
+class TestAttachedImageConfig:
     @patch('ckanext.feedback.services.utilization.details.get_upload_destination')
     @patch('ckanext.feedback.services.utilization.details.get_uploader')
     def test_get_attached_image_path(
@@ -722,20 +724,10 @@ class TestUtilizationDetailsService:
     def test_get_upload_destination(self):
         assert get_upload_destination() == 'feedback_utilization_comment'
 
-    @patch('ckanext.feedback.services.utilization.details.session')
-    def test_get_comment_attached_image_files(self, mock_session):
-        mock_query = MagicMock()
-        mock_query.filter.return_value = mock_query
-        mock_query.all.return_value = [
-            ('attached_image_filename1',),
-            ('attached_image_filename2',),
-        ]
-        mock_session.query.return_value = mock_query
 
-        get_comment_attached_image_files()
+@pytest.mark.db_test
+class TestAttachedImageService:
+    def test_get_comment_attached_image_files(self, utilization_comment):
+        result = get_comment_attached_image_files()
 
-        mock_session.query.assert_called_once_with(
-            UtilizationComment.attached_image_filename
-        )
-        assert mock_query.filter.call_count == 1
-        mock_query.all.assert_called_once()
+        assert result == ['test_attached_image.jpg']

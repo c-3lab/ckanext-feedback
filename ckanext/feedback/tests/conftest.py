@@ -1,8 +1,15 @@
 import uuid
+from datetime import datetime
 
 import pytest
+from ckan import model
 from ckan.tests import factories
 
+from ckanext.feedback.command.feedback import (
+    create_download_tables,
+    create_resource_tables,
+    create_utilization_tables,
+)
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
@@ -10,12 +17,25 @@ from ckanext.feedback.models.resource_comment import (
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.types import ResourceCommentResponseStatus
+from ckanext.feedback.models.utilization import (
+    Utilization,
+    UtilizationComment,
+    UtilizationCommentCategory,
+)
 
 
 @pytest.fixture(autouse=True)
-def reset_transaction():
-    yield
-    session.rollback()
+def reset_transaction(request, clean_db):
+    if request.node.get_closest_marker('db_test'):
+        model.repo.init_db()
+        engine = model.meta.engine
+        create_utilization_tables(engine)
+        create_resource_tables(engine)
+        create_download_tables(engine)
+        yield
+        session.rollback()
+    else:
+        yield
 
 
 @pytest.fixture(scope="function")
@@ -51,6 +71,7 @@ def resource_comment(resource):
         category=ResourceCommentCategory.REQUEST,
         content='test_content',
         rating=3,
+        attached_image_filename='test_attached_image.jpg',
     )
     session.add(comment)
     session.flush()
@@ -68,3 +89,40 @@ def resource_comment_reactions(user, resource_comment):
     session.add(reactions)
     session.flush()
     return reactions
+
+
+@pytest.fixture(scope='function')
+def utilization(user, resource):
+    utilization = Utilization(
+        id=str(uuid.uuid4()),
+        resource_id=resource['id'],
+        title='test_title',
+        url='test_url',
+        description='test_description',
+        comment=0,
+        created=datetime(2024, 1, 1, 15, 0, 0),
+        approval=True,
+        approved=datetime(2024, 1, 1, 15, 0, 0),
+        approval_user_id=user['id'],
+    )
+    session.add(utilization)
+    session.flush()
+    return utilization
+
+
+@pytest.fixture(scope='function')
+def utilization_comment(user, utilization):
+    comment = UtilizationComment(
+        id=str(uuid.uuid4()),
+        utilization_id=utilization.id,
+        category=UtilizationCommentCategory.REQUEST,
+        content='test_content',
+        created=datetime(2024, 1, 1, 15, 0, 0),
+        approval=True,
+        approved=datetime(2024, 1, 1, 15, 0, 0),
+        approval_user_id=user['id'],
+        attached_image_filename='test_attached_image.jpg',
+    )
+    session.add(comment)
+    session.flush()
+    return comment
