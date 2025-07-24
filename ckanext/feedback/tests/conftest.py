@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 from ckan import model
 from ckan.tests import factories
+from ckan.tests.helpers import reset_db
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -25,15 +26,20 @@ from ckanext.feedback.models.utilization import (
 
 
 @pytest.fixture(autouse=True)
-def reset_transaction(request, clean_db):
+def reset_transaction(request):
     if request.node.get_closest_marker('db_test'):
+        reset_db()
+
         model.repo.init_db()
         engine = model.meta.engine
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
+
         yield
+
         session.rollback()
+        reset_db()
     else:
         yield
 
