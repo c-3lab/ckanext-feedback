@@ -143,12 +143,6 @@ def create_reply(resource_comment_id, content, creator_user_id):
     )
     session.add(reply)
 
-
-# Get cookie
-def get_cookie(resource_id):
-    return request.cookies.get(resource_id)
-
-
 def get_resource_comment_reactions(resource_comment_id):
     result = (
         session.query(ResourceCommentReactions)
