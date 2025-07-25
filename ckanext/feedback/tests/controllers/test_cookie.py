@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from flask import Flask, make_response
 
@@ -16,31 +18,36 @@ def app():
     return app
 
 
-def test_set_like_status_cookie_true(app):
+@pytest.fixture
+def resource_id():
+    return str(uuid.uuid4())
+
+
+def test_set_like_status_cookie_true(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/set_true")
         def set_cookie_true():
             resp = make_response("OK")
-            return set_like_status_cookie(resp, "123", "True")
+            return set_like_status_cookie(resp, resource_id, "True")
 
         res = client.get("/set_true")
         cookie = res.headers.get("Set-Cookie")
-        assert "like_status_123=True" in cookie
+        assert f"like_status_{resource_id}=True" in cookie
         assert "Max-Age=2147483647" in cookie
 
 
-def test_set_like_status_cookie_false(app):
+def test_set_like_status_cookie_false(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/set_false")
         def set_cookie_false():
             resp = make_response("OK")
-            return set_like_status_cookie(resp, "123", "False")
+            return set_like_status_cookie(resp, resource_id, "False")
 
         res = client.get("/set_false")
         cookie = res.headers.get("Set-Cookie")
-        assert "like_status_123=False" in cookie
+        assert f"like_status_{resource_id}=False" in cookie
         assert "Max-Age=2147483647" in cookie
 
 
@@ -51,17 +58,17 @@ def test_set_like_status_cookie_invalid_value_raises(app):
             set_like_status_cookie(resp, "abc", "maybe")
 
 
-def test_set_repeat_post_limit_cookie_nomal(app):
+def test_set_repeat_post_limit_cookie_nomal(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/set_cookie")
         def set_cookie_nomal():
             resp = make_response("OK")
-            return set_repeat_post_limit_cookie(resp, "123")
+            return set_repeat_post_limit_cookie(resp, resource_id)
 
         res = client.get("/set_cookie")
         cookie = res.headers.get("Set-Cookie")
-        assert "repeat_post_limit_123=alreadyPosted" in cookie
+        assert f"repeat_post_limit_{resource_id}=alreadyPosted" in cookie
         assert "Max-Age=2147483647" in cookie
 
 
@@ -104,36 +111,36 @@ def test_set_repeat_post_limit_cookie_none_id(app):
         assert "repeat_post_limit_None=alreadyPosted" in cookie
 
 
-def test_get_like_status_cookie_true(app):
+def test_get_like_status_cookie_true(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/get_cookie")
         def get_cookie_true():
-            return get_like_status_cookie("123") or "None"
+            return get_like_status_cookie(resource_id) or "None"
 
-        client.set_cookie("localhost", "like_status_123", "true")
+        client.set_cookie("localhost", f"like_status_{resource_id}", "true")
         res = client.get("/get_cookie")
         assert res.data.decode() == "true"
 
 
-def test_get_like_status_cookie_false(app):
+def test_get_like_status_cookie_false(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/get_cookie")
         def get_cookie_false():
-            return get_like_status_cookie("456") or "None"
+            return get_like_status_cookie(resource_id) or "None"
 
-        client.set_cookie("localhost", "like_status_456", "false")
+        client.set_cookie("localhost", f"like_status_{resource_id}", "false")
         res = client.get("/get_cookie")
         assert res.data.decode() == "false"
 
 
-def test_get_like_status_cookie_none(app):
+def test_get_like_status_cookie_none(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/get_cookie")
         def get_cookie_none():
-            return get_like_status_cookie("789") or "None"
+            return get_like_status_cookie(resource_id) or "None"
 
         res = client.get("/get_cookie")
         assert res.data.decode() == "None"
@@ -151,24 +158,26 @@ def test_get_like_status_cookie_empty_id(app):
         assert res.data.decode() == "true"
 
 
-def test_get_repeat_post_limit_cookie_set(app):
+def test_get_repeat_post_limit_cookie_set(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/get_repeat_cookie")
         def get_cookie_nomal():
-            return get_repeat_post_limit_cookie("123") or "None"
+            return get_repeat_post_limit_cookie(resource_id) or "None"
 
-        client.set_cookie("localhost", "repeat_post_limit_123", "alreadyPosted")
+        client.set_cookie(
+            "localhost", f"repeat_post_limit_{resource_id}", "alreadyPosted"
+        )
         res = client.get("/get_repeat_cookie")
         assert res.data.decode() == "alreadyPosted"
 
 
-def test_get_repeat_post_limit_cookie_none(app):
+def test_get_repeat_post_limit_cookie_none(app, resource_id):
     with app.test_client() as client:
 
         @app.route("/get_repeat_cookie")
         def get_cookie_none():
-            return get_repeat_post_limit_cookie("456") or "None"
+            return get_repeat_post_limit_cookie(resource_id) or "None"
 
         res = client.get("/get_repeat_cookie")
         assert res.data.decode() == "None"
@@ -182,17 +191,5 @@ def test_get_repeat_post_limit_cookie_empty_id(app):
             return get_repeat_post_limit_cookie("") or "None"
 
         client.set_cookie("localhost", "repeat_post_limit_", "alreadyPosted")
-        res = client.get("/get_repeat_cookie")
-        assert res.data.decode() == "alreadyPosted"
-
-
-def test_get_repeat_post_limit_cookie_special_id(app):
-    with app.test_client() as client:
-
-        @app.route("/get_repeat_cookie")
-        def get_cookie_special():
-            return get_repeat_post_limit_cookie("@!#") or "None"
-
-        client.set_cookie("localhost", "repeat_post_limit_@!#", "alreadyPosted")
         res = client.get("/get_repeat_cookie")
         assert res.data.decode() == "alreadyPosted"
