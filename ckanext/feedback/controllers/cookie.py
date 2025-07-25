@@ -1,6 +1,8 @@
 from flask import request
 
 def set_like_status_cookie(resp,resource_id,like_status):
+    if like_status not in ["True","False"]:
+        raise ValueError("like_status must be 'True' or 'False'")
     resp.set_cookie(f'like_status_{resource_id}', f'{like_status}', max_age=2147483647)
     return resp
 
