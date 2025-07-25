@@ -26,3 +26,33 @@ def get_org_list(id=None):
         org_list.append(org)
 
     return org_list
+
+
+def get_organization_name_list():
+    org_name_list = (
+        session.query(Group.name)
+        .filter(Group.state == "active", Group.is_organization.is_(True))
+        .all()
+    )
+    return [name for (name,) in org_name_list]
+
+
+def get_organization_name_by_name(name):
+    org_name = (
+        session.query(Group.name)
+        .filter(
+            Group.name == name,
+            Group.state == "active",
+            Group.is_organization.is_(True),
+        )
+        .first()
+    )
+
+    return org_name
+
+
+def get_organization_name_by_id(org_id):
+    org_name = (
+        session.query(Group.name.label('name')).filter(Group.id == org_id).first()
+    )
+    return org_name

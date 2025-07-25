@@ -3,9 +3,7 @@ import os
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import ckan.tests.factories as factories
 import pytest
-from ckan import model
 from ckan.common import config
 from ckan.plugins import toolkit
 from ckan.plugins.toolkit import ValidationError
@@ -16,29 +14,16 @@ from ckanext.feedback.services.common.config import (
     CONFIG_HANDLER_PATH,
     FeedbackConfig,
     download_handler,
-    get_organization,
 )
 
-engine = model.repo.session.get_bind()
+ORG_NAME_A = 'org-name-a'
+ORG_NAME_B = 'org-name-b'
+ORG_NAME_C = 'org-name-c'
+ORG_NAME_D = 'org-name-d'
 
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestCheck:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-
-    def test_check_administrator(self):
-        enable_org = factories.Organization(
-            is_organization=True,
-            name='enable_org',
-            type='organization',
-            title='enable_org',
-        )
-
-        result = get_organization(enable_org['id'])
-        assert result.name == enable_org['name']
-
     @patch('ckanext.feedback.services.common.config.import_string')
     def test_seted_download_handler(self, mock_import_string):
         toolkit.config['ckan.feedback.download_handler'] = CONFIG_HANDLER_PATH
@@ -110,13 +95,8 @@ class TestCheck:
         result = FeedbackPlugin.get_commands(self)
         assert result == [feedback.feedback]
 
-    @patch('ckanext.feedback.services.common.config.get_organization')
-    def test_load_feedback_config_and_is_enable(self, mock_get_organization):
-        org_name_a = 'org-name-a'
-        org_name_b = 'org-name-b'
-        org_name_c = 'org-name-c'
-        org_name_d = 'org-name-d'
-
+    @patch('ckanext.feedback.services.common.config.organization_service')
+    def test_load_feedback_config_and_is_enable(self, mock_organization_service):
         # No description of settings
         config.pop('ckan.feedback.resources.enable', None)
         config.pop('ckan.feedback.resources.enable_orgs', None)
@@ -129,10 +109,10 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
 
         # Write enable = True in ckan.ini
         config['ckan.feedback.resources.enable'] = True
@@ -144,10 +124,10 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
 
         # Write enable = False in ckan.ini
         config['ckan.feedback.resources.enable'] = False
@@ -159,10 +139,10 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.is_enable() is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is False
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is False
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is False
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is False
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is False
 
         # enable has an invalid value
         config['ckan.feedback.resources.enable'] = "invalid_value"
@@ -195,14 +175,22 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_b})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_c})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_d})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_C})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_D})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # The "enable" key is set to True in feedback_config.json
@@ -219,14 +207,22 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_b})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_c})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_d})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_C})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_D})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # The "enable_orgs" key is listed in feedback_config.json
@@ -234,7 +230,7 @@ class TestCheck:
 
         feedback_config = {
             "modules": {
-                "resources": {"enable": True, "enable_orgs": [org_name_a, org_name_b]}
+                "resources": {"enable": True, "enable_orgs": [ORG_NAME_A, ORG_NAME_B]}
             }
         }
         with open('/srv/app/feedback_config.json', 'w') as f:
@@ -244,20 +240,28 @@ class TestCheck:
 
         assert config.get('ckan.feedback.resources.enable', None) is True
         assert config.get('ckan.feedback.resources.enable_orgs', None) == [
-            org_name_a,
-            org_name_b,
+            ORG_NAME_A,
+            ORG_NAME_B,
         ]
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_b})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_c})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_d})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_C})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_D})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is False
         os.remove('/srv/app/feedback_config.json')
 
         # The "disable_orgs" key is listed in feedback_config.json
@@ -266,7 +270,7 @@ class TestCheck:
 
         feedback_config = {
             "modules": {
-                "resources": {"enable": True, "disable_orgs": [org_name_a, org_name_b]}
+                "resources": {"enable": True, "disable_orgs": [ORG_NAME_A, ORG_NAME_B]}
             }
         }
         with open('/srv/app/feedback_config.json', 'w') as f:
@@ -277,19 +281,27 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.enable', None) is True
         assert config.get('ckan.feedback.resources.enable_orgs', None) is None
         assert config.get('ckan.feedback.resources.disable_orgs', None) == [
-            org_name_a,
-            org_name_b,
+            ORG_NAME_A,
+            ORG_NAME_B,
         ]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_b})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_c})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_d})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_C})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_D})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # Both "enable_orgs" and "disable_orgs" are listed in feedback_config.json
@@ -300,8 +312,8 @@ class TestCheck:
             "modules": {
                 "resources": {
                     "enable": True,
-                    "enable_orgs": [org_name_a, org_name_b],
-                    "disable_orgs": [org_name_c],
+                    "enable_orgs": [ORG_NAME_A, ORG_NAME_B],
+                    "disable_orgs": [ORG_NAME_C],
                 }
             }
         }
@@ -312,20 +324,28 @@ class TestCheck:
 
         assert config.get('ckan.feedback.resources.enable', None) is True
         assert config.get('ckan.feedback.resources.enable_orgs', None) == [
-            org_name_a,
-            org_name_b,
+            ORG_NAME_A,
+            ORG_NAME_B,
         ]
-        assert config.get('ckan.feedback.resources.disable_orgs', None) == [org_name_c]
+        assert config.get('ckan.feedback.resources.disable_orgs', None) == [ORG_NAME_C]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_b})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_c})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_d})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_C})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_D})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # The same organization is listed in both
@@ -338,8 +358,8 @@ class TestCheck:
             "modules": {
                 "resources": {
                     "enable": True,
-                    "enable_orgs": [org_name_a, org_name_b],
-                    "disable_orgs": [org_name_a],
+                    "enable_orgs": [ORG_NAME_A, ORG_NAME_B],
+                    "disable_orgs": [ORG_NAME_A],
                 }
             }
         }
@@ -350,20 +370,28 @@ class TestCheck:
 
         assert config.get('ckan.feedback.resources.enable', None) is True
         assert config.get('ckan.feedback.resources.enable_orgs', None) == [
-            org_name_a,
-            org_name_b,
+            ORG_NAME_A,
+            ORG_NAME_B,
         ]
-        assert config.get('ckan.feedback.resources.disable_orgs', None) == [org_name_a]
+        assert config.get('ckan.feedback.resources.disable_orgs', None) == [ORG_NAME_A]
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_b})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_c})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_d})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_C})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_D})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # The "enable" key is set to False in feedback_config.json
@@ -382,14 +410,22 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_b})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_c})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is False
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_d})
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_C})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is False
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_D})
+        )
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is False
         os.remove('/srv/app/feedback_config.json')
 
         # The specified organization was not found
@@ -408,11 +444,11 @@ class TestCheck:
         assert config.get('ckan.feedback.resources.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        mock_get_organization.return_value = None
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is False
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is False
+        mock_organization_service.get_organization_name_by_id.return_value = None
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is False
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is False
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is False
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is False
         os.remove('/srv/app/feedback_config.json')
 
         # The "enable" key does not exist
@@ -444,17 +480,19 @@ class TestCheck:
         config.pop('ckan.feedback.resources.disable_orgs', None)
 
         feedback_config = {
-            "modules": {"resources": {"enable": True, "enable_orgs": org_name_a}}
+            "modules": {"resources": {"enable": True, "enable_orgs": ORG_NAME_A}}
         }
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
 
         with pytest.raises(ValidationError) as exc_info:
-            FeedbackConfig().resource_comment.is_enable(org_name_a)
+            FeedbackConfig().resource_comment.is_enable(ORG_NAME_A)
 
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
@@ -472,17 +510,19 @@ class TestCheck:
         config.pop('ckan.feedback.resources.disable_orgs', None)
 
         feedback_config = {
-            "modules": {"resources": {"enable": True, "disable_orgs": org_name_a}}
+            "modules": {"resources": {"enable": True, "disable_orgs": ORG_NAME_A}}
         }
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
         FeedbackConfig().load_feedback_config()
 
-        mock_get_organization.return_value = SimpleNamespace(**{'name': org_name_a})
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
 
         with pytest.raises(ValidationError) as exc_info:
-            FeedbackConfig().resource_comment.is_enable(org_name_a)
+            FeedbackConfig().resource_comment.is_enable(ORG_NAME_A)
 
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
@@ -494,13 +534,8 @@ class TestCheck:
         )
         os.remove('/srv/app/feedback_config.json')
 
-    @patch('ckanext.feedback.services.common.config.get_organization')
-    def test_module_default_config(self, mock_get_organization):
-        org_name_a = 'org-name-a'
-        org_name_b = 'org-name-b'
-        org_name_c = 'org-name-c'
-        org_name_d = 'org-name-d'
-
+    @patch('ckanext.feedback.services.common.config.organization_service')
+    def test_module_default_config(self, mock_organization_service):
         # utilization(ckan.ini)
         config.pop('ckan.feedback.utilization.enable', None)
         config.pop('ckan.feedback.utilization.enable_orgs', None)
@@ -513,10 +548,10 @@ class TestCheck:
         assert config.get('ckan.feedback.utilization.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().utilization.is_enable() is True
-        assert FeedbackConfig().utilization.is_enable(org_name_a) is True
-        assert FeedbackConfig().utilization.is_enable(org_name_b) is True
-        assert FeedbackConfig().utilization.is_enable(org_name_c) is True
-        assert FeedbackConfig().utilization.is_enable(org_name_d) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_D) is True
 
         # utilization(feedback_config.json)
         feedback_config = {"modules": {}}
@@ -530,10 +565,10 @@ class TestCheck:
         assert config.get('ckan.feedback.utilization.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().utilization.is_enable() is True
-        assert FeedbackConfig().utilization.is_enable(org_name_a) is True
-        assert FeedbackConfig().utilization.is_enable(org_name_b) is True
-        assert FeedbackConfig().utilization.is_enable(org_name_c) is True
-        assert FeedbackConfig().utilization.is_enable(org_name_d) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().utilization.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # repeated_post_limit(ckan.ini)
@@ -568,19 +603,19 @@ class TestCheck:
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_a)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_A)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_b)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_B)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_c)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_C)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_d)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_D)
             is False
         )
 
@@ -612,19 +647,19 @@ class TestCheck:
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.repeat_post_limit.is_enable() is False
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_a)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_A)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_b)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_B)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_c)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_C)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(org_name_d)
+            FeedbackConfig().resource_comment.repeat_post_limit.is_enable(ORG_NAME_D)
             is False
         )
         os.remove('/srv/app/feedback_config.json')
@@ -647,10 +682,10 @@ class TestCheck:
         )
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.rating.is_enable() is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_a) is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_b) is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_c) is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_d) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_A) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_B) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_C) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_D) is False
 
         # rating(feedback_config.json)
         feedback_config = {"modules": {}}
@@ -670,10 +705,10 @@ class TestCheck:
         )
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.rating.is_enable() is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_a) is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_b) is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_c) is False
-        assert FeedbackConfig().resource_comment.rating.is_enable(org_name_d) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_A) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_B) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_C) is False
+        assert FeedbackConfig().resource_comment.rating.is_enable(ORG_NAME_D) is False
         os.remove('/srv/app/feedback_config.json')
 
         # image_attachment(ckan.ini)
@@ -704,19 +739,19 @@ class TestCheck:
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.image_attachment.is_enable() is False
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_a)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_A)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_b)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_B)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_c)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_C)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_d)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_D)
             is False
         )
 
@@ -746,19 +781,19 @@ class TestCheck:
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.image_attachment.is_enable() is False
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_a)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_A)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_b)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_B)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_c)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_C)
             is False
         )
         assert (
-            FeedbackConfig().resource_comment.image_attachment.is_enable(org_name_d)
+            FeedbackConfig().resource_comment.image_attachment.is_enable(ORG_NAME_D)
             is False
         )
         os.remove('/srv/app/feedback_config.json')
@@ -775,10 +810,10 @@ class TestCheck:
         assert config.get('ckan.feedback.downloads.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
 
         # downloads(feedback_config.json)
         feedback_config = {"modules": {}}
@@ -792,10 +827,10 @@ class TestCheck:
         assert config.get('ckan.feedback.downloads.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().resource_comment.is_enable() is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_a) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_b) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_c) is True
-        assert FeedbackConfig().resource_comment.is_enable(org_name_d) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # likes(ckan.ini)
@@ -810,10 +845,10 @@ class TestCheck:
         assert config.get('ckan.feedback.likes.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().like.is_enable() is True
-        assert FeedbackConfig().like.is_enable(org_name_a) is True
-        assert FeedbackConfig().like.is_enable(org_name_b) is True
-        assert FeedbackConfig().like.is_enable(org_name_c) is True
-        assert FeedbackConfig().like.is_enable(org_name_d) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_D) is True
 
         # likes(feedback_config.json)
         feedback_config = {"modules": {}}
@@ -827,10 +862,10 @@ class TestCheck:
         assert config.get('ckan.feedback.likes.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().like.is_enable() is True
-        assert FeedbackConfig().like.is_enable(org_name_a) is True
-        assert FeedbackConfig().like.is_enable(org_name_b) is True
-        assert FeedbackConfig().like.is_enable(org_name_c) is True
-        assert FeedbackConfig().like.is_enable(org_name_d) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().like.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # moral_keeper_ai(ckan.ini)
@@ -845,10 +880,10 @@ class TestCheck:
         assert config.get('ckan.feedback.moral_keeper_ai.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().moral_keeper_ai.is_enable() is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_a) is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_b) is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_c) is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_d) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_A) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_B) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_C) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_D) is False
 
         # moral_keeper_ai(feedback_config.json)
         feedback_config = {"modules": {}}
@@ -862,10 +897,10 @@ class TestCheck:
         assert config.get('ckan.feedback.moral_keeper_ai.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().moral_keeper_ai.is_enable() is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_a) is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_b) is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_c) is False
-        assert FeedbackConfig().moral_keeper_ai.is_enable(org_name_d) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_A) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_B) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_C) is False
+        assert FeedbackConfig().moral_keeper_ai.is_enable(ORG_NAME_D) is False
         os.remove('/srv/app/feedback_config.json')
 
     def test_recaptcha_config(self):
@@ -1390,17 +1425,88 @@ class TestCheck:
         )
         os.remove('/srv/app/feedback_config.json')
 
-    def test_get_enable_orgs(self):
-        org_name_a = 'org-name-a'
-        org_name_b = 'org-name-b'
+    def test_get_enable_org_names_with_enable_is_False(self):
+        feedback_config = {"modules": {"resources": {"enable": False}}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
 
-        config['ckan.feedback.resources.enable'] = True
-        config['ckan.feedback.resources.enable_orgs'] = [org_name_a, org_name_b]
+        FeedbackConfig().load_feedback_config()
 
-        result = FeedbackConfig().resource_comment.get_enable_orgs()
-        assert result == [org_name_a, org_name_b]
+        result = FeedbackConfig().resource_comment.get_enable_org_names()
 
-        config['ckan.feedback.resources.enable'] = False
+        assert result == []
 
-        result = FeedbackConfig().resource_comment.get_enable_orgs()
-        assert result is False
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.organization_service')
+    def test_get_enable_org_names_with_disable_orgs(self, mock_organization_service):
+        feedback_config = {
+            "modules": {
+                "resources": {"enable": True, "disable_orgs": [ORG_NAME_A, ORG_NAME_B]}
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_organization_service.get_organization_name_list.return_value = [
+            ORG_NAME_A,
+            ORG_NAME_B,
+            ORG_NAME_C,
+            ORG_NAME_D,
+        ]
+
+        result = FeedbackConfig().resource_comment.get_enable_org_names()
+
+        assert result == [ORG_NAME_C, ORG_NAME_D]
+
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.organization_service')
+    def test_get_enable_org_names_with_enable_orgs(self, mock_organization_service):
+        feedback_config = {
+            "modules": {
+                "resources": {"enable": True, "enable_orgs": [ORG_NAME_A, ORG_NAME_B]}
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_organization_service.get_organization_name_list.return_value = [
+            ORG_NAME_A,
+            ORG_NAME_B,
+            ORG_NAME_C,
+            ORG_NAME_D,
+        ]
+
+        result = FeedbackConfig().resource_comment.get_enable_org_names()
+
+        assert result == [ORG_NAME_A, ORG_NAME_B]
+
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.organization_service')
+    def test_get_enable_org_names_with_enable_orgs_and_disable_orgs(
+        self, mock_organization_service
+    ):
+        feedback_config = {"modules": {"resources": {"enable": True}}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_organization_service.get_organization_name_list.return_value = [
+            ORG_NAME_A,
+            ORG_NAME_B,
+            ORG_NAME_C,
+            ORG_NAME_D,
+        ]
+
+        result = FeedbackConfig().resource_comment.get_enable_org_names()
+
+        assert result == [ORG_NAME_A, ORG_NAME_B, ORG_NAME_C, ORG_NAME_D]
+
+        os.remove('/srv/app/feedback_config.json')

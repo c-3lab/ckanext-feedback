@@ -4,19 +4,14 @@ import os
 from abc import ABC, abstractmethod
 
 from ckan.common import config
-from ckan.model.group import Group
 from ckan.plugins import toolkit
 from werkzeug.utils import import_string
 
-from ckanext.feedback.models.session import session
+from ckanext.feedback.services.organization import organization as organization_service
 
 log = logging.getLogger(__name__)
 
 CONFIG_HANDLER_PATH = 'ckan.feedback.download_handler'
-
-
-def get_organization(org_id=None):
-    return session.query(Group.name.label('name')).filter(Group.id == org_id).first()
 
 
 def download_handler():
@@ -154,7 +149,7 @@ class BaseConfig:
             return enable
 
         # Retrieve the name of the specified organization
-        organization = get_organization(org_id)
+        organization = organization_service.get_organization_name_by_id(org_id)
 
         # Return False if the specified organization cannot be retrieved
         if not organization:
@@ -211,12 +206,25 @@ class BaseConfig:
             # turn off organizations in the disabled list and turn on the others
             return organization.name not in disable_orgs
 
-    def get_enable_orgs(self):
+    def get_enable_org_names(self):
         ck_conf_str = self.get_ckan_conf_str()
         enable = config.get(f"{ck_conf_str}.enable", self.default)
-        if enable:
-            return config.get(f"{ck_conf_str}.enable_orgs", [])
-        return enable
+
+        if not enable:
+            return []
+
+        all_org_names = organization_service.get_organization_name_list()
+        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs", [])
+        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs", [])
+
+        if disable_orgs:
+            enable_orgs = [org for org in all_org_names if org not in disable_orgs]
+            return enable_orgs
+
+        if enable_orgs:
+            return enable_orgs
+
+        return all_org_names
 
 
 class DownloadsConfig(BaseConfig, FeedbackConfigInterface):

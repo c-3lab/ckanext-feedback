@@ -163,6 +163,7 @@ class TestComments:
         assert not get_cookie(resource['id'])
 
 
+@pytest.mark.db_test
 class TestResourceComment:
     def test_create_resource_comment(self, resource):
         resource_id = resource['id']
@@ -173,6 +174,7 @@ class TestResourceComment:
         create_resource_comment(resource_id, category, content, rating)
 
 
+@pytest.mark.db_test
 class TestResourceCommentReactions:
     def test_get_resource_comment_reactions_exists_returns_reaction(
         self, resource_comment
@@ -245,6 +247,8 @@ class TestResourceCommentReactions:
         assert result.admin_liked is True
         assert result.updater_user_id == user['id']
 
+
+class TestAttachedImageConfig:
     @patch('ckanext.feedback.services.resource.comment.get_upload_destination')
     @patch('ckanext.feedback.services.resource.comment.get_uploader')
     def test_get_attached_image_path(
@@ -265,20 +269,10 @@ class TestResourceCommentReactions:
     def test_get_upload_destination(self):
         assert get_upload_destination() == 'feedback_resouce_comment'
 
-    @patch('ckanext.feedback.services.resource.comment.session')
-    def test_get_comment_attached_image_files(self, mock_session):
-        mock_query = MagicMock()
-        mock_query.filter.return_value = mock_query
-        mock_query.all.return_value = [
-            ('attached_image_filename1',),
-            ('attached_image_filename2',),
-        ]
-        mock_session.query.return_value = mock_query
 
-        get_comment_attached_image_files()
+@pytest.mark.db_test
+class TestAttachedImageService:
+    def test_get_comment_attached_image_files(self, resource_comment):
+        result = get_comment_attached_image_files()
 
-        mock_session.query.assert_called_once_with(
-            ResourceComment.attached_image_filename
-        )
-        assert mock_query.filter.call_count == 1
-        mock_query.all.assert_called_once()
+        assert result == ['test_attached_image.jpg']
