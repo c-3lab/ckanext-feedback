@@ -30,6 +30,12 @@ from ckanext.feedback.services.common.check import (
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
+from ckanext.feedback.controllers.cookie import (
+    set_like_status_cookie,
+    set_repeat_post_limit_cookie,
+    get_like_status_cookie,
+    get_repeat_post_limit_cookie
+)
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +66,7 @@ class ResourceController:
         )
 
         categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
+        cookie = get_repeat_post_limit_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
@@ -179,7 +185,7 @@ class ResourceController:
             )
         )
 
-        resp.set_cookie(resource_id, 'alreadyPosted')
+        resp = set_repeat_post_limit_cookie(resp,resource_id)
 
         return resp
 
@@ -395,7 +401,8 @@ class ResourceController:
             )
 
     def like_status(resource_id):
-        status = comment_service.get_cookie(resource_id)
+
+        status = get_like_status_cookie(resource_id)
         if status:
             return status
         return 'False'
@@ -415,7 +422,8 @@ class ResourceController:
         session.commit()
 
         resp = Response("OK", status=200, mimetype='text/plain')
-        resp.set_cookie(resource_id, f'{like_status}', max_age=2147483647)
+        resp =  set_like_status_cookie(resp,resource_id,like_status)
+
         return resp
 
     # resource_comment/<resource_id>/comment/reactions
