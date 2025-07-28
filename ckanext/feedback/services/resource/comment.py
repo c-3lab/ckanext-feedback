@@ -6,7 +6,6 @@ from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from ckan.types import PUploader
-from flask import request
 from sqlalchemy.orm import joinedload
 
 from ckanext.feedback.models.resource_comment import (
@@ -142,11 +141,6 @@ def create_reply(resource_comment_id, content, creator_user_id):
         creator_user_id=creator_user_id,
     )
     session.add(reply)
-
-
-# Get cookie
-def get_cookie(resource_id):
-    return request.cookies.get(resource_id)
 
 
 def get_resource_comment_reactions(resource_comment_id):
