@@ -1,8 +1,8 @@
 async function like_toggle() {
-    let likeButton = document.getElementById('like_button');
-    const likeIcon = document.getElementById('like-icon');
-    let likeCount = parseInt(likeButton.textContent.trim());
     const resourceId = document.getElementById('resource-id').value;
+    const likeButtons = document.querySelectorAll('.like-button');
+    const likeIcon = document.getElementById('like-icon');
+    let likeCount = parseInt(document.getElementById('like-count').textContent);
     let likeStatus = '';
 
     if (likeIcon.classList.toggle('liked')) {
@@ -13,10 +13,18 @@ async function like_toggle() {
         likeCount--;
     }
 
-    likeButton.innerHTML = `
-        <i id="like-icon" class="fa-solid fa-thumbs-up ${likeIcon.classList.contains('liked') ? 'liked' : ''}"></i>
-        ${likeCount}
-    `
+    likeButtons.forEach(button => {
+        const buttonIcon = button.querySelector('.like-icon');
+        const likeCountElement = button.querySelector('.like-count');
+
+        if (likeStatus) {
+            buttonIcon.classList.add('liked');
+        } else {
+            buttonIcon.classList.remove('liked');
+        }
+
+        likeCountElement.textContent = likeCount;
+    });
 
     await fetch(`${resourceId}/like_toggle`, {
         method: 'POST',
@@ -29,3 +37,15 @@ async function like_toggle() {
         }),
     });
 }
+
+document.querySelectorAll('.download-modal-show').forEach(button => {
+    button.addEventListener('click', function () {
+        const downloadModal = new bootstrap.Modal(document.getElementById('download-modal'));
+        downloadModal.show();
+    });
+});
+ 
+
+document.querySelectorAll('.like-button').forEach(button => {
+    button.addEventListener('click', like_toggle);
+});

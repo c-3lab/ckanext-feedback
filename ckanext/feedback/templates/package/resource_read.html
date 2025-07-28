@@ -8,10 +8,10 @@
     {% endif %}
   {% endblock action_manage %}
   {% if h.is_enabled_likes(pkg.owner_org) %}
-  <li>
-    <a id="like_button" class="btn btn-primary" onclick="like_toggle()">
-      <i id="like-icon" class="fa-solid fa-thumbs-up {% if h.like_status(res.id)=='True' %}liked{% endif %}"></i>
-      {{ h.get_resource_like_count(res.id) }}
+    <li>
+    <a class="like-button btn btn-primary">
+      <i id="like-icon"class="like-icon fa-solid fa-thumbs-up {% if h.like_status(res.id)=='True' %}liked{% endif %}"></i>
+       <span id="like-count" class="like-count">{{ h.get_resource_like_count(res.id) }}</span>
     </a>
     <input type="hidden" id="resource-id" value="{{ res.id }}">
   </li>
@@ -22,27 +22,47 @@
     {% endif %}
       {% if res.url and h.is_url(res.url) %}
         {% if res.resource_type in ('listing', 'service') %}
-        <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
-          <i class="fa fa-eye"></i> {{ _('View') }}
+          <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
+            <i class="fa fa-eye"></i> {{ _('View') }}
+          </a>
         {% elif  res.resource_type == 'api' %}
-        <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
-          <i class="fa fa-key"></i> {{ _('API Endpoint') }}
+          <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
+            <i class="fa fa-key"></i> {{ _('API Endpoint') }}
+          </a>
         {% elif not res.has_views and not res.url_type == 'upload' %}
           {% if h.is_enabled_downloads() %}
-          <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}">
+            {% if h.is_enable_modal() %}
+              <a class="btn btn-primary resource-url-analytics download-modal-show" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" download>
+                <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
+              </a>
+            {% else %}
+              <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" download>
+                <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
+              </a>
+            {% endif %}
           {% else %}
-          <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
+            <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
+              <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
+            </a>
           {% endif %}
-            <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
         {% else %}
           {% if h.is_enabled_downloads() %}
-          <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" titel="{{ res.url }}" download>
+            {% if h.is_enable_modal() %}
+              <a class="btn btn-primary resource-url-analytics download-modal-show" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" title="{{ res.url }}" download>
+                <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
+              </a>
+            {% else %}
+              <a class="btn btn-primary resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}?user-download=true" title="{{ res.url }}" download>
+                <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
+              </a>
+            {% endif %}
           {% else %}
-          <a class="btn btn-primary resource-url-analytics" href="{{ res.url }}">
+            <a class="btn btn-primary resource-url-analytics"
+              href="{{ res.url }}">
+              <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
+            </a>
           {% endif %}
-            <i class="fa fa-arrow-circle-down"></i> {{ _('Download') }}
         {% endif %}
-        </a>
       {% endif %}
       {% block download_resource_button %}
         {% if res.datastore_active %}
@@ -101,12 +121,65 @@
   {% endif %}
 {% endblock %}
 
+{% block primary %}
+  {{ super() }}
+  <div id="download-modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ダウンロードありがとうございます！<br>よければ、データ改善のためのフィードバックをお願いします！</h5>
+          {% if h.is_base_public_folder_bs3() %}
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          {% else %}
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          {% endif %}
+        </div>
+        <div class="modal-body">
+        <span class="modal-label">いいねを押していきませんか？</span>
+          <a class="btn btn-primary like-button">
+            <i class="like-icon fa-solid fa-thumbs-up {% if h.like_status(res.id)=='True' %}liked{% endif %}"></i>
+            <span id="like-count" class="like-count">{{ h.get_resource_like_count(res.id) }}</span>
+          </a>
+          {% set comment_count = h.get_resource_comments(res.id)  %}
+          {% if comment_count > 0 %}
+            <span class="modal-label">コメントをしていきませんか？({{ h.get_resource_comments(res.id) }})</span>
+          {% else %}
+            <span class="modal-label">コメントをしていきませんか？</span>
+          {% endif %}
+          <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ h.url_for('resource_comment.comment', resource_id=res.id) }}" target="_blank">
+            <i class="fa-solid fa-comment-dots"></i> {{ _('Comment') }}
+          </a>
+          {% set resource_utilization_count = h.get_resource_utilizations(res.id)  %}
+          {% if resource_utilization_count > 0 %}
+            <span class="modal-label">活用方法を共有しませんか？({{ h.get_resource_utilizations(res.id) }})</span>
+          {% else %}
+            <span class="modal-label">活用方法を共有しませんか？</span>
+          {% endif %} 
+          <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ h.url_for('utilization.new', package_name=pkg.name, resource_id=res.id, return_to_resource=true) }}" target="_blank">
+            <i class="fa-solid fa-seedling"></i> {{ _('Create utilization application') }}
+          </a>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+            {{ _('Close') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
 {% block resource_read_url %}
   {% if res.url and h.is_url(res.url) %}
     <p class="text-muted ellipsis">
       {{ _('URL:') }}
       {% if h.is_enabled_downloads() %}
-      <a class="resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" title="{{ res.url }}">{{ res.url }}</a>
+        {% if h.is_enable_modal() %}
+          <a class="resource-url-analytics download-modal-show" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" title="{{ res.url }}">{{ res.url }}</a>    
+        {% else %}
+          <a class="resource-url-analytics" href="{{ h.url_for('download.download', id=pkg.id, resource_id=res.id) }}" title="{{ res.url }}">{{ res.url }}</a>
+        {% endif %} 
       {% else %}
       <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}">{{ res.url }}</a>
       {% endif %}
@@ -120,3 +193,5 @@
   {{ super() }}
   {% asset 'feedback/feedback-resource_read-js' %}
 {% endblock -%}
+
+
