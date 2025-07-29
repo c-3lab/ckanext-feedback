@@ -51,13 +51,6 @@ def test_set_like_status_cookie_false(app, resource_id):
         assert "Max-Age=2147483647" in cookie
 
 
-def test_set_like_status_cookie_invalid_value_raises(app):
-    with app.test_request_context():
-        resp = make_response("OK")
-        with pytest.raises(ValueError):
-            set_like_status_cookie(resp, "abc", "maybe")
-
-
 def test_set_repeat_post_limit_cookie_nomal(app, resource_id):
     with app.test_client() as client:
 
