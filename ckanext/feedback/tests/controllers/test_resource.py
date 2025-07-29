@@ -438,7 +438,7 @@ class TestResourceController:
 
         mock_send_email.side_effect = Exception("Mock Exception")
         mock_url_for.return_value = 'resource comment'
-
+        ResourceController().create_comment(resource_id)
         mock_comment_service.create_resource_comment.assert_called_once_with(
             resource_id,
             category,
