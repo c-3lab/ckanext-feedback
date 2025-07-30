@@ -40,7 +40,6 @@ def user_env():
 
 def mock_current_user(current_user, user):
     user_obj = model.User.get(user['name'])
-    # mock current_user
     current_user.return_value = user_obj
 
 
@@ -83,7 +82,6 @@ class TestResourceController:
         package = factories.Dataset(owner_org=organization_dict['id'])
         resource = factories.Resource(package_id=package['id'])
         resource['package'] = package
-        # session.commit()
         resource_id = resource['id']
 
         page = 1
@@ -161,12 +159,10 @@ class TestResourceController:
     ):
         mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
         user_dict = factories.User()
-        # owner_org = factories.Organization()
         mock_current_user(current_user, user_dict)
         organization_dict = factories.Organization(
             name='org_name',
         )
-        # dataset = factories.Dataset(owner_org=owner_org['id'])
         package = factories.Dataset(owner_org=organization_dict['id'])
         resource = factories.Resource(package_id=package['id'])
         resource['package'] = package
