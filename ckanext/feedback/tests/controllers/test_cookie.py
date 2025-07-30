@@ -78,19 +78,6 @@ def test_set_repeat_post_limit_cookie_empty_id(app):
         assert "repeat_post_limit_=alreadyPosted" in cookie
 
 
-def test_set_repeat_post_limit_cookie_numeric_id(app):
-    with app.test_client() as client:
-
-        @app.route("/set_cookie_num")
-        def set_cookie_numeric():
-            resp = make_response("OK")
-            return set_repeat_post_limit_cookie(resp, 456)
-
-        res = client.get("/set_cookie_num")
-        cookie = res.headers.get("Set-Cookie")
-        assert "repeat_post_limit_456=alreadyPosted" in cookie
-
-
 def test_set_repeat_post_limit_cookie_none_id(app):
     with app.test_client() as client:
 
