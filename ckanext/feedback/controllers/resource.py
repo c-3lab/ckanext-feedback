@@ -15,6 +15,12 @@ import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.resource.likes as likes_service
 import ckanext.feedback.services.resource.summary as summary_service
 import ckanext.feedback.services.resource.validate as validate_service
+from ckanext.feedback.controllers.cookie import (
+    get_like_status_cookie,
+    get_repeat_post_limit_cookie,
+    set_like_status_cookie,
+    set_repeat_post_limit_cookie,
+)
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
@@ -60,7 +66,7 @@ class ResourceController:
         )
 
         categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
+        cookie = get_repeat_post_limit_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
@@ -172,16 +178,14 @@ class ResourceController:
             ),
             allow_html=True,
         )
-
         resp = make_response(
             toolkit.redirect_to(
                 'resource.read', id=package_name, resource_id=resource_id
             )
         )
+        resp_with_cookie = set_repeat_post_limit_cookie(resp, resource_id)
 
-        resp.set_cookie(resource_id, 'alreadyPosted')
-
-        return resp
+        return resp_with_cookie
 
     # resource_comment/<resource_id>/comment/suggested
     @staticmethod
@@ -395,7 +399,7 @@ class ResourceController:
             )
 
     def like_status(resource_id):
-        status = comment_service.get_cookie(resource_id)
+        status = get_like_status_cookie(resource_id)
         if status:
             return status
         return 'False'
@@ -415,8 +419,8 @@ class ResourceController:
         session.commit()
 
         resp = Response("OK", status=200, mimetype='text/plain')
-        resp.set_cookie(resource_id, f'{like_status}', max_age=2147483647)
-        return resp
+        resp_with_like = set_like_status_cookie(resp, resource_id, like_status)
+        return resp_with_like
 
     # resource_comment/<resource_id>/comment/reactions
     @staticmethod
