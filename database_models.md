@@ -10,7 +10,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL, DEFAULT uuid.uuid4 | コメントの一意識別子 |
-| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL, UNIQUE | リソースID |
+| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL | リソースID |
 | category | Enum(ResourceCommentCategory) | - | コメントカテゴリ（Request/Question/Thank） |
 | content | Text | - | コメント内容 |
 | rating | Integer | - | 評価値 |
@@ -45,7 +45,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL, DEFAULT uuid.uuid4 | 集計の一意識別子 |
-| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL | リソースID |
+| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL, UNIQUE | リソースID |
 | comment | Integer | DEFAULT 0 | 総コメント数 |
 | rating_comment | Integer | DEFAULT 0 | 評価付きコメント数 |
 | rating | Float | DEFAULT 0 | 平均評価値 |
