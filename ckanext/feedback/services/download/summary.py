@@ -1,9 +1,10 @@
-import datetime
 import logging
 import uuid
+from datetime import datetime
 
 from ckan.model import Resource
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import insert
 
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.session import session
@@ -34,21 +35,20 @@ def get_resource_downloads(resource_id):
 
 
 def increment_resource_downloads(resource_id):
-    download_summary = (
-        session.query(DownloadSummary)
-        .filter(DownloadSummary.resource_id == resource_id)
-        .first()
+    now = datetime.now()
+
+    insert_download_summary = insert(DownloadSummary).values(
+        id=str(uuid.uuid4()),
+        resource_id=resource_id,
+        download=1,
+        created=now,
     )
-    if download_summary is None:
-        download_summary = DownloadSummary(
-            id=str(uuid.uuid4()),
-            resource_id=resource_id,
-            download=1,
-            created=datetime.datetime.now(),
-            updated=datetime.datetime.now(),
-        )
-        session.add(download_summary)
-    else:
-        download_summary.download = download_summary.download + 1
-        download_summary.updated = datetime.datetime.now()
+    download_summary = insert_download_summary.on_conflict_do_update(
+        index_elements=['resource_id'],
+        set_={
+            'download': DownloadSummary.download + 1,
+            'updated': now,
+        },
+    )
+    session.execute(download_summary)
     session.commit()

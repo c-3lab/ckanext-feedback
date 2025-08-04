@@ -4,6 +4,7 @@ from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from sqlalchemy import literal
+from sqlalchemy.dialects.postgresql import insert
 
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import (
@@ -146,6 +147,8 @@ def delete_utilization(utilization_id_list):
 
 
 def refresh_utilization_summary(resource_ids):
+    now = datetime.now()
+
     for resource_id in resource_ids:
         count = (
             session.query(Utilization)
@@ -155,18 +158,18 @@ def refresh_utilization_summary(resource_ids):
             )
             .count()
         )
-        summary = (
-            session.query(UtilizationSummary)
-            .filter(UtilizationSummary.resource_id == resource_id)
-            .first()
+
+        insert_summary = insert(UtilizationSummary).values(
+            resource_id=resource_id,
+            utilization=count,
+            created=now,
+            updated=now,
         )
-        if summary is None:
-            summary = UtilizationSummary(
-                resource_id=resource_id,
-                utilization=count,
-                updated=datetime.now(),
-            )
-            session.add(summary)
-        else:
-            summary.utilization = count
-            summary.updated = datetime.now()
+        summary = insert_summary.on_conflict_do_update(
+            index_elements=['resource_id'],
+            set_={
+                'utilization': insert_summary.excluded.utilization,
+                'updated': now,
+            },
+        )
+        session.execute(summary)

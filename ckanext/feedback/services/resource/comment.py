@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from ckan.lib.uploader import get_uploader
@@ -7,6 +6,7 @@ from ckan.model.package import Package
 from ckan.model.resource import Resource
 from ckan.types import PUploader
 from flask import request
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import joinedload
 
 from ckanext.feedback.models.resource_comment import (
@@ -101,20 +101,27 @@ def create_resource_comment(
         content=content,
         rating=rating,
         attached_image_filename=attached_image_filename,
+        created=now,
     )
     session.add(comment)
     session.flush()
 
-    reactions = ResourceCommentReactions(
-        id=str(uuid.uuid4()),
+    insert_reactions = insert(ResourceCommentReactions).values(
         resource_comment_id=comment.id,
         response_status=ResourceCommentResponseStatus.STATUS_NONE,
-        admin_liked=False,
         created=now,
-        updated=None,
-        updater_user_id=None,
     )
-    session.add(reactions)
+    reactions = insert_reactions.on_conflict_do_update(
+        index_elements=['resource_comment_id'],
+        set_={
+            'response_status': ResourceCommentResponseStatus.STATUS_NONE,
+            'admin_liked': False,
+            'created': now,
+            'updated': None,
+            'updater_user_id': None,
+        },
+    )
+    session.execute(reactions)
 
 
 # Approve selected resource comment
@@ -167,8 +174,7 @@ def create_resource_comment_reactions(
 ):
     now = datetime.now()
 
-    reactions = ResourceCommentReactions(
-        id=str(uuid.uuid4()),
+    insert_reactions = insert(ResourceCommentReactions).values(
         resource_comment_id=resource_comment_id,
         response_status=response_status,
         admin_liked=admin_liked,
@@ -176,8 +182,16 @@ def create_resource_comment_reactions(
         updated=now,
         updater_user_id=updater_user_id,
     )
-    session.add(reactions)
-    return
+    reactions = insert_reactions.on_conflict_do_update(
+        index_elements=['resource_comment_id'],
+        set_={
+            'response_status': response_status,
+            'admin_liked': admin_liked,
+            'updated': now,
+            'updater_user_id': updater_user_id,
+        },
+    )
+    session.execute(reactions)
 
 
 def update_resource_comment_reactions(

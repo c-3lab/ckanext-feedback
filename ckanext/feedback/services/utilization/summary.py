@@ -3,6 +3,7 @@ from datetime import datetime
 
 from ckan.model import Resource
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import insert
 
 from ckanext.feedback.models.issue import IssueResolutionSummary
 from ckanext.feedback.models.session import session
@@ -37,20 +38,20 @@ def get_resource_utilizations(resource_id):
 
 # Create new utilizaton summary
 def create_utilization_summary(resource_id):
-    summary = (
-        session.query(UtilizationSummary)
-        .filter(UtilizationSummary.resource_id == resource_id)
-        .first()
+    now = datetime.now()
+
+    insert_summary = insert(UtilizationSummary).values(
+        resource_id=resource_id,
+        created=now,
     )
-    if summary is None:
-        summary = UtilizationSummary(
-            resource_id=resource_id,
-        )
-        session.add(summary)
+    summary = insert_summary.on_conflict_do_nothing(index_elements=['resource_id'])
+    session.execute(summary)
 
 
 # Recalculate approved utilization related to the utilization summary
 def refresh_utilization_summary(resource_id):
+    now = datetime.now()
+
     count = (
         session.query(Utilization)
         .filter(
@@ -59,20 +60,21 @@ def refresh_utilization_summary(resource_id):
         )
         .count()
     )
-    summary = (
-        session.query(UtilizationSummary)
-        .filter(UtilizationSummary.resource_id == resource_id)
-        .first()
+
+    insert_summary = insert(UtilizationSummary).values(
+        resource_id=resource_id,
+        utilization=count,
+        created=now,
+        updated=now,
     )
-    if summary is None:
-        summary = UtilizationSummary(
-            resource_id=resource_id,
-            utilization=count,
-        )
-        session.add(summary)
-    else:
-        summary.utilization = count
-        summary.updated = datetime.now()
+    summary = insert_summary.on_conflict_do_update(
+        index_elements=['resource_id'],
+        set_={
+            'utilization': insert_summary.excluded.utilization,
+            'updated': now,
+        },
+    )
+    session.execute(summary)
 
 
 def get_package_issue_resolutions(package_id):
@@ -100,19 +102,19 @@ def get_resource_issue_resolutions(resource_id):
 
 
 def increment_issue_resolution_summary(utilization_id):
-    issue_resolution_summary = (
-        session.query(IssueResolutionSummary)
-        .filter(IssueResolutionSummary.utilization_id == utilization_id)
-        .first()
+    now = datetime.now()
+
+    insert_issue_resolution_summary = insert(IssueResolutionSummary).values(
+        utilization_id=utilization_id,
+        issue_resolution=1,
+        created=now,
+        updated=now,
     )
-    if issue_resolution_summary is None:
-        issue_resolution_summary = IssueResolutionSummary(
-            utilization_id=utilization_id,
-            issue_resolution=1,
-        )
-        session.add(issue_resolution_summary)
-    else:
-        issue_resolution_summary.issue_resolution = (
-            issue_resolution_summary.issue_resolution + 1
-        )
-        issue_resolution_summary.updated = datetime.now()
+    issue_resolution_summary = insert_issue_resolution_summary.on_conflict_do_update(
+        index_elements=['utilization_id'],
+        set_={
+            'issue_resolution': IssueResolutionSummary.issue_resolution + 1,
+            'updated': now,
+        },
+    )
+    session.execute(issue_resolution_summary)

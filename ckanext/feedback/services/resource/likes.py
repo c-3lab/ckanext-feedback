@@ -4,6 +4,7 @@ from datetime import datetime
 
 from ckan.model import Resource
 from sqlalchemy import extract, func
+from sqlalchemy.dialects.postgresql import insert
 
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.session import session
@@ -12,24 +13,22 @@ log = logging.getLogger(__name__)
 
 
 def increment_resource_like_count(resource_id):
-    resource_like = (
-        session.query(ResourceLike)
-        .filter(ResourceLike.resource_id == resource_id)
-        .first()
-    )
+    now = datetime.now()
 
-    if resource_like is None:
-        resource_like = ResourceLike(
-            id=str(uuid.uuid4()),
-            resource_id=resource_id,
-            like_count=1,
-            created=datetime.now(),
-            updated=datetime.now(),
-        )
-        session.add(resource_like)
-    else:
-        resource_like.like_count = resource_like.like_count + 1
-        resource_like.updated = datetime.now()
+    insert_resource_like = insert(ResourceLike).values(
+        resource_id=resource_id,
+        like_count=1,
+        created=now,
+        updated=now,
+    )
+    resource_like = insert_resource_like.on_conflict_do_update(
+        index_elements=['resource_id'],
+        set_={
+            'like_count': ResourceLike.like_count + 1,
+            'updated': now,
+        },
+    )
+    session.execute(resource_like)
 
 
 def decrement_resource_like_count(resource_id):
