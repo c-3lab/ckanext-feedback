@@ -10,3 +10,10 @@
 .modal-body a.btn {
   margin-bottom: 8px;
 }
+
+.modal-title{
+  display: block;
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 15px;
+  font-size: 17px;
+}
