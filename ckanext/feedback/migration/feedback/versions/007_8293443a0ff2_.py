@@ -14,6 +14,7 @@ Create Date: 2025-08-01 04:31:53.115172
 
 """
 
+import click
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -23,79 +24,53 @@ branch_labels = None
 depends_on = None
 
 
+def delete_duplicates(conn, table, unique_column, order_columns):
+    sql = f"""
+        DELETE FROM {table}
+        WHERE id NOT IN (
+            SELECT id FROM (
+                SELECT DISTINCT ON ({unique_column}) id
+                FROM {table}
+                ORDER BY {unique_column}, {', '.join(order_columns)}
+            ) AS keep_rows
+        )
+        RETURNING id;
+    """
+    result = conn.execute(sql)
+    deleted_rows = result.fetchall()
+    click.secho(
+        f"Removed {len(deleted_rows)} duplicate record(s) from the '{table}' table.",
+        fg='green',
+    )
+
+
 def upgrade():
-    op.execute(
-        """
-        DELETE FROM resource_comment_summary
-        WHERE id NOT IN (
-            SELECT id FROM (
-                SELECT DISTINCT ON (resource_id) id
-                FROM resource_comment_summary
-                ORDER BY resource_id, updated DESC, comment DESC
-            ) AS keep_rows
-        );
-    """
+    conn = op.get_bind()
+    delete_duplicates(
+        conn,
+        'resource_comment_summary',
+        'resource_id',
+        ['updated DESC', 'comment DESC'],
     )
-    op.execute(
-        """
-        DELETE FROM utilization_summary
-        WHERE id NOT IN (
-            SELECT id FROM (
-                SELECT DISTINCT ON (resource_id) id
-                FROM utilization_summary
-                ORDER BY resource_id, updated DESC, utilization DESC
-            ) AS keep_rows
-        );
-    """
+    delete_duplicates(
+        conn, 'utilization_summary', 'resource_id', ['updated DESC', 'utilization DESC']
     )
-    op.execute(
-        """
-        DELETE FROM resource_like
-        WHERE id NOT IN (
-            SELECT id FROM (
-                SELECT DISTINCT ON (resource_id) id
-                FROM resource_like
-                ORDER BY resource_id, updated DESC, like_count DESC
-            ) AS keep_rows
-        );
-    """
+    delete_duplicates(
+        conn, 'resource_like', 'resource_id', ['updated DESC', 'like_count DESC']
     )
-    op.execute(
-        """
-        DELETE FROM download_summary
-        WHERE id NOT IN (
-            SELECT id FROM (
-                SELECT DISTINCT ON (resource_id) id
-                FROM download_summary
-                ORDER BY resource_id, updated DESC, download DESC
-            ) AS keep_rows
-        );
-    """
+    delete_duplicates(
+        conn, 'download_summary', 'resource_id', ['updated DESC', 'download DESC']
     )
-    op.execute(
-        """
-        DELETE FROM issue_resolution_summary
-        WHERE id NOT IN (
-            SELECT id FROM (
-                SELECT DISTINCT ON (utilization_id) id
-                FROM issue_resolution_summary
-                ORDER BY utilization_id, updated DESC, issue_resolution DESC
-            ) AS keep_rows
-        );
-    """
+    delete_duplicates(
+        conn,
+        'issue_resolution_summary',
+        'utilization_id',
+        ['updated DESC', 'issue_resolution DESC'],
     )
-    op.execute(
-        """
-        DELETE FROM resource_comment_reactions
-        WHERE id NOT IN (
-            SELECT id FROM (
-                SELECT DISTINCT ON (resource_comment_id) id
-                FROM resource_comment_reactions
-                ORDER BY resource_comment_id, updated DESC
-            ) AS keep_rows
-        );
-    """
+    delete_duplicates(
+        conn, 'resource_comment_reactions', 'resource_comment_id', ['updated DESC']
     )
+
     op.create_unique_constraint(
         'resource_comment_summary_resource_id_ukey',
         'resource_comment_summary',
