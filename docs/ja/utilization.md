@@ -2,7 +2,6 @@
 
 データに紐づけて利活用方法を登録することができるモジュールです。  
 登録した利活用方法へコメントを送ることも出来ます。
- ![utilization モジュール　登録画面　イメージ図](../assets/register_utilization_image.jpg) 
 ## 概要
 
 ## 導入の利点
@@ -12,22 +11,27 @@
   * オープンデータの重要性をより認識することができる
 
 * データを使った利活用方法の利用と改善が進む
+  
+* 以下の3つの集計情報を可視化することが出来ます
+  * データリソースごとの利活用数
+  * 利活用の課題解決数
+  * 利活用方法へのコメント数
 
 ## 主要機能
   ### 1. 利活用方法の登録
   データリソースに対して以下のことが出来ます：
  * データリソースに対しての利活用方法登録
    
- ![utilization モジュール　登録画面　イメージ図](../assets/register_utilization_image.jpg)
+ ![utilization モジュール　登録画面　イメージ図](../assets/utilization_registar.png)
 
 
   ### 2. 利活用方法の検索
   
- ![utilization モジュール　検索画面　イメージ図](../assets/search_utilization_image.jpg)  
+ ![utilization モジュール　検索画面　イメージ図](../assets/utilization_search.png)  
   
   ### 3. 利活用方法へのコメント
   
- ![utilization モジュール　リソース詳細画面　イメージ図](../assets/utilization_comment_image.jpg)
+ ![リソース詳細画面　イメージ図](../assets/utilization_comment.png)
 
  ## オプション機能
 
@@ -35,7 +39,7 @@
 
 コメントに画像を添付することを可能にします。
 
-![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilizations_image.jpg)  
+![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilization_comment_image_attachement.png)  
 
 
 #### 設定方法
@@ -43,12 +47,3 @@
 各機能のON/OFF設定については、以下のドキュメントをご参照ください：
 
 📖 [ON/OFF機能の詳細ドキュメント](./switch_function.md)
-
-
-
-
-
-* 以下の3つの集計情報を可視化することが出来ます
-  * データリソースごとの利活用数
-  * 利活用の課題解決数
-  * 利活用方法へのコメント数
