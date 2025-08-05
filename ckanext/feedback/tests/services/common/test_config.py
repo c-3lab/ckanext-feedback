@@ -22,7 +22,6 @@ ORG_NAME_C = 'org-name-c'
 ORG_NAME_D = 'org-name-d'
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestCheck:
     @patch('ckanext.feedback.services.common.config.import_string')
     def test_seted_download_handler(self, mock_import_string):
@@ -831,6 +830,44 @@ class TestCheck:
         assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
         assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
         assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
+        os.remove('/srv/app/feedback_config.json')
+
+        # feedback_prompt_modal(ckan.ini)
+        config.pop('ckan.feedback.feedback_prompt_modal.enable', None)
+        config.pop('ckan.feedback.feedback_prompt_modal.enable_orgs', None)
+        config.pop('ckan.feedback.feedback_prompt_modal.disable_orgs', None)
+        FeedbackConfig().load_feedback_config()
+        assert config.get('ckan.feedback.feedback_prompt_modal.enable', None) is None
+        assert (
+            config.get('ckan.feedback.feedback_prompt_modal.enable_orgs', None) is None
+        )
+        assert (
+            config.get('ckan.feedback.feedback_prompt_modal.disable_orgs', None) is None
+        )
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().download_feedback_prompt.is_enable() is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_D) is True
+        # feedback_prompt_modal(feedback_config.json)
+        feedback_config = {"modules": {}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        FeedbackConfig().load_feedback_config()
+        assert config.get('ckan.feedback.feedback_prompt_modal.enable', None) is None
+        assert (
+            config.get('ckan.feedback.feedback_prompt_modal.enable_orgs', None) is None
+        )
+        assert (
+            config.get('ckan.feedback.feedback_prompt_modal.disable_orgs', None) is None
+        )
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable() is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().download_feedback_prompt.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # likes(ckan.ini)
