@@ -11,6 +11,8 @@ from ckanext.feedback.command.feedback import (
     create_resource_tables,
     create_utilization_tables,
 )
+from ckanext.feedback.models.download import DownloadSummary
+from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
@@ -132,3 +134,45 @@ def utilization_comment(user, utilization):
     session.add(comment)
     session.flush()
     return comment
+
+
+@pytest.fixture(scope='function')
+def download_summary(resource):
+    download_summary = DownloadSummary(
+        id=str(uuid.uuid4()),
+        resource_id=resource['id'],
+        download=1,
+        created=datetime(2024, 1, 1, 15, 0, 0),
+        updated=datetime(2024, 1, 1, 15, 0, 0),
+    )
+    session.add(download_summary)
+    session.flush()
+    return download_summary
+
+
+@pytest.fixture(scope='function')
+def resource_like(resource):
+    resource_like = ResourceLike(
+        id=str(uuid.uuid4()),
+        resource_id=resource['id'],
+        like_count=1,
+        created=datetime(2024, 1, 1, 15, 0, 0),
+        updated=datetime(2024, 1, 1, 15, 0, 0),
+    )
+    session.add(resource_like)
+    session.flush()
+    return resource_like
+
+
+@pytest.fixture(scope='function')
+def resource_like_monthly(resource):
+    resource_like_monthly = ResourceLikeMonthly(
+        id=str(uuid.uuid4()),
+        resource_id=resource['id'],
+        like_count=1,
+        created=datetime(2024, 1, 1, 15, 0, 0),
+        updated=datetime(2024, 1, 1, 15, 0, 0),
+    )
+    session.add(resource_like_monthly)
+    session.flush()
+    return resource_like_monthly
