@@ -1,10 +1,10 @@
-# utilization モジュール
+# Utilization モジュール
 
 データに紐づけて利活用方法を登録することができるモジュールです。  
 登録した利活用方法へコメントを送ることも出来ます。
 ## 概要
 
-## 導入の利点
+### 導入の利点
 
 * **データの利活用状況を知ることができる**
   * データの公開や整備の計画を立てる際の指針になる
@@ -22,16 +22,16 @@
   データリソースに対して以下のことが出来ます：
  * データリソースに対しての利活用方法登録
    
- ![utilization モジュール　登録画面　イメージ図](../assets/utilization_10.jpeg)
+ ![utilization モジュール　登録画面　イメージ図](../assets/utilization_image_10.jpeg)
 
 
   ### 2. 利活用方法の検索
   
- ![utilization モジュール　検索画面　イメージ図](../assets/utilization_20.jpeg)  
+ ![utilization モジュール　検索画面　イメージ図](../assets/utilization_image_20.jpeg)  
   
   ### 3. 利活用方法へのコメント
   
- ![リソース詳細画面　イメージ図](../assets/utilization_30.jpeg)
+ ![リソース詳細画面　イメージ図](../assets/utilization_image_30.jpeg)
 
  ## オプション機能
 
@@ -39,7 +39,7 @@
 
 コメントに画像を添付することを可能にします。
 
-![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilization_40.jpeg)  
+![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilization_iage_40.jpeg)  
 
 
 #### 設定方法
