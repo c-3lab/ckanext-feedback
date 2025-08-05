@@ -39,7 +39,7 @@
 
 コメントに画像を添付することを可能にします。
 
-![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilization_iage_40.jpeg)  
+![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilization_image_40.jpeg)  
 
 
 #### 設定方法
