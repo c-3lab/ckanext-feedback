@@ -10,35 +10,3 @@
 .modal-body a.btn {
   margin-bottom: 8px;
 }
-.custom-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.modal-title {
-  margin: 0;
-  font-size: 18px;
-  line-height: 1.2;
-}
-
-.modal-close{
-  float: right;
-  font-size: 37px;
-  line-height: 1;
-  color: #000;
-  text-shadow: 0 1px 0 #fff;
-  filter: alpha(opacity=20);
-  opacity: 0.2;
-}
-
-.modal-btn-close{
-  padding: 18px;
-  position: fixed;
-  top: 1px;
-  right: 15px;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-  -webkit-appearance: none;
-  appearance: none;
-}
