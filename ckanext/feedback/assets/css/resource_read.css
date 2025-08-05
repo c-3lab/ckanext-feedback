@@ -10,6 +10,16 @@
 .modal-body a.btn {
   margin-bottom: 8px;
 }
+.custom-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
 
 .modal-close{
   float: right;
