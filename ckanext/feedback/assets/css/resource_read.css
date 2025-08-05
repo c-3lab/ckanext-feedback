@@ -1,10 +1,14 @@
 .like-icon.liked {
   color: rgb(255, 238, 0);
 }
+.like-count{
+  line-height: 1;
+}
 
 .modal-label {
   display: block;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .modal-body a.btn {

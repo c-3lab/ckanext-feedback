@@ -11,7 +11,7 @@
     <li>
     <a class="like-button btn btn-primary">
       <i id="like-icon"class="like-icon fa-solid fa-thumbs-up {% if h.like_status(res.id)=='True' %}liked{% endif %}"></i>
-        <i id="like-count" class="like-count">{{ h.get_resource_like_count(res.id) }}</i>
+        <span id="like-count" class="like-count">{{ h.get_resource_like_count(res.id) }}</span>
     </a>
     <input type="hidden" id="resource-id" value="{{ res.id }}">
   </li>
