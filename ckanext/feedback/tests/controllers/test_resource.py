@@ -40,7 +40,6 @@ def user_env():
 
 def mock_current_user(current_user, user):
     user_obj = model.User.get(user['name'])
-    # mock current_user
     current_user.return_value = user_obj
 
 
@@ -61,8 +60,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
+    @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
     def test_comment_with_sysadmin(
         self,
+        mock_get_repeat_post_limit_cookie,
         mock_request,
         mock_render,
         mock_page,
@@ -71,6 +72,7 @@ class TestResourceController:
         app,
         sysadmin_env,
     ):
+        mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
 
@@ -80,7 +82,6 @@ class TestResourceController:
         package = factories.Dataset(owner_org=organization_dict['id'])
         resource = factories.Resource(package_id=package['id'])
         resource['package'] = package
-        # session.commit()
         resource_id = resource['id']
 
         page = 1
@@ -110,7 +111,7 @@ class TestResourceController:
             offset=offset,
         )
         categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
+
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
@@ -122,15 +123,16 @@ class TestResourceController:
             item_count=total_count,
             items_per_page=limit,
         )
-
+        g.pkg_dict = package
         assert g.pkg_dict["organization"]['name'] == 'org_name'
+
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
                 'resource': resource.Resource,
                 'pkg_dict': package,
                 'categories': categories,
-                'cookie': cookie,
+                'cookie': 'mock_cookie',
                 'selected_category': 'REQUEST',
                 'content': '',
                 'attached_image_filename': None,
@@ -143,8 +145,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
+    @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
     def test_comment_with_user(
         self,
+        mock_get_repeat_post_limit_cookie,
         mock_request,
         mock_render,
         mock_page,
@@ -153,11 +157,15 @@ class TestResourceController:
         app,
         user_env,
     ):
+        mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
         user_dict = factories.User()
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
         mock_current_user(current_user, user_dict)
-        resource = factories.Resource(package_id=dataset['id'])
+        organization_dict = factories.Organization(
+            name='org_name',
+        )
+        package = factories.Dataset(owner_org=organization_dict['id'])
+        resource = factories.Resource(package_id=package['id'])
+        resource['package'] = package
         resource_id = resource['id']
 
         page = 1
@@ -187,7 +195,7 @@ class TestResourceController:
             offset=offset,
         )
         categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
+
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
@@ -200,13 +208,16 @@ class TestResourceController:
             items_per_page=limit,
         )
 
+        g.pkg_dict = package
+        assert g.pkg_dict["organization"]['name'] == 'org_name'
+
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
                 'resource': resource.Resource,
                 'pkg_dict': package,
                 'categories': categories,
-                'cookie': cookie,
+                'cookie': 'mock_cookie',
                 'selected_category': 'REQUEST',
                 'content': '',
                 'attached_image_filename': None,
@@ -219,8 +230,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
+    @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
     def test_comment_question_with_user(
         self,
+        mock_get_repeat_post_limit_cookie,
         mock_request,
         mock_render,
         mock_page,
@@ -249,6 +262,7 @@ class TestResourceController:
         ]
 
         mock_page.return_value = 'mock_page'
+        mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
 
         with app.get(url='/', environ_base=user_env):
             g.userobj = current_user
@@ -263,7 +277,6 @@ class TestResourceController:
             offset=offset,
         )
         categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
@@ -282,7 +295,7 @@ class TestResourceController:
                 'resource': resource.Resource,
                 'pkg_dict': package,
                 'categories': categories,
-                'cookie': cookie,
+                'cookie': 'mock_cookie',
                 'selected_category': 'QUESTION',
                 'content': '',
                 'attached_image_filename': None,
@@ -293,12 +306,21 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
     @patch('ckanext.feedback.controllers.resource.request')
     def test_comment_without_user(
-        self, mock_request, mock_render, mock_page, mock_pagination, app
+        self,
+        mock_request,
+        mock_get_repeat_post_limit_cookie,
+        mock_render,
+        mock_page,
+        mock_pagination,
+        app,
     ):
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
+        organization_dict = factories.Organization(
+            name='org_name',
+        )
+        dataset = factories.Dataset(owner_org=organization_dict['id'])
         resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
 
@@ -315,7 +337,7 @@ class TestResourceController:
         ]
 
         mock_page.return_value = 'mock_page'
-
+        mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
         with app.get(url='/'):
             g.userobj = None
             ResourceController.comment(resource_id)
@@ -329,7 +351,6 @@ class TestResourceController:
             offset=offset,
         )
         categories = comment_service.get_resource_comment_categories()
-        cookie = comment_service.get_cookie(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
             context, {'id': resource.Resource.package_id}
@@ -342,13 +363,16 @@ class TestResourceController:
             items_per_page=limit,
         )
 
+        g.pkg_dict = package
+        assert g.pkg_dict["organization"]['name'] == 'org_name'
+
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
                 'resource': resource.Resource,
                 'pkg_dict': package,
                 'categories': categories,
-                'cookie': cookie,
+                'cookie': 'mock_cookie',
                 'selected_category': 'REQUEST',
                 'content': '',
                 'attached_image_filename': None,
@@ -367,8 +391,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.toolkit.url_for')
     @patch('ckanext.feedback.controllers.resource.make_response')
     @patch('ckanext.feedback.controllers.resource.send_email')
+    @patch('ckanext.feedback.controllers.resource.set_repeat_post_limit_cookie')
     def test_create_comment(
         self,
+        mock_set_repeat_post_limit_cookie,
         mock_send_email,
         mock_make_response,
         mock_url_for,
@@ -408,8 +434,7 @@ class TestResourceController:
 
         mock_send_email.side_effect = Exception("Mock Exception")
         mock_url_for.return_value = 'resource comment'
-        resp = ResourceController.create_comment(resource_id)
-
+        ResourceController().create_comment(resource_id)
         mock_comment_service.create_resource_comment.assert_called_once_with(
             resource_id,
             category,
@@ -429,7 +454,10 @@ class TestResourceController:
             'resource.read', id=package_name, resource_id=resource_id
         )
         mock_make_response.assert_called_once_with(mock_redirect_to())
-        resp.set_cookie.assert_called_once_with(resource_id, 'alreadyPosted')
+        mock_set_repeat_post_limit_cookie.value = 'mock_cookie_value'
+        mock_set_repeat_post_limit_cookie.assert_called_once_with(
+            mock_make_response(), resource_id
+        )
 
     @patch('ckanext.feedback.controllers.resource.validate_service.validate_comment')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
@@ -1716,7 +1744,7 @@ class TestResourceController:
         mock_get_attached_image_path.assert_called_once_with(attached_image_filename)
         mock_exists.assert_called_once_with('attached_image_path')
 
-    @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
+    @patch('ckanext.feedback.controllers.resource.get_like_status_cookie')
     def test_like_status_return_True(self, mock_get_cookie):
         mock_get_cookie.return_value = 'True'
         resource_id = 'resource id'
@@ -1724,7 +1752,7 @@ class TestResourceController:
         result = ResourceController.like_status(resource_id)
         assert result == 'True'
 
-    @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
+    @patch('ckanext.feedback.controllers.resource.get_like_status_cookie')
     def test_like_status_return_False(self, mock_get_cookie):
         mock_get_cookie.return_value = 'False'
         resource_id = 'resource id'
@@ -1732,7 +1760,7 @@ class TestResourceController:
         result = ResourceController.like_status(resource_id)
         assert result == 'False'
 
-    @patch('ckanext.feedback.controllers.resource.comment_service.get_cookie')
+    @patch('ckanext.feedback.controllers.resource.get_like_status_cookie')
     def test_like_status_none(self, mock_get_cookie):
         mock_get_cookie.return_value = None
         resource_id = 'resource id'

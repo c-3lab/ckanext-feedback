@@ -36,12 +36,16 @@ class TestCheck:
     @patch('ckanext.feedback.services.common.config.DownloadsConfig.load_config')
     @patch('ckanext.feedback.services.common.config.ResourceCommentConfig.load_config')
     @patch('ckanext.feedback.services.common.config.UtilizationConfig.load_config')
+    @patch(
+        'ckanext.feedback.services.common.config.UtilizationCommentConfig.load_config'
+    )
     @patch('ckanext.feedback.services.common.config.ReCaptchaConfig.load_config')
     @patch('ckanext.feedback.services.common.config.NoticeEmailConfig.load_config')
     def test_load_feedback_config_with_feedback_config_file(
         self,
         mock_DownloadsConfig_load_config,
         mock_ResourceCommentConfig_load_config,
+        mock_UtilizationCommentConfig_load_config,
         mock_UtilizationConfig_load_config,
         mock_ReCaptchaConfig_load_config,
         mock_NoticeEmailConfig_load_config,
@@ -64,6 +68,7 @@ class TestCheck:
         assert FeedbackConfig().is_feedback_config_file is True
         mock_DownloadsConfig_load_config.assert_called_once()
         mock_ResourceCommentConfig_load_config.assert_called_once()
+        mock_UtilizationCommentConfig_load_config.assert_called_once()
         mock_UtilizationConfig_load_config.assert_called_once()
         mock_ReCaptchaConfig_load_config.assert_called_once()
         mock_NoticeEmailConfig_load_config.assert_called_once()

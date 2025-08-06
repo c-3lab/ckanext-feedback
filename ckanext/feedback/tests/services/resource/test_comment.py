@@ -26,7 +26,6 @@ from ckanext.feedback.services.resource.comment import (
     get_attached_image_path,
     get_comment_attached_image_files,
     get_comment_reply,
-    get_cookie,
     get_resource,
     get_resource_comment,
     get_resource_comment_categories,
@@ -157,10 +156,6 @@ class TestComments:
         create_reply(comment_id, 'test_reply', user_id)
         session.commit()
         assert get_comment_reply(comment_id)
-
-    def test_get_cookie(self):
-        resource = factories.Resource()
-        assert not get_cookie(resource['id'])
 
 
 @pytest.mark.db_test

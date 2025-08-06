@@ -289,6 +289,22 @@ class UtilizationConfig(BaseConfig, FeedbackConfigInterface):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
 
+class UtilizationCommentConfig(BaseConfig, FeedbackConfigInterface):
+    def __init__(self):
+        super().__init__('utilizations')
+        self.default = True
+        parents = self.conf_path + ['comments']
+        self.image_attachment = BaseConfig('image_attachment', parents)
+        self.image_attachment.default = False
+
+    def load_config(self, feedback_config):
+        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=self.conf_path + ['comments', 'image_attachment'],
+        )
+
+
 class LikesConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
         super().__init__('likes')
@@ -403,6 +419,7 @@ class FeedbackConfig(Singleton):
             self.download = DownloadsConfig()
             self.resource_comment = ResourceCommentConfig()
             self.utilization = UtilizationConfig()
+            self.utilization_comment = UtilizationCommentConfig()
             self.recaptcha = ReCaptchaConfig()
             self.notice_email = NoticeEmailConfig()
             self.like = LikesConfig()
