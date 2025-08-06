@@ -231,25 +231,12 @@ class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
         super().__init__('downloads')
         self.default = True
-        self.feedback_prompt = DownloadsFeedbackPromptConfig()
-
-    def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
-        self.feedback_prompt.load_config(feedback_config)
-
-
-class DownloadsFeedbackPromptConfig(BaseConfig, FeedbackConfigInterface):
-    def __init__(self):
-        super().__init__('feedback_prompt')
-        self.default = True
-
         parents = self.conf_path + ['feedback_prompt']
         self.modal = BaseConfig('modal', parents)
         self.modal.default = True
 
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
-
         fb_feedback_prompt_conf_path = self.conf_path + ['feedback_prompt']
         self.modal.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
@@ -414,7 +401,6 @@ class FeedbackConfig(Singleton):
             )
             self.is_feedback_config_file = False
             self.download = DownloadsConfig()
-            self.download_feedback_prompt = DownloadsFeedbackPromptConfig()
             self.resource_comment = ResourceCommentConfig()
             self.utilization = UtilizationConfig()
             self.recaptcha = ReCaptchaConfig()
