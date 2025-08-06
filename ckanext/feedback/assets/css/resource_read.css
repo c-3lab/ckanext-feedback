@@ -2,7 +2,7 @@
   color: rgb(255, 238, 0);
 }
 .like-count{
-  line-height: 1;
+  line-height: inherit;
 }
 
 .modal-label {
