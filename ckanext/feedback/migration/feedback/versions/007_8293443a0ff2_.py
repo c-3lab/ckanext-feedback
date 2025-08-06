@@ -14,8 +14,11 @@ Create Date: 2025-08-01 04:31:53.115172
 
 """
 
+from datetime import datetime
+
 import click
 from alembic import op
+from sqlalchemy.exc import SQLAlchemyError
 
 # revision identifiers, used by Alembic.
 revision = '8293443a0ff2'
@@ -24,7 +27,23 @@ branch_labels = None
 depends_on = None
 
 
-def delete_duplicates(conn, table, unique_column, order_columns):
+def log_message(level, message, color=None):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+
+    if not color:
+        click.secho(
+            f"{timestamp} {level} {message}",
+        )
+    else:
+        click.secho(
+            f"{timestamp} {level} {message}",
+            fg=color,
+        )
+
+
+def delete_duplicates(table, unique_column, order_columns):
+    conn = op.get_bind()
+
     sql = f"""
         DELETE FROM {table}
         WHERE id NOT IN (
@@ -36,39 +55,71 @@ def delete_duplicates(conn, table, unique_column, order_columns):
         )
         RETURNING id;
     """
-    result = conn.execute(sql)
-    deleted_rows = result.fetchall()
-    click.secho(
-        f"Removed {len(deleted_rows)} duplicate record(s) from the '{table}' table.",
-        fg='green',
-    )
+
+    try:
+        result = conn.execute(sql)
+        deleted_rows = result.fetchall()
+
+        log_message(
+            "INFO",
+            f"Removed {len(deleted_rows)} duplicate record(s) "
+            f"from the '{table}' table.",
+        )
+
+    except SQLAlchemyError:
+        log_message(
+            "ERROR",
+            "END - Duplicate record removal: Failed",
+            "red",
+        )
+        log_message(
+            "INFO",
+            "-" * 80,
+        )
+        raise
 
 
 def upgrade():
-    conn = op.get_bind()
+    log_message(
+        "INFO",
+        "-" * 80,
+    )
+    log_message(
+        "INFO",
+        "START - Duplicate record removal for unique constraint",
+    )
+
     delete_duplicates(
-        conn,
         'resource_comment_summary',
         'resource_id',
         ['updated DESC', 'comment DESC'],
     )
     delete_duplicates(
-        conn, 'utilization_summary', 'resource_id', ['updated DESC', 'utilization DESC']
+        'utilization_summary', 'resource_id', ['updated DESC', 'utilization DESC']
     )
     delete_duplicates(
-        conn, 'resource_like', 'resource_id', ['updated DESC', 'like_count DESC']
+        'resource_like', 'resource_id', ['updated DESC', 'like_count DESC']
     )
     delete_duplicates(
-        conn, 'download_summary', 'resource_id', ['updated DESC', 'download DESC']
+        'download_summary', 'resource_id', ['updated DESC', 'download DESC']
     )
     delete_duplicates(
-        conn,
         'issue_resolution_summary',
         'utilization_id',
         ['updated DESC', 'issue_resolution DESC'],
     )
     delete_duplicates(
-        conn, 'resource_comment_reactions', 'resource_comment_id', ['updated DESC']
+        'resource_comment_reactions', 'resource_comment_id', ['updated DESC']
+    )
+
+    log_message(
+        "SUCCESS",
+        "END - Duplicate record removal: Completed",
+        "green",
+    )
+    log_message(
+        "INFO",
+        "-" * 80,
     )
 
     op.create_unique_constraint(
