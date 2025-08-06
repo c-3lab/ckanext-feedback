@@ -1062,3 +1062,15 @@ msgstr "データリソース"
 msgid "Registered"
 msgstr "登録日"
 
+msgid "Thank you for downloading!<br>If you like, please give us your feedback to help us improve our data."
+msgstr "ダウンロードありがとうございます！<br>よければ、データ改善のためのフィードバックをお願いします！"
+
+msgid "How about giving likes?"
+msgstr "いいねを押していきませんか？"
+
+msgid "How about leaving a comment?"
+msgstr "コメントをしていきませんか？"
+
+msgid "How about sharing your way of using it?"
+msgstr "活用方法を共有しませんか？"
+
