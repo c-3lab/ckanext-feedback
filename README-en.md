@@ -164,7 +164,7 @@ poetry run pre-commit install
 5. Execute tests:
 
     ```bash
-    CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest -s --ckan-ini=config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings ./
+    CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest -s --ckan-ini=config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-config=/srv/app/src_extensions/ckanext-feedback/.coveragerc ./
     ```
 
 ## LICENSE
