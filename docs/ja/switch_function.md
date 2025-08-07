@@ -201,7 +201,7 @@ ckan.feedback.resources.comment.repeated_post_limit.enable = True
 ckan.feedback.resources.comment.rating.enable = True
 ckan.feedback.resources.comment.image_attachment.enable = True
 ckan.feedback.downloads.enable = True
-ckan.feedback.download.modal.enable = True
+ckan.feedback.downloads.modal.enable = True
 ckan.feedback.likes.enable = True
 ckan.feedback.moral_keeper_ai.enable = True
 ・・・
