@@ -667,7 +667,7 @@ msgstr "活用方法を共有しませんか？"
 
 #: ckanext/feedback/templates/package/resource_read.html:178
 msgid "Close"
-msgstr ""
+msgstr "閉じる"
 
 #: ckanext/feedback/templates/package/resource_read.html:190
 #: ckanext/feedback/templates/package/resource_read.html:202
