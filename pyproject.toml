@@ -17,7 +17,7 @@ include = ["**/*.mo"]
 packages = [
     { include = "ckanext" },
     { include = "README.md" },
-    { include = "LICENSE" }
+    { include = "LICENSE" },
 ]
 
 [tool.poetry.plugins."ckan.plugins"]
@@ -45,7 +45,7 @@ markupsafe = "2.1.1"
 ckan = "2.10.3"
 flask = "2.0.3"
 itsdangerous = "2.1.1"
-werkzeug = {version = "2.0.3", extras = ["watchdog"]}
+werkzeug = { version = "2.0.3", extras = ["watchdog"] }
 polib = "1.0.7"
 flask-babel = "1.0.0"
 simplejson = "3.10.0"
@@ -90,6 +90,7 @@ line_length = 88
 multi_line_output = 3
 
 [tool.poe.tasks]
+
 babel-extract = """
 pybabel extract --keywords 'translate isPlural'
                 --add-comments TRANSLATORS:
@@ -117,3 +118,14 @@ pybabel compile --domain ckanext-feedback
                 --directory ckanext/feedback/i18n
                 --statistics
 """
+[tool.pytest.ini_options]
+testpaths = ["/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests"]
+
+addopts = [
+    "-s",
+    "--ckan-ini=/srv/app/src_extensions/ckanext-feedback/ckanext/feedback/tests/config/test.ini",
+    "--cov=ckanext.feedback",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--disable-warnings",
+]
