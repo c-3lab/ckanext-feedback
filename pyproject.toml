@@ -127,5 +127,6 @@ addopts = [
     "--cov=ckanext.feedback",
     "--cov-branch",
     "--cov-report=term-missing",
+    "--cov-report=xml:/tmp/coverage.xml",
     "--disable-warnings",
 ]
