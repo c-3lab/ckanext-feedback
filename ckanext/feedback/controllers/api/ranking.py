@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 import ckanext.feedback.services.ranking.dataset as dataset_ranking_service
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
+from ckanext.feedback.models.resource_comment import ResourceCommentSummary
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.organization import organization as organization_service
 
@@ -37,6 +38,7 @@ class RankingConfig:
     AGGREGATION_METRIC_LIST = [
         'download',
         'likes',
+        'comments',
     ]
 
 
@@ -175,6 +177,17 @@ class RankingValidator:
                 }
             )
 
+    def validate_comments_function(self):
+        if not FeedbackConfig().resource_comment.is_enable():
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "ResourceComments function is off."
+                        "Please contact the site administrator for assintance."
+                    )
+                }
+            )
+
     def validate_organization_name_in_group(self, organization_name):
         org_name = organization_service.get_organization_name_by_name(organization_name)
 
@@ -206,6 +219,18 @@ class RankingValidator:
                 {
                     "message": (
                         "An organization with the likes feature disabled "
+                        "has been selected. "
+                        "Please contact the site administrator for assistance."
+                    )
+                }
+            )
+
+    def validate_organization_comments_enabled(self, organization_name, enable_orgs):
+        if organization_name not in enable_orgs:
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "An organization with the resourceComment feature disabled "
                         "has been selected. "
                         "Please contact the site administrator for assistance."
                     )
@@ -288,6 +313,13 @@ class DatasetRankingService:
             period_column = "like_count"
             total_model = ResourceLike
             total_column = "like_count"
+        elif metric == 'comments':
+            self.validator.validate_comments_function()
+            enable_orgs = FeedbackConfig().resource_comment.get_enable_org_names()
+            period_model = ResourceCommentSummary
+            period_column = "comment"
+            total_model = ResourceCommentSummary
+            total_column = "comment"
         else:
             raise toolkit.ValidationError({"message": "Invalid metric specified."})
 
@@ -316,6 +348,10 @@ class DatasetRankingService:
             )
         elif metric == 'likes':
             self.validator.validate_organization_likes_enabled(
+                organization_name, enable_orgs
+            )
+        elif metric == 'comments':
+            self.validator.validate_organization_comments_enabled(
                 organization_name, enable_orgs
             )
         return get_ranking_result
