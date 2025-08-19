@@ -171,7 +171,7 @@ poetry run pre-commit install
    ```bash
    ./test.sh ckanext/feedback/tests/command/test_feedback.py
    ```
-   **クラス・関数単位での指定も可能(クラス名::関数名)**
+   **クラス・関数単位での指定も可能(::クラス名::関数名)**
    ```bash
    ./test.sh ckanext/feedback/tests/command/test_feedback.py::TestFeedbackCommand::test_feedback_default
    ```
