@@ -79,25 +79,12 @@ def get_utilizations_by_comment_ids(comment_id_list):
 
 
 def get_utilization_details_by_ids(utilization_id_list):
-    utilizations = (
-        session.query(
-            Utilization.title,
-            Utilization.url,
-            Utilization.description,
-            Utilization.comment,
-            Utilization.approval,
-            Resource.name.label('resource_name'),
-            Resource.id.label('resource_id'),
-            Package.name.label('package_name'),
-            Package.owner_org,
-        )
-        .join(Resource, Utilization.resource)
-        .join(Package)
+    return (
+        session.query(Utilization)
+        .options(joinedload(Utilization.resource).joinedload(Resource.package))
         .filter(Utilization.id.in_(utilization_id_list))
         .all()
     )
-
-    return utilizations
 
 
 # Get the IDs of utilization where approval is False using utilization_id_list.
