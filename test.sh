@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 
-# プロジェクトルート（pyproject.tomlのある場所）
+# Project root directory (location of pyproject.toml)
 PROJECT_ROOT="/srv/app/src_extensions/ckanext-feedback"
 
-# site-packages側（テスト対象コード）
+# site-packages side (test target code)
 SITE_PACKAGES="/usr/lib/python3.10/site-packages/ckanext/feedback/tests"
 
 cd "$PROJECT_ROOT"
 
-# 環境変数設定
+# Environment variable settings
 export PYTHONPATH="$SITE_PACKAGES:$PYTHONPATH"
 export CKAN_SQLALCHEMY_URL=
 export CKAN_DATASTORE_READ_URL=
 export CKAN_DATASTORE_WRITE_URL=
 
-# pytestをプロジェクトルートから実行（pyproject.tomlを読み込む）
+# Run pytest from the project root (read pyproject.toml)
 pytest --rootdir="$PROJECT_ROOT" "$@"
