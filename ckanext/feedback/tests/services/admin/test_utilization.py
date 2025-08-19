@@ -175,15 +175,16 @@ class TestUtilization:
         )
 
         assert len(utilizations) == 1
-        assert utilizations[0].title == title
-        assert utilizations[0].url is None
-        assert utilizations[0].description == description
-        assert utilizations[0].comment == 0
-        assert utilizations[0].approval
-        assert utilizations[0].resource_name == resource['name']
-        assert utilizations[0].resource_id == resource['id']
-        assert utilizations[0].package_name == package['name']
-        assert utilizations[0].owner_org == package['owner_org']
+        util = utilizations[0]
+        assert util.id == utilization_id
+        assert util.title == title
+        assert util.description == description
+        assert util.comment == 0
+        assert util.approval
+        assert util.resource.name == resource['name']
+        assert util.resource.id == resource['id']
+        assert util.resource.package.name == package['name']
+        assert util.resource.package.owner_org == package['owner_org']
 
     def test_get_utilization_ids(self):
         resource = factories.Resource()
