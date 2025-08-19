@@ -45,6 +45,14 @@ def mock_current_user(current_user, user):
     current_user.return_value = user_obj
 
 
+def make_mocked_object(owner_org):
+    mocked = MagicMock()
+    mocked.resource = MagicMock()
+    mocked.resource.package = MagicMock()
+    mocked.resource.package.owner_org = owner_org
+    return mocked
+
+
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestAdminController:
     @classmethod
@@ -818,26 +826,22 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_utilization_using_sysadmin(
+    def test_check_organization_admin_role_with_using_sysadmin(
         self, mock_toolkit_abort, current_user
     ):
-        mocked_utilization = MagicMock()
-        mocked_utilization.resource.package.owner_org = 'owner_org'
-
+        mocked_obj = make_mocked_object('owner_org')
         user_dict = factories.Sysadmin()
         mock_current_user(current_user, user_dict)
-        g.userobj = current_user
-        AdminController._check_organization_admin_role_with_utilization(
-            [mocked_utilization]
-        )
+
+        AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_utilization_comment_using_org_admin(
+    def test_check_organization_admin_role_with_using_org_admin(
         self, mock_toolkit_abort, current_user
     ):
-        mocked_utilization = MagicMock()
+        mocked_obj = make_mocked_object('owner_org')
 
         user_dict = factories.User()
         user = User.get(user_dict['id'])
@@ -846,9 +850,7 @@ class TestAdminController:
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
-
-        mocked_utilization.resource.package.owner_org = organization_dict['id']
-
+        mocked_obj.resource.package.owner_org = organization_dict['id']
         member = model.Member(
             group=organization,
             group_id=organization_dict['id'],
@@ -859,134 +861,24 @@ class TestAdminController:
         model.Session.add(member)
         model.Session.commit()
 
-        AdminController._check_organization_admin_role_with_utilization_comment(
-            [mocked_utilization]
-        )
+        AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_utilization_comment_using_user(
+    def test_check_organization_admin_role_with_using_user(
         self, mock_toolkit_abort, current_user
     ):
-        mocked_utilization = MagicMock()
+        mocked_obj = MagicMock()
 
         user_dict = factories.User()
         mock_current_user(current_user, user_dict)
         g.userobj = current_user
 
         organization_dict = factories.Organization()
+        mocked_obj.resource.package.owner_org = organization_dict['id']
 
-        mocked_utilization.resource.package.owner_org = organization_dict['id']
-
-        AdminController._check_organization_admin_role_with_utilization_comment(
-            [mocked_utilization]
-        )
-        mock_toolkit_abort.assert_called_once_with(
-            404,
-            _(
-                'The requested URL was not found on the server. If you entered the URL'
-                ' manually please check your spelling and try again.'
-            ),
-        )
-
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_utilization(
-        self, mock_toolkit_abort, current_user
-    ):
-        mocked_utilization = MagicMock()
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
-
-        organization_dict = factories.Organization()
-
-        mocked_utilization.resource.package.owner_org = organization_dict['id']
-
-        AdminController._check_organization_admin_role_with_utilization(
-            [mocked_utilization]
-        )
-        mock_toolkit_abort.assert_called_once_with(
-            404,
-            _(
-                'The requested URL was not found on the server. '
-                'If you entered the URL manually please check '
-                'your spelling and try again.'
-            ),
-        )
-
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_resource_using_sysadmin(
-        self, mock_toolkit_abort, current_user
-    ):
-        mocked_resource_comment_summary = MagicMock()
-        mocked_resource_comment_summary.resource.package.owner_org = 'owner_org'
-
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
-        AdminController._check_organization_admin_role_with_resource(
-            [mocked_resource_comment_summary]
-        )
-        mock_toolkit_abort.assert_not_called()
-
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_resource_using_org_admin(
-        self, mock_toolkit_abort, current_user
-    ):
-        mocked_resource_comment_summary = MagicMock()
-
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
-
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
-
-        mocked_resource_comment_summary.resource.package.owner_org = organization_dict[
-            'id'
-        ]
-
-        member = model.Member(
-            group=organization,
-            group_id=organization_dict['id'],
-            table_id=user.id,
-            table_name='user',
-            capacity='admin',
-        )
-        model.Session.add(member)
-        model.Session.commit()
-
-        AdminController._check_organization_admin_role_with_resource(
-            [mocked_resource_comment_summary]
-        )
-        mock_toolkit_abort.assert_not_called()
-
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_resource_using_user(
-        self, mock_toolkit_abort, current_user
-    ):
-        mocked_resource_comment_summary = MagicMock()
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
-
-        organization_dict = factories.Organization()
-
-        mocked_resource_comment_summary.resource.package.owner_org = organization_dict[
-            'id'
-        ]
-
-        AdminController._check_organization_admin_role_with_resource(
-            [mocked_resource_comment_summary]
-        )
+        AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_called_once_with(
             404,
             _(
