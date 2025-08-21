@@ -33,6 +33,7 @@ class IssueResolutionSummary(Base):
         Text,
         ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
+        unique=True,
     )
     issue_resolution = Column(Integer)
     created = Column(TIMESTAMP, default=datetime.now)
