@@ -19,6 +19,7 @@ def get_generic_ranking(
     total_model,
     total_column,
     enable_org=None,
+    organization_name=None,
 ):
     count_by_period = get_count_by_period(
         period_model, period_column, start_year_month, end_year_month
@@ -44,6 +45,10 @@ def get_generic_ranking(
     )
     if enable_org and enable_org != [None]:
         query = query.filter(Group.name.in_(enable_org))
+
+    if organization_name:
+        query = query.filter(Group.name == organization_name)
+
     query = query.order_by(count_by_period.c.count.desc()).limit(top_ranked_limit).all()
     return query
 
