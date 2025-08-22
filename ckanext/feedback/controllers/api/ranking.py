@@ -325,25 +325,17 @@ class DatasetRankingService:
         else:
             raise toolkit.ValidationError({"message": "Invalid metric specified."})
 
-        # if not FeedbackConfig().is_feedback_config_file:
-        #     return get_ranking_result
-
-        # if not organization_name:
-        #     return get_ranking_result
-
-        # self.validator.validate_organization_name_in_group(organization_name)
-
         if organization_name:
-            if metric == 'download':
-                self.validator.validate_organization_download_enabled(
-                    organization_name, enable_orgs
-                )
-            elif metric == 'likes':
+            if metric == 'likes':
                 self.validator.validate_organization_likes_enabled(
                     organization_name, enable_orgs
                 )
             elif metric == 'comments':
                 self.validator.validate_organization_comments_enabled(
+                    organization_name, enable_orgs
+                )
+            else:
+                self.validator.validate_organization_download_enabled(
                     organization_name, enable_orgs
                 )
 
