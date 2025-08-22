@@ -78,6 +78,7 @@ class ResourceCommentSummary(Base):
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
+        unique=True,
     )
     # the total count of all comment
     comment = Column(Integer, default=0)
@@ -97,6 +98,7 @@ class ResourceCommentReactions(Base):
         Text,
         ForeignKey('resource_comment.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
+        unique=True,
     )
     response_status = Column(Enum(ResourceCommentResponseStatus))
     admin_liked = Column(BOOLEAN, default=False)

@@ -12,6 +12,7 @@ class DownloadSummary(Base):
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
+        unique=True,
     )
     download = Column(Integer)
     created = Column(TIMESTAMP)

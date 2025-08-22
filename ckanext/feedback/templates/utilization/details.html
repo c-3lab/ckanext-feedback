@@ -98,7 +98,7 @@
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
             <div class="comment-form-footer">
-              {% if h.is_enabled_image_attachment(utilization.owner_org) %}
+              {% if h.is_enabled_utilization_comment_image_attachment(utilization.owner_org) %}
                 <div class="image-upload-section">
                   <button id="uploadBtn" type="button" class="btn btn-default" onclick="uploadClicked();">
                     <i class="fa-solid fa-image"></i>

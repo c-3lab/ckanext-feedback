@@ -48,6 +48,7 @@ jobs:
         run: |
           docker exec -i ckan-docker-ckan-dev-1 bash -c "/srv/app/src_extensions/ckanext-feedback/test.sh"
 
+
       - name: copy coverage.xml
         if: always()
         run: |
