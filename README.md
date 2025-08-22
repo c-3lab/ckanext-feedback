@@ -158,15 +158,24 @@ poetry run pre-commit install
 4. ディレクトリを移動
 
     ```bash
-    cd /usr/lib/python3.10/site-packages/ckanext/feedback/tests
+    cd /srv/app/src_extensions/ckanext-feedback
     ```
 
 5. テストを実行
 
     ```bash
-    CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest -s --ckan-ini=config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-config=/srv/app/src_extensions/ckanext-feedback/.coveragerc ./
+    ./test.sh
     ```
-
+    
+    **ファイルを指定する場合は以下のように指定することが可能**
+   ```bash
+   ./test.sh ckanext/feedback/tests/command/test_feedback.py
+   ```
+   **クラス・関数単位での指定も可能(::クラス名::関数名)**
+   ```bash
+   ./test.sh ckanext/feedback/tests/command/test_feedback.py::TestFeedbackCommand::test_feedback_default
+   ```
+    
 ## LICENSE
 
 [AGPLv3 LICENSE](https://github.com/c-3lab/ckanext-feedback/blob/feature/documentation-README/LICENSE)
