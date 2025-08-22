@@ -837,6 +837,36 @@ class TestCheck:
         assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
+        # modal(ckan.ini)
+        config.pop('ckan.feedback.download.modal.enable', None)
+        config.pop('ckan.feedback.download.modal.enable_orgs', None)
+        config.pop('ckan.feedback.download.modal.disable_orgs', None)
+        FeedbackConfig().load_feedback_config()
+        assert config.get('ckan.feedback.download.modal.enable', None) is None
+        assert config.get('ckan.feedback.download.modal.enable_orgs', None) is None
+        assert config.get('ckan.feedback.download.modal.disable_orgs', None) is None
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().download.modal.is_enable() is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_D) is True
+        # modal(feedback_config.json)
+        feedback_config = {"modules": {}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        FeedbackConfig().load_feedback_config()
+        assert config.get('ckan.feedback.download.modal.enable', None) is None
+        assert config.get('ckan.feedback.download.modal.enable_orgs', None) is None
+        assert config.get('ckan.feedback.download.modal.disable_orgs', None) is None
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.modal.is_enable() is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_D) is True
+        os.remove('/srv/app/feedback_config.json')
+
         # likes(ckan.ini)
         config.pop('ckan.feedback.likes.enable', None)
         config.pop('ckan.feedback.likes.enable_orgs', None)
