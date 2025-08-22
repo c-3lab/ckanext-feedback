@@ -1,12 +1,7 @@
-import pytest
-from ckan import model
-from ckan.tests import factories
+from datetime import datetime
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
+import pytest
+
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.download.summary import (
@@ -17,56 +12,33 @@ from ckanext.feedback.services.download.summary import (
 
 
 def get_downloads(resource_id):
-    count = (
-        session.query(DownloadSummary.download)
+    return (
+        session.query(DownloadSummary)
         .filter(DownloadSummary.resource_id == resource_id)
-        .scalar()
+        .first()
     )
-    return count
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestDownloadServices:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        engine = model.meta.engine
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-        session.commit()
-
-    def test_increment_resource_downloads(self):
-        resource = factories.Resource()
-        increment_resource_downloads(resource['id'])
-        assert get_downloads(resource['id']) == 1
-        increment_resource_downloads(resource['id'])
-        assert get_downloads(resource['id']) == 2
-
-    def test_get_package_download(self):
-        resource = factories.Resource()
-        assert get_package_downloads(resource['package_id']) == 0
-        download_summary = DownloadSummary(
-            id=str('test_id'),
-            resource_id=resource['id'],
-            download=1,
-            created='2023-03-31 01:23:45.123456',
-            updated='2023-03-31 01:23:45.123456',
+    def test_get_package_download(self, resource, download_summary):
+        assert (
+            get_package_downloads(resource['package_id']) == download_summary.download
         )
-        session.add(download_summary)
-        session.commit()
-        assert get_package_downloads(resource['package_id']) == 1
 
-    def test_get_resource_download(self):
-        resource = factories.Resource()
-        assert get_resource_downloads(resource['id']) == 0
-        download_summary = DownloadSummary(
-            id=str('test_id'),
-            resource_id=resource['id'],
-            download=1,
-            created='2023-03-31 01:23:45.123456',
-            updated='2023-03-31 01:23:45.123456',
-        )
-        session.add(download_summary)
-        session.commit()
-        assert get_resource_downloads(resource['id']) == 1
+    def test_get_resource_download(self, resource, download_summary):
+        assert get_resource_downloads(resource['id']) == download_summary.download
+
+    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
+    def test_increment_resource_downloads(self, resource):
+        increment_resource_downloads(resource['id'])
+        download_summary = get_downloads(resource['id'])
+
+        assert download_summary.download == 1
+        assert download_summary.updated is None
+
+        increment_resource_downloads(resource['id'])
+        download_summary = get_downloads(resource['id'])
+
+        assert download_summary.download == 2
+        assert download_summary.updated == datetime(2024, 1, 1, 15, 0, 0)

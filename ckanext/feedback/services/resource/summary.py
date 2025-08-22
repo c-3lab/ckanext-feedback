@@ -2,6 +2,7 @@ from datetime import datetime
 
 from ckan.model.resource import Resource
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import insert
 
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
@@ -68,20 +69,17 @@ def get_resource_rating(resource_id):
 
 # Create new resource summary
 def create_resource_summary(resource_id):
-    summary = (
-        session.query(ResourceCommentSummary)
-        .filter(ResourceCommentSummary.resource_id == resource_id)
-        .first()
+    summary = insert(ResourceCommentSummary).values(
+        resource_id=resource_id,
     )
-    if summary is None:
-        summary = ResourceCommentSummary(
-            resource_id=resource_id,
-        )
-        session.add(summary)
+    summary = summary.on_conflict_do_nothing(index_elements=['resource_id'])
+    session.execute(summary)
 
 
 # Recalculate approved ratings and comments related to the resource summary
 def refresh_resource_summary(resource_id):
+    now = datetime.now()
+
     total_rating = (
         session.query(
             func.sum(ResourceComment.rating),
@@ -121,21 +119,19 @@ def refresh_resource_summary(resource_id):
         .count()
     )
 
-    summary = (
-        session.query(ResourceCommentSummary)
-        .filter(ResourceCommentSummary.resource_id == resource_id)
-        .first()
+    insert_summary = insert(ResourceCommentSummary).values(
+        resource_id=resource_id,
+        rating=rating,
+        comment=comment,
+        rating_comment=rating_comment,
     )
-    if summary is None:
-        summary = ResourceCommentSummary(
-            resource_id=resource_id,
-            rating=rating,
-            comment=comment,
-            rating_comment=rating_comment,
-        )
-        session.add(summary)
-    else:
-        summary.rating = rating
-        summary.comment = comment
-        summary.rating_comment = rating_comment
-        summary.updated = datetime.now()
+    summary = insert_summary.on_conflict_do_update(
+        index_elements=['resource_id'],
+        set_={
+            'rating': insert_summary.excluded.rating,
+            'comment': insert_summary.excluded.comment,
+            'rating_comment': insert_summary.excluded.rating_comment,
+            'updated': now,
+        },
+    )
+    session.execute(summary)

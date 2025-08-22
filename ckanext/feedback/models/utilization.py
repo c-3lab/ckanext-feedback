@@ -81,6 +81,7 @@ class UtilizationSummary(Base):
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
+        unique=True,
     )
     utilization = Column(Integer, default=0)
     created = Column(TIMESTAMP, default=datetime.now)

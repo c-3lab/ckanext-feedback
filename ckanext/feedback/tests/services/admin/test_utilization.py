@@ -3,14 +3,8 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from ckan import model
 from ckan.tests import factories
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import (
     Utilization,
@@ -69,18 +63,8 @@ def get_registered_utilization_summary(resource_id):
     )
 
 
-engine = model.repo.session.get_bind()
-
-
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestUtilization:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
     def test_get_utilizations_query(self):
         organization = factories.Organization()
 
@@ -296,32 +280,14 @@ class TestUtilization:
         utilization = get_registered_utilization(resource['id'])
         assert len(utilization) == 0
 
-    def test_refresh_utilization_summary(self):
-        resource = factories.Resource()
-
-        utilization_id = str(uuid.uuid4())
-        title = 'test title'
-        description = 'test description'
-
-        register_utilization(utilization_id, resource['id'], title, description, True)
-
-        session.commit()
-
+    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
+    def test_refresh_utilization_summary(self, resource, utilization):
         resource_ids = [resource['id']]
+
         utilization_service.refresh_utilization_summary(resource_ids)
+        session.commit()
 
         utilization_summary = get_registered_utilization_summary(resource['id'])
 
         assert utilization_summary.utilization == 1
-
-        another_utilization_id = str(uuid.uuid4())
-
-        register_utilization(
-            another_utilization_id, resource['id'], title, description, True
-        )
-
-        utilization_service.refresh_utilization_summary(resource_ids)
-
-        utilization_summary = get_registered_utilization_summary(resource['id'])
-
-        assert utilization_summary.utilization == 2
+        assert utilization_summary.updated == datetime(2024, 1, 1, 15, 0, 0)
