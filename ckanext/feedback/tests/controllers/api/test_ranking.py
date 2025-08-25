@@ -5,6 +5,9 @@ import pytest
 from ckan.plugins.toolkit import ValidationError
 
 from ckanext.feedback.controllers.api import ranking as DatasetRankingController
+from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
+from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
+from ckanext.feedback.models.resource_comment import ResourceCommentSummary
 
 
 class TestRankingApi:
@@ -245,9 +248,8 @@ class TestRankingValidator:
 
     def test_validate_aggregation_metric(self):
         controller = DatasetRankingController._ranking_controller
-        aggregation_metric = 'download'
-
-        controller.validator.validate_aggregation_metric(aggregation_metric)
+        for aggregation_metric in ['download', 'likes', 'comments']:
+            controller.validator.validate_aggregation_metric(aggregation_metric)
 
     def test_validate_aggregation_metric_with_invalid_value(self):
         controller = DatasetRankingController._ranking_controller
@@ -289,6 +291,122 @@ class TestRankingValidator:
 
         assert (
             error_message == "Download function is off. "
+            "Please contact the site administrator for assistance."
+        )
+
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    def test_validate_likes_function(self, mock_feedback_config):
+        controller = DatasetRankingController._ranking_controller
+
+        mock_likes = MagicMock()
+        mock_likes.is_enable.return_value = True
+        mock_feedback_config.return_value.like = mock_likes
+
+        controller.validator.validate_likes_function()
+
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    def test_validate_likes_function_with_disabled_likes(self, mock_feedback_config):
+        controller = DatasetRankingController._ranking_controller
+
+        mock_likes = MagicMock()
+        mock_likes.is_enable.return_value = False
+        mock_feedback_config.return_value.like = mock_likes
+
+        with pytest.raises(ValidationError) as exc_info:
+            controller.validator.validate_likes_function()
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            error_message == "Likes function is off."
+            "Please contact the site administrator for assintance."
+        )
+
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    def test_validate_comments_function(self, mock_feedback_config):
+        controller = DatasetRankingController._ranking_controller
+
+        mock_comments = MagicMock()
+        mock_comments.is_enable.return_value = True
+        mock_feedback_config.return_value.resource_comment = mock_comments
+
+        controller.validator.validate_comments_function()
+
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    def test_validate_comments_function_with_disabled_comments(
+        self, mock_feedback_config
+    ):
+        controller = DatasetRankingController._ranking_controller
+
+        mock_comments = MagicMock()
+        mock_comments.is_enable.return_value = False
+        mock_feedback_config.return_value.resource_comment = mock_comments
+
+        with pytest.raises(ValidationError) as exc_info:
+            controller.validator.validate_comments_function()
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            error_message == "ResourceComments function is off."
+            "Please contact the site administrator for assintance."
+        )
+
+    def test_validate_organization_likes_enabled(self):
+        controller = DatasetRankingController._ranking_controller
+        organization_name = 'test_org1'
+        enable_org = ['test_org1']
+
+        controller.validator.validate_organization_likes_enabled(
+            organization_name, enable_org
+        )
+
+    def test_validate_organization_likes_enabled_with_disabled_organization(self):
+        controller = DatasetRankingController._ranking_controller
+        organization_name = 'test_org2'
+        enable_org = ['test_org1']
+
+        with pytest.raises(ValidationError) as exc_info:
+            controller.validator.validate_organization_likes_enabled(
+                organization_name, enable_org
+            )
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            error_message
+            == "An organization with the likes feature disabled has been selected. "
+            "Please contact the site administrator for assistance."
+        )
+
+    def test_validate_organization_comments_enabled(self):
+        controller = DatasetRankingController._ranking_controller
+        organization_name = 'test_org1'
+        enable_org = ['test_org1']
+
+        controller.validator.validate_organization_comments_enabled(
+            organization_name, enable_org
+        )
+
+    def test_validate_organization_comments_enabled_with_disabled_organization(self):
+        controller = DatasetRankingController._ranking_controller
+        organization_name = 'test_org2'
+        enable_org = ['test_org1']
+
+        with pytest.raises(ValidationError) as exc_info:
+            controller.validator.validate_organization_comments_enabled(
+                organization_name, enable_org
+            )
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            error_message == "An organization with the resourceComment "
+            "feature disabled has been selected. "
             "Please contact the site administrator for assistance."
         )
 
@@ -460,43 +578,15 @@ class TestDateRangeCalculator:
 
 
 class TestDatasetRankingService:
-    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
-    @patch('ckanext.feedback.controllers.api.ranking.dataset_ranking_service')
-    @patch.object(
-        DatasetRankingController._ranking_controller.validator,
-        'validate_organization_download_enabled',
-    )
-    @patch.object(
-        DatasetRankingController._ranking_controller.validator,
-        'validate_organization_name_in_group',
-    )
-    @patch.object(
-        DatasetRankingController._ranking_controller.validator,
-        'validate_download_function',
-    )
-    def test_get_dataset_download_ranking_with_feedback_config(
-        self,
-        mock_validate_download,
-        mock_validate_org,
-        mock_validate_org_download,
-        mock_dataset_ranking_service,
-        mock_feedback_config,
-    ):
-        controller = DatasetRankingController._ranking_controller
-        top_ranked_limit = '1'
-        start_year_month = '2023-04'
-        end_year_month = '2023-12'
-        organization_name = 'test_org1'
-
-        mock_validate_download.return_value = None
-        mock_validate_org.return_value = None
-        mock_validate_org_download.return_value = None
-
+    def _setup_common_mocks(self, mock_feedback_config, enable_org_config):
         feedback_config = mock_feedback_config.return_value
-        feedback_config.is_feedback_config_file = True
-        feedback_config.download.get_enable_org_names.return_value = ['test_org1']
+        getattr(
+            feedback_config, enable_org_config
+        ).get_enable_org_names.return_value = ['test_org1']
+        return feedback_config
 
-        mock_dataset_ranking_service.get_download_ranking.return_value = [
+    def _get_expected_result(self):
+        return [
             (
                 'test_org1',
                 'test_org1_title',
@@ -508,150 +598,52 @@ class TestDatasetRankingService:
             )
         ]
 
-        result = controller.ranking_service.get_dataset_download_ranking(
-            top_ranked_limit,
-            start_year_month,
-            end_year_month,
-            organization_name,
-        )
-
-        assert result == [
-            (
-                'test_org1',
-                'test_org1_title',
-                'test_dataset1',
-                'test_dataset1_title',
-                'test_dataset1_notes',
-                100,
-                100,
-            )
-        ]
-
-        mock_validate_download.assert_called_once()
-        mock_validate_org.assert_called_once_with(organization_name)
-        mock_validate_org_download.assert_called_once_with(
-            organization_name, ['test_org1']
-        )
-        mock_dataset_ranking_service.get_download_ranking.assert_called_once_with(
-            top_ranked_limit, start_year_month, end_year_month, [organization_name]
-        )
-
-    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
-    @patch('ckanext.feedback.controllers.api.ranking.dataset_ranking_service')
-    @patch.object(
-        DatasetRankingController._ranking_controller.validator,
-        'validate_download_function',
-    )
-    def test_get_dataset_download_ranking_without_organization_name(
-        self, mock_validate_download, mock_dataset_ranking_service, mock_feedback_config
+    def _assert_generic_ranking_call(
+        self,
+        mock_get_generic_ranking,
+        top_ranked_limit,
+        start_year_month,
+        end_year_month,
+        period_model,
+        period_column,
+        total_model,
+        total_column,
+        organization_name,
     ):
-        controller = DatasetRankingController._ranking_controller
-        top_ranked_limit = '1'
-        start_year_month = '2023-04'
-        end_year_month = '2023-12'
-        organization_name = None
-
-        mock_validate_download.return_value = None
-
-        mock_feedback_config.return_value.is_feedback_config_file = True
-        mock_feedback_config.return_value.download.get_enable_org_names.return_value = [
-            'test_org1'
-        ]
-
-        mock_dataset_ranking_service.get_download_ranking.return_value = [
-            (
-                'test_org1',
-                'test_org1_title',
-                'test_dataset1',
-                'test_dataset1_title',
-                'test_dataset1_notes',
-                100,
-                100,
-            )
-        ]
-
-        result = controller.ranking_service.get_dataset_download_ranking(
+        mock_get_generic_ranking.assert_called_once_with(
             top_ranked_limit,
             start_year_month,
             end_year_month,
-            organization_name,
+            period_model,
+            period_column,
+            total_model,
+            total_column,
+            enable_org=None,
+            organization_name=organization_name,
         )
 
-        assert result == [
-            (
-                'test_org1',
-                'test_org1_title',
-                'test_dataset1',
-                'test_dataset1_title',
-                'test_dataset1_notes',
-                100,
-                100,
-            )
-        ]
-
-        mock_validate_download.assert_called_once()
-        mock_dataset_ranking_service.get_download_ranking.assert_called_once_with(
-            top_ranked_limit, start_year_month, end_year_month, ['test_org1']
-        )
-
-    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
-    @patch('ckanext.feedback.controllers.api.ranking.dataset_ranking_service')
-    @patch.object(
-        DatasetRankingController._ranking_controller.validator,
-        'validate_download_function',
-    )
-    def test_get_dataset_download_ranking_without_feedback_config(
-        self, mock_validate_download, mock_dataset_ranking_service, mock_feedback_config
-    ):
+    def test_get_dataset_ranking_with_invalid_metric(self):
         controller = DatasetRankingController._ranking_controller
-        top_ranked_limit = '1'
-        start_year_month = '2023-04'
-        end_year_month = '2023-12'
-        organization_name = None
 
-        mock_validate_download.return_value = None
-
-        mock_feedback_config.return_value.is_feedback_config_file = False
-
-        mock_dataset_ranking_service.get_download_ranking.return_value = [
-            (
-                'test_org1',
-                'test_org1_title',
-                'test_dataset1',
-                'test_dataset1_title',
-                'test_dataset1_notes',
-                100,
-                100,
+        with pytest.raises(ValidationError) as exc_info:
+            controller.ranking_service.get_dataset_ranking(
+                metric='invalid_metric',
+                top_ranked_limit='1',
+                start_year_month='2023-04',
+                end_year_month='2023-12',
+                organization_name=None,
             )
-        ]
 
-        result = controller.ranking_service.get_dataset_download_ranking(
-            top_ranked_limit,
-            start_year_month,
-            end_year_month,
-            organization_name,
-        )
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
 
-        assert result == [
-            (
-                'test_org1',
-                'test_org1_title',
-                'test_dataset1',
-                'test_dataset1_title',
-                'test_dataset1_notes',
-                100,
-                100,
-            )
-        ]
-
-        mock_validate_download.assert_called_once()
-        mock_dataset_ranking_service.get_download_ranking.assert_called_once_with(
-            top_ranked_limit, start_year_month, end_year_month
-        )
+        assert error_message == "Invalid metric specified."
 
     @patch('ckanext.feedback.controllers.api.ranking.config.get')
     @patch('ckanext.feedback.controllers.api.ranking.toolkit.url_for')
-    def test_generate_dataset_ranking_list(self, mock_toolkit_url_for, mock_config_get):
+    def test_generate_dataset_ranking_list_with_different_metric(
+        self, mock_toolkit_url_for, mock_config_get
+    ):
         controller = DatasetRankingController._ranking_controller
         results = [
             (
@@ -668,9 +660,10 @@ class TestDatasetRankingService:
         mock_config_get.return_value = 'https://test-site-url'
         mock_toolkit_url_for.return_value = '/dataset/test_dataset1_title'
 
-        result = controller.ranking_service.generate_dataset_ranking_list(results)
-
-        assert result == [
+        result_likes = controller.ranking_service.generate_dataset_ranking_list(
+            results, metric_name='likes'
+        )
+        assert result_likes == [
             {
                 'rank': 1,
                 'group_name': 'test_org1',
@@ -678,8 +671,25 @@ class TestDatasetRankingService:
                 'dataset_title': 'test_dataset1_title',
                 'dataset_notes': 'test_dataset1_notes',
                 'dataset_link': 'https://test-site-url/dataset/test_dataset1_title',
-                'download_count_by_period': 100,
-                'total_download_count': 100,
+                'likes_count_by_period': 100,
+                'total_likes_count': 100,
+            },
+        ]
+
+        result_comments = controller.ranking_service.generate_dataset_ranking_list(
+            results, metric_name='comments'
+        )
+
+        assert result_comments == [
+            {
+                'rank': 1,
+                'group_name': 'test_org1',
+                'group_title': 'test_org1_title',
+                'dataset_title': 'test_dataset1_title',
+                'dataset_notes': 'test_dataset1_notes',
+                'dataset_link': 'https://test-site-url/dataset/test_dataset1_title',
+                'comments_count_by_period': 100,
+                'total_comments_count': 100,
             },
         ]
 
@@ -729,7 +739,7 @@ class TestDatasetRankingController:
     )
     @patch.object(
         DatasetRankingController._ranking_controller.ranking_service,
-        'get_dataset_download_ranking',
+        'get_dataset_ranking',
     )
     @patch.object(
         DatasetRankingController._ranking_controller.validator,
@@ -747,14 +757,14 @@ class TestDatasetRankingController:
         DatasetRankingController._ranking_controller.validator,
         'validate_input_parameters',
     )
-    def test_get_datasets_ranking_with_download_aggregation_metric(
+    def test_get_datasets_ranking_with_download_metric(
         self,
         mock_validate_input,
         mock_extract_params,
         mock_validate_limit,
         mock_get_year_months,
         mock_validate_metric,
-        mock_get_download_ranking,
+        mock_get_dataset_ranking,
         mock_generate_ranking_list,
     ):
         controller = DatasetRankingController._ranking_controller
@@ -771,7 +781,7 @@ class TestDatasetRankingController:
         mock_validate_limit.return_value = None
         mock_get_year_months.return_value = ('2023-04', '2023-12')
         mock_validate_metric.return_value = None
-        mock_get_download_ranking.return_value = [
+        mock_get_dataset_ranking.return_value = [
             (
                 'test_org1',
                 'test_org1_title',
@@ -826,8 +836,12 @@ class TestDatasetRankingController:
             datetime(2024, 1, 1, 15, 0, 0), 'all', None, None
         )
         mock_validate_metric.assert_called_once_with('download')
-        mock_get_download_ranking.assert_called_once_with(
-            '1', '2023-04', '2023-12', None
+        mock_get_dataset_ranking.assert_called_once_with(
+            metric='download',
+            top_ranked_limit='1',
+            start_year_month='2023-04',
+            end_year_month='2023-12',
+            organization_name=None,
         )
         mock_generate_ranking_list.assert_called_once_with(
             [
@@ -840,10 +854,15 @@ class TestDatasetRankingController:
                     100,
                     100,
                 )
-            ]
+            ],
+            metric_name='download',
         )
 
     @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
+    @patch.object(
+        DatasetRankingController._ranking_controller.ranking_service,
+        'get_dataset_ranking',
+    )
     @patch.object(
         DatasetRankingController._ranking_controller.validator,
         'validate_aggregation_metric',
@@ -867,6 +886,7 @@ class TestDatasetRankingController:
         mock_validate_limit,
         mock_get_year_months,
         mock_validate_metric,
+        mock_get_dataset_ranking,
     ):
         controller = DatasetRankingController._ranking_controller
 
@@ -882,6 +902,9 @@ class TestDatasetRankingController:
         mock_validate_limit.return_value = None
         mock_get_year_months.return_value = ('2023-04', '2023-12')
         mock_validate_metric.return_value = None
+        mock_get_dataset_ranking.side_effect = ValidationError(
+            {"message": "Invalid metric specified."}
+        )
 
         data_dict = {
             'top_ranked_limit': '1',
@@ -892,9 +915,13 @@ class TestDatasetRankingController:
             'organization_name': None,
         }
 
-        result = controller.get_datasets_ranking(data_dict)
+        with pytest.raises(ValidationError) as exc_info:
+            controller.get_datasets_ranking(data_dict)
 
-        assert result == []
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert error_message == "Invalid metric specified."
 
         mock_validate_input.assert_called_once_with(data_dict)
         mock_extract_params.assert_called_once_with(data_dict)
@@ -903,3 +930,216 @@ class TestDatasetRankingController:
             datetime(2024, 1, 1, 15, 0, 0), 'all', None, None
         )
         mock_validate_metric.assert_called_once_with('invalid_metric')
+
+    @pytest.mark.parametrize(
+        "metric,"
+        "organization_name,"
+        "validate_func,"
+        "validate_org_func,"
+        "period_model,"
+        "period_column,"
+        "total_model,"
+        "total_column,"
+        "enable_org_config",
+        [
+            (
+                'download',
+                None,
+                'validate_download_function',
+                None,
+                DownloadMonthly,
+                "download_count",
+                DownloadSummary,
+                "download",
+                'download',
+            ),
+            (
+                'likes',
+                None,
+                'validate_likes_function',
+                None,
+                ResourceLikeMonthly,
+                "like_count",
+                ResourceLike,
+                "like_count",
+                'like',
+            ),
+            (
+                'comments',
+                None,
+                'validate_comments_function',
+                None,
+                ResourceCommentSummary,
+                "comment",
+                ResourceCommentSummary,
+                "comment",
+                'resource_comment',
+            ),
+            (
+                'download',
+                'test_org1',
+                'validate_download_function',
+                'validate_organization_download_enabled',
+                DownloadMonthly,
+                "download_count",
+                DownloadSummary,
+                "download",
+                'download',
+            ),
+            (
+                'likes',
+                'test_org1',
+                'validate_likes_function',
+                'validate_organization_likes_enabled',
+                ResourceLikeMonthly,
+                "like_count",
+                ResourceLike,
+                "like_count",
+                'like',
+            ),
+            (
+                'comments',
+                'test_org1',
+                'validate_comments_function',
+                'validate_organization_comments_enabled',
+                ResourceCommentSummary,
+                "comment",
+                ResourceCommentSummary,
+                "comment",
+                'resource_comment',
+            ),
+        ],
+    )
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    def test_get_dataset_ranking_parametrized(
+        self,
+        mock_get_generic_ranking,
+        mock_feedback_config,
+        metric,
+        organization_name,
+        validate_func,
+        validate_org_func,
+        period_model,
+        period_column,
+        total_model,
+        total_column,
+        enable_org_config,
+    ):
+        controller = DatasetRankingController._ranking_controller
+        top_ranked_limit = '1'
+        start_year_month = '2023-04'
+        end_year_month = '2023-12'
+
+        with patch.object(controller.validator, validate_func) as mock_validate:
+            mock_validate.return_value = None
+
+            if organization_name and validate_org_func:
+                with patch.object(
+                    controller.validator, 'validate_organization_name_in_group'
+                ) as mock_validate_org, patch.object(
+                    controller.validator, validate_org_func
+                ) as mock_validate_org_func:
+                    mock_validate_org.return_value = None
+                    mock_validate_org_func.return_value = None
+
+                    feedback_config = mock_feedback_config.return_value
+                    getattr(
+                        feedback_config, enable_org_config
+                    ).get_enable_org_names.return_value = ['test_org1']
+
+                    mock_get_generic_ranking.return_value = [
+                        (
+                            'test_org1',
+                            'test_org1_title',
+                            'test_dataset1',
+                            'test_dataset1_title',
+                            'test_dataset1_notes',
+                            100,
+                            100,
+                        )
+                    ]
+
+                    result = controller.ranking_service.get_dataset_ranking(
+                        metric=metric,
+                        top_ranked_limit=top_ranked_limit,
+                        start_year_month=start_year_month,
+                        end_year_month=end_year_month,
+                        organization_name=organization_name,
+                    )
+
+                    assert result == [
+                        (
+                            'test_org1',
+                            'test_org1_title',
+                            'test_dataset1',
+                            'test_dataset1_title',
+                            'test_dataset1_notes',
+                            100,
+                            100,
+                        )
+                    ]
+                    mock_validate.assert_called_once()
+                    mock_validate_org.assert_called_once_with(organization_name)
+                    mock_validate_org_func.assert_called_once_with(
+                        organization_name, ['test_org1']
+                    )
+                    mock_get_generic_ranking.assert_called_once_with(
+                        top_ranked_limit,
+                        start_year_month,
+                        end_year_month,
+                        period_model,
+                        period_column,
+                        total_model,
+                        total_column,
+                        enable_org=None,
+                        organization_name=organization_name,
+                    )
+            else:
+                feedback_config = mock_feedback_config.return_value
+                getattr(
+                    feedback_config, enable_org_config
+                ).get_enable_org_names.return_value = ['test_org1']
+
+                mock_get_generic_ranking.return_value = [
+                    (
+                        'test_org1',
+                        'test_org1_title',
+                        'test_dataset1',
+                        'test_dataset1_title',
+                        'test_dataset1_notes',
+                        100,
+                        100,
+                    )
+                ]
+
+                result = controller.ranking_service.get_dataset_ranking(
+                    metric=metric,
+                    top_ranked_limit=top_ranked_limit,
+                    start_year_month=start_year_month,
+                    end_year_month=end_year_month,
+                    organization_name=organization_name,
+                )
+
+                assert result == [
+                    (
+                        'test_org1',
+                        'test_org1_title',
+                        'test_dataset1',
+                        'test_dataset1_title',
+                        'test_dataset1_notes',
+                        100,
+                        100,
+                    )
+                ]
+                mock_validate.assert_called_once()
+                mock_get_generic_ranking.assert_called_once_with(
+                    top_ranked_limit,
+                    start_year_month,
+                    end_year_month,
+                    period_model,
+                    period_column,
+                    total_model,
+                    total_column,
+                    enable_org=None,
+                    organization_name=organization_name,
+                )
