@@ -128,8 +128,8 @@ function checkCommentExists(button, bs3=false) {
   if ( button.id === "comment-button" ) {
     comment = document.getElementById('comment-content').value;
   }
-  if ( button.id === "proposal-comment-button" ) {
-    comment = document.getElementById('proposal-comment-content').value;
+  if ( button.id === "suggested-comment-button" ) {
+    comment = document.getElementById('suggested-comment-content').value;
   }
 
   const rating = document.getElementById('rating').value;

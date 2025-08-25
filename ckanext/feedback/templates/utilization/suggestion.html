@@ -33,7 +33,7 @@
         <br>
         <div class="comment" style="display: flex;">
           <h5 class="p-2" style="flex: 1;">{{ _('Input Comments') }}</h5>
-          <h5 class="p-2" style="flex: 1;">{{ _('Proposal Comments') }}</h5>
+          <h5 class="p-2" style="flex: 1;">{{ _('Suggested Comments') }}</h5>
         </div>
 
         <div class="comment-contents" style="display: flex; gap: 10px;">
@@ -73,18 +73,18 @@
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
             <div style="flex: 1;">
-              <textarea class="p-2 resize-vertical" id="proposal-comment-content" name="comment-content" style="height: 200px; width: 100%; overflow: auto; border-radius: 10px;">{{ softened }}</textarea>
+              <textarea class="p-2 resize-vertical" id="suggested-comment-content" name="comment-content" style="height: 200px; width: 100%; overflow: auto; border-radius: 10px;">{{ softened }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary right-aligned" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                <button class="btn btn-primary right-aligned" id="suggested-comment-button" onclick="return checkCommentExists(this, bs3=true);">
                   <i class="fa-solid fa-chevron-right"></i>
-                  {{ _('Review the proposal comment') }}
+                  {{ _('Review the suggested comment') }}
                 </button>
                 {% else %}
-                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">
+                <button class="btn btn-primary" id="suggested-comment-button" onclick="return checkCommentExists(this);">
                   <i class="fa-solid fa-chevron-right"></i>
-                  {{ _('Review the proposal comment') }}
+                  {{ _('Review the suggested comment') }}
                 </button>
                 {% endif %}
               </div>

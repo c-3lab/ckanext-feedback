@@ -112,8 +112,8 @@ function checkCommentExists(button, bs3=false) {
   if ( button.id === "comment-button" ) {
     comment = document.getElementById('comment-content').value;
   }
-  if ( button.id === "proposal-comment-button" ) {
-    comment = document.getElementById('proposal-comment-content').value;
+  if ( button.id === "suggested-comment-button" ) {
+    comment = document.getElementById('suggested-comment-content').value;
   }
   const commentNoneErrorElement = document.getElementById('comment-none-error');
   const commentOverErrorElement = document.getElementById('comment-over-error');
