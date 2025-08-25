@@ -931,6 +931,11 @@ class TestDatasetRankingController:
         )
         mock_validate_metric.assert_called_once_with('invalid_metric')
 
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.api.ranking.'
+        'dataset_ranking_service.get_generic_ranking'
+    )
     @pytest.mark.parametrize(
         "metric,"
         "organization_name,"
@@ -1010,7 +1015,6 @@ class TestDatasetRankingController:
             ),
         ],
     )
-    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
     def test_get_dataset_ranking_parametrized(
         self,
         mock_get_generic_ranking,
