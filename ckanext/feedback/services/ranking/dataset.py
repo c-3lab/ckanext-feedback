@@ -59,11 +59,17 @@ def get_last_day_of_month(year, month):
 
 
 def get_count_by_period(model, column, start_year_month, end_year_month):
-    start_date = datetime.strptime(start_year_month, '%Y-%m')
-    end_date = datetime.strptime(end_year_month, '%Y-%m')
-    end_year, end_month = end_date.year, end_date.month
-    end_date = end_date.replace(day=get_last_day_of_month(end_year, end_month))
-    end_date = end_date.replace(hour=23, minute=59, second=59)
+    start_dt = datetime.strptime(start_year_month, '%Y-%m').replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    end_base = datetime.strptime(end_year_month, '%Y-%m').replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    # 次月1日（排他的上限）
+    if end_base.month == 12:
+        next_month_start = end_base.replace(year=end_base.year + 1, month=1)
+    else:
+        next_month_start = end_base.replace(month=end_base.month + 1)
 
     query = (
         session.query(
@@ -73,8 +79,8 @@ def get_count_by_period(model, column, start_year_month, end_year_month):
         .join(model, Resource.id == model.resource_id, isouter=True)
         .filter(
             Resource.state == 'active',
-            func.date(model.created) >= start_date,
-            func.date(model.created) <= end_date,
+            model.created >= start_dt,
+            model.created < next_month_start,
         )
         .group_by(Resource.package_id)
         .subquery()
