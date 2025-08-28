@@ -11,6 +11,7 @@ from sqlalchemy.orm import joinedload
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
+    ResourceCommentMoralCheckLog,
     ResourceCommentReactions,
     ResourceCommentReply,
 )
@@ -221,3 +222,19 @@ def get_comment_attached_image_files():
     )
 
     return [filename for (filename,) in image_files]
+
+
+def create_resource_comment_moral_check_log(
+    resource_id, action, input_comment, suggested_comment, output_comment
+):
+    now = datetime.now()
+
+    moral_check_log = ResourceCommentMoralCheckLog(
+        resource_id=resource_id,
+        action=action,
+        input_comment=input_comment,
+        suggested_comment=suggested_comment,
+        output_comment=output_comment,
+        timestamp=now,
+    )
+    session.add(moral_check_log)
