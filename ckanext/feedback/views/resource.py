@@ -61,6 +61,12 @@ rules = [
         resource.ResourceController.attached_image,
         {'methods': ['GET']},
     ),
+    (
+        '/<resource_id>/comment/reply/approve',
+        'approve_reply',
+        resource.ResourceController.approve_reply,
+        {'methods': ['POST']},
+    ),
 ]
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})

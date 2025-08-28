@@ -25,10 +25,6 @@ from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.types import ResourceCommentResponseStatus
-from ckanext.feedback.services.common.ai_functions import (
-    check_ai_comment,
-    suggest_ai_comment,
-)
 from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
@@ -196,7 +192,8 @@ class ResourceController:
         rating='',
         attached_image_filename: str | None = None,
     ):
-        softened = suggest_ai_comment(comment=content)
+        # softened = suggest_ai_comment(comment=content)
+        softened = "a"
 
         context = {'model': model, 'session': session, 'for_view': True}
 
@@ -292,7 +289,9 @@ class ResourceController:
         ) and FeedbackConfig().moral_keeper_ai.is_enable(
             resource.Resource.package.owner_org
         ):
-            if check_ai_comment(comment=content) is False:
+            is_ai = True
+            if is_ai:
+                # if check_ai_comment(comment=content) is False:
                 return ResourceController.suggested_comment(
                     resource_id=resource_id,
                     rating=rating,
@@ -337,11 +336,23 @@ class ResourceController:
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
+    @staticmethod
+    @check_administrator
+    def approve_reply(resource_id):
+        ResourceController._check_organization_admin_role(resource_id)
+        reply_id = request.form.get('resource_comment_reply_id')
+        if not reply_id:
+            toolkit.abort(400)
+
+        comment_service.approve_reply(reply_id, current_user.id)
+        session.commit()
+        return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
+
     # resource_comment/<resource_id>/comment/reply
     @staticmethod
     @check_administrator
     def reply(resource_id):
-        ResourceController._check_organization_admin_role(resource_id)
+        # ResourceController._check_organization_admin_role(resource_id)
         resource_comment_id = request.form.get('resource_comment_id', '')
         content = request.form.get('reply_content', '')
         if not (resource_comment_id and content):
