@@ -114,7 +114,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_issue_resolutions': (
                 utilization_summary_service.get_package_issue_resolutions
             ),
-            'get_comment_reply': comment_service.get_comment_reply,
+            'get_comment_reply': comment_service.get_comment_replies,
+            'get_comment_replies': comment_service.get_comment_replies,
+            'get_comment_replies_for_display': (
+                comment_service.get_comment_replies_for_display
+            ),
+            'approve_reply': comment_service.approve_reply,
             'get_resource_comments': resource_summary_service.get_resource_comments,
             'get_package_comments': resource_summary_service.get_package_comments,
             'get_resource_rating': resource_summary_service.get_resource_rating,
