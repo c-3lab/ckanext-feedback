@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     charCount.textContent = currentLength;
   }
 
-  textareas.forEach((textarea, index) => {
+  Array.from(textareas).forEach((textarea, index) => {
     updateCharCount(textarea, charCounts[index]);
     textarea.addEventListener('input', () => {
       const currentLength = textarea.value.length;
@@ -44,9 +44,9 @@ window.addEventListener('pageshow', (event) => {
   }
 
   const sendButtons = document.getElementsByName('send-button');
-  sendButtons.forEach(sendButton => {
+  Array.from(sendButtons).forEach(sendButton => {
     sendButton.style.pointerEvents = "auto";
-    sendButton.style.background = "#206b82";
+    sendButton.style.background = "";
     sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
     sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
   });
@@ -150,7 +150,7 @@ function checkCommentExists(button, bs3=false) {
     return false;
   }
   const sendButtons = document.getElementsByName('send-button');
-  sendButtons.forEach(button => {
+  Array.from(sendButtons).forEach(button => {
     button.style.pointerEvents = "none";
     button.style.background = "#333333";
     if (!bs3) {
