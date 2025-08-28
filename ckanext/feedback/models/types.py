@@ -15,3 +15,11 @@ class ResourceCommentResponseStatus(enum.Enum):
     IN_PROGRESS = 'InProgress'
     COMPLETED = 'Completed'
     REJECTED = 'Rejected'
+
+
+class MoralCheckAction(enum.Enum):
+    PREVIOUS = 'Previous'
+    CHECK_COMPLETED = 'CheckCompleted'
+    INPUT_SELECTED = 'InputSelected'
+    SUGGESTION_SELECTED = 'SuggestionSelected'
+    CLOSED = 'Closed'
