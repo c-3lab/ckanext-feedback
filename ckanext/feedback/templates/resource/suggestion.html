@@ -39,6 +39,9 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            <input type="hidden" name="action" value="{{ action.INPUT_SELECTED.name }}">
+            <input type="hidden" id="input-comment" name="input-comment" value="{{ content }}">
+            <input type="hidden" id="suggested-comment" name="suggested-comment" value="{{ softened }}">
             {% if attached_image_filename %}
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
@@ -70,6 +73,9 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" id="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            <input type="hidden" name="action" value="{{ action.SUGGESTION_SELECTED.name }}">
+            <input type="hidden" id="input-comment" name="input-comment" value="{{ content }}">
+            <input type="hidden" id="suggested-comment" name="suggested-comment" value="{{ softened }}">
             {% if attached_image_filename %}
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
