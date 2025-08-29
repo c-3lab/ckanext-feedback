@@ -22,4 +22,3 @@ class MoralCheckAction(enum.Enum):
     CHECK_COMPLETED = 'CheckCompleted'
     INPUT_SELECTED = 'InputSelected'
     SUGGESTION_SELECTED = 'SuggestionSelected'
-    CLOSED = 'Closed'
