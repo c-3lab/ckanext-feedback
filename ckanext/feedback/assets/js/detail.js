@@ -6,7 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const charCounts = document.getElementsByName('comment-count');
   const imageUpload = document.getElementById('imageUpload');
 
-  imageUpload.addEventListener('change', handleImageChange);
+  if (imageUpload) {
+    imageUpload.addEventListener('change', handleImageChange);
+  }
 
   function updateCharCount(textarea, charCount) {
     const currentLength = textarea.value.length;
@@ -86,25 +88,27 @@ function createPreview(src) {
 function resetFileInput() {
   const oldInput = document.getElementById('imageUpload');
 
-  const oldInputType = oldInput.type;
-  const oldInputId = oldInput.id;
-  const oldInputClassName = oldInput.className;
-  const oldInputName = oldInput.name;
-  const oldInputAccept = oldInput.accept;
-  const parent = oldInput.parentNode;
+  if (oldInput) {
+    const oldInputType = oldInput.type;
+    const oldInputId = oldInput.id;
+    const oldInputClassName = oldInput.className;
+    const oldInputName = oldInput.name;
+    const oldInputAccept = oldInput.accept;
+    const parent = oldInput.parentNode;
 
-  parent.removeChild(oldInput);
+    parent.removeChild(oldInput);
 
-  const newInput = document.createElement('input');
-  newInput.type = oldInputType;
-  newInput.id = oldInputId;
-  newInput.className = oldInputClassName;
-  newInput.name = oldInputName;
-  newInput.accept = oldInputAccept;
+    const newInput = document.createElement('input');
+    newInput.type = oldInputType;
+    newInput.id = oldInputId;
+    newInput.className = oldInputClassName;
+    newInput.name = oldInputName;
+    newInput.accept = oldInputAccept;
 
-  newInput.addEventListener('change', handleImageChange);
+    newInput.addEventListener('change', handleImageChange);
 
-  parent.insertBefore(newInput, parent.firstChild);
+    parent.insertBefore(newInput, parent.firstChild);
+  }
 }
 
 function checkCommentExists(button, bs3=false) {
@@ -112,8 +116,8 @@ function checkCommentExists(button, bs3=false) {
   if ( button.id === "comment-button" ) {
     comment = document.getElementById('comment-content').value;
   }
-  if ( button.id === "proposal-comment-button" ) {
-    comment = document.getElementById('proposal-comment-content').value;
+  if ( button.id === "suggested-comment-button" ) {
+    comment = document.getElementById('suggested-comment-content').value;
   }
   const commentNoneErrorElement = document.getElementById('comment-none-error');
   const commentOverErrorElement = document.getElementById('comment-over-error');

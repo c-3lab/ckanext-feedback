@@ -20,6 +20,7 @@
 
   {% block primary %}
     <article class="module" role="main">
+      <input type="hidden" id="resource-id" value="{{ resource.id }}">
       <div class="module-content">
         <div>
           <div class="wrap-text">
@@ -357,6 +358,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
+    {% asset 'feedback/feedback-resource-comment-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
