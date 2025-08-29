@@ -163,6 +163,7 @@ function checkCommentExists(button, bs3=false) {
       button.innerHTML = spinner_bs3 + button.innerHTML;
     }
   });
+  sessionStorage.removeItem('is_suggestion');
 
   return true;
 }

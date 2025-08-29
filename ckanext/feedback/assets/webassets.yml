@@ -61,6 +61,18 @@ feedback-resource_read-js:
   contents:
     - js/resource_read.js
 
+feedback-suggestion-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-suggestion.js
+  contents:
+    - js/suggestion.js
+
+feedback-resource-comment-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-resource_comment.js
+  contents:
+    - js/resource_comment.js
+
 feedback-search-css:
   filter: cssrewrite
   output: feedback/%(version)s-search.css

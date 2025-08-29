@@ -503,3 +503,25 @@ class ResourceController:
         attached_image_filename = data_dict["image_url"]
         uploader.upload()
         return attached_image_filename
+
+    # resource_comment/<resource_id>/comment/create_previous_suggestion_log
+    @staticmethod
+    def create_previous_suggestion_log(resource_id):
+        resource = comment_service.get_resource(resource_id)
+        if FeedbackConfig().moral_keeper_ai.is_enable(
+            resource.Resource.package.owner_org
+        ):
+            data = request.get_json()
+            input_comment = data.get('input_comment', None)
+            suggested_comment = data.get('suggested_comment', None)
+
+            comment_service.create_resource_comment_moral_check_log(
+                resource_id=resource_id,
+                action=MoralCheckAction.PREVIOUS.name,
+                input_comment=input_comment,
+                suggested_comment=suggested_comment,
+                output_comment=None,
+            )
+            session.commit()
+
+        return '', 204
