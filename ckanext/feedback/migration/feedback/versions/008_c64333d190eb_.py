@@ -1,10 +1,10 @@
-"""Add suggestion log tables for resource and utilization comments
+"""Add moral check log tables for resource and utilization comments
 
 Tables added:
-- resource_comment_suggestion_log
-- utilization_comment_suggestion_log
+- resource_comment_moral_check_log
+- utilization_comment_moral_check_log
 
-These tables store logs of suggestion actions
+These tables store logs of moral check actions
 for comments on resources and utilizations.
 """
 
@@ -22,12 +22,11 @@ branch_labels = None
 depends_on = None
 
 
-class SuggestAction(enum.Enum):
+class MoralCheckAction(enum.Enum):
     PREVIOUS = 'Previous'
     CHECK_COMPLETED = 'CheckCompleted'
     INPUT_SELECTED = 'InputSelected'
     SUGGESTION_SELECTED = 'SuggestionSelected'
-    CLOSED = 'Closed'
 
 
 def upgrade():
@@ -40,7 +39,7 @@ def upgrade():
             sa.ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
             nullable=False,
         ),
-        sa.Column('action', sa.Enum(SuggestAction), nullable=False),
+        sa.Column('action', sa.Enum(MoralCheckAction), nullable=False),
         sa.Column('input_comment', sa.Text),
         sa.Column('suggested_comment', sa.Text),
         sa.Column('output_comment', sa.Text),
@@ -55,7 +54,7 @@ def upgrade():
             sa.ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'),
             nullable=False,
         ),
-        sa.Column('action', sa.Enum(SuggestAction), nullable=False),
+        sa.Column('action', sa.Enum(MoralCheckAction), nullable=False),
         sa.Column('input_comment', sa.Text),
         sa.Column('suggested_comment', sa.Text),
         sa.Column('output_comment', sa.Text),
@@ -66,4 +65,4 @@ def upgrade():
 def downgrade():
     op.drop_table('resource_comment_moral_check_log')
     op.drop_table('utilization_comment_moral_check_log')
-    op.execute('DROP TYPE IF EXISTS suggestaction;')
+    op.execute('DROP TYPE IF EXISTS moralcheckaction;')
