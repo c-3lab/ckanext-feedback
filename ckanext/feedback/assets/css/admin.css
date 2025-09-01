@@ -154,6 +154,11 @@ input[name="tab-menu"] {
   text-align: center;
 }
 
+/* Ensure consistent column width for post content links */
+.post-content {
+  min-width: 37%;
+}
+
 .feedback-list-header [class*="col-"] {
   padding-left: 7.5px;
   padding-right: 7.5px;
@@ -162,7 +167,12 @@ input[name="tab-menu"] {
 .feedback-list-body [class*="col-"] {
   padding-left: 7.5px;
   padding-right: 7.5px;
-  height: 20px;
+  min-height: 20px;
+}
+
+/* Center bubble text labels in feedback rows (non-destructive) */
+.feedback-list-body .bubble .bubbleText {
+  text-align: center;
 }
 
 .row {
