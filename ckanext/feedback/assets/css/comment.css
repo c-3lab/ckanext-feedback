@@ -64,7 +64,7 @@
   color: #808080;
 }
 
-.notice-container{
+.notice-container {
   background-color: blanchedalmond;
   padding: 10px;
   border-radius: 10px;
@@ -84,7 +84,8 @@
 }
 
 textarea {
-  padding-bottom: 25px; /* Adjust padding to account for char-count */
+  padding-bottom: 25px;
+  /* Adjust padding to account for char-count */
 }
 
 label.radio {
@@ -118,7 +119,7 @@ label.radio {
   font-weight: bold;
 }
 
-.comment-action-buttons { 
+.comment-action-buttons {
   margin-left: auto;
 }
 
@@ -135,20 +136,25 @@ label.radio {
   background-color: transparent;
   padding: 0.35em 0;
 }
+
 .badge-not-started {
   background-color: #A0A0A0;
 }
+
 .badge-in-progress {
   background-color: #3B82F6;
 }
+
 .badge-completed {
   background-color: #22C55E;
 }
+
 .badge-rejected {
   background-color: #f0ad4e;
 }
 
-.status-controls, .like-controls {
+.status-controls,
+.like-controls {
   display: flex;
   flex-direction: column;
   padding: 2px;
@@ -156,7 +162,8 @@ label.radio {
   margin-bottom: 10px;
 }
 
-.status-option, .like-option {
+.status-option,
+.like-option {
   display: flex;
   height: 24px;
   align-items: center;
@@ -210,3 +217,7 @@ input[type="file"].imageUpload {
   display: none;
 }
 
+.badge-org-admin-reply {
+  background-color: #2b7cff;
+  color: #fff;
+}
