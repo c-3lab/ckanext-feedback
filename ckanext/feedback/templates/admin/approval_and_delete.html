@@ -78,20 +78,20 @@
                           <i class="fa-solid fa-comment-dots"></i>
                           <div class="bubbleText">{{ _('Resource Comment') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                        <a class="col-md-4 text-truncate post-content" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == 'リソースコメント返信' %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-reply"></i>
-                          <div class="bubbleText">{{ _('Resource Comment Reply') }}</div>
+                          <div class="bubbleText" style="text-align: center;">{{ _('Resource Comment Reply') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate" style="min-width: 37%;"
+                        <a class="col-md-4 text-truncate post-content" style="min-width: 37%;"
                            href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == '利活用申請' %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-seedling"></i>
                           <div class="bubbleText">{{ _('Utilization') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
+                        <a class="col-md-4 text-truncate post-content" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == '利活用コメント' %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="fa-stack" style="font-size: 7px;">
@@ -100,7 +100,7 @@
                           </span>
                           <div class="bubbleText">{{ _('Utilization Comment') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                        <a class="col-md-4 text-truncate post-content" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
                       {% endif %}
                       <div class="col-md-2 centered-text" style="display: flex; justify-content: center;">
                         {% if feedback.is_approved %}
@@ -138,7 +138,7 @@
                     <div class="col-2" style="text-align: center;">{{ _('Dataset') }}</div>
                     <div class="col-2" style="text-align: center;">{{ _('Resource') }}</div>
                     <div class="col-1" style="text-align: center;">{{ _('Type') }}</div>
-                    <div class="col" style="min-width: 37%; text-align: center;">{{ _('Post Content') }}</div>
+                    <div class="col-4" style="min-width: 37%; text-align: center;">{{ _('Post Content') }}</div>
                     <div class="col-2" style="text-align: center;">{{ _('Status') }}</div>
                   </div>
                   {% for feedback in page.collection %}
@@ -154,26 +154,26 @@
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="resource-comment-replies-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
                         {% endif %}
                       </div>
-                      <a class="col-2 text-truncate" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
-                      <a class="col-2 text-truncate" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
+                      <a class="col-2 text-truncate" style="text-align: center;" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
+                      <a class="col-2 text-truncate" style="text-align: center;" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
                       {% if feedback.feedback_type == 'リソースコメント' %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-comment-dots"></i>
                           <div class="bubbleText">{{ _('Resource Comment') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                        <a class="col-4 text-truncate post-content" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == 'リソースコメント返信' %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-reply"></i>
-                          <div class="bubbleText">{{ _('Resource Comment Reply') }}</div>
+                          <div class="bubbleText" style="text-align: center;">{{ _('Resource Comment Reply') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                        <a class="col-4 text-truncate post-content" style="min-width: 37%;" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == '利活用申請' %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-seedling"></i>
                           <div class="bubbleText">{{ _('Utilization') }}</div>
                         </div>
-                        <a class="col text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
+                        <a class="col-4 text-truncate post-content" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == '利活用コメント' %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="fa-stack" style="font-size: 7px;">
@@ -182,7 +182,7 @@
                           </span>
                           <div class="bubbleText">{{ _('Utilization Comment') }}</div>
                         </div>
-                        <a class="col text-truncate" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
+                        <a class="col-4 text-truncate post-content" style="min-width: 37%;" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}">{{ feedback.content }}</a>
                       {% endif %}
                       <div class="col-2 text-truncate centered-text" style="display: flex; justify-content: center;">
                         {% if feedback.is_approved %}
