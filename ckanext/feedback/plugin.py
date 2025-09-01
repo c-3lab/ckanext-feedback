@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 import ckan.model as model
 from ckan import plugins
@@ -62,13 +62,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
-        if FeedbackConfig().download.is_enable():
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+        if cfg.download.is_enable():
             blueprints.append(download.get_download_blueprint())
-        if FeedbackConfig().resource_comment.is_enable():
+        if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
-        if FeedbackConfig().utilization.is_enable():
+        if cfg.utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
-        if FeedbackConfig().like.is_enable():
+        if cfg.like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
         blueprints.append(admin.get_admin_blueprint())
         return blueprints
@@ -81,25 +82,26 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # ITemplateHelpers
 
     def get_helpers(self):
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
         return {
-            'is_enabled_downloads': FeedbackConfig().download.is_enable,
-            'is_enable_modal': FeedbackConfig().download.modal.is_enable,
-            'is_enabled_resources': FeedbackConfig().resource_comment.is_enable,
-            'is_enabled_utilizations': FeedbackConfig().utilization.is_enable,
+            'is_enabled_downloads': cfg.download.is_enable,
+            'is_enabled_resources': cfg.resource_comment.is_enable,
+            'is_enabled_utilizations': cfg.utilization.is_enable,
             'is_enabled_utilization_comment_image_attachment': (
-                FeedbackConfig().utilization_comment.image_attachment.is_enable
+                cfg.utilization_comment.image_attachment.is_enable
             ),
-            'is_enabled_likes': FeedbackConfig().like.is_enable,
+            'is_enabled_likes': cfg.like.is_enable,
             'is_disabled_repeat_post_on_resource': (
-                FeedbackConfig().resource_comment.repeat_post_limit.is_enable
+                cfg.resource_comment.repeat_post_limit.is_enable
             ),
-            'is_enabled_rating': FeedbackConfig().resource_comment.rating.is_enable,
+            'is_enabled_rating': cfg.resource_comment.rating.is_enable,
             'is_enabled_image_attachment': (
-                FeedbackConfig().resource_comment.image_attachment.is_enable
+                cfg.resource_comment.image_attachment.is_enable
             ),
             'is_organization_admin': check.is_organization_admin,
             'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
+            'user_has_organization_admin_role': check.user_has_organization_admin_role,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
             'get_package_downloads': download_summary_service.get_package_downloads,
             'get_resource_utilizations': (
@@ -114,12 +116,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_issue_resolutions': (
                 utilization_summary_service.get_package_issue_resolutions
             ),
-            'get_comment_reply': comment_service.get_comment_replies,
             'get_comment_replies': comment_service.get_comment_replies,
             'get_comment_replies_for_display': (
                 comment_service.get_comment_replies_for_display
             ),
-            'approve_reply': comment_service.approve_reply,
             'get_resource_comments': resource_summary_service.get_resource_comments,
             'get_package_comments': resource_summary_service.get_package_comments,
             'get_resource_rating': resource_summary_service.get_resource_rating,
@@ -127,10 +127,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_resource_like_count': resource_likes_service.get_resource_like_count,
             'get_package_like_count': resource_likes_service.get_package_like_count,
             'get_organization': organization_service.get_organization,
-            'is_enabled_feedback_recaptcha': FeedbackConfig().recaptcha.is_enable,
-            'get_feedback_recaptcha_publickey': (
-                FeedbackConfig().recaptcha.publickey.get
-            ),
+            'is_enabled_feedback_recaptcha': cfg.recaptcha.is_enable,
+            'is_feedback_recaptcha_force_all': cfg.recaptcha.force_all.get,
+            'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
@@ -138,9 +137,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IPackageController
 
-    def before_dataset_view(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
+    def before_dataset_view(self, pkg_dict: Dict[str, Any]) -> Dict[str, Any]:
         package_id = pkg_dict['id']
         owner_org = model.Package.get(package_id).owner_org
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
 
         if not pkg_dict['extras']:
             pkg_dict['extras'] = []
@@ -148,13 +148,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         def add_pkg_dict_extras(key: str, value: str):
             pkg_dict['extras'].append({'key': key, 'value': value})
 
-        if FeedbackConfig().download.is_enable(owner_org):
+        if cfg.download.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Downloads'),
                 value=download_summary_service.get_package_downloads(package_id),
             )
 
-        if FeedbackConfig().utilization.is_enable(owner_org):
+        if cfg.utilization.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Utilizations'),
                 value=(
@@ -170,12 +170,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 ),
             )
 
-        if FeedbackConfig().resource_comment.is_enable(owner_org):
+        if cfg.resource_comment.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Comments'),
                 value=resource_summary_service.get_package_comments(package_id),
             )
-            if FeedbackConfig().resource_comment.rating.is_enable(owner_org):
+            if cfg.resource_comment.rating.is_enable(owner_org):
                 add_pkg_dict_extras(
                     key=_('Rating'),
                     value=round(
@@ -183,7 +183,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     ),
                 )
 
-        if FeedbackConfig().like.is_enable(owner_org):
+        if cfg.like.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Number of Likes'),
                 value=resource_likes_service.get_package_like_count(package_id),
@@ -193,17 +193,18 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IResourceController
 
-    def before_resource_show(self, resource_dict: dict[str, Any]) -> dict[str, Any]:
+    def before_resource_show(self, resource_dict: Dict[str, Any]) -> Dict[str, Any]:
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
         resource_id = resource_dict['id']
-        if FeedbackConfig().download.is_enable(owner_org):
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+        if cfg.download.is_enable(owner_org):
             if _('Downloads') != 'Downloads':
                 resource_dict.pop('Downloads', None)
             resource_dict[_('Downloads')] = (
                 download_summary_service.get_resource_downloads(resource_id)
             )
 
-        if FeedbackConfig().utilization.is_enable(owner_org):
+        if cfg.utilization.is_enable(owner_org):
             if _('Utilizations') != 'Utilizations':
                 resource_dict.pop('Utilizations', None)
             resource_dict[_('Utilizations')] = (
@@ -215,20 +216,20 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 utilization_summary_service.get_resource_issue_resolutions(resource_id)
             )
 
-        if FeedbackConfig().resource_comment.is_enable(owner_org):
+        if cfg.resource_comment.is_enable(owner_org):
             if _('Comments') != 'Comments':
                 resource_dict.pop('Comments', None)
             resource_dict[_('Comments')] = (
                 resource_summary_service.get_resource_comments(resource_id)
             )
-            if FeedbackConfig().resource_comment.rating.is_enable(owner_org):
+            if cfg.resource_comment.rating.is_enable(owner_org):
                 if _('Rating') != 'Rating':
                     resource_dict.pop('Rating', None)
                 resource_dict[_('Rating')] = round(
                     resource_summary_service.get_resource_rating(resource_id), 1
                 )
 
-        if FeedbackConfig().like.is_enable(owner_org):
+        if cfg.like.is_enable(owner_org):
             if _('Number of Likes') != 'Number of Likes':
                 resource_dict.pop('Number of Likes', None)
             resource_dict[_('Number of Likes')] = (
