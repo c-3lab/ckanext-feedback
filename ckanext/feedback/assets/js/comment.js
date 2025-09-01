@@ -29,6 +29,32 @@ document.addEventListener('DOMContentLoaded', () => {
       replyCount.textContent = replyTextarea.value.length;
     });
   }
+
+  // Ensure reactions form always submits with a valid resource_comment_id
+  const reactionsForm = document.getElementById('reactions-form');
+  if (reactionsForm) {
+    reactionsForm.addEventListener('submit', (e) => {
+      const hidden = document.getElementById('reactions-comment-id');
+      if (hidden && !hidden.value) {
+        // Try to recover from last set value or focused button's data attribute
+        if (window.lastReactionsCommentId) {
+          hidden.value = window.lastReactionsCommentId;
+        }
+        if (!hidden.value && reactionsForm.dataset && reactionsForm.dataset.resourceCommentId) {
+          hidden.value = reactionsForm.dataset.resourceCommentId;
+        }
+        if (!hidden.value) {
+          const active = document.activeElement;
+          const dataId = active && active.getAttribute ? active.getAttribute('data-resource-comment-id') : null;
+          if (dataId) hidden.value = dataId;
+        }
+        // If still empty, block submit to avoid server error
+        if (!hidden.value) {
+          e.preventDefault();
+        }
+      }
+    });
+  }
 });
 
 function selectRating(selectedStar) {
@@ -217,7 +243,28 @@ function setReactionsFormContent(resourceCommentId) {
   }
   document.getElementById('admin-liked').checked = adminLikeIndicator ? true : false;
   document.getElementById('reactions-comment').innerHTML = content;
-  document.getElementById('reactions-comment-id').value = resourceCommentId;
+  const hidden = document.getElementById('reactions-comment-id');
+  hidden.value = resourceCommentId;
+  // keep last id globally for submit fallback
+  try { window.lastReactionsCommentId = resourceCommentId; } catch (e) {}
+  // also store on form dataset as a reliable place
+  try {
+    const reactionsForm = document.getElementById('reactions-form');
+    if (reactionsForm && reactionsForm.dataset) {
+      reactionsForm.dataset.resourceCommentId = resourceCommentId;
+    }
+  } catch (e) {}
+  // Fallback: if empty, recover from data attribute on the triggering button
+  if (!hidden.value) {
+    try {
+      const active = document.activeElement;
+      const dataId = active && active.getAttribute ? active.getAttribute('data-resource-comment-id') : null;
+      if (dataId) hidden.value = dataId;
+      if (!hidden.value && window.lastReactionsCommentId) hidden.value = window.lastReactionsCommentId;
+    } catch (e) {
+      // no-op
+    }
+  }
 }
 
 function setButtonDisable(button) {
