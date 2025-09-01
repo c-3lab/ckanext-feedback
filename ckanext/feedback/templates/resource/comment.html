@@ -158,8 +158,8 @@
                     {% endif %}
                   {% endif %}
                 </div>
-                {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
-                  <div id="comment-action-buttons" class="comment-action-buttons">
+                <div id="comment-action-buttons" class="comment-action-buttons">
+                  {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
                     {% if h.is_base_public_folder_bs3() %}
                       <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reactions-form-window" onclick="setReactionsFormContent('{{ comment.id }}')">
                         <i class="fa-solid fa-rotate"></i>
@@ -171,35 +171,31 @@
                         {{ _('Status Change') }}
                       </button>
                     {% endif %}
-                    {% if comment.approval %}
-                      {% if not reply %}
-                        {% if h.is_base_public_folder_bs3() %}
-                          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
-                            <i class="fa-solid fa-reply"></i>
-                            {{ _('Reply') }}
-                          </button>
-                        {% else %}
-                          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
-                            <i class="fa-solid fa-reply"></i>
-                            {{ _('Reply') }}
-                          </button>
-                        {% endif %}
-                      {% else %}
-                        <button type="button" class="btn btn-primary" disabled>
-                          <i class="fa-solid fa-reply"></i>
-                          {{ _('Reply') }}
-                        </button>
-                      {% endif %}
+                  {% endif %}
+
+                  {% if comment.approval %}
+                    {% if h.is_base_public_folder_bs3() %}
+                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
+                        <i class="fa-solid fa-reply"></i>
+                        {{ _('Reply') }}
+                      </button>
                     {% else %}
-                      <form class="inline-form" name="approval_form" style="margin-bottom: 0;" action="{{ h.url_for('resource_comment.approve_comment', resource_id=resource.id) }}" method="post">
-                        <button class="btn btn-primary" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}" onclick="setButtonDisable(this);">
-                          <i class="fa-solid fa-check"></i>
-                          {{ _('Approve') }}
-                        </button>
-                      </form>
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
+                        <i class="fa-solid fa-reply"></i>
+                        {{ _('Reply') }}
+                      </button>
                     {% endif %}
-                  </div>
-                {% endif %}
+                  {% endif %}
+
+                  {% if (c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org)) and not comment.approval %}
+                    <form class="inline-form" name="approval_form" style="margin-bottom: 0;" action="{{ h.url_for('resource_comment.approve_comment', resource_id=resource.id) }}" method="post">
+                      <button class="btn btn-primary" id="resource_comment_id" name="resource_comment_id" value="{{ comment.id }}" onclick="setButtonDisable(this);">
+                        <i class="fa-solid fa-check"></i>
+                        {{ _('Approve') }}
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
               </div>
               <div class="wrap-text">
                 {% if comment.content %}
@@ -217,34 +213,104 @@
                 {% if replies and replies|length %}
                   <hr>
                   <div class="reply">
-                    {% for reply in replies %}
-                      <div class="comment-top-section">
-                        <i class="fa-solid fa-reply"></i>
-                        <span class="font-bold">{{ _('Reply') }}</span>
-                        {% if not reply.approval %}
-                          <span class="font-bold me-2">({{ _('Unapproved') }})</span>
-                        {% endif %}
-                        <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(reply.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
-                          {{ h.render_datetime(reply.created, with_hours=True) }}
-                        </span>
-                        {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
-                          <div class="comment-action-buttons">
+                    {% if replies|length > 3 %}
+                      
+                      <div id="replies-hidden-{{ comment.id }}" style="display: none;">
+                        {% for reply in replies %}
+                          <div class="{{ 'unapproved' if not reply.approval }}">
+                            <div class="comment-top-section">
+                              {% set is_admin_reply = h.user_has_organization_admin_role(reply.creator_user_id, resource.package.owner_org) %}
+                              <i class="fa-solid fa-reply"></i>
+                              {% if is_admin_reply %}
+                                <i class="fa-solid fa-user-tie"></i>
+                              {% endif %}
+                              <span class="font-bold">
+                                {% if is_admin_reply %}
+                                  {{ _('Reply from the Administrator') }}
+                                {% else %}
+                                  {{ _('Reply') }}
+                                {% endif %}
+                              </span>
+                              {% if not reply.approval %}
+                                <span class="font-bold me-2">({{ _('Unapproved') }})</span>
+                              {% endif %}
+                              <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(reply.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                                {{ h.render_datetime(reply.created, with_hours=True) }}
+                              </span>
+                              {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
+                                <div class="comment-action-buttons">
+                                  {% if not reply.approval %}
+                                    <form class="inline-form" name="approve_reply_form" style="margin-bottom: 0;" action="{{ h.url_for('resource_comment.approve_reply', resource_id=resource.id) }}" method="post">
+                                      <button class="btn btn-primary" name="resource_comment_reply_id" value="{{ reply.id }}" onclick="setButtonDisable(this);">
+                                        <i class="fa-solid fa-check"></i>
+                                        {{ _('Approve') }}
+                                      </button>
+                                    </form>
+                                  {% endif %}
+                                </div>
+                              {% endif %}
+                            </div>
+                            <div class="comment-container">
+                              <span class="comment-content">{{ reply.content }}</span>
+                            </div>
+                          </div>
+                          {% if not loop.last %}<hr>{% endif %}
+                        {% endfor %}
+                      </div>
+                      <div>
+                        <button type="button"
+                                id="replies-toggle-{{ comment.id }}"
+                                class="btn btn-link p-0"
+                                data-count="{{ replies|length }}"
+                                data-show-text="{{ _('Show replies') }}"
+                                data-hide-text="{{ _('Hide replies') }}"
+                                onclick="toggleReplies('{{ comment.id }}')">
+                          {{ _('Show replies') }} ({{ replies|length }})
+                        </button>
+                      </div>
+                    {% else %}
+                      
+                      {% for reply in replies %}
+                        <div class="{{ 'unapproved' if not reply.approval }}">
+                          <div class="comment-top-section">
+                            {% set is_admin_reply = h.user_has_organization_admin_role(reply.creator_user_id, resource.package.owner_org) %}
+                            <i class="fa-solid fa-reply"></i>
+                            {% if is_admin_reply %}
+                              <i class="fa-solid fa-user-tie"></i>
+                            {% endif %}
+                            <span class="font-bold">
+                              {% if is_admin_reply %}
+                                {{ _('Reply from the Administrator') }}
+                              {% else %}
+                                {{ _('Reply') }}
+                              {% endif %}
+                            </span>
                             {% if not reply.approval %}
-                              <form class="inline-form" name="approve_reply_form" style="margin-bottom: 0;" action="{{ h.url_for('resource_comment.approve_reply', resource_id=resource.id) }}" method="post">
-                                <button class="btn btn-primary" name="resource_comment_reply_id" value="{{ reply.id }}" onclick="setButtonDisable(this);">
-                                  <i class="fa-solid fa-check"></i>
-                                  {{ _('Approve') }}
-                                </button>
-                              </form>
+                              <span class="font-bold me-2">({{ _('Unapproved') }})</span>
+                            {% endif %}
+                            <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(reply.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                              {{ h.render_datetime(reply.created, with_hours=True) }}
+                            </span>
+                            {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
+                              <div class="comment-action-buttons">
+                                {% if not reply.approval %}
+                                  <form class="inline-form" name="approve_reply_form" style="margin-bottom: 0;" action="{{ h.url_for('resource_comment.approve_reply', resource_id=resource.id) }}" method="post">
+                                    <button class="btn btn-primary" name="resource_comment_reply_id" value="{{ reply.id }}" onclick="setButtonDisable(this);">
+                                      <i class="fa-solid fa-check"></i>
+                                      {{ _('Approve') }}
+                                    </button>
+                                  </form>
+                                {% endif %}
+                              </div>
                             {% endif %}
                           </div>
-                        {% endif %}
-                      </div>
-                      <div class="comment-container">
-                        <span class="comment-content">{{ reply.content }}</span>
-                      </div>
-                      {% if not loop.last %}<hr>{% endif %}
-                    {% endfor %}
+                          <div class="comment-container">
+                            <span class="comment-content">{{ reply.content }}</span>
+                          </div>
+                        </div>
+                        {% if not loop.last %}<hr>{% endif %}
+                      {% endfor %}
+                    {% endif %}
                   </div>
                 {% endif %}
               </div>
@@ -326,7 +392,7 @@
     <div id="reply-form-window" class="modal fade" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
-          <form id="reply-form" action="{{h.url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
+          <form id="reply-form" name="reply_form" action="{{h.url_for('resource_comment.reply', resource_id=resource.id ) }}" method="post">
             <input type="hidden" id="reply-comment-id" name="resource_comment_id">
             <div class="modal-header">
               {% if h.is_base_public_folder_bs3() %}
@@ -344,10 +410,12 @@
               <div class="form-group control-full">
                 <label class="control-label" for="code">{{ _('Input') }}</label>
                 <div class="controls">
-                  <textarea id="reply_content" name="reply_content" cols="20" rows="3" placeholder="" class="form-control resize-vertical"></textarea>
+                  <textarea id="reply_content" name="reply_content" cols="20" rows="3" placeholder="" class="form-control resize-vertical" maxlength="1000"></textarea>
+                  <div class="char-count text-end"><span id="reply-count">0</span>/1000</div>
                 </div>
                 <div>
                   <p id="reply-error" class="alert alert-error" style="display: none;">{{ _('Please enter your reply') }}</p>
+                  <p id="reply-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
                 </div>
               </div>
             </div>
@@ -375,12 +443,14 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
-    {% if h.is_enabled_feedback_recaptcha() %}
+    {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not (c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org)))) %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
-        const feedbackRecaptchaTargetForm = 'comment_form'
-        const feedbackRecaptchaAction = 'resource_comment'
-        const feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
+        window.feedbackRecaptchaForms = [
+          { name: 'comment_form', action: 'resource_comment' },
+          { name: 'reply_form', action: 'resource_comment_reply' }
+        ];
+        window.feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
       </script>
       {% asset 'feedback/feedback-recaptcha-js'%}
     {% endif %}
