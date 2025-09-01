@@ -36,7 +36,7 @@ def apply_filters_to_query(query, active_filters, org_list, combined_query):
             type_conditions.append(combined_query.c.feedback_type == '利活用コメント')
         if 'reply' in active_filters:
             type_conditions.append(
-                combined_query.c.feedback_type == 'リソースコメント返信'
+                combined_query.c.feedback_type == 'resource_comment_reply'
             )
         if type_conditions:
             filter_conditions.append(or_(*type_conditions))
@@ -203,7 +203,7 @@ def get_type_counts(active_filters, org_list, combined_query):
             "util_comment"
         ),
         func.count(
-            case((combined_query.c.feedback_type == "リソースコメント返信", 1))
+            case((combined_query.c.feedback_type == "resource_comment_reply", 1))
         ).label("reply"),
     )
 
