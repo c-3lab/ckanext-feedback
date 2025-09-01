@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const replyTextarea = document.getElementById('reply_content');
   const replyCount = document.getElementById('reply-count');
 
-  imageUpload.addEventListener('change', handleImageChange);
+  if (imageUpload) {
+    imageUpload.addEventListener('change', handleImageChange);
+  }
 
   function updateCharCount(textarea, charCount) {
     const currentLength = textarea.value.length;
@@ -96,6 +98,7 @@ function handleImageChange(e) {
 
 function uploadClicked() {
   const imageUpload = document.getElementById('imageUpload');
+  if (!imageUpload) return;
   imageUpload.value = '';
   imageUpload.click();
 }
@@ -117,7 +120,7 @@ function createPreview(src) {
 
   closeBtn.addEventListener('click', () => {
     const imageUpload = document.getElementById('imageUpload');
-    imageUpload.value = '';
+    if (imageUpload) imageUpload.value = '';
     previewContainer.innerHTML = '';
     uploadBtn.style.display = 'inline-block';
   });
