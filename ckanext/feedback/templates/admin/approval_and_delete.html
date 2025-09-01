@@ -61,38 +61,38 @@
                   {% for feedback in page.collection %}
                     <div class="row form-check-label fs-6 feedback-list-body" style="font-size: 14px;">
                       <div class="col-md-1 target" style="max-width: 25px;">
-                        {% if feedback.feedback_type == 'リソースコメント' %}
+                        {% if feedback.feedback_type in ['リソースコメント', 'resource_comment'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="resource-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
-                        {% elif feedback.feedback_type == '利活用申請' %}
+                        {% elif feedback.feedback_type in ['利活用申請', 'utilization'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="utilization-checkbox" id="{{ feedback.utilization_id }}" value="{{ feedback.utilization_id }}" data-approval="{{ feedback.is_approved }}">
-                        {% elif feedback.feedback_type == '利活用コメント' %}
+                        {% elif feedback.feedback_type in ['利活用コメント', 'utilization_comment'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="utilization-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
-                        {% elif feedback.feedback_type == 'リソースコメント返信' %}
+                        {% elif feedback.feedback_type in ['リソースコメント返信', 'resource_comment_reply'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="resource-comment-replies-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
                         {% endif %}
                       </div>
                       <a class="col-md-2 text-truncate" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
                       <a class="col-md-2 text-truncate" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
-                      {% if feedback.feedback_type == 'リソースコメント' %}
+                      {% if feedback.feedback_type in ['リソースコメント', 'resource_comment'] %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-comment-dots"></i>
                           <div class="bubbleText">{{ _('Resource Comment') }}</div>
                         </div>
                         <a class="col-md-4 text-truncate post-content" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
-                      {% elif feedback.feedback_type == 'リソースコメント返信' %}
+                      {% elif feedback.feedback_type in ['リソースコメント返信', 'resource_comment_reply'] %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-reply"></i>
                           <div class="bubbleText">{{ _('Resource Comment Reply') }}</div>
                         </div>
                         <a class="col-md-4 text-truncate post-content"
                            href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
-                      {% elif feedback.feedback_type == '利活用申請' %}
+                      {% elif feedback.feedback_type in ['利活用申請', 'utilization'] %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-seedling"></i>
                           <div class="bubbleText">{{ _('Utilization') }}</div>
                         </div>
                         <a class="col-md-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
-                      {% elif feedback.feedback_type == '利活用コメント' %}
+                      {% elif feedback.feedback_type in ['利活用コメント', 'utilization_comment'] %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="fa-stack" style="font-size: 7px;">
                             <i class="fa fa-comment fa-stack-2x"></i>
@@ -144,37 +144,37 @@
                   {% for feedback in page.collection %}
                     <div class="row form-check-label fs-6">
                       <div class="col-1 target" style="float:left; max-width: 25px;">
-                        {% if feedback.feedback_type == 'リソースコメント' %}
+                        {% if feedback.feedback_type in ['リソースコメント', 'resource_comment'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="resource-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
-                        {% elif feedback.feedback_type == '利活用申請' %}
+                        {% elif feedback.feedback_type in ['利活用申請', 'utilization'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="utilization-checkbox" id="{{ feedback.utilization_id }}" value="{{ feedback.utilization_id }}" data-approval="{{ feedback.is_approved }}">
-                        {% elif feedback.feedback_type == '利活用コメント' %}
+                        {% elif feedback.feedback_type in ['利活用コメント', 'utilization_comment'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="utilization-comments-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
-                        {% elif feedback.feedback_type == 'リソースコメント返信' %}
+                        {% elif feedback.feedback_type in ['リソースコメント返信', 'resource_comment_reply'] %}
                           <input class="checkbox-inline" style="margin: 0;" type="checkbox" name="resource-comment-replies-checkbox" id="{{ feedback.comment_id }}" value="{{ feedback.comment_id }}" data-approval="{{ feedback.is_approved }}">
                         {% endif %}
                       </div>
                       <a class="col-2 text-truncate" style="text-align: center;" href="{{  h.url_for('dataset.search') }}{{ feedback.package_name }}">{{ feedback.package_title }}</a>
                       <a class="col-2 text-truncate" style="text-align: center;" href="{{ h.url_for('dataset.search') }}{{ feedback.package_name }}/resource/{{ feedback.resource_id }}">{{ feedback.resource_name }}</a>
-                      {% if feedback.feedback_type == 'リソースコメント' %}
+                      {% if feedback.feedback_type in ['リソースコメント', 'resource_comment'] %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-comment-dots"></i>
                           <div class="bubbleText">{{ _('Resource Comment') }}</div>
                         </div>
                         <a class="col-4 text-truncate post-content" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
-                      {% elif feedback.feedback_type == 'リソースコメント返信' %}
+                      {% elif feedback.feedback_type in ['リソースコメント返信', 'resource_comment_reply'] %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-reply"></i>
                           <div class="bubbleText">{{ _('Resource Comment Reply') }}</div>
                         </div>
                         <a class="col-4 text-truncate post-content" href="{{ h.url_for('resource_comment.comment', resource_id=feedback.resource_id) }}#comment-created-{{ feedback.comment_id }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
-                      {% elif feedback.feedback_type == '利活用申請' %}
+                      {% elif feedback.feedback_type in ['利活用申請', 'utilization'] %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <i class="fa-solid fa-seedling"></i>
                           <div class="bubbleText">{{ _('Utilization') }}</div>
                         </div>
                         <a class="col-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
-                      {% elif feedback.feedback_type == '利活用コメント' %}
+                      {% elif feedback.feedback_type in ['利活用コメント', 'utilization_comment'] %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="fa-stack" style="font-size: 7px;">
                             <i class="fa fa-comment fa-stack-2x"></i>

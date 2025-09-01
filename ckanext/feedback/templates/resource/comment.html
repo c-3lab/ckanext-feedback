@@ -161,12 +161,12 @@
                 <div id="comment-action-buttons" class="comment-action-buttons">
                   {% if c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org) %}
                     {% if h.is_base_public_folder_bs3() %}
-                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reactions-form-window" onclick="setReactionsFormContent('{{ comment.id }}')">
+                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reactions-form-window" data-resource-comment-id="{{ comment.id }}" onclick="setReactionsFormContent('{{ comment.id }}')">
                         <i class="fa-solid fa-rotate"></i>
                         {{ _('Status Change') }}
                       </button>
                     {% else %}
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reactions-form-window" onclick="setReactionsFormContent('{{ comment.id }}')">
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reactions-form-window" data-resource-comment-id="{{ comment.id }}" onclick="setReactionsFormContent('{{ comment.id }}')">
                         <i class="fa-solid fa-rotate"></i>
                         {{ _('Status Change') }}
                       </button>
