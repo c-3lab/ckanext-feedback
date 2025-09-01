@@ -2,13 +2,12 @@ import logging
 
 from ckan.common import _
 from sqlalchemy import case, func, select, union_all
-from sqlalchemy.sql import and_
+from sqlalchemy.sql import and_, or_
 
+import ckanext.feedback.services.admin.resource_comment_replies as reply_service
+import ckanext.feedback.services.admin.resource_comments as resource_comments_service
+import ckanext.feedback.services.admin.utilization as utilization_service
 from ckanext.feedback.models.session import session
-from ckanext.feedback.services.admin import (
-    resource_comments as resource_comments_service,
-)
-from ckanext.feedback.services.admin import utilization as utilization_service
 from ckanext.feedback.services.admin import (
     utilization_comments as utilization_comments_service,
 )
@@ -20,34 +19,42 @@ def apply_filters_to_query(query, active_filters, org_list, combined_query):
     if active_filters:
         filter_conditions = []
 
-        filter_status = []
+        status_conditions = []
         if 'approved' in active_filters:
-            filter_status.append(combined_query.c.is_approved.is_(True))
+            status_conditions.append(combined_query.c.is_approved.is_(True))
         if 'unapproved' in active_filters:
-            filter_status.append(combined_query.c.is_approved.is_(False))
-        if filter_status:
-            filter_conditions.append(and_(*filter_status))
+            status_conditions.append(combined_query.c.is_approved.is_(False))
+        if status_conditions:
+            filter_conditions.append(or_(*status_conditions))
 
-        filter_type = []
+        type_conditions = []
         if 'resource' in active_filters:
-            filter_type.append(combined_query.c.feedback_type == 'リソースコメント')
+            type_conditions.append(combined_query.c.feedback_type == 'リソースコメント')
         if 'utilization' in active_filters:
-            filter_type.append(combined_query.c.feedback_type == '利活用申請')
+            type_conditions.append(combined_query.c.feedback_type == '利活用申請')
         if 'util-comment' in active_filters:
-            filter_type.append(combined_query.c.feedback_type == '利活用コメント')
-        if filter_type:
-            filter_conditions.append(and_(*filter_type))
+            type_conditions.append(combined_query.c.feedback_type == '利活用コメント')
+        if 'reply' in active_filters:
+            type_conditions.append(
+                combined_query.c.feedback_type == 'リソースコメント返信'
+            )
+        if type_conditions:
+            filter_conditions.append(or_(*type_conditions))
 
-        filter_org = [
+        org_conditions = [
             combined_query.c.group_name == org['name']
             for org in org_list
             if org['name'] in active_filters
         ]
-        if filter_org:
-            filter_conditions.append(and_(*filter_org))
+        if org_conditions:
+            filter_conditions.append(or_(*org_conditions))
 
         if filter_conditions:
-            query = query.filter(and_(*filter_conditions))
+            combined_condition = and_(*filter_conditions)
+            if hasattr(query, 'where'):
+                query = query.where(combined_condition)
+            else:
+                query = query.filter(combined_condition)
 
     return query
 
@@ -112,7 +119,10 @@ def get_feedbacks(
     )
 
     combined_query = union_all(
-        resource_comments, utilizations, utilization_comments
+        resource_comments,
+        utilizations,
+        utilization_comments,
+        reply_service.get_resource_comment_replies_query(org_list),
     ).subquery()
 
     query = select(combined_query)
@@ -165,7 +175,6 @@ def get_feedbacks(
         }
         for result in results
     ]
-
     return feedback_list, total_count
 
 
@@ -193,6 +202,9 @@ def get_type_counts(active_filters, org_list, combined_query):
         func.count(case((combined_query.c.feedback_type == "利活用コメント", 1))).label(
             "util_comment"
         ),
+        func.count(
+            case((combined_query.c.feedback_type == "リソースコメント返信", 1))
+        ).label("reply"),
     )
 
     query = apply_filters_to_query(query, active_filters, org_list, combined_query)
@@ -203,6 +215,7 @@ def get_type_counts(active_filters, org_list, combined_query):
         "resource": results.resource,
         "utilization": results.utilization,
         "util-comment": results.util_comment,
+        "reply": results.reply,
     }
 
 
@@ -231,9 +244,13 @@ def get_feedbacks_total_count(filter_set_name, active_filters, org_list):
     utilization_comment_query = (
         utilization_comments_service.get_simple_utilization_comments_query(org_list)
     )
+    reply_query = reply_service.get_simple_resource_comment_replies_query(org_list)
 
     combined_query = union_all(
-        resource_comment_query, utilization_query, utilization_comment_query
+        resource_comment_query,
+        utilization_query,
+        utilization_comment_query,
+        reply_query,
     )
 
     if filter_set_name == _('Status'):
