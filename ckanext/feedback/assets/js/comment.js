@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const textareas = document.getElementsByName('comment-content');
   const charCounts = document.getElementsByName('comment-count');
   const imageUpload = document.getElementById('imageUpload');
+  const replyTextarea = document.getElementById('reply_content');
+  const replyCount = document.getElementById('reply-count');
 
   imageUpload.addEventListener('change', handleImageChange);
 
@@ -20,6 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
       charCounts[index].textContent = currentLength;
     });
   });
+
+  if (replyTextarea && replyCount) {
+    replyCount.textContent = replyTextarea.value.length;
+    replyTextarea.addEventListener('input', () => {
+      replyCount.textContent = replyTextarea.value.length;
+    });
+  }
 });
 
 function selectRating(selectedStar) {
@@ -39,10 +48,6 @@ function selectRating(selectedStar) {
 }
 
 window.addEventListener('pageshow', (event) => {
-  if (event.persisted || performance.getEntriesByType("navigation")[0]?.type === "back_forward") {
-    resetFileInput();
-  }
-
   const sendButtons = document.getElementsByName('send-button');
   sendButtons.forEach(sendButton => {
     sendButton.style.pointerEvents = "auto";
@@ -99,29 +104,7 @@ function createPreview(src) {
   uploadBtn.style.display = 'none';
 }
 
-function resetFileInput() {
-  const oldInput = document.getElementById('imageUpload');
 
-  const oldInputType = oldInput.type;
-  const oldInputId = oldInput.id;
-  const oldInputClassName = oldInput.className;
-  const oldInputName = oldInput.name;
-  const oldInputAccept = oldInput.accept;
-  const parent = oldInput.parentNode;
-
-  parent.removeChild(oldInput);
-
-  const newInput = document.createElement('input');
-  newInput.type = oldInputType;
-  newInput.id = oldInputId;
-  newInput.className = oldInputClassName;
-  newInput.name = oldInputName;
-  newInput.accept = oldInputAccept;
-
-  newInput.addEventListener('change', handleImageChange);
-
-  parent.insertBefore(newInput, parent.firstChild);
-}
 
 function checkCommentExists(button, bs3=false) {
   let comment
@@ -163,13 +146,17 @@ function checkCommentExists(button, bs3=false) {
   return true;
 }
 
-function checkReplyExists(button) {
+function checkReplyExists(button, bs3=false) {
   button.style.pointerEvents = 'none';
 
   const errorElement = document.getElementById('reply-error');
+  const overErrorElement = document.getElementById('reply-over-error');
   const reply = document.getElementById('reply_content').value;
 
   errorElement.style.display = 'none';
+  if (overErrorElement) {
+    overErrorElement.style.display = 'none';
+  }
   
   let is_reply_exists = true;
 
@@ -177,8 +164,27 @@ function checkReplyExists(button) {
     errorElement.style.display = 'block';
     is_reply_exists = false;
   }
+  if (reply && reply.length>1000) {
+    if (overErrorElement) {
+      overErrorElement.style.display = 'block';
+    }
+    is_reply_exists = false;
+  }
 
   button.style.pointerEvents = 'auto';
+
+  if (is_reply_exists) {
+    const sendButtons = document.getElementsByName('send-button');
+    sendButtons.forEach(button => {
+      button.style.pointerEvents = "none";
+      button.style.background = "#333333";
+      if (!bs3) {
+        button.innerHTML = spinner + button.innerHTML;
+      } else {
+        button.innerHTML = spinner_bs3 + button.innerHTML;
+      }
+    });
+  }
 
   return is_reply_exists;
 }
@@ -216,4 +222,19 @@ function setReactionsFormContent(resourceCommentId) {
 
 function setButtonDisable(button) {
   button.style.pointerEvents = "none"
+}
+
+function toggleReplies(commentId) {
+  const hidden = document.getElementById(`replies-hidden-${commentId}`);
+  const toggle = document.getElementById(`replies-toggle-${commentId}`);
+  if (!hidden || !toggle) return;
+
+  const isHidden = window.getComputedStyle(hidden).display === 'none';
+  if (isHidden) {
+    hidden.style.display = '';
+    toggle.textContent = `${toggle.dataset.hideText} (${toggle.dataset.count})`;
+  } else {
+    hidden.style.display = 'none';
+    toggle.textContent = `${toggle.dataset.showText} (${toggle.dataset.count})`;
+  }
 }
