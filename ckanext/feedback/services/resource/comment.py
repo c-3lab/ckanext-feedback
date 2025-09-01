@@ -156,13 +156,22 @@ def get_comment_replies(resource_comment_id, approval=None):
 
 def approve_reply(resource_comment_reply_id, approval_user_id):
     reply = session.query(ResourceCommentReply).get(resource_comment_reply_id)
+    if reply is None:
+        raise ValueError("Reply not found")
+
+    parent_comment = session.query(ResourceComment).get(reply.resource_comment_id)
+    if parent_comment is None:
+        raise ValueError("Parent comment not found")
+
+    if not parent_comment.approval:
+        raise PermissionError("Cannot approve reply before parent comment is approved")
+
     reply.approval = True
     reply.approved = datetime.now()
     reply.approval_user_id = approval_user_id
 
 
 def get_comment_replies_for_display(resource_comment_id, owner_org_id):
-    # 管理者 or シス管は全件、それ以外は承認済みのみ
     approval = (
         None
         if (
