@@ -11,6 +11,7 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentCategory,
+    UtilizationCommentMoralCheckLog,
 )
 
 
@@ -181,3 +182,19 @@ def get_comment_attached_image_files():
     )
 
     return [filename for (filename,) in image_files]
+
+
+def create_utilization_comment_moral_check_log(
+    utilization_id, action, input_comment, suggested_comment, output_comment
+):
+    now = datetime.now()
+
+    moral_check_log = UtilizationCommentMoralCheckLog(
+        utilization_id=utilization_id,
+        action=action,
+        input_comment=input_comment,
+        suggested_comment=suggested_comment,
+        output_comment=output_comment,
+        timestamp=now,
+    )
+    session.add(moral_check_log)

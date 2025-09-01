@@ -20,7 +20,10 @@ import ckanext.feedback.services.utilization.summary as summary_service
 import ckanext.feedback.services.utilization.validate as validate_service
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.utilization import UtilizationCommentCategory
+from ckanext.feedback.models.utilization import (
+    MoralCheckAction,
+    UtilizationCommentCategory,
+)
 from ckanext.feedback.services.common.ai_functions import (
     check_ai_comment,
     suggest_ai_comment,
@@ -398,6 +401,7 @@ class UtilizationController:
                     'selected_category': category,
                     'content': content,
                     'attached_image_filename': attached_image_filename,
+                    'action': MoralCheckAction,
                 },
             )
 
@@ -410,6 +414,7 @@ class UtilizationController:
                 'content': content,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
+                'action': MoralCheckAction,
             },
         )
 
@@ -469,18 +474,40 @@ class UtilizationController:
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
-        if not request.form.get(
-            'comment-suggested', False
-        ) and FeedbackConfig().moral_keeper_ai.is_enable(
+        if FeedbackConfig().moral_keeper_ai.is_enable(
             resource.Resource.package.owner_org
         ):
-            if check_ai_comment(comment=content) is False:
-                return UtilizationController.suggested_comment(
+            is_suggested = request.form.get('comment-suggested', False) == 'True'
+
+            if is_suggested:
+                action = request.form.get('action')
+                input_comment = request.form.get('input-comment', None)
+                suggested_comment = request.form.get('suggested-comment', None)
+
+                detail_service.create_utilization_comment_moral_check_log(
                     utilization_id=utilization_id,
-                    category=category,
-                    content=content,
-                    attached_image_filename=attached_image_filename,
+                    action=action,
+                    input_comment=input_comment,
+                    suggested_comment=suggested_comment,
+                    output_comment=content,
                 )
+            else:
+                if check_ai_comment(comment=content) is False:
+                    return UtilizationController.suggested_comment(
+                        utilization_id=utilization_id,
+                        category=category,
+                        content=content,
+                        attached_image_filename=attached_image_filename,
+                    )
+
+                detail_service.create_utilization_comment_moral_check_log(
+                    utilization_id=utilization_id,
+                    action=MoralCheckAction.CHECK_COMPLETED.name,
+                    input_comment=content,
+                    suggested_comment=None,
+                    output_comment=content,
+                )
+            session.commit()
 
         return toolkit.render(
             'utilization/comment_check.html',
