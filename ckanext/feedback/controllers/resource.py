@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Optional
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
@@ -41,7 +42,10 @@ class ResourceController:
     # resource_comment/<resource_id>
     @staticmethod
     def comment(
-        resource_id, category='', content='', attached_image_filename: str | None = None
+        resource_id,
+        category='',
+        content='',
+        attached_image_filename: Optional[str] = None,
     ):
         approval = True
         resource = comment_service.get_resource(resource_id)
@@ -105,7 +109,7 @@ class ResourceController:
         if not (category and content):
             toolkit.abort(400)
 
-        attached_image: FileStorage = request.files.get("image-upload")
+        attached_image: FileStorage = request.files.get("attached_image")
         if attached_image:
             try:
                 attached_image_filename = ResourceController._upload_image(
@@ -118,7 +122,19 @@ class ResourceController:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
 
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _res = comment_service.get_resource(resource_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return ResourceController.comment(
                 resource_id, category, content, attached_image_filename
@@ -190,7 +206,7 @@ class ResourceController:
         category='',
         content='',
         rating='',
-        attached_image_filename: str | None = None,
+        attached_image_filename: Optional[str] = None,
     ):
         # softened = suggest_ai_comment(comment=content)
         softened = "a"
@@ -261,7 +277,19 @@ class ResourceController:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
 
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _res = comment_service.get_resource(resource_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return ResourceController.comment(
                 resource_id, category, content, attached_image_filename
@@ -344,21 +372,58 @@ class ResourceController:
         if not reply_id:
             toolkit.abort(400)
 
-        comment_service.approve_reply(reply_id, current_user.id)
-        session.commit()
+        try:
+            comment_service.approve_reply(reply_id, current_user.id)
+            session.commit()
+        except PermissionError:
+            helpers.flash_error(
+                _('Cannot approve reply before the parent comment is approved.'),
+                allow_html=True,
+            )
+        except ValueError:
+            toolkit.abort(404)
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
     # resource_comment/<resource_id>/comment/reply
     @staticmethod
-    @check_administrator
     def reply(resource_id):
-        # ResourceController._check_organization_admin_role(resource_id)
         resource_comment_id = request.form.get('resource_comment_id', '')
         content = request.form.get('reply_content', '')
         if not (resource_comment_id and content):
             toolkit.abort(400)
 
-        comment_service.create_reply(resource_comment_id, content, current_user.id)
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _res = comment_service.get_resource(resource_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        if (force_all or not admin_bypass) and is_recaptcha_verified(request) is False:
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        # 文字数バリデーション（コメントと同一ロジック）
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        creator_user_id = (
+            current_user.id if isinstance(current_user, model.User) else None
+        )
+        comment_service.create_reply(resource_comment_id, content, creator_user_id)
         session.commit()
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
@@ -418,9 +483,14 @@ class ResourceController:
     @staticmethod
     def like_toggle(package_name, resource_id):
         data = request.get_json()
-        like_status = data.get('likeStatus')
+        like_status_raw = data.get('likeStatus')
+        like_status_bool = (
+            like_status_raw
+            if isinstance(like_status_raw, bool)
+            else str(like_status_raw).lower() == 'true'
+        )
 
-        if like_status:
+        if like_status_bool:
             likes_service.increment_resource_like_count(resource_id)
             likes_service.increment_resource_like_count_monthly(resource_id)
         else:
@@ -430,7 +500,7 @@ class ResourceController:
         session.commit()
 
         resp = Response("OK", status=200, mimetype='text/plain')
-        resp_with_like = set_like_status_cookie(resp, resource_id, like_status)
+        resp_with_like = set_like_status_cookie(resp, resource_id, like_status_bool)
         return resp_with_like
 
     # resource_comment/<resource_id>/comment/reactions
@@ -440,6 +510,37 @@ class ResourceController:
         ResourceController._check_organization_admin_role(resource_id)
 
         comment_id = request.form.get('resource_comment_id')
+        # Normalize and validate comment id
+        if comment_id is not None:
+            comment_id = comment_id.strip()
+        if not comment_id:
+            log.error(
+                'reactions: missing resource_comment_id (resource_id=%s)', resource_id
+            )
+            helpers.flash_error(
+                _('Failed to change status due to invalid target.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+        target_comment = comment_service.get_resource_comment(
+            comment_id=comment_id, resource_id=resource_id
+        )
+        if target_comment is None:
+            log.error(
+                'reactions: comment not found or not belong to resource '
+                '(resource_id=%s, comment_id=%s)',
+                resource_id,
+                comment_id,
+            )
+            helpers.flash_error(
+                _('Failed to change status due to invalid target.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+        # Use canonical id from DB to avoid empty/invalid ids propagating further
+        comment_id = str(getattr(target_comment, 'id'))
         response_status = request.form.get('response_status')
         response_status_map = {
             'status-none': ResourceCommentResponseStatus.STATUS_NONE.name,
@@ -448,6 +549,22 @@ class ResourceController:
             'completed': ResourceCommentResponseStatus.COMPLETED.name,
             'rejected': ResourceCommentResponseStatus.REJECTED.name,
         }
+        if response_status not in response_status_map:
+            log.error(
+                'reactions: invalid response_status=%s '
+                '(resource_id=%s, comment_id=%s)',
+                response_status,
+                resource_id,
+                comment_id,
+            )
+            helpers.flash_error(
+                _('Failed to change status due to invalid status value.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+        mapped_status = response_status_map[response_status]
         admin_liked = request.form.get('admin_liked') == 'on'
 
         resource_comment_reactions = comment_service.get_resource_comment_reactions(
@@ -457,14 +574,14 @@ class ResourceController:
         if resource_comment_reactions:
             comment_service.update_resource_comment_reactions(
                 resource_comment_reactions,
-                response_status_map[response_status],
+                mapped_status,
                 admin_liked,
                 current_user.id,
             )
         else:
             comment_service.create_resource_comment_reactions(
                 comment_id,
-                response_status_map[response_status],
+                mapped_status,
                 admin_liked,
                 current_user.id,
             )

@@ -35,8 +35,8 @@ def get_resource_comments_query(org_list):
         )
         .select_from(Package)
         .join(Group, Package.owner_org == Group.id)
-        .join(Resource)
-        .join(ResourceComment)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(ResourceComment, Resource.id == ResourceComment.resource_id)
         .filter(
             Group.name.in_(org_names),
             Package.state == "active",
