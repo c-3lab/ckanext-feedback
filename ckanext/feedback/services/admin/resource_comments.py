@@ -9,6 +9,7 @@ from sqlalchemy import func, literal
 import ckanext.feedback.services.resource.comment as comment_service
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
+    ResourceCommentReply,
     ResourceCommentSummary,
 )
 from ckanext.feedback.models.session import session
@@ -26,7 +27,7 @@ def get_resource_comments_query(org_list):
             Resource.id.label('resource_id'),
             Resource.name.label('resource_name'),
             literal(None).label('utilization_id'),
-            literal('リソースコメント').label('feedback_type'),
+            literal('resource_comment').label('feedback_type'),
             ResourceComment.id.label('comment_id'),
             ResourceComment.content.label('content'),
             ResourceComment.created.label('created'),
@@ -46,13 +47,71 @@ def get_resource_comments_query(org_list):
     return query
 
 
+def get_resource_comment_replies_query(org_list):
+    org_names = [org['name'] for org in org_list]
+
+    return (
+        session.query(
+            Group.name.label('group_name'),
+            Package.name.label('package_name'),
+            Package.title.label('package_title'),
+            Package.owner_org.label('owner_org'),
+            Resource.id.label('resource_id'),
+            Resource.name.label('resource_name'),
+            literal(None).label('utilization_id'),
+            literal('resource_comment_reply').label('feedback_type'),
+            ResourceCommentReply.id.label('comment_id'),
+            ResourceCommentReply.content.label('content'),
+            ResourceCommentReply.created.label('created'),
+            ResourceCommentReply.approval.label('is_approved'),
+        )
+        .select_from(Package)
+        .join(Group, Package.owner_org == Group.id)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(ResourceComment, Resource.id == ResourceComment.resource_id)
+        .join(
+            ResourceCommentReply,
+            ResourceComment.id == ResourceCommentReply.resource_comment_id,
+        )
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
+    )
+
+
+def get_simple_resource_comment_replies_query(org_list):
+    org_names = [org['name'] for org in org_list]
+
+    return (
+        session.query(
+            Group.name.label('group_name'),
+            literal('resource_comment_reply').label('feedback_type'),
+            ResourceCommentReply.approval.label('is_approved'),
+        )
+        .join(Package, Group.id == Package.owner_org)
+        .join(Resource, Package.id == Resource.package_id)
+        .join(ResourceComment, Resource.id == ResourceComment.resource_id)
+        .join(
+            ResourceCommentReply,
+            ResourceComment.id == ResourceCommentReply.resource_comment_id,
+        )
+        .filter(
+            Group.name.in_(org_names),
+            Package.state == "active",
+            Resource.state == "active",
+        )
+    )
+
+
 def get_simple_resource_comments_query(org_list):
     org_names = [org['name'] for org in org_list]
 
     query = (
         session.query(
             Group.name.label('group_name'),
-            literal("リソースコメント").label("feedback_type"),
+            literal("resource_comment").label("feedback_type"),
             ResourceComment.approval.label('is_approved'),
         )
         .join(Package, Group.id == Package.owner_org)
@@ -148,7 +207,7 @@ def refresh_resources_comments(resource_comment_summaries):
             )
             .first()
         )
-        if row.total_rating is None:
+        if row.total_rating is None or not row.total_rating_comment:
             rating = 0
         else:
             rating = row.total_rating / row.total_rating_comment
