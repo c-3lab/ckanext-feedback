@@ -73,6 +73,12 @@ feedback-resource-comment-js:
   contents:
     - js/resource_comment.js
 
+feedback-utilization-comment-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-utilization_comment.js
+  contents:
+    - js/utilization_comment.js
+
 feedback-search-css:
   filter: cssrewrite
   output: feedback/%(version)s-search.css

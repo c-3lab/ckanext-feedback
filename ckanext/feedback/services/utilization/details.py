@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from ckan.lib.uploader import get_uploader
+from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from ckan.types import PUploader
@@ -198,3 +199,18 @@ def create_utilization_comment_moral_check_log(
         timestamp=now,
     )
     session.add(moral_check_log)
+
+
+def get_resource_by_utilization_id(utilization_id):
+    return (
+        session.query(
+            Resource,
+            Package.id.label('organization_id'),
+            Group.name.label('organization_name'),
+        )
+        .join(Utilization, Utilization.resource_id == Resource.id)
+        .join(Package, Resource.package_id == Package.id)
+        .join(Group, Package.owner_org == Group.id)
+        .filter(Utilization.id == utilization_id)
+        .first()
+    )

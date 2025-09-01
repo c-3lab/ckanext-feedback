@@ -144,6 +144,8 @@ function checkCommentExists(button, bs3=false) {
       sendButton.innerHTML = spinner_bs3 + sendButton.innerHTML;
     }
   });
+  sessionStorage.removeItem('is_suggestion');
+  
   return true;
 }
 

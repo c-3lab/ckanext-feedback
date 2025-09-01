@@ -106,6 +106,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-detail-js' %}
+    {% asset 'feedback/feedback-suggestion-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>

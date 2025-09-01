@@ -708,3 +708,25 @@ class UtilizationController:
         attached_image_filename = data_dict["image_url"]
         uploader.upload()
         return attached_image_filename
+
+    # utilization/<utilization_id>/comment/create_previous_suggestion_log
+    @staticmethod
+    def create_previous_suggestion_log(utilization_id):
+        resource = detail_service.get_resource_by_utilization_id(utilization_id)
+        if FeedbackConfig().moral_keeper_ai.is_enable(
+            resource.Resource.package.owner_org
+        ):
+            data = request.get_json()
+            input_comment = data.get('input_comment', None)
+            suggested_comment = data.get('suggested_comment', None)
+
+            detail_service.create_utilization_comment_moral_check_log(
+                utilization_id=utilization_id,
+                action=MoralCheckAction.PREVIOUS.name,
+                input_comment=input_comment,
+                suggested_comment=suggested_comment,
+                output_comment=None,
+            )
+            session.commit()
+
+        return '', 204

@@ -16,6 +16,7 @@
 
   {% block primary %}
     <article class="module" role="main">
+      <input type="hidden" id="utilization-id" value="{{ utilization_id }}">
       <div class="module-content">
         {% set row = utilization %}
         <div>
@@ -274,6 +275,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-detail-js' %}
+    {% asset 'feedback/feedback-utilization-comment-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
