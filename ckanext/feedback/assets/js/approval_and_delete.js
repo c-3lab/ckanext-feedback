@@ -34,14 +34,18 @@ function processAction(action, isApproval) {
     const resourceCommentWaiting = getCheckedCheckboxes('resource-comments-checkbox', 'False');
     const resourceCommentApproved = getCheckedCheckboxes('resource-comments-checkbox', 'True');
 
+    const resourceCommentReplyWaiting = getCheckedCheckboxes('resource-comment-replies-checkbox', 'False');
+    const resourceCommentReplyApproved = getCheckedCheckboxes('resource-comment-replies-checkbox', 'True');
+
+
     const utilizationWaiting = getCheckedCheckboxes('utilization-checkbox', 'False');
     const utilizationApproved = getCheckedCheckboxes('utilization-checkbox', 'True');
 
     const utilizationCommentWaiting = getCheckedCheckboxes('utilization-comments-checkbox', 'False');
     const utilizationCommentApproved = getCheckedCheckboxes('utilization-comments-checkbox', 'True');
 
-    const waitingRows = resourceCommentWaiting.length + utilizationWaiting.length + utilizationCommentWaiting.length;
-    const approvedRows = resourceCommentApproved.length + utilizationApproved.length + utilizationCommentApproved.length;
+    const waitingRows = resourceCommentWaiting.length + utilizationWaiting.length + utilizationCommentWaiting.length + resourceCommentReplyWaiting.length;
+    const approvedRows = resourceCommentApproved.length + utilizationApproved.length + utilizationCommentApproved.length + resourceCommentReplyApproved.length;
     const checkedRows = waitingRows + approvedRows;
 
     if (checkedRows === 0) {
@@ -63,7 +67,7 @@ function processAction(action, isApproval) {
     let message;
 
     if (isApproval) {
-        [...resourceCommentApproved, ...utilizationApproved, ...utilizationCommentApproved].forEach(checkbox => {
+        [...resourceCommentApproved, ...utilizationApproved, ...utilizationCommentApproved, ...resourceCommentReplyApproved].forEach(checkbox => {
             checkbox.checked = false;
         });
         message = getTranslatedMessage('Is it okay to approve checked WAITING_ROWS item(s)?',{WAITING_ROWS: waitingRows});
