@@ -175,6 +175,20 @@ input[name="tab-menu"] {
   text-align: center;
 }
 
+/* For utilization comment reply: place reply mark outside top-right of bubble */
+.bubble-icon-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.bubble-icon-wrap .reply-outside {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  font-size: 8px;
+  line-height: 1;
+}
+
 .row {
   margin-bottom: 0px;
 }
