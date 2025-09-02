@@ -163,6 +163,7 @@ class AdminController:
             "utilization": _('Utilization'),
             "util-comment": _('Utilization Comment'),
             "reply": _('Resource Comment Reply'),
+            "util-reply": _('Utilization Comment Reply'),
         }
 
         if org_list:
@@ -221,6 +222,7 @@ class AdminController:
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
         replies = request.form.getlist('resource-comment-replies-checkbox')
+        util_replies = request.form.getlist('utilization-comment-replies-checkbox')
 
         target = 0
 
@@ -236,6 +238,24 @@ class AdminController:
             )
             target += approved_count
             if approved_count < len(replies):
+                helpers.flash_error(
+                    _(
+                        'Some replies were not approved '
+                        'because their parent comments '
+                        'are not approved.'
+                    ),
+                    allow_html=True,
+                )
+        if util_replies:
+            from ckanext.feedback.services.admin import (
+                utilization_comment_replies as util_reply_service,
+            )
+
+            approved_count = util_reply_service.approve_utilization_comment_replies(
+                util_replies, current_user.id
+            )
+            target += approved_count
+            if approved_count < len(util_replies):
                 helpers.flash_error(
                     _(
                         'Some replies were not approved '
@@ -261,6 +281,7 @@ class AdminController:
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
         replies = request.form.getlist('resource-comment-replies-checkbox')
+        util_replies = request.form.getlist('utilization-comment-replies-checkbox')
         target = 0
 
         if resource_comments:
@@ -272,6 +293,13 @@ class AdminController:
         if replies:
             reply_service.delete_resource_comment_replies(replies)
             target += len(replies)
+        if util_replies:
+            from ckanext.feedback.services.admin import (
+                utilization_comment_replies as util_reply_service,
+            )
+
+            util_reply_service.delete_utilization_comment_replies(util_replies)
+            target += len(util_replies)
         # Commit all DB changes in one transaction
         session.commit()
         helpers.flash_success(
