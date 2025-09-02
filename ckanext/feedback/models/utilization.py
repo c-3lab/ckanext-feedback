@@ -74,6 +74,26 @@ class UtilizationComment(Base):
     approval_user = relationship(User)
 
 
+class UtilizationCommentReply(Base):
+    __tablename__ = 'utilization_comment_reply'
+    id = Column(Text, default=uuid.uuid4, primary_key=True, nullable=False)
+    utilization_comment_id = Column(
+        Text,
+        ForeignKey('utilization_comment.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    )
+    content = Column(Text)
+    created = Column(TIMESTAMP, default=datetime.now)
+    approval = Column(BOOLEAN, default=False)
+    approved = Column(TIMESTAMP)
+    approval_user_id = Column(
+        Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
+    )
+    creator_user_id = Column(
+        Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
+    )
+
+
 class UtilizationSummary(Base):
     __tablename__ = 'utilization_summary'
     id = Column(Text, default=uuid.uuid4, primary_key=True, nullable=False)

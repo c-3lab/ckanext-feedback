@@ -7,6 +7,7 @@ from sqlalchemy.sql import and_, or_
 import ckanext.feedback.services.admin.resource_comment_replies as reply_service
 import ckanext.feedback.services.admin.resource_comments as resource_comments_service
 import ckanext.feedback.services.admin.utilization as utilization_service
+import ckanext.feedback.services.admin.utilization_comment_replies as util_reply_service
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.admin import (
     utilization_comments as utilization_comments_service,
@@ -29,7 +30,12 @@ def apply_filters_to_query(query, active_filters, org_list, combined_query):
 
         type_conditions = []
         if 'resource' in active_filters:
-            type_conditions.append(combined_query.c.feedback_type == 'リソースコメント')
+            type_conditions.append(
+                or_(
+                    combined_query.c.feedback_type == 'resource_comment',
+                    combined_query.c.feedback_type == 'リソースコメント',
+                )
+            )
         if 'utilization' in active_filters:
             type_conditions.append(combined_query.c.feedback_type == '利活用申請')
         if 'util-comment' in active_filters:
@@ -37,6 +43,10 @@ def apply_filters_to_query(query, active_filters, org_list, combined_query):
         if 'reply' in active_filters:
             type_conditions.append(
                 combined_query.c.feedback_type == 'resource_comment_reply'
+            )
+        if 'util-reply' in active_filters:
+            type_conditions.append(
+                combined_query.c.feedback_type == 'utilization_comment_reply'
             )
         if type_conditions:
             filter_conditions.append(or_(*type_conditions))
@@ -123,6 +133,7 @@ def get_feedbacks(
         utilizations,
         utilization_comments,
         reply_service.get_resource_comment_replies_query(org_list),
+        util_reply_service.get_utilization_comment_replies_query(org_list),
     ).subquery()
 
     query = select(combined_query)
@@ -194,7 +205,15 @@ def get_approval_counts(active_filters, org_list, combined_query):
 def get_type_counts(active_filters, org_list, combined_query):
     query = session.query(
         func.count(
-            case((combined_query.c.feedback_type == "リソースコメント", 1))
+            case(
+                (
+                    or_(
+                        combined_query.c.feedback_type == "resource_comment",
+                        combined_query.c.feedback_type == "リソースコメント",
+                    ),
+                    1,
+                )
+            )
         ).label("resource"),
         func.count(case((combined_query.c.feedback_type == "利活用申請", 1))).label(
             "utilization"
@@ -205,6 +224,9 @@ def get_type_counts(active_filters, org_list, combined_query):
         func.count(
             case((combined_query.c.feedback_type == "resource_comment_reply", 1))
         ).label("reply"),
+        func.count(
+            case((combined_query.c.feedback_type == "utilization_comment_reply", 1))
+        ).label("util_reply"),
     )
 
     query = apply_filters_to_query(query, active_filters, org_list, combined_query)
@@ -216,6 +238,7 @@ def get_type_counts(active_filters, org_list, combined_query):
         "utilization": results.utilization,
         "util-comment": results.util_comment,
         "reply": results.reply,
+        "util-reply": results.util_reply,
     }
 
 
@@ -245,12 +268,16 @@ def get_feedbacks_total_count(filter_set_name, active_filters, org_list):
         utilization_comments_service.get_simple_utilization_comments_query(org_list)
     )
     reply_query = reply_service.get_simple_resource_comment_replies_query(org_list)
+    util_reply_query = util_reply_service.get_simple_utilization_comment_replies_query(
+        org_list
+    )
 
     combined_query = union_all(
         resource_comment_query,
         utilization_query,
         utilization_comment_query,
         reply_query,
+        util_reply_query,
     )
 
     if filter_set_name == _('Status'):
