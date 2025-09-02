@@ -110,11 +110,6 @@ class BaseConfig:
                 value = value.get(key)
             except AttributeError as e:
                 toolkit.error_shout(e)
-                log.debug(
-                    f"module[{self.name}]\nfeedback_config:{feedback_config}"
-                    f" feedback_conf_path:{self.fb_conf_prefix + fb_conf_path} "
-                    "target-key:'{key}'"
-                )
         if value is not None:
             config[ckan_conf_path_str] = value
 
@@ -326,6 +321,8 @@ class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
         self.publickey.default = ''
         self.score_threshold = BaseConfig('score_threshold', parents)
         self.score_threshold.default = 0.5
+        self.force_all = BaseConfig('force_all', parents)
+        self.force_all.default = False
 
     def load_config(self, feedback_config):
         self.set_config(
@@ -337,6 +334,7 @@ class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
         self.privatekey.set_config(feedback_config)
         self.publickey.set_config(feedback_config)
         self.score_threshold.set_config(feedback_config)
+        self.force_all.set_config(feedback_config)
 
 
 class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):

@@ -20,6 +20,7 @@ from ckanext.feedback.services.organization import organization as organization_
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
+from ckanext.feedback.services.utilization import details as utilization_details_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import admin, download, likes, resource, utilization
 
@@ -115,6 +116,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             ),
             'get_package_issue_resolutions': (
                 utilization_summary_service.get_package_issue_resolutions
+            ),
+            'get_utilization_comment_replies_for_display': (
+                utilization_details_service.get_utilization_comment_replies_for_display
             ),
             'get_comment_replies': comment_service.get_comment_replies,
             'get_comment_replies_for_display': (
