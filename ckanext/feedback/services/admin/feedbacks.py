@@ -30,16 +30,13 @@ def apply_filters_to_query(query, active_filters, org_list, combined_query):
 
         type_conditions = []
         if 'resource' in active_filters:
-            type_conditions.append(
-                or_(
-                    combined_query.c.feedback_type == 'resource_comment',
-                    combined_query.c.feedback_type == 'リソースコメント',
-                )
-            )
+            type_conditions.append(combined_query.c.feedback_type == 'resource_comment')
         if 'utilization' in active_filters:
-            type_conditions.append(combined_query.c.feedback_type == '利活用申請')
+            type_conditions.append(combined_query.c.feedback_type == 'utilization')
         if 'util-comment' in active_filters:
-            type_conditions.append(combined_query.c.feedback_type == '利活用コメント')
+            type_conditions.append(
+                combined_query.c.feedback_type == 'utilization_comment'
+            )
         if 'reply' in active_filters:
             type_conditions.append(
                 combined_query.c.feedback_type == 'resource_comment_reply'
@@ -205,22 +202,14 @@ def get_approval_counts(active_filters, org_list, combined_query):
 def get_type_counts(active_filters, org_list, combined_query):
     query = session.query(
         func.count(
-            case(
-                (
-                    or_(
-                        combined_query.c.feedback_type == "resource_comment",
-                        combined_query.c.feedback_type == "リソースコメント",
-                    ),
-                    1,
-                )
-            )
+            case((combined_query.c.feedback_type == "resource_comment", 1))
         ).label("resource"),
-        func.count(case((combined_query.c.feedback_type == "利活用申請", 1))).label(
+        func.count(case((combined_query.c.feedback_type == "utilization", 1))).label(
             "utilization"
         ),
-        func.count(case((combined_query.c.feedback_type == "利活用コメント", 1))).label(
-            "util_comment"
-        ),
+        func.count(
+            case((combined_query.c.feedback_type == "utilization_comment", 1))
+        ).label("util_comment"),
         func.count(
             case((combined_query.c.feedback_type == "resource_comment_reply", 1))
         ).label("reply"),

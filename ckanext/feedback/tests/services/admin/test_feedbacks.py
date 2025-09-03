@@ -160,7 +160,7 @@ class TestFeedbacks:
 
         active_filters = ['resource']
         expected_query = query.filter(
-            combined_query.c.feedback_type == 'リソースコメント'
+            combined_query.c.feedback_type == 'resource_comment'
         )
         returned_query = feedbacks.apply_filters_to_query(
             query, active_filters, org_list, combined_query
@@ -168,7 +168,7 @@ class TestFeedbacks:
         assert str(returned_query) == str(expected_query)
 
         active_filters = ['utilization']
-        expected_query = query.filter(combined_query.c.feedback_type == '利活用申請')
+        expected_query = query.filter(combined_query.c.feedback_type == 'utilization')
         returned_query = feedbacks.apply_filters_to_query(
             query, active_filters, org_list, combined_query
         )
@@ -176,7 +176,7 @@ class TestFeedbacks:
 
         active_filters = ['util-comment']
         expected_query = query.filter(
-            combined_query.c.feedback_type == '利活用コメント'
+            combined_query.c.feedback_type == 'utilization_comment'
         )
         returned_query = feedbacks.apply_filters_to_query(
             query, active_filters, org_list, combined_query
@@ -231,7 +231,7 @@ class TestFeedbacks:
                 'resource_id': resource['id'],
                 'resource_name': resource['name'],
                 'utilization_id': None,
-                'feedback_type': 'リソースコメント',
+                'feedback_type': 'resource_comment',
                 'comment_id': comment_id,
                 'content': content,
                 'created': datetime(2000, 1, 2, 3, 4),
@@ -274,7 +274,7 @@ class TestFeedbacks:
                 'resource_id': resource['id'],
                 'resource_name': resource['name'],
                 'utilization_id': None,
-                'feedback_type': 'リソースコメント',
+                'feedback_type': 'resource_comment',
                 'comment_id': comment_id,
                 'content': content,
                 'created': datetime(2000, 1, 2, 3, 4),
