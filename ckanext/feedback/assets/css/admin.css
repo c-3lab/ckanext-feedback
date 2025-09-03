@@ -183,10 +183,21 @@ input[name="tab-menu"] {
 
 .bubble-icon-wrap .reply-outside {
   position: absolute;
-  top: -2px;
-  right: -4px;
+  top: -1px;
+  right: 1px;
   font-size: 8px;
   line-height: 1;
+  color: grey;
+}
+
+/* Fine-tuned reply overlay for resource (single icon base) */
+.reply-resource {
+  position: absolute;
+  top: -2px;
+  right: -1px;
+  font-size: 8px;
+  line-height: 1;
+  color: gray;
 }
 
 .row {
