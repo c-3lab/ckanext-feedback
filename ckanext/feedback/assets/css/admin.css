@@ -149,10 +149,6 @@ input[name="tab-menu"] {
   text-overflow: ellipsis;
 }
 
-.feedback-list-body .post-content,
-.row.form-check-label.fs-6 .post-content {
-  text-align: center;
-}
 
 /* Ensure consistent column width for post content links */
 .post-content {
