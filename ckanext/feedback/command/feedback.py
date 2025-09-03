@@ -13,6 +13,7 @@ from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummar
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
+    ResourceCommentMoralCheckLog,
     ResourceCommentReactions,
     ResourceCommentReply,
     ResourceCommentSummary,
@@ -20,6 +21,7 @@ from ckanext.feedback.models.resource_comment import (
 from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
+    UtilizationCommentMoralCheckLog,
     UtilizationSummary,
 )
 from ckanext.feedback.utils.excel_export import export_moral_check_log
@@ -71,6 +73,7 @@ def init(modules):
 def drop_utilization_tables(engine):
     IssueResolutionSummary.__table__.drop(engine, checkfirst=True)
     IssueResolution.__table__.drop(engine, checkfirst=True)
+    UtilizationCommentMoralCheckLog.__table__.drop(engine, checkfirst=True)
     UtilizationSummary.__table__.drop(engine, checkfirst=True)
     UtilizationComment.__table__.drop(engine, checkfirst=True)
     Utilization.__table__.drop(engine, checkfirst=True)
@@ -80,11 +83,13 @@ def create_utilization_tables(engine):
     Utilization.__table__.create(engine, checkfirst=True)
     UtilizationComment.__table__.create(engine, checkfirst=True)
     UtilizationSummary.__table__.create(engine, checkfirst=True)
+    UtilizationCommentMoralCheckLog.__table__.create(engine, checkfirst=True)
     IssueResolution.__table__.create(engine, checkfirst=True)
     IssueResolutionSummary.__table__.create(engine, checkfirst=True)
 
 
 def drop_resource_tables(engine):
+    ResourceCommentMoralCheckLog.__table__.drop(engine, checkfirst=True)
     ResourceCommentReactions.__table__.drop(engine, checkfirst=True)
     ResourceLikeMonthly.__table__.drop(engine, checkfirst=True)
     ResourceLike.__table__.drop(engine, checkfirst=True)
@@ -100,6 +105,7 @@ def create_resource_tables(engine):
     ResourceLike.__table__.create(engine, checkfirst=True)
     ResourceLikeMonthly.__table__.create(engine, checkfirst=True)
     ResourceCommentReactions.__table__.create(engine, checkfirst=True)
+    ResourceCommentMoralCheckLog.__table__.create(engine, checkfirst=True)
 
 
 def drop_download_tables(engine):
