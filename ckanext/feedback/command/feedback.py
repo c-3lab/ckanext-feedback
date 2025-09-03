@@ -22,6 +22,7 @@ from ckanext.feedback.models.utilization import (
     UtilizationComment,
     UtilizationSummary,
 )
+from ckanext.feedback.utils.excel_export import export_moral_check_log
 
 
 @click.group()
@@ -187,3 +188,33 @@ def handle_file_deletion(dry_run, file_path):
         except Exception as e:
             # Exception handling when deletion fails
             click.secho(f"Deletion failure: {file_path}. {e}", fg='red', err=True)
+
+
+@feedback.command(
+    name='moral-check-log',
+    short_help='Export as a joined sheet (default) or separate sheets in Excel.',
+)
+@click.option(
+    '-s',
+    '--separation',
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help='Export each table to a separate sheet.',
+)
+@click.option(
+    '-o',
+    '--output',
+    default='moral_check_log.xlsx',
+    show_default=True,
+    help='Output file name. (default: moral_check_log.xlsx)',
+)
+def moral_check_log(separation, output):
+    try:
+        result = export_moral_check_log(separation)
+        with open(output, 'wb') as f:
+            f.write(result.getvalue())
+        click.secho(f'Exported moral check log to {output}', fg='green')
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()

@@ -238,3 +238,7 @@ def create_resource_comment_moral_check_log(
         timestamp=now,
     )
     session.add(moral_check_log)
+
+
+def get_resource_comment_moral_check_logs():
+    return session.query(ResourceCommentMoralCheckLog).all()

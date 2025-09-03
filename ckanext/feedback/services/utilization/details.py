@@ -214,3 +214,7 @@ def get_resource_by_utilization_id(utilization_id):
         .filter(Utilization.id == utilization_id)
         .first()
     )
+
+
+def get_utilization_comment_moral_check_logs():
+    return session.query(UtilizationCommentMoralCheckLog).all()
