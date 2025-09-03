@@ -255,6 +255,12 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment = BaseConfig('image_attachment', parents)
         self.image_attachment.default = False
 
+        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
+        self.reply_open.default = False
+
+        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
+        self.reply_open.default = False
+
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
@@ -272,6 +278,15 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.image_attachment.name],
+        )
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=fb_comments_conf_path + ['reply_open'],
+        )
+
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=fb_comments_conf_path + ['reply_open'],
         )
 
 
@@ -292,11 +307,25 @@ class UtilizationCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment = BaseConfig('image_attachment', parents)
         self.image_attachment.default = False
 
+        self.reply_open = BaseConfig('reply_open', parents)
+        self.reply_open.default = False
+
+        self.reply_open = BaseConfig('reply_open', parents)
+        self.reply_open.default = False
+
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=self.conf_path + ['comments', 'image_attachment'],
+        )
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=self.conf_path + ['comments', 'reply_open'],
+        )
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=self.conf_path + ['comments', 'reply_open'],
         )
 
 
