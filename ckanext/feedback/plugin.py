@@ -86,6 +86,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         cfg = getattr(self, 'fb_config', FeedbackConfig())
         return {
             'is_enabled_downloads': cfg.download.is_enable,
+            'is_enable_modal': cfg.download.modal.is_enable,
             'is_enabled_resources': cfg.resource_comment.is_enable,
             'is_enabled_utilizations': cfg.utilization.is_enable,
             'is_enabled_utilization_comment_image_attachment': (
@@ -134,6 +135,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'is_enabled_feedback_recaptcha': cfg.recaptcha.is_enable,
             'is_feedback_recaptcha_force_all': cfg.recaptcha.force_all.get,
             'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
+            'is_resource_reply_open': cfg.resource_comment.reply_open.is_enable,
+            'is_utilization_reply_open': cfg.utilization_comment.reply_open.is_enable,
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
