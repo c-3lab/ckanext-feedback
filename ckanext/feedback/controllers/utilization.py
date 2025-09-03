@@ -409,13 +409,32 @@ class UtilizationController:
             except Exception:
                 admin_bypass = current_user.sysadmin
 
+        # Reply permission control (admin or reply_open)
+        reply_open = False
+        try:
+            reply_open = FeedbackConfig().utilization_comment.reply_open.is_enable(
+                _uti.owner_org
+            )
+        except Exception:
+            reply_open = False
+
+        if not reply_open and not (
+            current_user
+            and (current_user.sysadmin or has_organization_admin_role(_uti.owner_org))
+        ):
+            helpers.flash_error(
+                _('Reply is restricted to administrators.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
+
         if (force_all or not admin_bypass) and is_recaptcha_verified(request) is False:
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return toolkit.redirect_to(
                 'utilization.details', utilization_id=utilization_id
             )
 
-        # 文字数バリデーション（コメントと同一ロジック）
         if message := validate_service.validate_comment(content):
             helpers.flash_error(
                 _(message),
