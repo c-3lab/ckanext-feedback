@@ -167,7 +167,8 @@
                       </button>
                     </form>
                   {% endif %}
-                  {% if comment.approval %}
+                  {% set reply_open = h.is_utilization_reply_open(utilization.owner_org) %}
+                  {% if comment.approval and (reply_open or c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) %}
                     {% if h.is_base_public_folder_bs3() %}
                       <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
                         <i class="fa-solid fa-reply"></i>
