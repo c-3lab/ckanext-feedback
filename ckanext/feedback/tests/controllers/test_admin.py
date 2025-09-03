@@ -400,6 +400,8 @@ class TestAdminController:
             resource_comments,
             utilization,
             utilization_comments,
+            [],
+            [],
         ]
         mock_approve_resource_comments.return_value = 1
         mock_approve_utilization.return_value = 1
@@ -444,6 +446,8 @@ class TestAdminController:
             resource_comments,
             utilization,
             utilization_comments,
+            [],
+            [],
         ]
 
         user_dict = factories.Sysadmin()
@@ -461,6 +465,271 @@ class TestAdminController:
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.admin.reply_service.'
+        'approve_resource_comment_replies'
+    )
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    def test_approve_target_replies_success_and_partial(
+        self,
+        mock_getlist,
+        mock_approve_replies,
+        mock_session_commit,
+        mock_flash_success,
+        mock_flash_error,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        replies = ['r1', 'r2', 'r3']
+
+        mock_getlist.side_effect = [None, None, None, replies, None]
+        mock_approve_replies.return_value = len(replies)
+
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.approve_target()
+
+        mock_approve_replies.assert_called_once_with(replies, user_dict['id'])
+        mock_flash_error.assert_not_called()
+        mock_flash_success.assert_called()
+        mock_approve_replies.reset_mock()
+        mock_flash_error.reset_mock()
+        mock_flash_success.reset_mock()
+
+        mock_getlist.side_effect = [None, None, None, replies, None]
+        mock_approve_replies.return_value = 1
+
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.approve_target()
+
+        mock_approve_replies.assert_called_once()
+        mock_flash_error.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch(
+        'ckanext.feedback.services.admin.utilization_comment_replies.'
+        'approve_utilization_comment_replies'
+    )
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    def test_approve_target_util_replies_success_and_partial(
+        self,
+        mock_getlist,
+        mock_approve_util_replies,
+        mock_session_commit,
+        mock_flash_success,
+        mock_flash_error,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        util_replies = ['u1', 'u2']
+        mock_getlist.side_effect = [None, None, None, None, util_replies]
+        mock_approve_util_replies.return_value = len(util_replies)
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.approve_target()
+        mock_flash_error.assert_not_called()
+        mock_approve_util_replies.reset_mock()
+        mock_flash_error.reset_mock()
+        mock_flash_success.reset_mock()
+        mock_getlist.side_effect = [None, None, None, None, util_replies]
+        mock_approve_util_replies.return_value = 0
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.approve_target()
+        mock_flash_error.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.admin.reply_service.'
+        'delete_resource_comment_replies'
+    )
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    def test_delete_target_replies_only(
+        self,
+        mock_getlist,
+        mock_session_commit,
+        mock_flash_success,
+        mock_delete_replies,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        mock_current_user(current_user, factories.Sysadmin())
+        replies = ['r1', 'r2', 'r3']
+        mock_getlist.side_effect = [None, None, None, replies, None]
+
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.delete_target()
+
+        mock_delete_replies.assert_called_once_with(replies)
+        mock_flash_success.assert_called()
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.services.admin.utilization_comment_replies.'
+        'delete_utilization_comment_replies'
+    )
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.session.commit')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    def test_delete_target_util_replies_only(
+        self,
+        mock_getlist,
+        mock_session_commit,
+        mock_flash_success,
+        mock_delete_util_replies,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        mock_current_user(current_user, factories.Sysadmin())
+        util_replies = ['u1', 'u2']
+        mock_getlist.side_effect = [None, None, None, None, util_replies]
+
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.delete_target()
+
+        mock_delete_util_replies.assert_called_once_with(util_replies)
+        mock_flash_success.assert_called()
+
+    @pytest.mark.parametrize(
+        'sort',
+        ['oldest', 'dataset_asc', 'dataset_desc', 'resource_asc', 'resource_desc'],
+    )
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.feedback_service')
+    @patch('ckanext.feedback.controllers.admin.get_pagination_value')
+    @patch('ckanext.feedback.controllers.admin.request.args')
+    @patch('ckanext.feedback.controllers.admin.toolkit.render')
+    def test_approval_and_delete_with_filters_and_sorts(
+        self,
+        mock_render,
+        mock_args,
+        mock_pagination,
+        mock_feedback_service,
+        mock_org_service,
+        current_user,
+        app,
+        sysadmin_env,
+        sort,
+    ):
+        mock_current_user(current_user, factories.Sysadmin())
+        org_list = [{'name': 'org', 'title': 'Org'}]
+        mock_org_service.get_org_list.return_value = org_list
+        mock_args.getlist.return_value = ['resource', 'approved']
+        mock_args.get.return_value = sort
+        mock_pagination.return_value = [1, 20, 0, 'pager_url']
+        mock_feedback_service.get_feedbacks.return_value = ([], 0)
+
+        mock_feedback_service.get_feedbacks_total_count.return_value = {
+            'approved': 1,
+            'unapproved': 1,
+            'resource': 1,
+            'utilization': 1,
+            'util-comment': 1,
+            'reply': 1,
+            'util-reply': 1,
+            'org': 1,
+        }
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.approval_and_delete()
+        mock_render.assert_called_once()
+
+        mock_feedback_service.get_feedbacks.assert_called_once()
+        _, kwargs = mock_feedback_service.get_feedbacks.call_args
+        assert kwargs['active_filters'] == ['resource', 'approved']
+        assert kwargs['sort'] == sort
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.request.args', autospec=True)
+    def test_get_href_toggle_multiple_filters(
+        self, mock_args, current_user, app, sysadmin_env
+    ):
+        mock_current_user(current_user, factories.Sysadmin())
+        mock_args.get.return_value = 'resource_asc'
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            url = AdminController.get_href('resource', ['approved', 'resource'])
+        assert url in (
+            '/feedback/admin/approval-and-delete?sort=resource_asc&filter=approved',
+            '/feedback/admin/approval-and-delete?filter=approved&sort=resource_asc',
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.admin.feedback_service.get_feedbacks_total_count'
+    )
+    def test_create_filter_dict_active_and_zero_excluded(
+        self, mock_get_counts, current_user, app, sysadmin_env
+    ):
+        mock_current_user(current_user, factories.Sysadmin())
+        org_list = [{'name': 'o', 'title': 'O'}]
+        name_label = {'approved': 'Approved', 'unapproved': 'Waiting'}
+        active = ['approved']
+        mock_get_counts.return_value = {'approved': 2, 'unapproved': 0}
+
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            result = AdminController.create_filter_dict(
+                'Status', name_label, active, org_list
+            )
+
+        assert result['type'] == 'Status'
+        assert [i['name'] for i in result['list']] == ['approved']
+        assert result['list'][0]['active'] is True
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    def test_check_organization_admin_role_with_utilization_comment_sysadmin(
+        self, mock_abort, current_user
+    ):
+        mock_current_user(current_user, factories.Sysadmin())
+        mocked = MagicMock()
+        mocked.resource.package.owner_org = 'owner_org'
+        g.userobj = current_user
+        AdminController._check_organization_admin_role_with_utilization_comment(
+            [mocked]
+        )
+        mock_abort.assert_not_called()
+
+    @patch(
+        'ckanext.feedback.controllers.admin.aggregation_service.get_resource_details'
+    )
+    def test_export_csv_response_rating_none(self, mock_get_resource_details):
+        mock_get_resource_details.return_value = ('G', 'P', 'R', 'http://example.com')
+        MockRow = mock.Mock()
+        MockRow.resource_id = '1'
+        MockRow.download = 0
+        MockRow.resource_comment = 0
+        MockRow.utilization = 0
+        MockRow.utilization_comment = 0
+        MockRow.issue_resolution = 0
+        MockRow.like = 0
+        MockRow.rating = None
+        response = AdminController.export_csv_response([MockRow], 't.csv')
+        text = io.TextIOWrapper(io.BytesIO(response.data), encoding='utf-8-sig').read()
+        assert 'Not rated' in text
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
@@ -495,6 +764,8 @@ class TestAdminController:
             resource_comments,
             utilization,
             utilization_comments,
+            [],
+            [],
         ]
         mock_delete_resource_comments.return_value = 1
         mock_delete_utilization.return_value = 1
@@ -539,6 +810,8 @@ class TestAdminController:
             resource_comments,
             utilization,
             utilization_comments,
+            [],
+            [],
         ]
 
         user_dict = factories.Sysadmin()
@@ -558,14 +831,10 @@ class TestAdminController:
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
-    @patch('ckanext.feedback.controllers.admin.utilization_service')
-    @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_approve_utilization_comments(
         self,
         mock_flash_success,
-        mock_session_commit,
         mock_utilization_service,
         mock_utilization_comments_service,
         current_user,
@@ -592,28 +861,31 @@ class TestAdminController:
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
             AdminController.approve_utilization_comments(target)
-
         # fmt: off
-        # Disable automatic formatting by Black
-        mock_utilization_comments_service.get_utilization_comment_ids.\
-            assert_called_once_with(target)
-        mock_utilization_service.get_utilizations_by_comment_ids.\
-            assert_called_once_with(target)
-        mock_utilization_comments_service.approve_utilization_comments.\
-            assert_called_once_with(target, user_dict['id'])
-        mock_utilization_comments_service.refresh_utilizations_comments.\
-            assert_called_once_with(utilizations)
+        mock_utilization_comments_service.\
+            get_utilization_comment_ids.assert_called_once_with(
+                target
+            )
+        mock_utilization_service.\
+            get_utilizations_by_comment_ids.assert_called_once_with(
+                target
+            )
+        mock_utilization_comments_service.\
+            approve_utilization_comments.assert_called_once_with(
+                target, user_dict['id']
+            )
+        mock_utilization_comments_service.\
+            refresh_utilizations_comments.assert_called_once_with(
+                utilizations
+            )
         # fmt: on
-        mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
-    @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_approve_utilization(
         self,
         mock_flash_success,
-        mock_session_commit,
         mock_utilization_service,
         current_user,
         app,
@@ -638,25 +910,19 @@ class TestAdminController:
             g.userobj = current_user
             AdminController.approve_utilization(target)
 
-        # fmt: off
-        # Disable automatic formatting by Black
-        mock_utilization_service.get_utilization_ids.\
-            assert_called_once_with(target)
-        mock_utilization_service.get_utilization_details_by_ids.\
-            assert_called_once_with(target)
-        mock_utilization_service.approve_utilization.\
-            assert_called_once_with(target, user_dict['id'])
-        # fmt: on
-        mock_session_commit.assert_called_once()
+        mock_utilization_service.get_utilization_ids.assert_called_once_with(target)
+        mock_utilization_service.get_utilization_details_by_ids.assert_called_once_with(
+            target
+        )
+        mock_utilization_service.approve_utilization.assert_called_once_with(
+            target, user_dict['id']
+        )
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
-    @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_approve_resource_comments(
         self,
         mock_flash_success,
-        mock_session_commit,
         mock_resource_comments_service,
         current_user,
         app,
@@ -682,27 +948,29 @@ class TestAdminController:
             AdminController.approve_resource_comments(target)
 
         # fmt: off
-        # Disable automatic formatting by Black
-        mock_resource_comments_service.get_resource_comment_ids.\
-            assert_called_once_with(target)
-        mock_resource_comments_service.get_resource_comment_summaries.\
-            assert_called_once_with(target)
-        mock_resource_comments_service.approve_resource_comments.\
-            assert_called_once_with(target, user_dict['id'])
-        mock_resource_comments_service.refresh_resources_comments.\
-            assert_called_once_with(resource_comment_summaries)
+        mock_resource_comments_service.\
+            get_resource_comment_ids.assert_called_once_with(
+                target
+            )
+        mock_resource_comments_service.\
+            get_resource_comment_summaries.assert_called_once_with(
+                target
+            )
+        mock_resource_comments_service.\
+            approve_resource_comments.assert_called_once_with(
+                target, user_dict['id']
+            )
+        mock_resource_comments_service.\
+            refresh_resources_comments.assert_called_once_with(
+                resource_comment_summaries
+            )
         # fmt: on
-        mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
-    @patch('ckanext.feedback.controllers.admin.utilization_service')
-    @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_delete_utilization_comments(
         self,
         mock_flash_success,
-        mock_session_commit,
         mock_utilization_service,
         mock_utilization_comments_service,
         current_user,
@@ -727,24 +995,25 @@ class TestAdminController:
             AdminController.delete_utilization_comments(target)
 
         # fmt: off
-        # Disable automatic formatting by Black
-        mock_utilization_service.get_utilizations_by_comment_ids.\
-            assert_called_once_with(target)
-        mock_utilization_comments_service.delete_utilization_comments.\
-            assert_called_once_with(target)
-        mock_utilization_comments_service.refresh_utilizations_comments.\
-            assert_called_once_with(utilizations)
+        mock_utilization_service.\
+            get_utilizations_by_comment_ids.assert_called_once_with(
+                target
+            )
+        mock_utilization_comments_service.\
+            delete_utilization_comments.assert_called_once_with(
+                target
+            )
+        mock_utilization_comments_service.\
+            refresh_utilizations_comments.assert_called_once_with(
+                utilizations
+            )
         # fmt: on
-        mock_session_commit.assert_called_once()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.utilization_service')
-    @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_delete_utilization(
         self,
         mock_flash_success,
-        mock_session_commit,
         mock_utilization_service,
         current_user,
         app,
@@ -766,24 +1035,16 @@ class TestAdminController:
         with app.get(url='/', environ_base=sysadmin_env):
             g.userobj = current_user
             AdminController.delete_utilization(target)
-
-        # fmt: off
-        # Disable automatic formatting by Black
-        mock_utilization_service.get_utilization_details_by_ids.\
-            assert_called_once_with(target)
-        mock_utilization_service.delete_utilization.\
-            assert_called_once_with(target)
-        # fmt: on
-        mock_session_commit.assert_called_once()
+        mock_utilization_service.get_utilization_details_by_ids.assert_called_once_with(
+            target
+        )
+        mock_utilization_service.delete_utilization.assert_called_once_with(target)
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
-    @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
     def test_delete_resource_comments(
         self,
         mock_flash_success,
-        mock_session_commit,
         mock_resource_comments_service,
         current_user,
         app,
@@ -806,15 +1067,18 @@ class TestAdminController:
             AdminController.delete_resource_comments(target)
 
         # fmt: off
-        # Disable automatic formatting by Black
-        mock_resource_comments_service.get_resource_comment_summaries.\
-            assert_called_once_with(target)
-        mock_resource_comments_service.delete_resource_comments.\
-            assert_called_once_with(target)
-        mock_resource_comments_service.refresh_resources_comments.\
-            assert_called_once_with(resource_comment_summaries)
-        # fmt: on
-        mock_session_commit.assert_called_once()
+        mock_resource_comments_service.\
+            get_resource_comment_summaries.assert_called_once_with(
+                target
+            )
+        mock_resource_comments_service.\
+            delete_resource_comments.assert_called_once_with(
+                target
+            )
+        mock_resource_comments_service.\
+            refresh_resources_comments.assert_called_once_with(
+                resource_comment_summaries
+            )
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
