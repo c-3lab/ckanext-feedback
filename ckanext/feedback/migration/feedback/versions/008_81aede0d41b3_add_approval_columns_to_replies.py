@@ -40,12 +40,11 @@ def upgrade():
 
 
 def downgrade():
-    def downgrade():
-        op.drop_constraint(
-            'resource_comment_reply_approval_user_id_fkey',
-            'resource_comment_reply',
-            type_='foreignkey',
-        )
-        op.drop_column('resource_comment_reply', 'approval_user_id')
-        op.drop_column('resource_comment_reply', 'approved')
-        op.drop_column('resource_comment_reply', 'approval')
+    op.drop_constraint(
+        'resource_comment_reply_approval_user_id_fkey',
+        'resource_comment_reply',
+        type_='foreignkey',
+    )
+    op.drop_column('resource_comment_reply', 'approval_user_id')
+    op.drop_column('resource_comment_reply', 'approved')
+    op.drop_column('resource_comment_reply', 'approval')
