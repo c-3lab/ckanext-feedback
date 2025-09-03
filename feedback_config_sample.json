@@ -1,42 +1,46 @@
 {
-    "modules":{
+    "modules": {
         "utilizations": {
             "enable": true,
-            "disable_orgs": ["org_name3"],
             "comments": {
                 "image_attachment": {
                     "enable": true
+                },
+                "reply_open": {
+                    "enable": true
+                }
             }
         },
         "resources": {
             "enable": true,
-            "disable_orgs": ["org_name3"],
             "comments": {
                 "repeat_post_limit": {
-                    "enable": true,
-                    "enable_orgs": ["org_name1"]
+                    "enable": true
                 },
                 "rating": {
-                    "enable": true,
-                    "enable_orgs": ["org_name1"]
+                    "enable": true
                 },
                 "image_attachment": {
+                    "enable": true
+                },
+                "reply_open": {
                     "enable": true
                 }
             }
         },
         "downloads": {
             "enable": true,
-            "disable_orgs": ["org_name3"]
+            "feedback_prompt": {
+                "modal": {
+                    "enable": true
+                }
+            }
         },
         "likes": {
-            "enable": true,
-            "disable_orgs": ["org_name2", "org_name3"]
+            "enable": true
         },
         "moral_keeper_ai": {
-            "enable": true,
-            "enable_orgs": ["org_name1"]
+            "enable": true
         }
     }
-}
 }
