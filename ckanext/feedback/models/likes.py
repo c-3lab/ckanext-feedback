@@ -15,6 +15,7 @@ class ResourceLike(Base):
         Text,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
+        unique=True,
     )
     like_count = Column(Integer, default=0)
     created = Column(TIMESTAMP, default=datetime.now)

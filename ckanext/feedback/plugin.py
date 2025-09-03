@@ -83,8 +83,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def get_helpers(self):
         return {
             'is_enabled_downloads': FeedbackConfig().download.is_enable,
+            'is_enable_modal': FeedbackConfig().download.modal.is_enable,
             'is_enabled_resources': FeedbackConfig().resource_comment.is_enable,
             'is_enabled_utilizations': FeedbackConfig().utilization.is_enable,
+            'is_enabled_utilization_comment_image_attachment': (
+                FeedbackConfig().utilization_comment.image_attachment.is_enable
+            ),
             'is_enabled_likes': FeedbackConfig().like.is_enable,
             'is_disabled_repeat_post_on_resource': (
                 FeedbackConfig().resource_comment.repeat_post_limit.is_enable

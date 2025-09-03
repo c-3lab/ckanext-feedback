@@ -2,29 +2,41 @@
     "modules":{
         "utilizations": {
             "enable": true,
-            "disable_orgs":["organization_name3"]
+            "disable_orgs": ["org_name3"],
+            "comments": {
+                "image_attachment": {
+                    "enable": true
+            }
         },
         "resources": {
             "enable": true,
-            "disable_orgs":["organization_name3"],
+            "disable_orgs": ["org_name3"],
             "comments": {
                 "repeat_post_limit": {
                     "enable": true,
-                    "disable_orgs":["organization_name2"]
+                    "enable_orgs": ["org_name1"]
                 },
                 "rating": {
                     "enable": true,
-                    "disable_orgs":["organization_name2"]
+                    "enable_orgs": ["org_name1"]
+                },
+                "image_attachment": {
+                    "enable": true
                 }
             }
         },
         "downloads": {
             "enable": true,
-            "disable_orgs":["organization_name3"]
+            "disable_orgs": ["org_name3"]
         },
         "likes": {
             "enable": true,
-            "disable_orgs":["organization_name3"]
+            "disable_orgs": ["org_name2", "org_name3"]
+        },
+        "moral_keeper_ai": {
+            "enable": true,
+            "enable_orgs": ["org_name1"]
         }
     }
+}
 }

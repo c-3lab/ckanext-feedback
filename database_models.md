@@ -45,7 +45,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL, DEFAULT uuid.uuid4 | 集計の一意識別子 |
-| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL | リソースID |
+| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL, UNIQUE | リソースID |
 | comment | Integer | DEFAULT 0 | 総コメント数 |
 | rating_comment | Integer | DEFAULT 0 | 評価付きコメント数 |
 | rating | Float | DEFAULT 0 | 平均評価値 |
@@ -102,7 +102,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL, DEFAULT uuid.uuid4 | 集計の一意識別子 |
-| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL | リソースID |
+| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL, UNIQUE | リソースID |
 | utilization | Integer | DEFAULT 0 | 活用事例数 |
 | created | TIMESTAMP | DEFAULT datetime.now | 作成日時 |
 | updated | TIMESTAMP | - | 更新日時 |
@@ -116,7 +116,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL, DEFAULT uuid.uuid4 | いいねの一意識別子 |
-| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL | リソースID |
+| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL, UNIQUE | リソースID |
 | like_count | Integer | DEFAULT 0 | いいね数 |
 | created | TIMESTAMP | DEFAULT datetime.now | 作成日時 |
 | updated | TIMESTAMP | - | 更新日時 |
@@ -144,7 +144,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL | ダウンロード集計の一意識別子 |
-| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL | リソースID |
+| resource_id | Text | FOREIGN KEY (resource.id), NOT NULL, UNIQUE | リソースID |
 | download | Integer | - | ダウンロード数 |
 | created | TIMESTAMP | - | 作成日時 |
 | updated | TIMESTAMP | - | 更新日時 |
@@ -187,7 +187,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL, DEFAULT uuid.uuid4 | 問題解決集計の一意識別子 |
-| utilization_id | Text | FOREIGN KEY (utilization.id), NOT NULL | 活用事例ID |
+| utilization_id | Text | FOREIGN KEY (utilization.id), NOT NULL, UNIQUE | 活用事例ID |
 | issue_resolution | Integer | - | 問題解決数 |
 | created | TIMESTAMP | DEFAULT datetime.now | 作成日時 |
 | updated | TIMESTAMP | - | 更新日時 |
@@ -201,7 +201,7 @@
 | カラム名 | データ型 | 制約 | 説明 |
 |---------|---------|------|------|
 | id | Text | PRIMARY KEY, NOT NULL, DEFAULT uuid.uuid4 | 問題解決集計の一意識別子 |
-| resource_comment_id | Text | FOREIGN KEY (resource_comment.id), NOT NULL | 活用事例ID |
+| resource_comment_id | Text | FOREIGN KEY (resource_comment.id), NOT NULL, UNIQUE | コメントID |
 | response_status | Enum(ResourceCommentResponseStatus) | - | レスポンスステータス（StatusNone/NotStarted/InProgress/Completed/Rejected） |
 | admin_liked | BOOLEAN | DEFAULT False | 管理者からの高評価 |
 | created | TIMESTAMP | DEFAULT datetime.now | 作成日時 |

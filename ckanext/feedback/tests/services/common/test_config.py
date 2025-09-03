@@ -22,7 +22,6 @@ ORG_NAME_C = 'org-name-c'
 ORG_NAME_D = 'org-name-d'
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestCheck:
     @patch('ckanext.feedback.services.common.config.import_string')
     def test_seted_download_handler(self, mock_import_string):
@@ -37,12 +36,16 @@ class TestCheck:
     @patch('ckanext.feedback.services.common.config.DownloadsConfig.load_config')
     @patch('ckanext.feedback.services.common.config.ResourceCommentConfig.load_config')
     @patch('ckanext.feedback.services.common.config.UtilizationConfig.load_config')
+    @patch(
+        'ckanext.feedback.services.common.config.UtilizationCommentConfig.load_config'
+    )
     @patch('ckanext.feedback.services.common.config.ReCaptchaConfig.load_config')
     @patch('ckanext.feedback.services.common.config.NoticeEmailConfig.load_config')
     def test_load_feedback_config_with_feedback_config_file(
         self,
         mock_DownloadsConfig_load_config,
         mock_ResourceCommentConfig_load_config,
+        mock_UtilizationCommentConfig_load_config,
         mock_UtilizationConfig_load_config,
         mock_ReCaptchaConfig_load_config,
         mock_NoticeEmailConfig_load_config,
@@ -65,6 +68,7 @@ class TestCheck:
         assert FeedbackConfig().is_feedback_config_file is True
         mock_DownloadsConfig_load_config.assert_called_once()
         mock_ResourceCommentConfig_load_config.assert_called_once()
+        mock_UtilizationCommentConfig_load_config.assert_called_once()
         mock_UtilizationConfig_load_config.assert_called_once()
         mock_ReCaptchaConfig_load_config.assert_called_once()
         mock_NoticeEmailConfig_load_config.assert_called_once()
@@ -831,6 +835,36 @@ class TestCheck:
         assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_B) is True
         assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_C) is True
         assert FeedbackConfig().resource_comment.is_enable(ORG_NAME_D) is True
+        os.remove('/srv/app/feedback_config.json')
+
+        # modal(ckan.ini)
+        config.pop('ckan.feedback.download.modal.enable', None)
+        config.pop('ckan.feedback.download.modal.enable_orgs', None)
+        config.pop('ckan.feedback.download.modal.disable_orgs', None)
+        FeedbackConfig().load_feedback_config()
+        assert config.get('ckan.feedback.download.modal.enable', None) is None
+        assert config.get('ckan.feedback.download.modal.enable_orgs', None) is None
+        assert config.get('ckan.feedback.download.modal.disable_orgs', None) is None
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().download.modal.is_enable() is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_D) is True
+        # modal(feedback_config.json)
+        feedback_config = {"modules": {}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        FeedbackConfig().load_feedback_config()
+        assert config.get('ckan.feedback.download.modal.enable', None) is None
+        assert config.get('ckan.feedback.download.modal.enable_orgs', None) is None
+        assert config.get('ckan.feedback.download.modal.disable_orgs', None) is None
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().download.modal.is_enable() is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_A) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_B) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_C) is True
+        assert FeedbackConfig().download.modal.is_enable(ORG_NAME_D) is True
         os.remove('/srv/app/feedback_config.json')
 
         # likes(ckan.ini)

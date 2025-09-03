@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -123,9 +124,6 @@ class TestComments:
             offset=offset,
         )
 
-    def test_create_resource_comment(self):
-        pass
-
     def test_get_resource_comment_categories(self):
         assert get_resource_comment_categories() == ResourceCommentCategory
 
@@ -160,13 +158,36 @@ class TestComments:
 
 @pytest.mark.db_test
 class TestResourceComment:
+    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_create_resource_comment(self, resource):
-        resource_id = resource['id']
-        category = ResourceCommentCategory.REQUEST
-        content = 'test_content'
-        rating = 3
+        create_resource_comment(
+            resource['id'],
+            ResourceCommentCategory.REQUEST,
+            'test_content',
+            3,
+            'test_attached_image.jpg',
+        )
+        session.commit()
 
-        create_resource_comment(resource_id, category, content, rating)
+        resource_comments = get_resource_comments(resource['id'])
+        resource_comment = resource_comments[0]
+        resource_comment_reactions = get_resource_comment_reactions(resource_comment.id)
+
+        assert resource_comment.resource_id == resource['id']
+        assert resource_comment.category == ResourceCommentCategory.REQUEST
+        assert resource_comment.content == 'test_content'
+        assert resource_comment.rating == 3
+        assert resource_comment.attached_image_filename == 'test_attached_image.jpg'
+        assert resource_comment.created == datetime(2024, 1, 1, 15, 0, 0)
+        assert resource_comment_reactions.resource_comment_id == resource_comment.id
+        assert (
+            resource_comment_reactions.response_status
+            == ResourceCommentResponseStatus.STATUS_NONE
+        )
+        assert resource_comment_reactions.admin_liked is False
+        assert resource_comment_reactions.created == datetime(2024, 1, 1, 15, 0, 0)
+        assert resource_comment_reactions.updated is None
+        assert resource_comment_reactions.updater_user_id is None
 
 
 @pytest.mark.db_test
@@ -197,21 +218,23 @@ class TestResourceCommentReactions:
 
         assert result is None
 
+    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_create_resource_comment_reactions(self, user, resource_comment):
         create_resource_comment_reactions(
             resource_comment_id=resource_comment.id,
-            response_status=ResourceCommentResponseStatus.STATUS_NONE,
-            admin_liked=False,
+            response_status=ResourceCommentResponseStatus.COMPLETED,
+            admin_liked=True,
             updater_user_id=user['id'],
         )
         session.flush()
 
         result = get_resource_comment_reactions(resource_comment.id)
 
-        assert result is not None
         assert result.resource_comment_id == resource_comment.id
-        assert result.response_status is ResourceCommentResponseStatus.STATUS_NONE
-        assert result.admin_liked is False
+        assert result.response_status is ResourceCommentResponseStatus.COMPLETED
+        assert result.admin_liked is True
+        assert result.created == datetime(2024, 1, 1, 15, 0, 0)
+        assert result.updated == datetime(2024, 1, 1, 15, 0, 0)
         assert result.updater_user_id == user['id']
 
     def test_update_resource_comment_reactions(

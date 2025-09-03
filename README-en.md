@@ -158,14 +158,24 @@ poetry run pre-commit install
 4. Move to the following directory:
 
     ```bash
-    cd /usr/lib/python3.10/site-packages/ckanext/feedback/tests
+    cd /srv/app/src_extensions/ckanext-feedback
     ```
 
 5. Execute tests:
 
     ```bash
-    CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest -s --ckan-ini=config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings ./
+    ./test.sh
     ```
+
+     **When specifying a file, you can specify it as follows**
+   ```bash
+   ./test.sh ckanext/feedback/tests/command/test_feedback.py
+   ```
+   **Specifying by class or function is also possible(::Class name::Function name)**
+   ```bash
+   ./test.sh ckanext/feedback/tests/command/test_feedback.py::TestFeedbackCommand::test_feedback_default
+   ```
+    
 
 ## LICENSE
 

@@ -26,6 +26,12 @@
 
 - **[moral-keeper-ai](./moral_keeper_ai.md)** - AI機能モジュール  
   **デフォルト**: 🔴**OFF**
+#### Utilization モジュールのサブ機能
+> [!IMPORTANT]
+> 以下の機能は、[utilization](./utilization.md)が🟢**ON**になっている場合にのみON/OFFを切り替えることができます。
+
+- **[image attachment](./utilization.md)** - 利活用方法へのコメントに画像を添付する機能  
+  **デフォルト**: 🟢**ON**
 
 #### Resource モジュールのサブ機能
 
@@ -40,6 +46,12 @@
 
 - **[image attachment](./resource.md)** - コメントに画像を添付する機能  
   **デフォルト**: 🔴**OFF**
+#### Download モジュールのサブ機能
+> [!IMPORTANT]
+> 以下の機能は、[download](./download.md)が🟢**ON**になっている場合にのみON/OFFを切り替えることができます。
+
+- **[feedback_prompt](./download.md)** - ダウンロード時にフィードバックを求めるモーダルウィンドウが表示される機能  
+  **デフォルト**: 🟢**ON**
 
 ## 設定方法
 
@@ -183,21 +195,24 @@ ckan.feedback.config_file = path/to/feedback_config_dir
 ckan.plugins = xxxxx xxxxx xxxx xxxxx xxxxx feedback
 
 ckan.feedback.utilization.enable = True
+ckan.feedback.utilization.comments.image_attachment.enable = True
 ckan.feedback.resources.enable = True
 ckan.feedback.resources.comment.repeated_post_limit.enable = True
 ckan.feedback.resources.comment.rating.enable = True
 ckan.feedback.resources.comment.image_attachment.enable = True
 ckan.feedback.downloads.enable = True
+ckan.feedback.downloads.modal.enable = True
 ckan.feedback.likes.enable = True
 ckan.feedback.moral_keeper_ai.enable = True
 ・・・
 ```
 
-| No. | 組織名 | utilization | resource | repeated_post_limit | rating | image_attachment | download | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| No. | 組織名 | utilization | utilization_comment_image_attachment | resource | repeated_post_limit | rating | resource_comment_image_attachment | download | modal | like | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+
 
 ### `feedback_config.json`でON/OFFの設定を行う
 
@@ -207,7 +222,12 @@ ckan.feedback.moral_keeper_ai.enable = True
 {
     "modules": {
         "utilizations": {
-            "enable": true
+            "enable": true,
+            "comments": {
+                "image_attachment"  :{
+                    "enable": true
+                }
+           }
         },
         "resources": {
             "enable": true,
@@ -225,6 +245,11 @@ ckan.feedback.moral_keeper_ai.enable = True
         },
         "downloads": {
             "enable": true
+            "feedback_prompt":{
+                "modal":{
+                    "enable":true
+                }
+            }
         },
         "likes": {
             "enable": true
@@ -236,60 +261,76 @@ ckan.feedback.moral_keeper_ai.enable = True
 }
 ```
 
-| No. | 組織名 | utilization | resource | repeated_post_limit | rating | image_attachment | download | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+
+| No. | 組織名 | utilization | utilization_comment_image_attachment | resource | repeated_post_limit | rating | resource_comment_image_attachment | download | modal | like | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+
 
 #### 例2: 組織毎にモジュールや機能のON/OFFを設定する場合
 
 ```json
 {
-    "modules":{
-        "utilizations": {
-            "enable": true,
-            "disable_orgs": ["org_name3"]
-        },
-        "resources": {
-            "enable": true,
-            "disable_orgs": ["org_name3"],
-            "comments": {
-                "repeat_post_limit": {
-                    "enable": true,
-                    "enable_orgs": ["org_name1"]
-                },
-                "rating": {
-                    "enable": true,
-                    "enable_orgs": ["org_name1"]
-                },
-                "image_attachment": {
-                    "enable": true,
-                    "enable_orgs": ["org_name1"]
+        "modules":{
+            "utilizations": {
+                "enable": true,
+                "disable_orgs": ["org_name3"],
+                "comments" : {
+                    "image_attachment":{
+                        "enable" :true,
+                        "enable_orgs": ["org_name1"]
                 }
+            },
+            "resources": {
+                "enable": true,
+                "disable_orgs": ["org_name3"],
+                "comments": {
+                    "repeat_post_limit": {
+                        "enable": true,
+                        "enable_orgs": ["org_name1"]
+                    },
+                    "rating": {
+                        "enable": true,
+                        "enable_orgs": ["org_name1"]
+                    },
+                    "image_attachment": {
+                        "enable": true,
+                        "enable_orgs": ["org_name1"]
+                    }
+                }
+            },
+            "downloads": {
+                "enable": true,
+                "disable_orgs":  ["org_name2", "org_name3"],
+                    "feedback_prompt":{
+                        "modal":{
+                            "enable":true,
+                            "disable_orgs":  ["org_name2", "org_name3"]
+                    }
+                }
+            },
+            "likes": {
+                "enable": true,
+                "disable_orgs": ["org_name2", "org_name3"]
+            },
+            "moral_keeper_ai": {
+                "enable": true,
+                "enable_orgs": ["org_name1"]
             }
-        },
-        "downloads": {
-            "enable": true,
-            "disable_orgs": ["org_name3"]
-        },
-        "likes": {
-            "enable": true,
-            "disable_orgs": ["org_name2", "org_name3"]
-        },
-        "moral_keeper_ai": {
-            "enable": true,
-            "enable_orgs": ["org_name1"]
         }
     }
 }
 ```
 
-| No. | 組織名 | utilization | resource | repeated_post_limit | rating | image_attachment | download | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🟢ON | 🔴OFF | 🔴OFF |
-| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+
+| No. | 組織名 | utilization | utilization_comment_image_attachment | resource | repeated_post_limit | rating | resource_comment_image_attachment | download | modal | like | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+
 
 ## 外部プラグインとの連携
 

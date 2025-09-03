@@ -4,11 +4,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-
       - name: Install Python 3.10.13
         uses: actions/setup-python@v4
         with:
-            python-version: "3.10.13"
+          python-version: "3.10.13"
 
       - name: Check out
         uses: actions/checkout@v3
@@ -45,9 +44,10 @@ jobs:
         run: |
           docker exec -i ckan-docker-ckan-dev-1 bash -c "ckan -c /usr/lib/python3.10/site-packages/ckanext/feedback/tests/config/test.ini db init"
 
-      - name: Run test
+      - name: Run tests via test.sh
         run: |
-          docker exec -i ckan-docker-ckan-dev-1 bash -c "CKAN_SQLALCHEMY_URL= CKAN_DATASTORE_READ_URL= CKAN_DATASTORE_WRITE_URL= pytest --cov-report=xml:/tmp/coverage.xml --ckan-ini=/usr/lib/python3.10/site-packages/ckanext/feedback/tests/config/test.ini --cov=ckanext.feedback --cov-branch --disable-warnings --cov-report=term-missing /usr/lib/python3.10/site-packages/ckanext/feedback/tests"
+          docker exec -i ckan-docker-ckan-dev-1 bash -c "/srv/app/src_extensions/ckanext-feedback/test.sh"
+
 
       - name: copy coverage.xml
         if: always()
