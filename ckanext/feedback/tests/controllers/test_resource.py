@@ -56,8 +56,8 @@ class TestResourceController:
         self.app = Flask(__name__)
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
-    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.resource.get_pagination_value')
+    @patch('ckanext.feedback.controllers.resource.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
     @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
@@ -141,8 +141,8 @@ class TestResourceController:
         )
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
-    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.resource.get_pagination_value')
+    @patch('ckanext.feedback.controllers.resource.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
     @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
@@ -226,8 +226,8 @@ class TestResourceController:
         )
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
-    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.resource.get_pagination_value')
+    @patch('ckanext.feedback.controllers.resource.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.request')
     @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
@@ -303,8 +303,8 @@ class TestResourceController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
-    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.resource.get_pagination_value')
+    @patch('ckanext.feedback.controllers.resource.helpers.Page')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
     @patch('ckanext.feedback.controllers.resource.request')
@@ -342,7 +342,7 @@ class TestResourceController:
             g.userobj = None
             ResourceController.comment(resource_id)
 
-        approval = False
+        approval = True
         resource = comment_service.get_resource(resource_id)
         comments, total_count = comment_service.get_resource_comments(
             resource_id,
@@ -538,8 +538,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     def test_create_comment_with_bad_image_exception(
         self,
+        mock_abort,
         mock_upload_image,
         mock_files,
         mock_form,
@@ -547,7 +549,7 @@ class TestResourceController:
         resource_id = 'resource id'
         package_name = 'package_name'
         comment_content = 'content'
-        category = 'category'
+        category = ResourceCommentCategory.REQUEST.name
         rating = '1'
         attached_image_filename = 'attached_image_filename'
 
@@ -569,20 +571,24 @@ class TestResourceController:
 
         mock_upload_image.side_effect = Exception('Unexpected error')
 
+        mock_abort.side_effect = Exception('abort')
         with pytest.raises(Exception):
             ResourceController.create_comment(resource_id)
 
         mock_upload_image.assert_called_once_with(mock_file)
+        mock_abort.assert_called_once_with(500)
 
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
     def test_create_comment_without_comment_length(
         self,
         mock_flash_flash_error,
         mock_redirect_to,
+        mock_is_recaptcha_verified,
         mock_comment,
         mock_files,
         mock_form,
@@ -605,6 +611,7 @@ class TestResourceController:
         }.get(x, default)
 
         mock_files.return_value = None
+        mock_is_recaptcha_verified.return_value = True
 
         ResourceController.create_comment(resource_id)
 
@@ -742,16 +749,16 @@ class TestResourceController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_check_comment_GET(
         self,
         mock_redirect_to,
-        mock_form,
+        mock_method,
     ):
         resource_id = 'resource_id'
 
-        mock_form.return_value = 'GET'
+        mock_method.return_value = 'GET'
 
         ResourceController.check_comment(resource_id)
         mock_redirect_to.assert_called_once_with(
@@ -838,7 +845,7 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.check_ai_comment')
-    @patch('ckanext.feedback.controllers.resource.ResourceController.suggested_comment')
+    @patch.object(ResourceController, 'suggested_comment')
     @patch(
         'ckanext.feedback.controllers.resource.'
         'comment_service.get_resource_comment_categories'
@@ -1107,16 +1114,24 @@ class TestResourceController:
         )
         mock_comment.assert_called_once_with(resource_id, category, content)
 
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.get_action')
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.request.files.get')
     @patch('ckanext.feedback.controllers.resource.ResourceController._upload_image')
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
     def test_check_comment_with_bad_image_exception(
         self,
+        mock_comment_service,
+        mock_abort,
         mock_upload_image,
         mock_files,
         mock_form,
         mock_method,
+        mock_get_action,
+        mock_render,
     ):
         resource_id = 'resource_id'
         category = 'category'
@@ -1140,10 +1155,19 @@ class TestResourceController:
 
         mock_upload_image.side_effect = Exception('Unexpected error')
 
-        with pytest.raises(Exception):
-            ResourceController.check_comment(resource_id)
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'dummy_package_id'
+        mock_comment_service.get_resource.return_value = mock_resource
+        ResourceController.check_comment(resource_id)
+
+        mock_package_show = MagicMock()
+        mock_package_show.return_value = {'id': 'dummy_package_id'}
+        mock_get_action.return_value = mock_package_show
+
+        mock_render.return_value = 'mock_render'
 
         mock_upload_image.assert_called_once_with(mock_file)
+        mock_abort.assert_called_once_with(500)
 
     @patch('ckanext.feedback.controllers.resource.request.method')
     @patch('ckanext.feedback.controllers.resource.request.form')
@@ -1347,7 +1371,10 @@ class TestResourceController:
         model.Session.add(member)
         model.Session.commit()
 
-        ResourceController.approve_comment(resource['id'])
+        mock_toolkit_abort.side_effect = Exception('abort')
+        with pytest.raises(Exception):
+            ResourceController.approve_comment(resource['id'])
+
         mock_toolkit_abort.assert_any_call(
             404,
             _(
@@ -1420,32 +1447,50 @@ class TestResourceController:
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
-    def test_reply_with_user(self, mock_toolkit_abort, current_user):
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    def test_reply_with_user(
+        self,
+        mock_comment_service,
+        mock_form,
+        mock_toolkit_abort,
+        mock_redirect_to,
+        mock_flash_error,
+        current_user,
+    ):
         resource_id = 'resource id'
 
         user_dict = factories.User()
         mock_current_user(current_user, user_dict)
         g.userobj = current_user
 
+        mock_form.get.side_effect = ['resource_comment_id', 'reply_content']
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'org-id'
+        mock_comment_service.get_resource.return_value = mock_resource
         ResourceController.reply(resource_id)
-        mock_toolkit_abort.assert_called_once_with(
-            404,
-            _(
-                'The requested URL was not found on the server. If you entered the URL'
-                ' manually please check your spelling and try again.'
-            ),
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'resource_comment.comment', resource_id=resource_id
         )
+        mock_toolkit_abort.assert_not_called()
 
     @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
     @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_reply_with_other_organization_admin_user(
         self,
         mock_redirect_to,
+        mock_form,
         mock_comment_service,
-        mock_toolkit_abort,
+        mock_flash_error,
         current_user,
     ):
         organization_dict = factories.Organization()
@@ -1469,13 +1514,16 @@ class TestResourceController:
         model.Session.add(member)
         model.Session.commit()
 
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_comment_service.get_resource.return_value = mock_resource
+
+        mock_form.get.side_effect = ['resource_comment_id', 'reply_content']
+
         ResourceController.reply(resource['id'])
-        mock_toolkit_abort.assert_any_call(
-            404,
-            _(
-                'The requested URL was not found on the server. If you entered the URL'
-                ' manually please check your spelling and try again.'
-            ),
+        mock_comment_service.create_reply.assert_not_called()
+        mock_redirect_to.assert_called_once_with(
+            'resource_comment.comment', resource_id=resource['id']
         )
 
     @patch('flask_login.utils._get_user')
@@ -1502,7 +1550,9 @@ class TestResourceController:
             None,
         ]
 
-        ResourceController.reply(resource_id)
+        mock_toolkit_abort.side_effect = Exception('abort')
+        with pytest.raises(Exception):
+            ResourceController.reply(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
 
     @patch('flask_login.utils._get_user')
@@ -1770,8 +1820,20 @@ class TestResourceController:
 
     @patch('ckanext.feedback.controllers.resource.request.get_json')
     @patch('ckanext.feedback.controllers.resource.Response')
+    @patch('ckanext.feedback.controllers.resource.set_like_status_cookie')
+    @patch(
+        'ckanext.feedback.controllers.resource.likes_service.'
+        'increment_resource_like_count_monthly'
+    )
+    @patch(
+        'ckanext.feedback.controllers.resource.likes_service.'
+        'increment_resource_like_count'
+    )
     def test_like_toggle_True(
         self,
+        mock_increment,
+        mock_increment_monthly,
+        mock_set_like_status_cookie,
         mock_response,
         mock_get_json,
     ):
@@ -1787,17 +1849,33 @@ class TestResourceController:
         mock_resp.mimetype = 'text/plain'
         mock_response.return_value = mock_resp
 
+        mock_set_like_status_cookie.return_value = mock_resp
         resp = ResourceController.like_toggle(package['name'], resource['id'])
+
+        mock_increment.assert_called_once_with(resource['id'])
+        mock_increment_monthly.assert_called_once_with(resource['id'])
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
         assert resp.mimetype == 'text/plain'
         assert resp == mock_resp
 
-    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch('ckanext.feedback.controllers.resource.' 'request.get_json')
     @patch('ckanext.feedback.controllers.resource.Response')
+    @patch('ckanext.feedback.controllers.resource.set_like_status_cookie')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'likes_service.decrement_resource_like_count_monthly'
+    )
+    @patch(
+        'ckanext.feedback.controllers.resource.likes_service.'
+        'decrement_resource_like_count'
+    )
     def test_like_toggle_False(
         self,
+        mock_decrement,
+        mock_decrement_monthly,
+        mock_set_like_status_cookie,
         mock_response,
         mock_get_json,
     ):
@@ -1813,7 +1891,11 @@ class TestResourceController:
         mock_resp.mimetype = 'text/plain'
         mock_response.return_value = mock_resp
 
+        mock_set_like_status_cookie.return_value = mock_resp
         resp = ResourceController.like_toggle(package['name'], resource['id'])
+
+        mock_decrement.assert_called_once_with(resource['id'])
+        mock_decrement_monthly.assert_called_once_with(resource['id'])
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
@@ -1857,6 +1939,10 @@ class TestResourceCommentReactions:
             response_status,
             admin_liked,
         ]
+        mock_comment = MagicMock()
+        mock_comment.id = comment_id
+        mock_comment_service.get_resource_comment.return_value = mock_comment
+
         mock_comment_service.get_resource_comment_reactions.return_value = (
             'resource_comment_reactions'
         )
@@ -1909,6 +1995,10 @@ class TestResourceCommentReactions:
             response_status,
             admin_liked,
         ]
+        mock_comment = MagicMock()
+        mock_comment.id = comment_id
+        mock_comment_service.get_resource_comment.return_value = mock_comment
+
         mock_comment_service.get_resource_comment_reactions.return_value = None
         mock_comment_service.create_resource_comment_reactions.return_value = None
 
