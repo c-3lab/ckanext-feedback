@@ -5,6 +5,7 @@ from ckan.model.package import Package
 from ckan.model.resource import Resource
 from sqlalchemy import literal
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import joinedload
 
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import (
