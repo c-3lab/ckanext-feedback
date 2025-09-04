@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -2567,7 +2568,7 @@ class TestUtilizationController:
         UtilizationController.delete(utilization_id)
 
         mock_detail_service.get_utilization.assert_any_call(utilization_id)
-        mock_edit_service.delete_utilization.asset_called_once_with(utilization_id)
+        mock_edit_service.delete_utilization.assert_called_once_with(utilization_id)
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
             resource_id
         )
@@ -2906,3 +2907,335 @@ class TestUtilizationController:
         mock_get_uploader.assert_called_once_with('/test/upload/path')
         mock_uploader.update_data_dict.assert_called_once()
         mock_uploader.upload.assert_called_once()
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+@patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+@patch('ckanext.feedback.controllers.utilization.registration_service')
+@patch('ckanext.feedback.controllers.utilization.summary_service')
+@patch('ckanext.feedback.controllers.utilization.session.commit')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+def test_create_admin_bypass_exception_fallback(
+    mock_redirect_to,
+    mock_flash_success,
+    mock_session_commit,
+    mock_summary_service,
+    mock_registration_service,
+    mock_get_resource,
+    mock_is_recaptcha_verified,
+    mock_request,
+):
+    package_name = 'pkg'
+    resource_id = 'res'
+    title = 'title'
+    url = ''
+    description = 'desc'
+    return_to_resource = False
+    mock_request.form.get.side_effect = [
+        package_name,
+        resource_id,
+        title,
+        url,
+        description,
+        return_to_resource,
+    ]
+    mock_get_resource.side_effect = Exception('boom')
+    mock_is_recaptcha_verified.return_value = True
+
+    UtilizationController.create()
+
+    mock_registration_service.create_utilization.assert_called_once_with(
+        resource_id, title, url, description
+    )
+    mock_summary_service.create_utilization_summary.assert_called_once_with(resource_id)
+    mock_session_commit.assert_called_once()
+    mock_flash_success.assert_called_once()
+    mock_redirect_to.assert_called_once_with('dataset.read', id=package_name)
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+@patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+@patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+def test_create_comment_admin_bypass_exception_fallback(
+    mock_flash_error,
+    mock_details,
+    mock_get_utilization,
+    mock_is_recaptcha_verified,
+    mock_request,
+):
+    utilization_id = 'uti'
+    category = UtilizationCommentCategory.REQUEST.name
+    content = 'content'
+    attached_image_filename = None
+    mock_request.form.get.side_effect = [category, content, attached_image_filename]
+    mock_request.files.get.return_value = None
+    mock_get_utilization.side_effect = Exception('boom')
+    mock_is_recaptcha_verified.return_value = False
+
+    UtilizationController.create_comment(utilization_id)
+
+    mock_details.assert_called_once_with(
+        utilization_id, category, content, attached_image_filename
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+def test_reply_missing_fields_abort(mock_abort, mock_request):
+    mock_request.form.get.side_effect = ['', '']
+    mock_abort.side_effect = Exception('abort')
+    with pytest.raises(Exception):
+        UtilizationController.reply('uti')
+    mock_abort.assert_called_once_with(400)
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+@patch('flask_login.utils._get_user')
+def test_reply_restricted_for_non_admin(
+    current_user,
+    mock_redirect_to,
+    mock_flash_error,
+    mock_get_utilization,
+    mock_request,
+):
+    utilization_id = 'uti'
+    mock_request.form.get.side_effect = ['comment_id', 'reply content']
+    mock_get_utilization.return_value = MagicMock(owner_org='org-x')
+    current_user.return_value = None
+    UtilizationController.reply(utilization_id)
+    mock_flash_error.assert_called_once()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+@patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+@patch('flask_login.utils._get_user')
+def test_reply_bad_captcha(
+    current_user,
+    mock_redirect_to,
+    mock_flash_error,
+    mock_get_utilization,
+    mock_is_recaptcha_verified,
+    mock_request,
+):
+    utilization_id = 'uti'
+    mock_request.form.get.side_effect = ['comment_id', 'reply content']
+    mock_get_utilization.return_value = MagicMock(owner_org='org-x')
+    mock_is_recaptcha_verified.return_value = False
+    current_user.return_value = None
+    UtilizationController.reply(utilization_id)
+    mock_flash_error.assert_called_once()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+@patch('flask_login.utils._get_user')
+def test_reply_validation_error(
+    current_user,
+    mock_redirect_to,
+    mock_flash_error,
+    mock_get_utilization,
+    mock_request,
+):
+    utilization_id = 'uti'
+    content = 'x' * 1001
+    mock_request.form.get.side_effect = ['comment_id', content]
+    mock_get_utilization.return_value = MagicMock(owner_org='org-x')
+    current_user.return_value = None
+    UtilizationController.reply(utilization_id)
+    mock_flash_error.assert_called_once()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch('flask_login.utils._get_user')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.detail_service')
+@patch('ckanext.feedback.controllers.utilization.session.commit')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+def test_reply_sysadmin_success(
+    mock_redirect_to,
+    mock_session_commit,
+    mock_detail_service,
+    mock_request,
+    current_user,
+):
+    utilization_id = 'uti'
+    user_dict = factories.Sysadmin()
+    mock_current_user(current_user, user_dict)
+    g.userobj = current_user
+    mock_request.form.get.side_effect = ['comment_id', 'reply content']
+    mock_detail_service.get_utilization.return_value = MagicMock(owner_org='org-x')
+
+    UtilizationController.reply(utilization_id)
+
+    mock_detail_service.create_utilization_comment_reply.assert_called_once()
+    mock_session_commit.assert_called_once()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+@patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+@patch('ckanext.feedback.controllers.utilization.UtilizationController.details')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+def test_check_comment_admin_bypass_exception_fallback(
+    mock_flash_error,
+    mock_details,
+    mock_get_utilization,
+    mock_is_recaptcha_verified,
+    mock_request,
+):
+    utilization_id = 'uti'
+    category = 'category'
+    content = 'content'
+    mock_request.method = 'POST'
+    mock_request.form.get.side_effect = lambda k, d: {
+        'category': category,
+        'comment-content': content,
+        'attached_image_filename': None,
+        'comment-suggested': True,
+    }.get(k, d)
+    mock_request.files.get.return_value = None
+    mock_get_utilization.side_effect = Exception('boom')
+    mock_is_recaptcha_verified.return_value = False
+
+    UtilizationController.check_comment(utilization_id)
+    mock_details.assert_called_once_with(utilization_id, category, content, None)
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch('flask_login.utils._get_user')
+@patch('ckanext.feedback.controllers.utilization.detail_service')
+@patch('ckanext.feedback.controllers.utilization.session.commit')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+def test_approve_reply_success(
+    mock_redirect_to,
+    mock_session_commit,
+    mock_detail_service,
+    current_user,
+):
+    utilization_id = 'uti'
+    reply_id = 'rid'
+    user_dict = factories.Sysadmin()
+    mock_current_user(current_user, user_dict)
+    g.userobj = current_user
+
+    UtilizationController.approve_reply(utilization_id, reply_id)
+
+    mock_detail_service.approve_utilization_comment_reply.assert_called_once_with(
+        reply_id, user_dict['id']
+    )
+    mock_session_commit.assert_called_once()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch('flask_login.utils._get_user')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+@patch('ckanext.feedback.controllers.utilization.detail_service')
+@patch('ckanext.feedback.controllers.utilization.session.commit')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+def test_approve_reply_permission_error(
+    mock_redirect_to,
+    mock_session_commit,
+    mock_detail_service,
+    mock_flash_error,
+    current_user,
+):
+    utilization_id = 'uti'
+    reply_id = 'rid'
+    user_dict = factories.Sysadmin()
+    mock_current_user(current_user, user_dict)
+    g.userobj = current_user
+    mock_detail_service.approve_utilization_comment_reply.side_effect = (
+        PermissionError()
+    )
+
+    UtilizationController.approve_reply(utilization_id, reply_id)
+
+    mock_flash_error.assert_called_once()
+    mock_session_commit.assert_not_called()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch('flask_login.utils._get_user')
+@patch('ckanext.feedback.controllers.utilization.detail_service')
+@patch('ckanext.feedback.controllers.utilization.session.commit')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+def test_approve_reply_value_error(
+    mock_redirect_to,
+    mock_session_commit,
+    mock_detail_service,
+    current_user,
+):
+    utilization_id = 'uti'
+    reply_id = 'rid'
+    user_dict = factories.Sysadmin()
+    mock_current_user(current_user, user_dict)
+    g.userobj = current_user
+    mock_detail_service.approve_utilization_comment_reply.side_effect = ValueError()
+
+    UtilizationController.approve_reply(utilization_id, reply_id)
+
+    mock_session_commit.assert_not_called()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
