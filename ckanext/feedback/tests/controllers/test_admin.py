@@ -41,7 +41,6 @@ def user_env():
 
 def mock_current_user(current_user, user):
     user_obj = model.User.get(user['name'])
-    # mock current_user
     current_user.return_value = user_obj
 
 
@@ -832,11 +831,13 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
     def test_approve_utilization_comments(
         self,
-        mock_flash_success,
         mock_utilization_service,
         mock_utilization_comments_service,
+        mock_flash_success,
         current_user,
         app,
         sysadmin_env,
@@ -920,10 +921,11 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     def test_approve_resource_comments(
         self,
-        mock_flash_success,
         mock_resource_comments_service,
+        mock_flash_success,
         current_user,
         app,
         sysadmin_env,
@@ -968,11 +970,13 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
     def test_delete_utilization_comments(
         self,
-        mock_flash_success,
         mock_utilization_service,
         mock_utilization_comments_service,
+        mock_flash_success,
         current_user,
         app,
         sysadmin_env,
@@ -1011,10 +1015,11 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
     def test_delete_utilization(
         self,
-        mock_flash_success,
         mock_utilization_service,
+        mock_flash_success,
         current_user,
         app,
         sysadmin_env,
@@ -1042,10 +1047,11 @@ class TestAdminController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     def test_delete_resource_comments(
         self,
-        mock_flash_success,
         mock_resource_comments_service,
+        mock_flash_success,
         current_user,
         app,
         sysadmin_env,
@@ -1522,3 +1528,187 @@ class TestAdminController:
 
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.request.args')
+    @patch('ckanext.feedback.controllers.admin.get_pagination_value')
+    @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.feedback_service')
+    @patch('ckanext.feedback.controllers.admin.toolkit.render')
+    @patch('ckanext.feedback.controllers.admin.helpers.Page')
+    @patch('ckanext.feedback.controllers.admin.log.debug')
+    def test_approval_and_delete_log_debug_exception(
+        self,
+        mock_log_debug,
+        mock_page,
+        mock_render,
+        mock_feedback_service,
+        mock_organization_service,
+        mock_pagination,
+        mock_args,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        mock_log_debug.side_effect = Exception('boom')
+        mock_args.getlist.return_value = []
+        mock_args.get.return_value = 'newest'
+        mock_pagination.return_value = [1, 20, 0, 'pager_url']
+        mock_organization_service.get_org_list.return_value = []
+        mock_feedback_service.get_feedbacks.return_value = ([], 0)
+        mock_page.return_value = 'page'
+        mock_render.return_value = 'rendered'
+
+        mock_current_user(current_user, factories.Sysadmin())
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            AdminController.approval_and_delete()
+        mock_render.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    def test_approve_utilization_comments_executes(
+        self,
+        mock_utilization_service,
+        mock_utilization_comments_service,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        target = ['uc1']
+        mock_utilization_comments_service.get_utilization_comment_ids.return_value = (
+            target
+        )
+        util = MagicMock()
+        util.resource.package.owner_org = 'org1'
+        mock_utilization_service.get_utilizations_by_comment_ids.return_value = [util]
+
+        mock_current_user(current_user, factories.Sysadmin())
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            ret = AdminController.approve_utilization_comments(target)
+
+        assert ret == 1
+        # fmt: off
+        mock_utilization_comments_service.\
+            approve_utilization_comments.assert_called_once(
+
+            )
+        mock_utilization_comments_service.\
+            refresh_utilizations_comments.assert_called_once(
+
+            )
+        # fmt: on
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
+    def test_approve_resource_comments_executes(
+        self,
+        mock_resource_comments_service,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        target = ['rc1']
+        mock_resource_comments_service.get_resource_comment_ids.return_value = target
+        summary = MagicMock()
+        summary.resource.package.owner_org = 'org1'
+        mock_resource_comments_service.get_resource_comment_summaries.return_value = [
+            summary
+        ]
+
+        mock_current_user(current_user, factories.Sysadmin())
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            ret = AdminController.approve_resource_comments(target)
+
+        assert ret == 1
+        mock_resource_comments_service.approve_resource_comments.assert_called_once()
+        mock_resource_comments_service.refresh_resources_comments.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    def test_delete_utilization_comments_executes(
+        self,
+        mock_utilization_service,
+        mock_utilization_comments_service,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        target = ['uc1']
+        util = MagicMock()
+        util.resource.package.owner_org = 'org1'
+        # fmt: off
+        mock_utilization_service.\
+            get_utilizations_by_comment_ids.return_value = [util]
+        mock_current_user(current_user, factories.Sysadmin())
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            ret = AdminController.delete_utilization_comments(target)
+
+        assert ret == 1
+        mock_utilization_comments_service.\
+            delete_utilization_comments.assert_called_once(
+
+            )
+        mock_utilization_comments_service.\
+            refresh_utilizations_comments.assert_called_once(
+
+            )
+        # fmt:on
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    def test_delete_utilization_executes(
+        self,
+        mock_utilization_service,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        target = ['u1']
+        util = MagicMock()
+        util.owner_org = 'org1'
+        mock_utilization_service.get_utilization_details_by_ids.return_value = [util]
+        mock_utilization_service.get_utilization_resource_ids.return_value = ['r1']
+
+        mock_current_user(current_user, factories.Sysadmin())
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            ret = AdminController.delete_utilization(target)
+
+        assert ret == 1
+        mock_utilization_service.delete_utilization.assert_called_once()
+        mock_utilization_service.refresh_utilization_summary.assert_called_once_with(
+            ['r1']
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
+    def test_delete_resource_comments_executes(
+        self,
+        mock_resource_comments_service,
+        current_user,
+        app,
+        sysadmin_env,
+    ):
+        target = ['rc1']
+        summary = MagicMock()
+        summary.resource.package.owner_org = 'org1'
+        mock_resource_comments_service.get_resource_comment_summaries.return_value = [
+            summary
+        ]
+
+        mock_current_user(current_user, factories.Sysadmin())
+        with app.get(url='/', environ_base=sysadmin_env):
+            g.userobj = current_user
+            ret = AdminController.delete_resource_comments(target)
+
+        assert ret == 1
+        mock_resource_comments_service.delete_resource_comments.assert_called_once_with(
+            target
+        )
+        mock_resource_comments_service.refresh_resources_comments.assert_called_once()
