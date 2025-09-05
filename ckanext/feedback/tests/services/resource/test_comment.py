@@ -173,8 +173,8 @@ class TestResourceComment:
         )
         session.commit()
 
-        resource_comments = get_resource_comments(resource['id'])
-        resource_comment = resource_comments[0]
+        rows = get_resource_comments(resource['id'])
+        resource_comment = rows[0]
         resource_comment_reactions = get_resource_comment_reactions(resource_comment.id)
 
         assert resource_comment.resource_id == resource['id']
@@ -499,3 +499,23 @@ class TestAttachedImageService:
 
         rows = get_comment_replies_for_display(parent.id, dataset['owner_org'])
         assert sorted([r.content for r in rows]) == ['a', 'u']
+
+    def test_get_resource_comment_replies_query(self):
+        from ckanext.feedback.services.admin import resource_comments as rc
+
+        organization = factories.Organization()
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        q = rc.get_resource_comment_replies_query(org_list)
+        s = str(q.statement)
+        assert "resource_comment_reply" in s
+
+    def test_get_simple_resource_comment_replies_query(self):
+        from ckanext.feedback.services.admin import resource_comments as rc
+
+        organization = factories.Organization()
+        org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        q = rc.get_simple_resource_comment_replies_query(org_list)
+        s = str(q.statement)
+        assert "resource_comment_reply" in s
