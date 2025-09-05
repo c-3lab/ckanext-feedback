@@ -2204,9 +2204,9 @@ class TestResourceCommentReactions:
     # fmt: off
     @patch('ckanext.feedback.controllers.resource.get_action')
     @patch(
-        'ckanext.feedback.controllers.resource.comment_service.\
-            get_resource_comment_categories'
-            )
+        'ckanext.feedback.controllers.resource.comment_service.'
+        'get_resource_comment_categories'
+    )
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     # fmt: on
     def test_check_comment_admin_bypass_exception_then_render(
@@ -2606,9 +2606,9 @@ class TestResourceCommentReactions:
     @patch('flask_login.utils._get_user')
     # fmt: off
     @patch(
-        'ckanext.feedback.controllers.resource.ResourceController.\
-            _check_organization_admin_role'
-            )
+        'ckanext.feedback.controllers.resource.ResourceController.'
+        '_check_organization_admin_role'
+    )
     # fmt: on
     @patch('ckanext.feedback.controllers.resource.request.form.get')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
@@ -2637,9 +2637,9 @@ class TestResourceCommentReactions:
     @patch('flask_login.utils._get_user')
     # fmt: off
     @patch(
-        'ckanext.feedback.controllers.resource.ResourceController.\
-            _check_organization_admin_role'
-            )
+        'ckanext.feedback.controllers.resource.ResourceController.'
+        '_check_organization_admin_role'
+    )
     # fmt: on
     @patch('ckanext.feedback.controllers.resource.request.form.get')
     @patch(
@@ -2672,9 +2672,9 @@ class TestResourceCommentReactions:
     @patch('flask_login.utils._get_user')
     # fmt: off
     @patch(
-        'ckanext.feedback.controllers.resource.ResourceController.\
-            _check_organization_admin_role'
-            )
+        'ckanext.feedback.controllers.resource.ResourceController.'
+        '_check_organization_admin_role'
+    )
     # fmt: on
     @patch('ckanext.feedback.controllers.resource.request.form.get')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
@@ -2717,16 +2717,15 @@ class TestResourceCommentReactions:
     @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
     # fmt: off
     @patch(
-        'ckanext.feedback.controllers.\
-            resource.is_recaptcha_verified',
+        'ckanext.feedback.controllers.resource.is_recaptcha_verified',
         return_value=True,
-            )
+    )
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.resource.get_action')
     @patch(
-        'ckanext.feedback.controllers.resource.comment_service.\
-            get_resource_comment_categories'
-            )
+        'ckanext.feedback.controllers.resource.comment_service.'
+        'get_resource_comment_categories'
+    )
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     # fmt: on
     def test_check_comment_admin_bypass_normal_renders(
@@ -2832,8 +2831,8 @@ class TestResourceCommentReactions:
 
     @patch('flask_login.utils._get_user')
     @patch(
-        'ckanext.feedback.controllers.resource.ResourceController.\
-            _check_organization_admin_role'
+        'ckanext.feedback.controllers.resource.ResourceController.'
+        '_check_organization_admin_role'
     )
     # fmt: on
     @patch('ckanext.feedback.controllers.resource.request.form.get')

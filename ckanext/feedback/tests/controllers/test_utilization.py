@@ -436,8 +436,8 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     # fmt: off
     @patch(
-        'ckanext.feedback.controllers.utilization.search_service.\
-            get_organization_name_from_pkg'
+        'ckanext.feedback.controllers.utilization.search_service.'
+        'get_organization_name_from_pkg'
     )
     # fmt: on
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -3548,8 +3548,8 @@ def test_reply_recaptcha_ok_validation_error_flashes_error(
 @patch('ckanext.feedback.controllers.utilization.get_action')
 # fmt: off
 @patch(
-    'ckanext.feedback.controllers.utilization.detail_service.\
-        get_utilization_comment_categories'
+    'ckanext.feedback.controllers.utilization.detail_service.'
+    'get_utilization_comment_categories'
 )
 # fmt: on
 @patch('ckanext.feedback.controllers.utilization.toolkit.render')
