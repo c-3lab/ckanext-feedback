@@ -298,9 +298,11 @@ class ResourceController:
             is_suggested = request.form.get('comment-suggested', False) == 'True'
 
             if is_suggested:
-                action = request.form.get('action')
+                action = request.form.get('action', None)
                 input_comment = request.form.get('input-comment', None)
-                suggested_comment = request.form.get('suggested-comment', None)
+                suggested_comment = request.form.get(
+                    'suggested-comment', 'AUTO_SUGGEST_FAILED'
+                )
 
                 comment_service.create_resource_comment_moral_check_log(
                     resource_id=resource_id,
