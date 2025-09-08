@@ -17,7 +17,7 @@ GET /api/3/action/datasets_ranking
 | period_months_ago    | 相対期間（過去Xヶ月）        | string   | 任意 | なし                    | 例: `3`を指定すると、直近3ヶ月間の集計を取得します。     |
 | start_year_month     | 固定期間の開始年月          | string| 任意 | 2023-04                    | 例: `2024-01` で2024年1月が開始。  
 | end_year_month       | 固定期間の終了年月          | string| 任意 | 先月                    | 例: `2024-03` で2024年3月が終了。開始・終了ともに指定した場合、その期間で集計します。 |
-| aggregation_metric   | 集計指標                     | string| 任意 | "download"              | `"likes"`いいね数,`"comment"`コメント数でも集計指標を指定可能。 |
+| aggregation_metric   | 集計指標                     | string| 任意 | "download"              | `"likes"`いいね数,`"resource_comment"`リソースコメント数,`"utilization_comments"`利活用コメント数でも集計指標を指定可能。 |
 | organization_name    | 組織名による絞り込み       | string| 任意 | なし  |   |
 
 ## 出力（レスポンス）の説明
@@ -38,8 +38,10 @@ GET /api/3/action/datasets_ranking
 | total_download_count | 全期間のダウンロード数 | int | aggregation_metric として download を指定した場合に存在する |
 | likes_count_by_period | 集計期間内のいいね数 | int | aggregation_metric として likes を指定した場合に存在する |
 | total_likes_count | 全期間のいいね数 | int | aggregation_metric として likes を指定した場合に存在する |
-| comments_count_by_period | 集計期間内のコメント数 | int | aggregation_metric として comments を指定した場合に存在する |
-| total_comments_count | 全期間のコメント数 | int | aggregation_metric として comments を指定した場合に存在する |
+| resorce_comments_count_by_period | 集計期間内のコメント数 | int | aggregation_metric として resource_comments を指定した場合に存在する |
+| total_resource_comments_count | 全期間のコメント数 | int | aggregation_metric として resource_comments を指定した場合に存在する |
+| utilization_comments_count_by_period | 集計期間内の利活用コメント数 | int | aggregation_metric として utilization_comments を指定した場合に存在する |
+| total_utilization_comments_count | 全期間の利活用コメント数 | int | aggregation_metric として utilization_comments を指定した場合に存在する |
 
 ## レスポンス例
 
