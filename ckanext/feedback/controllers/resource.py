@@ -416,6 +416,7 @@ class ResourceController:
 
         if not reply_open and not (
             current_user
+            and hasattr(current_user, 'sysadmin')
             and (
                 current_user.sysadmin
                 or has_organization_admin_role(_res.Resource.package.owner_org)
