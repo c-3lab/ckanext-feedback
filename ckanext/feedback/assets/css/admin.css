@@ -189,7 +189,7 @@ input[name="tab-menu"] {
 /* Fine-tuned reply overlay for resource (single icon base) */
 .reply-resource {
   position: absolute;
-  top: -2px;
+  top: -15px;
   right: -1px;
   font-size: 8px;
   line-height: 1;
