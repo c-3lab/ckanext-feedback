@@ -276,7 +276,7 @@ class TestRankingDataset:
             DownloadSummary(
                 id=str('sum_edge1'),
                 resource_id=resource['id'],
-                download=1,
+                download=100,
                 created='2023-03-31 23:59:59',
                 updated='2023-03-31 23:59:59',
             )
@@ -288,16 +288,6 @@ class TestRankingDataset:
                 download_count=1,
                 created='2023-03-01 00:00:00',
                 updated='2023-03-01 00:00:00',
-            )
-        )
-
-        session.add(
-            DownloadSummary(
-                id=str('sum_out1'),
-                resource_id=resource['id'],
-                download=99,
-                created='2023-04-01 00:00:00',
-                updated='2023-04-01 00:00:00',
             )
         )
         session.add(
