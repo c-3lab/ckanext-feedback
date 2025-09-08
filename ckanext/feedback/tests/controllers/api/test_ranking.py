@@ -8,6 +8,7 @@ from ckanext.feedback.controllers.api import ranking as DatasetRankingController
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import ResourceCommentSummary
+from ckanext.feedback.models.utilization import Utilization
 
 
 class TestRankingApi:
@@ -248,7 +249,12 @@ class TestRankingValidator:
 
     def test_validate_aggregation_metric(self):
         controller = DatasetRankingController._ranking_controller
-        for aggregation_metric in ['download', 'likes', 'comments']:
+        for aggregation_metric in [
+            'download',
+            'likes',
+            'resource_comments',
+            'utilization_comments',
+        ]:
             controller.validator.validate_aggregation_metric(aggregation_metric)
 
     def test_validate_aggregation_metric_with_invalid_value(self):
@@ -324,33 +330,68 @@ class TestRankingValidator:
         )
 
     @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
-    def test_validate_comments_function(self, mock_feedback_config):
+    def test_validate_resource_comments_function(self, mock_feedback_config):
         controller = DatasetRankingController._ranking_controller
 
-        mock_comments = MagicMock()
-        mock_comments.is_enable.return_value = True
-        mock_feedback_config.return_value.resource_comment = mock_comments
+        mock_resource_comments = MagicMock()
+        mock_resource_comments.is_enable.return_value = True
+        mock_feedback_config.return_value.resource_comment = mock_resource_comments
 
-        controller.validator.validate_comments_function()
+        controller.validator.validate_resource_comments_function()
 
     @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
-    def test_validate_comments_function_with_disabled_comments(
+    def test_validate_resource_comments_function_with_disabled_resource_comments(
         self, mock_feedback_config
     ):
         controller = DatasetRankingController._ranking_controller
 
-        mock_comments = MagicMock()
-        mock_comments.is_enable.return_value = False
-        mock_feedback_config.return_value.resource_comment = mock_comments
+        mock_resource_comments = MagicMock()
+        mock_resource_comments.is_enable.return_value = False
+        mock_feedback_config.return_value.resource_comment = mock_resource_comments
 
         with pytest.raises(ValidationError) as exc_info:
-            controller.validator.validate_comments_function()
+            controller.validator.validate_resource_comments_function()
 
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
 
         assert (
             error_message == "ResourceComments function is off."
+            "Please contact the site administrator for assintance."
+        )
+
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    def test_validate_utilization_comments_function(self, mock_feedback_config):
+        controller = DatasetRankingController._ranking_controller
+
+        mock_utilization_comments = MagicMock()
+        mock_utilization_comments.is_enable.return_value = True
+        mock_feedback_config.return_value.utilization_comment = (
+            mock_utilization_comments
+        )
+
+        controller.validator.validate_utilization_comments_function()
+
+    @patch('ckanext.feedback.controllers.api.ranking.FeedbackConfig')
+    def test_validate_utilization_comments_function_with_disabled_utilization_comments(
+        self, mock_feedback_config
+    ):
+        controller = DatasetRankingController._ranking_controller
+
+        mock_utilization_comments = MagicMock()
+        mock_utilization_comments.is_enable.return_value = False
+        mock_feedback_config.return_value.utilization_comment = (
+            mock_utilization_comments
+        )
+
+        with pytest.raises(ValidationError) as exc_info:
+            controller.validator.validate_utilization_comments_function()
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            error_message == "UtilizationComments function is off."
             "Please contact the site administrator for assintance."
         )
 
@@ -382,22 +423,24 @@ class TestRankingValidator:
             "Please contact the site administrator for assistance."
         )
 
-    def test_validate_organization_comments_enabled(self):
+    def test_validate_organization_resource_comments_enabled(self):
         controller = DatasetRankingController._ranking_controller
         organization_name = 'test_org1'
         enable_org = ['test_org1']
 
-        controller.validator.validate_organization_comments_enabled(
+        controller.validator.validate_organization_resource_comments_enabled(
             organization_name, enable_org
         )
 
-    def test_validate_organization_comments_enabled_with_disabled_organization(self):
+    def test_validate_organization_resource_comments_enabled_with_disabled_organization(
+        self,
+    ):
         controller = DatasetRankingController._ranking_controller
         organization_name = 'test_org2'
         enable_org = ['test_org1']
 
         with pytest.raises(ValidationError) as exc_info:
-            controller.validator.validate_organization_comments_enabled(
+            controller.validator.validate_organization_resource_comments_enabled(
                 organization_name, enable_org
             )
 
@@ -407,6 +450,37 @@ class TestRankingValidator:
         assert (
             error_message == "An organization with the resourceComment "
             "feature disabled has been selected. "
+            "Please contact the site administrator for assistance."
+        )
+
+    def test_validate_organization_utilization_comments_enabled(self):
+        controller = DatasetRankingController._ranking_controller
+        organization_name = 'test_org1'
+        enable_org = ['test_org1']
+
+        controller.validator.validate_organization_utilization_comments_enabled(
+            organization_name, enable_org
+        )
+
+    def test_validate_organization_utilization_comments_enabled_with_disabled_organization(  # noqa: E501
+        self,
+    ):
+        controller = DatasetRankingController._ranking_controller
+        organization_name = 'test_org2'
+        enable_org = ['test_org1']
+
+        with pytest.raises(ValidationError) as exc_info:
+            controller.validator.validate_organization_utilization_comments_enabled(
+                organization_name, enable_org
+            )
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            error_message
+            == "An organization with the utilizationComment feature disabled "
+            "has been selected. "
             "Please contact the site administrator for assistance."
         )
 
@@ -677,7 +751,7 @@ class TestDatasetRankingService:
         ]
 
         result_comments = controller.ranking_service.generate_dataset_ranking_list(
-            results, metric_name='comments'
+            results, metric_name='resource_comments'
         )
 
         assert result_comments == [
@@ -688,8 +762,27 @@ class TestDatasetRankingService:
                 'dataset_title': 'test_dataset1_title',
                 'dataset_notes': 'test_dataset1_notes',
                 'dataset_link': 'https://test-site-url/dataset/test_dataset1_title',
-                'comments_count_by_period': 100,
-                'total_comments_count': 100,
+                'resource_comments_count_by_period': 100,
+                'total_resource_comments_count': 100,
+            },
+        ]
+
+        result_utilization_comments = (
+            controller.ranking_service.generate_dataset_ranking_list(
+                results, metric_name='utilization_comments'
+            )
+        )
+
+        assert result_utilization_comments == [
+            {
+                'rank': 1,
+                'group_name': 'test_org1',
+                'group_title': 'test_org1_title',
+                'dataset_title': 'test_dataset1_title',
+                'dataset_notes': 'test_dataset1_notes',
+                'dataset_link': 'https://test-site-url/dataset/test_dataset1_title',
+                'utilization_comments_count_by_period': 100,
+                'total_utilization_comments_count': 100,
             },
         ]
 
@@ -970,15 +1063,26 @@ class TestDatasetRankingController:
                 'like',
             ),
             (
-                'comments',
+                'resource_comments',
                 None,
-                'validate_comments_function',
+                'validate_resource_comments_function',
                 None,
                 ResourceCommentSummary,
                 "comment",
                 ResourceCommentSummary,
                 "comment",
                 'resource_comment',
+            ),
+            (
+                'utilization_comments',
+                None,
+                'validate_utilization_comments_function',
+                None,
+                Utilization,
+                "comment",
+                Utilization,
+                "comment",
+                'utilization_comment',
             ),
             (
                 'download',
@@ -1003,15 +1107,26 @@ class TestDatasetRankingController:
                 'like',
             ),
             (
-                'comments',
+                'resource_comments',
                 'test_org1',
-                'validate_comments_function',
-                'validate_organization_comments_enabled',
+                'validate_resource_comments_function',
+                'validate_organization_resource_comments_enabled',
                 ResourceCommentSummary,
                 "comment",
                 ResourceCommentSummary,
                 "comment",
                 'resource_comment',
+            ),
+            (
+                'utilization_comments',
+                'test_org1',
+                'validate_utilization_comments_function',
+                'validate_organization_utilization_comments_enabled',
+                Utilization,
+                "comment",
+                Utilization,
+                "comment",
+                'utilization_comment',
             ),
         ],
     )
@@ -1085,7 +1200,10 @@ class TestDatasetRankingController:
                     mock_validate.assert_called_once()
                     mock_validate_org.assert_called_once_with(organization_name)
                     mock_validate_org_func.assert_called_once_with(
-                        organization_name, ['test_org1']
+                        organization_name,
+                        getattr(
+                            feedback_config, enable_org_config
+                        ).get_enable_org_names.return_value,
                     )
                     mock_get_generic_ranking.assert_called_once_with(
                         top_ranked_limit,
