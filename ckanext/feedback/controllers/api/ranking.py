@@ -12,6 +12,7 @@ import ckanext.feedback.services.ranking.dataset as dataset_ranking_service
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import ResourceCommentSummary
+from ckanext.feedback.models.utilization import Utilization
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.organization import organization as organization_service
 
@@ -38,7 +39,8 @@ class RankingConfig:
     AGGREGATION_METRIC_LIST = [
         'download',
         'likes',
-        'comments',
+        'resource_comments',
+        'utilization_comments',
     ]
 
 
@@ -177,12 +179,23 @@ class RankingValidator:
                 }
             )
 
-    def validate_comments_function(self):
+    def validate_resource_comments_function(self):
         if not FeedbackConfig().resource_comment.is_enable():
             raise toolkit.ValidationError(
                 {
                     "message": (
                         "ResourceComments function is off."
+                        "Please contact the site administrator for assintance."
+                    )
+                }
+            )
+
+    def validate_utilization_comments_function(self):
+        if not FeedbackConfig().utilization_comment.is_enable():
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "UtilizationComments function is off."
                         "Please contact the site administrator for assintance."
                     )
                 }
@@ -225,12 +238,28 @@ class RankingValidator:
                 }
             )
 
-    def validate_organization_comments_enabled(self, organization_name, enable_orgs):
+    def validate_organization_resource_comments_enabled(
+        self, organization_name, enable_orgs
+    ):
         if organization_name not in enable_orgs:
             raise toolkit.ValidationError(
                 {
                     "message": (
                         "An organization with the resourceComment feature disabled "
+                        "has been selected. "
+                        "Please contact the site administrator for assistance."
+                    )
+                }
+            )
+
+    def validate_organization_utilization_comments_enabled(
+        self, organization_name, enable_orgs
+    ):
+        if organization_name not in enable_orgs:
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "An organization with the utilizationComment feature disabled "
                         "has been selected. "
                         "Please contact the site administrator for assistance."
                     )
@@ -315,12 +344,19 @@ class DatasetRankingService:
             period_column = "like_count"
             total_model = ResourceLike
             total_column = "like_count"
-        elif metric == 'comments':
-            self.validator.validate_comments_function()
+        elif metric == 'resource_comments':
+            self.validator.validate_resource_comments_function()
             enable_orgs = FeedbackConfig().resource_comment.get_enable_org_names()
             period_model = ResourceCommentSummary
             period_column = "comment"
             total_model = ResourceCommentSummary
+            total_column = "comment"
+        elif metric == 'utilization_comments':
+            self.validator.validate_utilization_comments_function()
+            enable_orgs = FeedbackConfig().utilization_comment.get_enable_org_names()
+            period_model = Utilization
+            period_column = "comment"
+            total_model = Utilization
             total_column = "comment"
         else:
             raise toolkit.ValidationError({"message": "Invalid metric specified."})
@@ -330,8 +366,12 @@ class DatasetRankingService:
                 self.validator.validate_organization_likes_enabled(
                     organization_name, enable_orgs
                 )
-            elif metric == 'comments':
-                self.validator.validate_organization_comments_enabled(
+            elif metric == 'resource_comments':
+                self.validator.validate_organization_resource_comments_enabled(
+                    organization_name, enable_orgs
+                )
+            elif metric == 'utilization_comments':
+                self.validator.validate_organization_utilization_comments_enabled(
                     organization_name, enable_orgs
                 )
             else:
