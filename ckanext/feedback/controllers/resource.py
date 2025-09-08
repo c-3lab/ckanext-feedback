@@ -504,20 +504,28 @@ class ResourceController:
         uploader.upload()
         return attached_image_filename
 
-    # resource_comment/<resource_id>/comment/create_previous_suggestion_log
+    # resource_comment/<resource_id>/comment/create_previous_log
     @staticmethod
-    def create_previous_suggestion_log(resource_id):
+    def create_previous_log(resource_id):
         resource = comment_service.get_resource(resource_id)
         if FeedbackConfig().moral_keeper_ai.is_enable(
             resource.Resource.package.owner_org
         ):
             data = request.get_json()
+            previous_type = data.get('previous_type', None)
             input_comment = data.get('input_comment', None)
             suggested_comment = data.get('suggested_comment', None)
 
+            if previous_type == 'suggestion':
+                action = MoralCheckAction.PREVIOUS_SUGGESTION.name
+            elif previous_type == 'confirm':
+                action = MoralCheckAction.PREVIOUS_CONFIRM.name
+            else:
+                toolkit.abort(500)
+
             comment_service.create_resource_comment_moral_check_log(
                 resource_id=resource_id,
-                action=MoralCheckAction.PREVIOUS.name,
+                action=action,
                 input_comment=input_comment,
                 suggested_comment=suggested_comment,
                 output_comment=None,

@@ -17,6 +17,7 @@
   {% block primary %}
     <article class="module" role="main">
       <input type="hidden" id="utilization-id" value="{{ utilization_id }}">
+      <input type="hidden" id="current-type" name="current-type" value="comment">
       <div class="module-content">
         {% set row = utilization %}
         <div>
@@ -275,7 +276,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-detail-js' %}
-    {% asset 'feedback/feedback-utilization-comment-js' %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>

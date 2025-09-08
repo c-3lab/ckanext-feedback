@@ -16,6 +16,8 @@
 
   {% block primary %}
     <div class="module-content">
+      <input type="hidden" id="utilization-id" name="utilization-id" value="{{ utilization_id }}">
+      <input type="hidden" id="current-type" name="current-type" value="suggestion">
       <div>
         <h1 class="p-2">{{ _('Suggested comment content') }}</h1>
         <br>
@@ -73,8 +75,8 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="comment-suggested" value="True">
             <input type="hidden" name="action" value="{{ action.SUGGESTION_SELECTED.name }}">
-            <input type="hidden" id="input-comment" name="input-comment" value="{{ content }}">
-            <input type="hidden" id="suggested-comment" name="suggested-comment" value="{{ softened }}">
+            <input type="hidden" name="input-comment" value="{{ content }}">
+            <input type="hidden" name="suggested-comment" value="{{ softened }}">
             {% if attached_image_filename %}
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
@@ -106,7 +108,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-detail-js' %}
-    {% asset 'feedback/feedback-suggestion-js' %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>

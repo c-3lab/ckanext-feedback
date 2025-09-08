@@ -61,23 +61,11 @@ feedback-resource_read-js:
   contents:
     - js/resource_read.js
 
-feedback-suggestion-js:
+feedback-moral_check_log-js:
   filter: rjsmin
-  output: ckanext-feedback/%(version)s-suggestion.js
+  output: ckanext-feedback/%(version)s-moral_check_log.js
   contents:
-    - js/suggestion.js
-
-feedback-resource-comment-js:
-  filter: rjsmin
-  output: ckanext-feedback/%(version)s-resource_comment.js
-  contents:
-    - js/resource_comment.js
-
-feedback-utilization-comment-js:
-  filter: rjsmin
-  output: ckanext-feedback/%(version)s-utilization_comment.js
-  contents:
-    - js/utilization_comment.js
+    - js/moral_check_log.js
 
 feedback-search-css:
   filter: cssrewrite

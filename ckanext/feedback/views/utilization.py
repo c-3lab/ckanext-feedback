@@ -89,9 +89,9 @@ rules = [
         {'methods': ['GET']},
     ),
     (
-        '/<utilization_id>/comment/create_previous_suggestion_log',
-        'create_previous_suggestion_log',
-        utilization.UtilizationController.create_previous_suggestion_log,
+        '/<utilization_id>/comment/create_previous_log',
+        'create_previous_log',
+        utilization.UtilizationController.create_previous_log,
         {'methods': ['POST']},
     ),
 ]

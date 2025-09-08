@@ -62,9 +62,9 @@ rules = [
         {'methods': ['GET']},
     ),
     (
-        '/<resource_id>/comment/create_previous_suggestion_log',
-        'create_previous_suggestion_log',
-        resource.ResourceController.create_previous_suggestion_log,
+        '/<resource_id>/comment/create_previous_log',
+        'create_previous_log',
+        resource.ResourceController.create_previous_log,
         {'methods': ['POST']},
     ),
 ]
