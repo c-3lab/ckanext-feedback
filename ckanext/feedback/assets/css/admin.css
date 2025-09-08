@@ -179,7 +179,7 @@ input[name="tab-menu"] {
 
 .bubble-icon-wrap .reply-outside {
   position: absolute;
-  top: -1px;
+  top: 16px;
   right: 1px;
   font-size: 8px;
   line-height: 1;
