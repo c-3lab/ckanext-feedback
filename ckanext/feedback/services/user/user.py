@@ -4,11 +4,11 @@ from ckan.model.user import User
 from ckanext.feedback.models.session import session
 
 
-def get_user_by_api_token(api_token):
+def get_user_by_token_id(token_id):
     user = (
         session.query(User)
         .join(ApiToken)
-        .filter(ApiToken.id == api_token)
+        .filter(ApiToken.id == token_id)
         .filter(User.state == 'active')
         .first()
     )

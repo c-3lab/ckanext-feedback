@@ -8,6 +8,9 @@ from ckan.plugins import toolkit
 import ckanext.feedback.services.common.upload as upload_service
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.utilization.details as detail_service
+from ckanext.feedback.controllers.api.moral_check_log import (
+    create_moral_check_log_excel_workbook,
+)
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
@@ -24,7 +27,6 @@ from ckanext.feedback.models.utilization import (
     UtilizationCommentMoralCheckLog,
     UtilizationSummary,
 )
-from ckanext.feedback.utils.excel_export import export_moral_check_log
 
 
 @click.group()
@@ -217,7 +219,7 @@ def handle_file_deletion(dry_run, file_path):
 )
 def moral_check_log(separation, output):
     try:
-        result = export_moral_check_log(separation)
+        result = create_moral_check_log_excel_workbook(separation)
         with open(output, 'wb') as f:
             f.write(result.getvalue())
         click.secho(f'Exported moral check log to {output}', fg='green')
