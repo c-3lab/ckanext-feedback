@@ -407,21 +407,27 @@ class ResourceController:
 
         # Reply permission control (admin or reply_open)
         reply_open = False
+        _res = None
         try:
+            _res = comment_service.get_resource(resource_id)
             reply_open = FeedbackConfig().resource_comment.reply_open.is_enable(
                 _res.Resource.package.owner_org
             )
-        except Exception:
+            log.info(f"reply_open value: {reply_open}")
+        except Exception as e:
+            log.exception(f"Error getting reply_open: {e}")
             reply_open = False
 
-        if not reply_open and not (
-            current_user
-            and hasattr(current_user, 'sysadmin')
-            and (
-                current_user.sysadmin
-                or has_organization_admin_role(_res.Resource.package.owner_org)
-            )
-        ):
+        is_admin = False
+        if current_user and hasattr(current_user, 'sysadmin'):
+            is_admin = current_user.sysadmin
+            if _res:
+                is_admin = is_admin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            log.info(f"is_admin value: {is_admin}")
+
+        if not (reply_open or is_admin):
             helpers.flash_error(
                 _('Reply is restricted to administrators.'), allow_html=True
             )
