@@ -23,8 +23,9 @@ depends_on = None
 
 
 class MoralCheckAction(enum.Enum):
-    PREVIOUS = 'Previous'
     CHECK_COMPLETED = 'CheckCompleted'
+    PREVIOUS_CONFIRM = 'PreviousConfirm'
+    PREVIOUS_SUGGESTION = 'PreviousSuggestion'
     INPUT_SELECTED = 'InputSelected'
     SUGGESTION_SELECTED = 'SuggestionSelected'
 
@@ -39,7 +40,11 @@ def upgrade():
             sa.ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
             nullable=False,
         ),
-        sa.Column('action', sa.Enum(MoralCheckAction), nullable=False),
+        sa.Column(
+            'action',
+            sa.Enum(MoralCheckAction, name='resourcecomment_moralcheckaction'),
+            nullable=False,
+        ),
         sa.Column('input_comment', sa.Text),
         sa.Column('suggested_comment', sa.Text),
         sa.Column('output_comment', sa.Text),
@@ -54,7 +59,11 @@ def upgrade():
             sa.ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'),
             nullable=False,
         ),
-        sa.Column('action', sa.Enum(MoralCheckAction), nullable=False),
+        sa.Column(
+            'action',
+            sa.Enum(MoralCheckAction, name='utilizationcomment_moralcheckaction'),
+            nullable=False,
+        ),
         sa.Column('input_comment', sa.Text),
         sa.Column('suggested_comment', sa.Text),
         sa.Column('output_comment', sa.Text),
@@ -65,4 +74,5 @@ def upgrade():
 def downgrade():
     op.drop_table('resource_comment_moral_check_log')
     op.drop_table('utilization_comment_moral_check_log')
-    op.execute('DROP TYPE IF EXISTS moralcheckaction;')
+    op.execute('DROP TYPE IF EXISTS resourcecomment_moralcheckaction;')
+    op.execute('DROP TYPE IF EXISTS utilizationcomment_moralcheckaction;')

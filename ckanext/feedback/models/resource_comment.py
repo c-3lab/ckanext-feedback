@@ -123,7 +123,7 @@ class ResourceCommentMoralCheckLog(Base):
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
     )
-    action = Column(Enum(MoralCheckAction))
+    action = Column(Enum(MoralCheckAction, name='resourcecomment_moralcheckaction'))
     input_comment = Column(Text)
     suggested_comment = Column(Text)
     output_comment = Column(Text)

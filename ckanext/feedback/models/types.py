@@ -18,7 +18,8 @@ class ResourceCommentResponseStatus(enum.Enum):
 
 
 class MoralCheckAction(enum.Enum):
-    PREVIOUS = 'Previous'
     CHECK_COMPLETED = 'CheckCompleted'
+    PREVIOUS_CONFIRM = 'PreviousConfirm'
+    PREVIOUS_SUGGESTION = 'PreviousSuggestion'
     INPUT_SELECTED = 'InputSelected'
     SUGGESTION_SELECTED = 'SuggestionSelected'

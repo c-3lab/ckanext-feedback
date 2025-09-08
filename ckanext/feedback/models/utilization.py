@@ -99,7 +99,7 @@ class UtilizationCommentMoralCheckLog(Base):
         ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
     )
-    action = Column(Enum(MoralCheckAction))
+    action = Column(Enum(MoralCheckAction, name='utilizationcomment_moralcheckaction'))
     input_comment = Column(Text)
     suggested_comment = Column(Text)
     output_comment = Column(Text)
