@@ -19,7 +19,10 @@ from ckanext.feedback.command.feedback import (
 from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.types import ResourceCommentResponseStatus
+from ckanext.feedback.models.types import (
+    MoralCheckAction,
+    ResourceCommentResponseStatus,
+)
 
 engine = model.repo.session.get_bind()
 
@@ -692,8 +695,9 @@ class TestResourceController:
                 'selected_category': category,
                 'rating': rating,
                 'content': content,
-                'softened': softened,
                 'attached_image_filename': attached_image_filename,
+                'softened': softened,
+                'action': MoralCheckAction,
             },
         )
 
@@ -739,6 +743,7 @@ class TestResourceController:
                 'rating': rating,
                 'content': content,
                 'attached_image_filename': attached_image_filename,
+                'action': MoralCheckAction,
             },
         )
 
@@ -796,7 +801,6 @@ class TestResourceController:
             'category': category,
             'rating': rating,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': False,
         }.get(x, default)
 
         mock_file = MagicMock()
@@ -838,17 +842,24 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.check_ai_comment')
-    @patch('ckanext.feedback.controllers.resource.ResourceController.suggested_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.' 'ResourceController.suggested_comment'
+    )
     @patch(
         'ckanext.feedback.controllers.resource.'
         'comment_service.get_resource_comment_categories'
     )
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.create_resource_comment_moral_check_log'
+    )
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     def test_check_comment_POST_judgement_True(
         self,
         mock_render,
+        mock_create_resource_comment_moral_check_log,
         mock_get_action,
         mock_get_resource,
         mock_get_resource_comment_categories,
@@ -890,6 +901,8 @@ class TestResourceController:
         mock_package_show.return_value = mock_package
         mock_get_action.return_value = mock_package_show
 
+        mock_create_resource_comment_moral_check_log.return_value = None
+
         mock_get_resource_comment_categories.return_value = 'mock_categories'
 
         ResourceController.check_comment(resource_id)
@@ -912,7 +925,9 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.check_ai_comment')
-    @patch('ckanext.feedback.controllers.resource.ResourceController.suggested_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.' 'ResourceController.suggested_comment'
+    )
     @patch(
         'ckanext.feedback.controllers.resource.'
         'comment_service.get_resource_comment_categories'
@@ -987,10 +1002,15 @@ class TestResourceController:
     )
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.create_resource_comment_moral_check_log'
+    )
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     def test_check_comment_POST_suggested(
         self,
         mock_render,
+        mock_create_resource_comment_moral_check_log,
         mock_get_action,
         mock_get_resource,
         mock_get_resource_comment_categories,
@@ -1014,7 +1034,10 @@ class TestResourceController:
             'category': category,
             'rating': rating,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': True,
+            'comment-suggested': 'True',
+            'action': MoralCheckAction.INPUT_SELECTED,
+            'input-comment': 'test_input_comment',
+            'suggested-comment': 'test_suggested_comment',
         }.get(x, default)
 
         mock_files.return_value = None
@@ -1027,6 +1050,8 @@ class TestResourceController:
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
         mock_get_action.return_value = mock_package_show
+
+        mock_create_resource_comment_moral_check_log.return_value = None
 
         mock_get_resource_comment_categories.return_value = 'mock_categories'
 
@@ -1089,7 +1114,6 @@ class TestResourceController:
             'category': category,
             'rating': rating,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': True,
         }.get(x, default)
 
         mock_file = MagicMock()
@@ -1176,7 +1200,6 @@ class TestResourceController:
             'category': category,
             'rating': rating,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': True,
         }.get(x, default)
 
         mock_files.return_value = None
@@ -1216,15 +1239,12 @@ class TestResourceController:
         rating = '3'
         attached_image_filename = None
 
-        config['ckan.feedback.moral_keeper_ai.enable'] = True
-
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
             'comment-content': content,
             'category': category,
             'rating': rating,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': True,
         }.get(x, default)
 
         mock_files.return_value = None
@@ -1994,3 +2014,131 @@ class TestResourceCommentReactions:
         mock_get_uploader.assert_called_once_with('/test/upload/path')
         mock_uploader.update_data_dict.assert_called_once()
         mock_uploader.upload.assert_called_once()
+
+
+@pytest.mark.usefixtures('with_request_context')
+@pytest.mark.db_test
+class TestResourceCreatePreviousLog:
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.create_resource_comment_moral_check_log'
+    )
+    def test_create_previous_log_moral_keeper_ai_disabled(
+        self,
+        mock_create_resource_comment_moral_check_log,
+        mock_get_resource,
+        resource,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = False
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+
+        return_value = ResourceController.create_previous_log(resource['id'])
+
+        mock_create_resource_comment_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.create_resource_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_suggestion(
+        self,
+        mock_create_resource_comment_moral_check_log,
+        mock_get_json,
+        mock_get_resource,
+        resource,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'suggestion',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+        mock_create_resource_comment_moral_check_log.return_value = None
+
+        return_value = ResourceController.create_previous_log(resource['id'])
+
+        mock_create_resource_comment_moral_check_log.assert_called_once_with(
+            resource_id=resource['id'],
+            action=MoralCheckAction.PREVIOUS_SUGGESTION.name,
+            input_comment='test_input_comment',
+            suggested_comment='test_suggested_comment',
+            output_comment=None,
+        )
+        assert return_value == ('', 204)
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.create_resource_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_confirm(
+        self,
+        mock_create_resource_comment_moral_check_log,
+        mock_get_json,
+        mock_get_resource,
+        resource,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'confirm',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+        mock_create_resource_comment_moral_check_log.return_value = None
+
+        return_value = ResourceController.create_previous_log(resource['id'])
+
+        mock_create_resource_comment_moral_check_log.assert_called_once_with(
+            resource_id=resource['id'],
+            action=MoralCheckAction.PREVIOUS_CONFIRM.name,
+            input_comment='test_input_comment',
+            suggested_comment='test_suggested_comment',
+            output_comment=None,
+        )
+        assert return_value == ('', 204)
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.create_resource_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_none(
+        self,
+        mock_create_resource_comment_moral_check_log,
+        mock_get_json,
+        mock_get_resource,
+        resource,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'none',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+        mock_create_resource_comment_moral_check_log.return_value = None
+
+        return_value = ResourceController.create_previous_log(resource['id'])
+
+        mock_create_resource_comment_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)

@@ -18,11 +18,15 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentCategory,
 )
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.types import ResourceCommentResponseStatus
+from ckanext.feedback.models.types import (
+    MoralCheckAction,
+    ResourceCommentResponseStatus,
+)
 from ckanext.feedback.services.resource.comment import (
     approve_resource_comment,
     create_reply,
     create_resource_comment,
+    create_resource_comment_moral_check_log,
     create_resource_comment_reactions,
     get_attached_image_path,
     get_comment_attached_image_files,
@@ -30,6 +34,7 @@ from ckanext.feedback.services.resource.comment import (
     get_resource,
     get_resource_comment,
     get_resource_comment_categories,
+    get_resource_comment_moral_check_logs,
     get_resource_comment_reactions,
     get_resource_comments,
     get_upload_destination,
@@ -294,3 +299,54 @@ class TestAttachedImageService:
         result = get_comment_attached_image_files()
 
         assert result == ['test_attached_image.jpg']
+
+
+@pytest.mark.db_test
+class TestResourceCommentMoralCheckLog:
+    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
+    def test_create_resource_comment_moral_check_log(self, resource):
+        resource_id = resource['id']
+        action = MoralCheckAction.INPUT_SELECTED
+        input_comment = 'test_input_comment'
+        suggested_comment = 'test_suggested_comment'
+        output_comment = 'test_output_comment'
+
+        create_resource_comment_moral_check_log(
+            resource_id,
+            action,
+            input_comment,
+            suggested_comment,
+            output_comment,
+        )
+        session.flush()
+
+        results = get_resource_comment_moral_check_logs()
+
+        assert results is not None
+        assert results[0].resource_id == resource_id
+        assert results[0].action == action
+        assert results[0].input_comment == input_comment
+        assert results[0].suggested_comment == suggested_comment
+        assert results[0].output_comment == output_comment
+        assert results[0].timestamp == datetime(2024, 1, 1, 15, 0, 0)
+
+    def test_get_resource_comment_moral_check_logs(
+        self, resource_comment_moral_check_log
+    ):
+        results = get_resource_comment_moral_check_logs()
+
+        assert results is not None
+        assert results[0].id == resource_comment_moral_check_log.id
+        assert results[0].resource_id == resource_comment_moral_check_log.resource_id
+        assert results[0].action == resource_comment_moral_check_log.action
+        assert (
+            results[0].input_comment == resource_comment_moral_check_log.input_comment
+        )
+        assert (
+            results[0].suggested_comment
+            == resource_comment_moral_check_log.suggested_comment
+        )
+        assert (
+            results[0].output_comment == resource_comment_moral_check_log.output_comment
+        )
+        assert results[0].timestamp == resource_comment_moral_check_log.timestamp
