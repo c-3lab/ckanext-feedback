@@ -216,59 +216,6 @@ def user_context(flask_context, user):
 
 
 @pytest.fixture(scope='function')
-def utilization_with_params(resource):
-    def _create_utilization(
-        title='test_title',
-        description='test_description',
-        approval=True,
-        approval_user_id=None,
-        url='test_url',
-    ):
-        utilization = Utilization(
-            id=str(uuid.uuid4()),
-            resource_id=resource['id'],
-            title=title,
-            url=url,
-            description=description,
-            comment=0,
-            approval=approval,
-            approved=datetime(2024, 1, 1, 15, 0, 0) if approval else None,
-            approval_user_id=approval_user_id,
-        )
-        session.add(utilization)
-        session.flush()
-        return utilization
-
-    return _create_utilization
-
-
-@pytest.fixture(scope='function')
-def utilization_comment_with_params(utilization):
-    def _create_comment(
-        category=UtilizationCommentCategory.REQUEST,
-        content='test_content',
-        approval=True,
-        approval_user_id=None,
-    ):
-        comment = UtilizationComment(
-            id=str(uuid.uuid4()),
-            utilization_id=utilization.id,
-            category=category,
-            content=content,
-            created=datetime(2024, 1, 1, 15, 0, 0),
-            approval=approval,
-            approved=datetime(2024, 1, 1, 15, 0, 0) if approval else None,
-            approval_user_id=approval_user_id,
-            attached_image_filename='test_attached_image.jpg',
-        )
-        session.add(comment)
-        session.flush()
-        return comment
-
-    return _create_comment
-
-
-@pytest.fixture(scope='function')
 def multiple_utilizations(resource):
     def _create_multiple(count=2, approval=True):
         utilizations = []
