@@ -72,14 +72,10 @@ class TestUtilization:
 
     @pytest.mark.db_test
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilizations_by_comment_ids(self, resource, utilization_with_params):
-
-        util1 = utilization_with_params(
-            title='test title 1', description='test description 1'
-        )
-        util2 = utilization_with_params(
-            title='test title 2', description='test description 2'
-        )
+    def test_get_utilizations_by_comment_ids(self, resource, multiple_utilizations):
+        utils = multiple_utilizations(count=2)
+        util1 = utils[0]
+        util2 = utils[1]
 
         comment_id1 = str(uuid.uuid4())
         comment1 = UtilizationComment(
@@ -116,12 +112,13 @@ class TestUtilization:
 
     @pytest.mark.db_test
     def test_get_utilization_details_by_ids(
-        self, dataset, resource, utilization_with_params
+        self, dataset, resource, multiple_utilizations
     ):
+        utils = multiple_utilizations(count=1)
+        util = utils[0]
 
-        title = 'test title'
-        description = 'test description'
-        util = utilization_with_params(title=title, description=description)
+        title = 'test_title_0'
+        description = 'test_description_0'
 
         utilization_id_list = [util.id]
         utilizations = utilization_service.get_utilization_details_by_ids(
@@ -141,11 +138,9 @@ class TestUtilization:
         assert result_util.resource.package.owner_org == dataset['owner_org']
 
     @pytest.mark.db_test
-    def test_get_utilization_ids(self, resource, utilization_with_params):
-
-        util1 = utilization_with_params(
-            title='test title 1', description='test description 1', approval=False
-        )
+    def test_get_utilization_ids(self, resource, multiple_utilizations):
+        utils = multiple_utilizations(count=1, approval=False)
+        util1 = utils[0]
 
         session.commit()
 
@@ -155,11 +150,9 @@ class TestUtilization:
         assert utilization_ids == [util1.id]
 
     @pytest.mark.db_test
-    def test_get_utilization_resource_ids(self, resource, utilization_with_params):
-
-        util1 = utilization_with_params(
-            title='test title 1', description='test description 1', approval=False
-        )
+    def test_get_utilization_resource_ids(self, resource, multiple_utilizations):
+        utils = multiple_utilizations(count=1, approval=False)
+        util1 = utils[0]
 
         session.commit()
 
@@ -174,12 +167,10 @@ class TestUtilization:
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch('ckanext.feedback.services.admin.utilization.session.bulk_update_mappings')
     def test_approve_utilization(
-        self, mock_mappings, resource, utilization_with_params, user
+        self, mock_mappings, resource, multiple_utilizations, user
     ):
-
-        util = utilization_with_params(
-            title='test title', description='test description', approval=False
-        )
+        utils = multiple_utilizations(count=1, approval=False)
+        util = utils[0]
 
         session.commit()
 
@@ -202,10 +193,9 @@ class TestUtilization:
         assert mock_mappings.call_args[0] == expected_args
 
     @pytest.mark.db_test
-    def test_delete_utilization(self, resource, utilization_with_params):
-        util = utilization_with_params(
-            title='test title', description='test description', approval=False
-        )
+    def test_delete_utilization(self, resource, multiple_utilizations):
+        utils = multiple_utilizations(count=1, approval=False)
+        util = utils[0]
 
         session.commit()
 
