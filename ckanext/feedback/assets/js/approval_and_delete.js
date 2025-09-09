@@ -43,9 +43,12 @@ function processAction(action, isApproval) {
 
     const utilizationCommentWaiting = getCheckedCheckboxes('utilization-comments-checkbox', 'False');
     const utilizationCommentApproved = getCheckedCheckboxes('utilization-comments-checkbox', 'True');
+    
+    const utilizationCommentReplyWaiting = getCheckedCheckboxes('utilization-comment-replies-checkbox', 'False');
+    const utilizationCommentReplyApproved = getCheckedCheckboxes('utilization-comment-replies-checkbox', 'True');
 
-    const waitingRows = resourceCommentWaiting.length + utilizationWaiting.length + utilizationCommentWaiting.length + resourceCommentReplyWaiting.length;
-    const approvedRows = resourceCommentApproved.length + utilizationApproved.length + utilizationCommentApproved.length + resourceCommentReplyApproved.length;
+    const waitingRows = resourceCommentWaiting.length + utilizationWaiting.length + utilizationCommentWaiting.length + resourceCommentReplyWaiting.length + utilizationCommentReplyWaiting.length;
+    const approvedRows = resourceCommentApproved.length + utilizationApproved.length + utilizationCommentApproved.length + resourceCommentReplyApproved.length + utilizationCommentReplyApproved.length;
     const checkedRows = waitingRows + approvedRows;
 
     if (checkedRows === 0) {
@@ -59,7 +62,6 @@ function processAction(action, isApproval) {
         alert(message);
         return;
     }
-
     const buttonId = isApproval ? 'approval-button' : 'delete-button';
     const actionButton = document.getElementById(buttonId);
     actionButton.style.pointerEvents = 'none';
@@ -67,7 +69,7 @@ function processAction(action, isApproval) {
     let message;
 
     if (isApproval) {
-        [...resourceCommentApproved, ...utilizationApproved, ...utilizationCommentApproved, ...resourceCommentReplyApproved].forEach(checkbox => {
+        [...resourceCommentApproved, ...utilizationApproved, ...utilizationCommentApproved, ...resourceCommentReplyApproved, ...utilizationCommentReplyApproved].forEach(checkbox => {
             checkbox.checked = false;
         });
         message = getTranslatedMessage('Is it okay to approve checked WAITING_ROWS item(s)?',{WAITING_ROWS: waitingRows});
