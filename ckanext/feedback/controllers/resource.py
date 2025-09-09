@@ -518,12 +518,13 @@ class ResourceController:
             input_comment = data.get('input_comment', None)
             suggested_comment = data.get('suggested_comment', None)
 
-            if previous_type == 'suggestion':
-                action = MoralCheckAction.PREVIOUS_SUGGESTION.name
-            elif previous_type == 'confirm':
-                action = MoralCheckAction.PREVIOUS_CONFIRM.name
-            else:
-                toolkit.abort(500)
+            action_map = {
+                'suggestion': MoralCheckAction.PREVIOUS_SUGGESTION.name,
+                'confirm': MoralCheckAction.PREVIOUS_CONFIRM.name,
+            }
+            action = action_map.get(previous_type, None)
+            if action is None:
+                return '', 204
 
             comment_service.create_resource_comment_moral_check_log(
                 resource_id=resource_id,
