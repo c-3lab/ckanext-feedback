@@ -21,6 +21,8 @@ msgstr ""
 
 #: ckanext/feedback/plugin.py:148 ckanext/feedback/plugin.py:195
 #: ckanext/feedback/plugin.py:197
+#: ckanext/feedback/plugin.py:148 ckanext/feedback/plugin.py:195
+#: ckanext/feedback/plugin.py:197
 #: ckanext/feedback/templates/package/snippets/resource_item.html:31
 #: ckanext/feedback/templates/snippets/package_item.html:30
 #: ckanext/feedback/tests/test_plugin.py:146
@@ -29,6 +31,8 @@ msgstr ""
 msgid "Downloads"
 msgstr "ダウンロード数"
 
+#: ckanext/feedback/plugin.py:154 ckanext/feedback/plugin.py:202
+#: ckanext/feedback/plugin.py:204
 #: ckanext/feedback/plugin.py:154 ckanext/feedback/plugin.py:202
 #: ckanext/feedback/plugin.py:204
 #: ckanext/feedback/templates/package/snippets/resource_item.html:40
@@ -41,6 +45,8 @@ msgstr "利活用数"
 
 #: ckanext/feedback/plugin.py:160 ckanext/feedback/plugin.py:207
 #: ckanext/feedback/plugin.py:209
+#: ckanext/feedback/plugin.py:160 ckanext/feedback/plugin.py:207
+#: ckanext/feedback/plugin.py:209
 #: ckanext/feedback/templates/package/snippets/resource_item.html:67
 #: ckanext/feedback/templates/snippets/package_item.html:72
 #: ckanext/feedback/templates/utilization/details.html:56
@@ -50,6 +56,8 @@ msgstr "利活用数"
 msgid "Issue Resolutions"
 msgstr "課題解決数"
 
+#: ckanext/feedback/plugin.py:170 ckanext/feedback/plugin.py:214
+#: ckanext/feedback/plugin.py:216
 #: ckanext/feedback/plugin.py:170 ckanext/feedback/plugin.py:214
 #: ckanext/feedback/plugin.py:216
 #: ckanext/feedback/templates/package/snippets/resource_item.html:49
@@ -65,6 +73,8 @@ msgstr "コメント数"
 
 #: ckanext/feedback/plugin.py:175 ckanext/feedback/plugin.py:220
 #: ckanext/feedback/plugin.py:222
+#: ckanext/feedback/plugin.py:175 ckanext/feedback/plugin.py:220
+#: ckanext/feedback/plugin.py:222
 #: ckanext/feedback/templates/package/snippets/resource_item.html:57
 #: ckanext/feedback/templates/resource/comment.html:46
 #: ckanext/feedback/templates/snippets/package_item.html:62
@@ -73,6 +83,8 @@ msgstr "コメント数"
 msgid "Rating"
 msgstr "評価"
 
+#: ckanext/feedback/plugin.py:183 ckanext/feedback/plugin.py:227
+#: ckanext/feedback/plugin.py:229
 #: ckanext/feedback/plugin.py:183 ckanext/feedback/plugin.py:227
 #: ckanext/feedback/plugin.py:229
 #: ckanext/feedback/templates/package/snippets/resource_item.html:22
@@ -458,9 +470,13 @@ msgstr "月"
 #: ckanext/feedback/templates/admin/aggregation.html:47
 #: ckanext/feedback/templates/admin/aggregation.html:66
 #: ckanext/feedback/templates/admin/aggregation.html:77
-#: ckanext/feedback/templates/package/resource_read.html:43
+#: ckanext/feedback/templates/package/resource_read.html:36
+#: ckanext/feedback/templates/package/resource_read.html:40
 #: ckanext/feedback/templates/package/resource_read.html:52
-#: ckanext/feedback/templates/package/resource_read.html:59
+#: ckanext/feedback/templates/package/resource_read.html:56
+#: ckanext/feedback/templates/package/resource_read.html:62
+#: ckanext/feedback/templates/package/resource_read.html:72
+#: ckanext/feedback/templates/package/resource_read.html:79
 #: ckanext/feedback/templates/package/snippets/resource_item.html:122
 msgid "Download"
 msgstr "ダウンロード"
@@ -611,7 +627,7 @@ msgstr "管理"
 msgid "View"
 msgstr "ビュー"
 
-#: ckanext/feedback/templates/package/resource_read.html:29
+#: ckanext/feedback/templates/package/resource_read.html:30
 msgid "API Endpoint"
 msgstr "API エンドポイント"
 
@@ -620,8 +636,8 @@ msgstr "API エンドポイント"
 msgid "Go to resource"
 msgstr "リソースへ行く"
 
-#: ckanext/feedback/templates/package/resource_read.html:50
-#: ckanext/feedback/templates/package/resource_read.html:57
+#: ckanext/feedback/templates/package/resource_read.html:70
+#: ckanext/feedback/templates/package/resource_read.html:77
 msgid "List of downloadable formats"
 msgstr "ダウンロード可能フォーマット一覧"
 
@@ -639,8 +655,32 @@ msgstr "利活用方法登録申請"
 msgid "Comment"
 msgstr "コメント"
 
-#: ckanext/feedback/templates/package/resource_read.html:107
-#: ckanext/feedback/templates/package/resource_read.html:115
+#: ckanext/feedback/templates/package/resource_read.html:140
+msgid ""
+"Thank you for downloading!<br>If you like, please give us your feedback "
+"to help us improve our data."
+msgstr "ダウンロードありがとうございます！<br>よければ、データ改善のためのフィードバックをお願いします！"
+
+#: ckanext/feedback/templates/package/resource_read.html:142
+msgid "How about giving likes?"
+msgstr "いいねを押していきませんか？"
+
+#: ckanext/feedback/templates/package/resource_read.html:151
+#: ckanext/feedback/templates/package/resource_read.html:153
+msgid "How about leaving a comment?"
+msgstr "コメントをしていきませんか？"
+
+#: ckanext/feedback/templates/package/resource_read.html:162
+#: ckanext/feedback/templates/package/resource_read.html:164
+msgid "How about sharing your way of using it?"
+msgstr "活用方法を共有しませんか？"
+
+#: ckanext/feedback/templates/package/resource_read.html:178
+msgid "Close"
+msgstr "閉じる"
+
+#: ckanext/feedback/templates/package/resource_read.html:190
+#: ckanext/feedback/templates/package/resource_read.html:202
 msgid "URL:"
 msgstr "URL:"
 

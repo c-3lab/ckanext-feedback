@@ -1,3 +1,23 @@
-#like-icon.liked {
+.like-icon.liked {
   color: rgb(255, 238, 0);
+}
+.like-count{
+  line-height: inherit;
+}
+
+.modal-label {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.modal-body a.btn {
+  margin-bottom: 8px;
+}
+
+.modal-title{
+  display: block;
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 15px;
+  font-size: 17px;
 }
