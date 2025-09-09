@@ -7,11 +7,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from ckan import model
-from ckan.common import _
-from ckan.model import User
 from ckan.tests import factories
 from dateutil.relativedelta import relativedelta
-from flask import Flask, Response, g
+from flask import Response, g
 
 from ckanext.feedback.command.feedback import (
     create_download_tables,
@@ -39,12 +37,6 @@ def user_env():
     return env
 
 
-def mock_current_user(current_user, user):
-    user_obj = model.User.get(user['name'])
-    # mock current_user
-    current_user.return_value = user_obj
-
-
 def make_mocked_object(owner_org):
     mocked = MagicMock()
     mocked.resource = MagicMock()
@@ -53,7 +45,7 @@ def make_mocked_object(owner_org):
     return mocked
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestAdminController:
     @classmethod
     def setup_class(cls):
@@ -63,44 +55,37 @@ class TestAdminController:
         create_download_tables(engine)
 
     def setup_method(self, method):
-        self.app = Flask(__name__)
+        # self.app = Flask(__name__)
+        pass
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
+    @patch('ckanext.feedback.controllers.admin.toolkit.url_for')
     def test_admin(
         self,
+        mock_url_for,
         mock_render,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.admin()
+        mock_url_for.side_effect = lambda route: f"/{route.replace('.', '/')}"
+        AdminController.admin()
 
         mock_render.assert_called_once()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args', autospec=True)
+    @patch('ckanext.feedback.controllers.admin.toolkit.url_for')
     def test_get_href(
         self,
+        mock_url_for,
         mock_args,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        # Mock url_for to return a fixed URL
+        mock_url_for.return_value = '/feedback/admin/approval-and-delete'
 
         name = 'unapproved'
         active_list = []
         mock_args.get.return_value = 'newest'
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            url = AdminController.get_href(name, active_list)
+        url = AdminController.get_href(name, active_list)
         assert (
             '/feedback/admin/approval-and-delete?sort=newest&filter=unapproved' == url
         )
@@ -108,27 +93,21 @@ class TestAdminController:
         name = 'unapproved'
         active_list = ['unapproved']
         mock_args.get.return_value = None
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            url = AdminController.get_href(name, active_list)
+        url = AdminController.get_href(name, active_list)
         assert '/feedback/admin/approval-and-delete' == url
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch(
         'ckanext.feedback.controllers.admin.feedback_service.get_feedbacks_total_count'
     )
+    @patch('ckanext.feedback.controllers.admin.AdminController.get_href')
     def test_create_filter_dict(
         self,
+        mock_get_href,
         mock_get_feedback_total_count,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
 
         organization = factories.Organization()
-
         filter_set_name = 'Status'
         name_label_dict = {
             "approved": 'Approved',
@@ -136,14 +115,14 @@ class TestAdminController:
         }
         active_filters = []
         org_list = [{'name': organization['name'], 'title': organization['title']}]
-
         mock_get_feedback_total_count.return_value = {"approved": 0, "unapproved": 1}
+        mock_get_href.return_value = (
+            '/feedback/admin/approval-and-delete?filter=unapproved'
+        )
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            results = AdminController.create_filter_dict(
-                filter_set_name, name_label_dict, active_filters, org_list
-            )
+        results = AdminController.create_filter_dict(
+            filter_set_name, name_label_dict, active_filters, org_list
+        )
 
         expected_results = {
             'type': 'Status',
@@ -160,7 +139,7 @@ class TestAdminController:
 
         assert results == expected_results
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
     @patch('ckanext.feedback.controllers.admin.organization_service')
@@ -177,12 +156,7 @@ class TestAdminController:
         mock_organization_service,
         mock_pagination,
         mock_args,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
 
         organization = factories.Organization()
         dataset = factories.Dataset(owner_org=organization['id'])
@@ -221,9 +195,7 @@ class TestAdminController:
         mock_create_filter_dict.return_value = 'mock_filter'
         mock_page.return_value = 'mock_page'
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.approval_and_delete()
+        AdminController.approval_and_delete()
 
         mock_render.assert_called_once_with(
             'admin/approval_and_delete.html',
@@ -235,7 +207,7 @@ class TestAdminController:
             },
         )
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
     @patch('ckanext.feedback.controllers.admin.organization_service')
@@ -252,13 +224,8 @@ class TestAdminController:
         mock_organization_service,
         mock_pagination,
         mock_args,
-        current_user,
-        app,
-        user_env,
     ):
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        mock_current_user(current_user, user_dict)
+        user_obj = g.userobj.return_value
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
@@ -268,7 +235,7 @@ class TestAdminController:
         member = model.Member(
             group=organization,
             group_id=organization_dict['id'],
-            table_id=user.id,
+            table_id=user_obj.id,
             table_name='user',
             capacity='admin',
         )
@@ -308,9 +275,7 @@ class TestAdminController:
         mock_create_filter_dict.return_value = 'mock_filter'
         mock_page.return_value = 'mock_page'
 
-        with app.get(url='/', environ_base=user_env):
-            g.userobj = current_user
-            AdminController.approval_and_delete()
+        AdminController.approval_and_delete()
 
         mock_render.assert_called_once_with(
             'admin/approval_and_delete.html',
@@ -322,7 +287,7 @@ class TestAdminController:
             },
         )
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
     @patch('ckanext.feedback.controllers.admin.organization_service')
@@ -337,13 +302,7 @@ class TestAdminController:
         mock_organization_service,
         mock_pagination,
         mock_args,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
         org_list = []
         feedback_list = []
 
@@ -361,9 +320,7 @@ class TestAdminController:
         )
         mock_page.return_value = 'mock_page'
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.approval_and_delete()
+        AdminController.approval_and_delete()
 
         mock_render.assert_called_once_with(
             'admin/approval_and_delete.html',
@@ -375,7 +332,7 @@ class TestAdminController:
             },
         )
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch.object(AdminController, 'approve_resource_comments')
     @patch.object(AdminController, 'approve_utilization')
@@ -390,9 +347,6 @@ class TestAdminController:
         mock_approve_utilization,
         mock_approve_resource_comments,
         mock_getlist,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         resource_comments = [
             'resource_comment_id',
@@ -413,23 +367,18 @@ class TestAdminController:
         mock_approve_utilization.return_value = 1
         mock_approve_utilization_comments.return_value = 1
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.approve_target()
+        AdminController.approve_target()
 
         mock_approve_resource_comments.assert_called_once_with(resource_comments)
         mock_approve_utilization.assert_called_once_with(utilization)
         mock_approve_utilization_comments.assert_called_once_with(utilization_comments)
         mock_flash_success.assert_called_once_with(
-            '3 ' + _('item(s) were approved.'),
+            '3 ' + ('item(s) were approved.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch('ckanext.feedback.controllers.admin.AdminController')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -440,9 +389,6 @@ class TestAdminController:
         mock_flash_success,
         mock_management,
         mock_getlist,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         resource_comments = None
         utilization = None
@@ -454,23 +400,18 @@ class TestAdminController:
             utilization_comments,
         ]
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.approve_target()
+        AdminController.approve_target()
 
         mock_management.approve_resource_comments.assert_not_called()
         mock_management.approve_utilization.assert_not_called()
         mock_management.approve_utilization_comments.assert_not_called()
         mock_flash_success.assert_called_once_with(
-            '0 ' + _('item(s) were approved.'),
+            '0 ' + ('item(s) were approved.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch.object(AdminController, 'delete_resource_comments')
     @patch.object(AdminController, 'delete_utilization')
@@ -485,9 +426,6 @@ class TestAdminController:
         mock_delete_utilization,
         mock_delete_resource_comments,
         mock_getlist,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         resource_comments = [
             'resource_comment_id',
@@ -508,23 +446,18 @@ class TestAdminController:
         mock_delete_utilization.return_value = 1
         mock_delete_utilization_comments.return_value = 1
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.delete_target()
+        AdminController.delete_target()
 
         mock_delete_resource_comments.assert_called_once_with(resource_comments)
         mock_delete_utilization.assert_called_once_with(utilization)
         mock_delete_utilization_comments.assert_called_once_with(utilization_comments)
         mock_flash_success.assert_called_once_with(
-            '3 ' + _('item(s) were completely deleted.'),
+            '3 ' + ('item(s) were completely deleted.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch('ckanext.feedback.controllers.admin.AdminController')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -535,9 +468,6 @@ class TestAdminController:
         mock_flash_success,
         mock_management,
         mock_getlist,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         resource_comments = None
         utilization = None
@@ -549,23 +479,18 @@ class TestAdminController:
             utilization_comments,
         ]
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.delete_target()
+        AdminController.delete_target()
 
         mock_management.delete_resource_comments.assert_not_called()
         mock_management.delete_utilization.assert_not_called()
         mock_management.delete_utilization_comments.assert_not_called()
         mock_flash_success.assert_called_once_with(
-            '0 ' + _('item(s) were completely deleted.'),
+            '0 ' + ('item(s) were completely deleted.'),
             allow_html=True,
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
@@ -576,9 +501,6 @@ class TestAdminController:
         mock_session_commit,
         mock_utilization_service,
         mock_utilization_comments_service,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         target = ['utilization_comment_id']
 
@@ -594,12 +516,7 @@ class TestAdminController:
             utilizations
         )
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.approve_utilization_comments(target)
+        AdminController.approve_utilization_comments(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -608,13 +525,13 @@ class TestAdminController:
         mock_utilization_service.get_utilizations_by_comment_ids.\
             assert_called_once_with(target)
         mock_utilization_comments_service.approve_utilization_comments.\
-            assert_called_once_with(target, user_dict['id'])
+            assert_called_once_with(target, g.userobj.return_value.id)
         mock_utilization_comments_service.refresh_utilizations_comments.\
             assert_called_once_with(utilizations)
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -623,9 +540,6 @@ class TestAdminController:
         mock_flash_success,
         mock_session_commit,
         mock_utilization_service,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         target = ['utilization_id']
 
@@ -639,12 +553,7 @@ class TestAdminController:
             utilizations
         )
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.approve_utilization(target)
+        AdminController.approve_utilization(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -653,11 +562,11 @@ class TestAdminController:
         mock_utilization_service.get_utilization_details_by_ids.\
             assert_called_once_with(target)
         mock_utilization_service.approve_utilization.\
-            assert_called_once_with(target, user_dict['id'])
+            assert_called_once_with(target, g.userobj.return_value.id)
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -666,9 +575,6 @@ class TestAdminController:
         mock_flash_success,
         mock_session_commit,
         mock_resource_comments_service,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         target = ['resource_comment_id']
 
@@ -682,12 +588,7 @@ class TestAdminController:
             resource_comment_summaries
         )
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.approve_resource_comments(target)
+        AdminController.approve_resource_comments(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -696,13 +597,13 @@ class TestAdminController:
         mock_resource_comments_service.get_resource_comment_summaries.\
             assert_called_once_with(target)
         mock_resource_comments_service.approve_resource_comments.\
-            assert_called_once_with(target, user_dict['id'])
+            assert_called_once_with(target, g.userobj.return_value.id)
         mock_resource_comments_service.refresh_resources_comments.\
             assert_called_once_with(resource_comment_summaries)
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
@@ -713,9 +614,6 @@ class TestAdminController:
         mock_session_commit,
         mock_utilization_service,
         mock_utilization_comments_service,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         target = ['utilization_comment_id']
 
@@ -727,12 +625,7 @@ class TestAdminController:
             utilizations
         )
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.delete_utilization_comments(target)
+        AdminController.delete_utilization_comments(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -745,7 +638,7 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -754,9 +647,6 @@ class TestAdminController:
         mock_flash_success,
         mock_session_commit,
         mock_utilization_service,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         target = ['resource_comment_id']
 
@@ -768,12 +658,7 @@ class TestAdminController:
             utilizations
         )
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.delete_utilization(target)
+        AdminController.delete_utilization(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -784,7 +669,7 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -793,9 +678,6 @@ class TestAdminController:
         mock_flash_success,
         mock_session_commit,
         mock_resource_comments_service,
-        current_user,
-        app,
-        sysadmin_env,
     ):
         target = ['utilization_id']
         resource_comment_summary = MagicMock()
@@ -806,12 +688,7 @@ class TestAdminController:
             resource_comment_summaries
         )
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.delete_resource_comments(target)
+        AdminController.delete_resource_comments(target)
 
         # fmt: off
         # Disable automatic formatting by Black
@@ -824,29 +701,23 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_using_sysadmin(
-        self, mock_toolkit_abort, current_user
+        self, mock_toolkit_abort
     ):
         mocked_obj = make_mocked_object('owner_org')
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
         AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_not_called()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_using_org_admin(
-        self, mock_toolkit_abort, current_user
+        self, mock_toolkit_abort
     ):
         mocked_obj = make_mocked_object('owner_org')
 
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        user_obj = g.userobj.return_value
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
@@ -854,7 +725,7 @@ class TestAdminController:
         member = model.Member(
             group=organization,
             group_id=organization_dict['id'],
-            table_id=user.id,
+            table_id=user_obj.id,
             table_name='user',
             capacity='admin',
         )
@@ -864,16 +735,10 @@ class TestAdminController:
         AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_not_called()
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_using_user(
-        self, mock_toolkit_abort, current_user
-    ):
+    def test_check_organization_admin_role_with_using_user(self, mock_toolkit_abort):
         mocked_obj = MagicMock()
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
 
         organization_dict = factories.Organization()
         mocked_obj.resource.package.owner_org = organization_dict['id']
@@ -881,35 +746,27 @@ class TestAdminController:
         AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_called_once_with(
             404,
-            _(
+            (
                 'The requested URL was not found on the server. If you entered the URL'
                 ' manually please check your spelling and try again.'
             ),
         )
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.organization_service')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     def test_aggregation_with_sysadmin(
         self,
         mock_render,
         mock_organization_service,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
         organization = factories.Organization()
 
-        today = datetime.now()
-        max_month = today.strftime('%Y-%m')
-        end_date = today - relativedelta(months=1)
-        default_month = end_date.strftime('%Y-%m')
-        max_year = today.strftime('%Y')
-        year = today - relativedelta(years=1)
-        default_year = year.strftime('%Y')
+        max_month = "2024-01"
+        default_month = "2023-12"
+        max_year = "2024"
+        default_year = "2023"
 
         org_list = [
             {'name': organization['name'], 'title': organization['title']},
@@ -917,9 +774,7 @@ class TestAdminController:
 
         mock_organization_service.get_org_list.return_value = org_list
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            AdminController.aggregation()
+        AdminController.aggregation()
 
         mock_render.assert_called_once_with(
             'admin/aggregation.html',
@@ -932,20 +787,15 @@ class TestAdminController:
             },
         )
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.organization_service')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     def test_aggregation_with_org_admin(
         self,
         mock_render,
         mock_organization_service,
-        current_user,
-        app,
-        user_env,
     ):
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        mock_current_user(current_user, user_dict)
+        user_obj = g.userobj.return_value
 
         organization_dict = factories.Organization()
         organization = model.Group.get(organization_dict['id'])
@@ -953,7 +803,7 @@ class TestAdminController:
         member = model.Member(
             group=organization,
             group_id=organization_dict['id'],
-            table_id=user.id,
+            table_id=user_obj.id,
             table_name='user',
             capacity='admin',
         )
@@ -974,9 +824,7 @@ class TestAdminController:
 
         mock_organization_service.get_org_list.return_value = org_list
 
-        with app.get(url='/', environ_base=user_env):
-            g.userobj = current_user
-            AdminController.aggregation()
+        AdminController.aggregation()
 
         mock_render.assert_called_once_with(
             'admin/aggregation.html',
@@ -1064,7 +912,7 @@ class TestAdminController:
         ]
         assert row == expected_row, f"Row mismatch: {row} != {expected_row}"
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args.get')
     @patch('ckanext.feedback.controllers.admin.aggregation_service.get_monthly_data')
     @patch('ckanext.feedback.controllers.admin.AdminController.export_csv_response')
@@ -1073,13 +921,7 @@ class TestAdminController:
         mock_export,
         mock_get_monthly_data,
         mock_get,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
         mock_get.side_effect = lambda key: {
             "group_added": "Test Organization",
             "month": "2024-03",
@@ -1087,14 +929,12 @@ class TestAdminController:
         mock_get_monthly_data.return_value = ["data1", "data2"]
         mock_export.return_value = Response("mock_csv", mimetype="text/csv")
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            response = AdminController.download_monthly()
+        response = AdminController.download_monthly()
 
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args.get')
     @patch('ckanext.feedback.controllers.admin.aggregation_service.get_yearly_data')
     @patch('ckanext.feedback.controllers.admin.AdminController.export_csv_response')
@@ -1103,13 +943,7 @@ class TestAdminController:
         mock_export,
         mock_get_yearly_data,
         mock_get,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
         mock_get.side_effect = lambda key: {
             "group_added": "Test Organization",
             "year": "2024",
@@ -1117,14 +951,12 @@ class TestAdminController:
         mock_get_yearly_data.return_value = ["data1", "data2"]
         mock_export.return_value = Response("mock_csv", mimetype="text/csv")
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            response = AdminController.download_yearly()
+        response = AdminController.download_yearly()
 
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
 
-    @patch('flask_login.utils._get_user')
+    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args.get')
     @patch('ckanext.feedback.controllers.admin.aggregation_service.get_all_time_data')
     @patch('ckanext.feedback.controllers.admin.AdminController.export_csv_response')
@@ -1133,20 +965,12 @@ class TestAdminController:
         mock_export,
         mock_get_all_time_data,
         mock_get,
-        current_user,
-        app,
-        sysadmin_env,
     ):
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
         mock_get.return_value = "Test Organization"
         mock_get_all_time_data.return_value = ["data1", "data2"]
         mock_export.return_value = Response("mock_csv", mimetype="text/csv")
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            response = AdminController.download_all_time()
+        response = AdminController.download_all_time()
 
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
