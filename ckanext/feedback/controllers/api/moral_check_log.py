@@ -155,7 +155,7 @@ def create_moral_check_log_excel_response(is_separation):
     )
 
 
-# /api/3/action/download_moral_check_log
+# /api/feedback/download_moral_check_log
 def download_moral_check_log():
     """
     Handles the download of the moral check log as an Excel file.

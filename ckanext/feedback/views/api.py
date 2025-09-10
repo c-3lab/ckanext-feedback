@@ -8,7 +8,7 @@ from ckanext.feedback.views.error_handler import add_error_handler
 blueprint = Blueprint(
     'feedback_api',
     __name__,
-    url_prefix='/api/3/action',
+    url_prefix='/api/feedback',
 )
 
 blueprint.add_url_rule(
