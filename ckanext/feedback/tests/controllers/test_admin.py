@@ -11,11 +11,6 @@ from ckan.tests import factories
 from dateutil.relativedelta import relativedelta
 from flask import Response, g
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.controllers.admin import AdminController
 
 log = logging.getLogger(__name__)
@@ -49,12 +44,6 @@ def make_mocked_object(owner_org):
 @pytest.mark.usefixtures('admin_context')
 @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
 class TestAdminControllerWithContext:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
 
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     @patch('ckanext.feedback.controllers.admin.toolkit.url_for')
@@ -100,9 +89,8 @@ class TestAdminControllerWithContext:
         self,
         mock_get_href,
         mock_get_feedback_total_count,
+        organization,
     ):
-
-        organization = factories.Organization()
         filter_set_name = 'Status'
         name_label_dict = {
             "approved": 'Approved',
@@ -221,11 +209,10 @@ class TestAdminControllerWithContext:
         mock_organization_service,
         mock_pagination,
         mock_args,
+        organization,
+        dataset,
+        resource,
     ):
-
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
 
         org_list = [
             {'name': organization['name'], 'title': organization['title']},
@@ -288,17 +275,18 @@ class TestAdminControllerWithContext:
         mock_organization_service,
         mock_pagination,
         mock_args,
+        organization,
+        dataset,
+        resource,
+        admin_context,
     ):
-        user_obj = g.userobj.return_value
+        user_obj = admin_context.return_value
 
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
-        dataset = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+        organization_model = model.Group.get(organization['id'])
 
         member = model.Member(
-            group=organization,
-            group_id=organization_dict['id'],
+            group=organization_model,
+            group_id=organization['id'],
             table_id=user_obj.id,
             table_name='user',
             capacity='admin',
@@ -307,7 +295,7 @@ class TestAdminControllerWithContext:
         model.Session.commit()
 
         org_list = [
-            {'name': organization_dict['name'], 'title': organization_dict['title']},
+            {'name': organization['name'], 'title': organization['title']},
         ]
         feedback_list = [
             {
@@ -768,8 +756,8 @@ class TestAdminControllerWithContext:
         self,
         mock_render,
         mock_organization_service,
+        organization,
     ):
-        organization = factories.Organization()
 
         max_month = "2024-01"
         default_month = "2023-12"
@@ -934,21 +922,19 @@ class TestAdminControllerWithContext:
 @pytest.mark.db_test
 @pytest.mark.usefixtures('user_context')
 class TestAdminControllerWithoutContext:
-    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_using_org_admin(
-        self, mock_toolkit_abort
+        self, mock_toolkit_abort, organization, user_context
     ):
         mocked_obj = make_mocked_object('owner_org')
 
-        user_obj = g.userobj.return_value
+        user_obj = user_context.return_value
 
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
-        mocked_obj.resource.package.owner_org = organization_dict['id']
+        mocked_obj.resource.package.owner_org = organization['id']
+        organization_model = model.Group.get(organization['id'])
         member = model.Member(
-            group=organization,
-            group_id=organization_dict['id'],
+            group=organization_model,
+            group_id=organization['id'],
             table_id=user_obj.id,
             table_name='user',
             capacity='admin',
@@ -959,13 +945,13 @@ class TestAdminControllerWithoutContext:
         AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_not_called()
 
-    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_using_user(self, mock_toolkit_abort):
+    def test_check_organization_admin_role_with_using_user(
+        self, mock_toolkit_abort, organization
+    ):
         mocked_obj = MagicMock()
 
-        organization_dict = factories.Organization()
-        mocked_obj.resource.package.owner_org = organization_dict['id']
+        mocked_obj.resource.package.owner_org = organization['id']
 
         AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_called_once_with(
@@ -976,22 +962,22 @@ class TestAdminControllerWithoutContext:
             ),
         )
 
-    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.organization_service')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     def test_aggregation_with_org_admin(
         self,
         mock_render,
         mock_organization_service,
+        organization,
+        user_context,
     ):
-        user_obj = g.userobj.return_value
+        user_obj = user_context.return_value
 
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
+        organization_model = model.Group.get(organization['id'])
 
         member = model.Member(
-            group=organization,
-            group_id=organization_dict['id'],
+            group=organization_model,
+            group_id=organization['id'],
             table_id=user_obj.id,
             table_name='user',
             capacity='admin',
@@ -1008,7 +994,7 @@ class TestAdminControllerWithoutContext:
         default_year = year.strftime('%Y')
 
         org_list = [
-            {'name': organization_dict['name'], 'title': organization_dict['title']},
+            {'name': organization['name'], 'title': organization['title']},
         ]
 
         mock_organization_service.get_org_list.return_value = org_list
@@ -1033,7 +1019,7 @@ class TestAdminControllerWithoutContext:
     @patch('ckanext.feedback.controllers.admin.AdminController.create_filter_dict')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     @patch('ckanext.feedback.controllers.admin.helpers.Page')
-    def test_approval_and_delete_with_org_admin(
+    def test_approval_and_delete_with_org_admin_in_user_context(
         self,
         mock_page,
         mock_render,
@@ -1042,16 +1028,16 @@ class TestAdminControllerWithoutContext:
         mock_organization_service,
         mock_pagination,
         mock_args,
+        organization,
+        user_context,
     ):
-        user_obj = g.userobj.return_value
-        user_obj.sysadmin = False
+        user_obj = user_context.return_value
 
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
+        organization_model = model.Group.get(organization['id'])
 
         member = model.Member(
-            group=organization,
-            group_id=organization_dict['id'],
+            group=organization_model,
+            group_id=organization['id'],
             table_id=user_obj.id,
             table_name='user',
             capacity='admin',
@@ -1065,12 +1051,12 @@ class TestAdminControllerWithoutContext:
             user_obj, 'get_groups'
         ) as mock_get_groups:
 
-            mock_get_group_ids.return_value = [organization_dict['id']]
-            mock_get_groups.return_value = [organization]
+            mock_org = MagicMock()
+            mock_org.name = organization['name']
+            mock_get_group_ids.return_value = [organization['id']]
+            mock_get_groups.return_value = [mock_org]
 
-            org_list = [
-                {'name': organization_dict['name'], 'title': organization_dict['title']}
-            ]
+            org_list = [{'name': organization['name'], 'title': organization['title']}]
             feedback_list = []
 
             mock_args.getlist.return_value = []
