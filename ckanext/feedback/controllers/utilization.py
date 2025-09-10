@@ -397,12 +397,18 @@ class UtilizationController:
         if not (utilization_comment_id and content):
             toolkit.abort(400)
 
+        # Get utilization first to avoid UnboundLocalError
+        try:
+            _uti = detail_service.get_utilization(utilization_id)
+        except Exception:
+            helpers.flash_error(_('Utilization not found.'), allow_html=True)
+            return toolkit.redirect_to('utilization.search')
+
         # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
         force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
         admin_bypass = False
         if isinstance(current_user, model.User):
             try:
-                _uti = detail_service.get_utilization(utilization_id)
                 admin_bypass = current_user.sysadmin or has_organization_admin_role(
                     _uti.owner_org
                 )
@@ -418,10 +424,7 @@ class UtilizationController:
         except Exception:
             reply_open = False
 
-        if not reply_open and not (
-            current_user
-            and (current_user.sysadmin or has_organization_admin_role(_uti.owner_org))
-        ):
+        if not reply_open and not has_organization_admin_role(_uti.owner_org):
             helpers.flash_error(
                 _('Reply is restricted to administrators.'), allow_html=True
             )
