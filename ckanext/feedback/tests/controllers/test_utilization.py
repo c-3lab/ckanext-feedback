@@ -3147,7 +3147,9 @@ def test_reply_validation_error(
 @patch('ckanext.feedback.controllers.utilization.detail_service')
 @patch('ckanext.feedback.controllers.utilization.session.commit')
 @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
 def test_reply_sysadmin_success(
+    mock_flash_error,
     mock_redirect_to,
     mock_session_commit,
     mock_detail_service,
@@ -3305,7 +3307,9 @@ def test_approve_reply_value_error(
 @patch('ckanext.feedback.controllers.utilization.detail_service')
 @patch('ckanext.feedback.controllers.utilization.session.commit')
 @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
 def test_reply_admin_bypass_exception_fallback(
+    mock_flash_error,
     mock_redirect_to,
     mock_session_commit,
     mock_detail_service,
@@ -3322,11 +3326,9 @@ def test_reply_admin_bypass_exception_fallback(
 
     UtilizationController.reply(utilization_id)
 
-    mock_detail_service.create_utilization_comment_reply.assert_called_once()
-    mock_session_commit.assert_called_once()
-    mock_redirect_to.assert_called_once_with(
-        'utilization.details', utilization_id=utilization_id
-    )
+    mock_detail_service.create_utilization_comment_reply.assert_not_called()
+    mock_flash_error.assert_called_once()
+    mock_redirect_to.assert_called_once_with('utilization.search')
 
 
 @patch('flask_login.utils._get_user')
@@ -3605,3 +3607,83 @@ def test_check_comment_admin_bypass_renders_comment_check_page(
         UtilizationController.check_comment('uti-id')
 
     mock_render.assert_called_once()
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch('flask_login.utils._get_user')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.detail_service')
+@patch('ckanext.feedback.controllers.utilization.has_organization_admin_role')
+@patch('ckanext.feedback.controllers.utilization.session.commit')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+def test_reply_has_organization_admin_role_exception(
+    mock_flash_error,
+    mock_redirect_to,
+    mock_session_commit,
+    mock_has_organization_admin_role,
+    mock_detail_service,
+    mock_request,
+    current_user,
+):
+    utilization_id = 'uti'
+    mock_request.form.get.side_effect = ['comment_id', 'reply content']
+    mock_detail_service.get_utilization.return_value = MagicMock(owner_org='org-x')
+    mock_has_organization_admin_role.side_effect = Exception('boom')
+
+    user_dict = factories.User()
+    mock_current_user(current_user, user_dict)
+    g.userobj = current_user
+
+    UtilizationController.reply(utilization_id)
+
+    mock_flash_error.assert_called_once_with(
+        _('Reply is restricted to administrators.'), allow_html=True
+    )
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@patch('flask_login.utils._get_user')
+@patch(
+    'ckanext.feedback.controllers.utilization.request',
+    new_callable=lambda: SimpleNamespace(form=MagicMock(), files=MagicMock()),
+)
+@patch('ckanext.feedback.controllers.utilization.detail_service')
+@patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+@patch('ckanext.feedback.controllers.utilization.session.commit')
+@patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+@patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+def test_reply_feedback_config_exception(
+    mock_flash_error,
+    mock_redirect_to,
+    mock_session_commit,
+    mock_feedback_config,
+    mock_detail_service,
+    mock_request,
+    current_user,
+):
+    utilization_id = 'uti'
+    mock_request.form.get.side_effect = ['comment_id', 'reply content']
+    mock_detail_service.get_utilization.return_value = MagicMock(owner_org='org-x')
+
+    cfg = MagicMock()
+    cfg.utilization_comment.reply_open.is_enable.side_effect = Exception('boom')
+    mock_feedback_config.return_value = cfg
+
+    user_dict = factories.Sysadmin()
+    mock_current_user(current_user, user_dict)
+    g.userobj = current_user
+
+    UtilizationController.reply(utilization_id)
+
+    mock_detail_service.create_utilization_comment_reply.assert_called_once()
+    mock_session_commit.assert_called_once()
+    mock_redirect_to.assert_called_once_with(
+        'utilization.details', utilization_id=utilization_id
+    )

@@ -423,8 +423,15 @@ class UtilizationController:
             )
         except Exception:
             reply_open = False
-
-        if not reply_open and not has_organization_admin_role(_uti.owner_org):
+        is_org_admin = False
+        try:
+            is_org_admin = has_organization_admin_role(_uti.owner_org)
+        except Exception:
+            is_org_admin = False
+        if not reply_open and not (
+            is_org_admin
+            or (isinstance(current_user, model.User) and current_user.sysadmin)
+        ):
             helpers.flash_error(
                 _('Reply is restricted to administrators.'), allow_html=True
             )
