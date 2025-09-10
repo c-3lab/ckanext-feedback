@@ -46,7 +46,9 @@ def make_mocked_object(owner_org):
 
 
 @pytest.mark.db_test
-class TestAdminController:
+@pytest.mark.usefixtures('admin_context')
+@pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
+class TestAdminControllerWithContext:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
@@ -54,11 +56,6 @@ class TestAdminController:
         create_resource_tables(engine)
         create_download_tables(engine)
 
-    def setup_method(self, method):
-        # self.app = Flask(__name__)
-        pass
-
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     @patch('ckanext.feedback.controllers.admin.toolkit.url_for')
     def test_admin(
@@ -71,7 +68,6 @@ class TestAdminController:
 
         mock_render.assert_called_once()
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args', autospec=True)
     @patch('ckanext.feedback.controllers.admin.toolkit.url_for')
     def test_get_href(
@@ -96,7 +92,6 @@ class TestAdminController:
         url = AdminController.get_href(name, active_list)
         assert '/feedback/admin/approval-and-delete' == url
 
-    @pytest.mark.usefixtures('admin_context')
     @patch(
         'ckanext.feedback.controllers.admin.feedback_service.get_feedbacks_total_count'
     )
@@ -115,10 +110,35 @@ class TestAdminController:
         }
         active_filters = []
         org_list = [{'name': organization['name'], 'title': organization['title']}]
+
+        def _href_side_effect(*args, **kwargs):
+            """
+            get_href の呼び出し引数から filter 名（approved/unapproved）を抽出して
+            それに対応する href を返す。呼び出し順に依存しない。
+            """
+            candidate = None
+
+            for a in args:
+                if isinstance(a, str) and a in name_label_dict:
+                    candidate = a
+                    break
+
+            if candidate is None:
+                for key in ('name', 'filter', 'filter_name', 'value', 'filter_value'):
+                    v = kwargs.get(key)
+                    if isinstance(v, str) and v in name_label_dict:
+                        candidate = v
+                        break
+
+            assert (
+                candidate is not None
+            ), f"get_href called with unexpected args: args={args}, kwargs={kwargs}"
+
+            return f"/feedback/admin/approval-and-delete?filter={candidate}"
+
+        mock_get_href.side_effect = _href_side_effect
+
         mock_get_feedback_total_count.return_value = {"approved": 0, "unapproved": 1}
-        mock_get_href.return_value = (
-            '/feedback/admin/approval-and-delete?filter=unapproved'
-        )
 
         results = AdminController.create_filter_dict(
             filter_set_name, name_label_dict, active_filters, org_list
@@ -139,7 +159,56 @@ class TestAdminController:
 
         assert results == expected_results
 
-    @pytest.mark.usefixtures('admin_context')
+        mock_get_feedback_total_count.return_value = {"approved": 1, "unapproved": 0}
+        active_filters = ["approved"]
+
+        results = AdminController.create_filter_dict(
+            filter_set_name, name_label_dict, active_filters, org_list
+        )
+
+        expected_results = {
+            'type': 'Status',
+            'list': [
+                {
+                    'name': 'approved',
+                    'label': 'Approved',
+                    'href': '/feedback/admin/approval-and-delete?filter=approved',
+                    'count': 1,
+                    'active': True,
+                }
+            ],
+        }
+
+        assert results == expected_results
+
+        mock_get_feedback_total_count.return_value = {"unapproved": 3, "approved": 2}
+        active_filters = []
+
+        results = AdminController.create_filter_dict(
+            filter_set_name, name_label_dict, active_filters, org_list
+        )
+
+        expected_results = {
+            'type': 'Status',
+            'list': [
+                {
+                    'name': 'unapproved',
+                    'label': 'Waiting',
+                    'href': '/feedback/admin/approval-and-delete?filter=unapproved',
+                    'count': 3,
+                    'active': False,
+                },
+                {
+                    'name': 'approved',
+                    'label': 'Approved',
+                    'href': '/feedback/admin/approval-and-delete?filter=approved',
+                    'count': 2,
+                    'active': False,
+                },
+            ],
+        }
+        assert results == expected_results
+
     @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
     @patch('ckanext.feedback.controllers.admin.organization_service')
@@ -207,7 +276,6 @@ class TestAdminController:
             },
         )
 
-    @pytest.mark.usefixtures('user_context')
     @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
     @patch('ckanext.feedback.controllers.admin.organization_service')
@@ -287,7 +355,6 @@ class TestAdminController:
             },
         )
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args')
     @patch('ckanext.feedback.controllers.admin.get_pagination_value')
     @patch('ckanext.feedback.controllers.admin.organization_service')
@@ -332,7 +399,6 @@ class TestAdminController:
             },
         )
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch.object(AdminController, 'approve_resource_comments')
     @patch.object(AdminController, 'approve_utilization')
@@ -378,7 +444,6 @@ class TestAdminController:
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch('ckanext.feedback.controllers.admin.AdminController')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -411,7 +476,6 @@ class TestAdminController:
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch.object(AdminController, 'delete_resource_comments')
     @patch.object(AdminController, 'delete_utilization')
@@ -457,7 +521,6 @@ class TestAdminController:
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.form.getlist')
     @patch('ckanext.feedback.controllers.admin.AdminController')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -490,7 +553,6 @@ class TestAdminController:
         )
         mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
@@ -531,7 +593,6 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -566,7 +627,6 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -603,7 +663,6 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
@@ -638,7 +697,6 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -669,7 +727,6 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -701,7 +758,6 @@ class TestAdminController:
         # fmt: on
         mock_session_commit.assert_called_once()
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_using_sysadmin(
         self, mock_toolkit_abort
@@ -710,50 +766,6 @@ class TestAdminController:
         AdminController._check_organization_admin_role([mocked_obj])
         mock_toolkit_abort.assert_not_called()
 
-    @pytest.mark.usefixtures('user_context')
-    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_using_org_admin(
-        self, mock_toolkit_abort
-    ):
-        mocked_obj = make_mocked_object('owner_org')
-
-        user_obj = g.userobj.return_value
-
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
-        mocked_obj.resource.package.owner_org = organization_dict['id']
-        member = model.Member(
-            group=organization,
-            group_id=organization_dict['id'],
-            table_id=user_obj.id,
-            table_name='user',
-            capacity='admin',
-        )
-        model.Session.add(member)
-        model.Session.commit()
-
-        AdminController._check_organization_admin_role([mocked_obj])
-        mock_toolkit_abort.assert_not_called()
-
-    @pytest.mark.usefixtures('user_context')
-    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
-    def test_check_organization_admin_role_with_using_user(self, mock_toolkit_abort):
-        mocked_obj = MagicMock()
-
-        organization_dict = factories.Organization()
-        mocked_obj.resource.package.owner_org = organization_dict['id']
-
-        AdminController._check_organization_admin_role([mocked_obj])
-        mock_toolkit_abort.assert_called_once_with(
-            404,
-            (
-                'The requested URL was not found on the server. If you entered the URL'
-                ' manually please check your spelling and try again.'
-            ),
-        )
-
-    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.organization_service')
     @patch('ckanext.feedback.controllers.admin.toolkit.render')
     def test_aggregation_with_sysadmin(
@@ -770,56 +782,6 @@ class TestAdminController:
 
         org_list = [
             {'name': organization['name'], 'title': organization['title']},
-        ]
-
-        mock_organization_service.get_org_list.return_value = org_list
-
-        AdminController.aggregation()
-
-        mock_render.assert_called_once_with(
-            'admin/aggregation.html',
-            {
-                "max_month": max_month,
-                "default_month": default_month,
-                "max_year": int(max_year),
-                "default_year": int(default_year),
-                "org_list": org_list,
-            },
-        )
-
-    @pytest.mark.usefixtures('user_context')
-    @patch('ckanext.feedback.controllers.admin.organization_service')
-    @patch('ckanext.feedback.controllers.admin.toolkit.render')
-    def test_aggregation_with_org_admin(
-        self,
-        mock_render,
-        mock_organization_service,
-    ):
-        user_obj = g.userobj.return_value
-
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
-
-        member = model.Member(
-            group=organization,
-            group_id=organization_dict['id'],
-            table_id=user_obj.id,
-            table_name='user',
-            capacity='admin',
-        )
-        model.Session.add(member)
-        model.Session.commit()
-
-        today = datetime.now()
-        max_month = today.strftime('%Y-%m')
-        end_date = today - relativedelta(months=1)
-        default_month = end_date.strftime('%Y-%m')
-        max_year = today.strftime('%Y')
-        year = today - relativedelta(years=1)
-        default_year = year.strftime('%Y')
-
-        org_list = [
-            {'name': organization_dict['name'], 'title': organization_dict['title']},
         ]
 
         mock_organization_service.get_org_list.return_value = org_list
@@ -912,7 +874,6 @@ class TestAdminController:
         ]
         assert row == expected_row, f"Row mismatch: {row} != {expected_row}"
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args.get')
     @patch('ckanext.feedback.controllers.admin.aggregation_service.get_monthly_data')
     @patch('ckanext.feedback.controllers.admin.AdminController.export_csv_response')
@@ -934,7 +895,6 @@ class TestAdminController:
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args.get')
     @patch('ckanext.feedback.controllers.admin.aggregation_service.get_yearly_data')
     @patch('ckanext.feedback.controllers.admin.AdminController.export_csv_response')
@@ -956,7 +916,6 @@ class TestAdminController:
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
 
-    @pytest.mark.usefixtures('admin_context')
     @patch('ckanext.feedback.controllers.admin.request.args.get')
     @patch('ckanext.feedback.controllers.admin.aggregation_service.get_all_time_data')
     @patch('ckanext.feedback.controllers.admin.AdminController.export_csv_response')
@@ -974,3 +933,176 @@ class TestAdminController:
 
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
+
+
+@pytest.mark.db_test
+@pytest.mark.usefixtures('user_context')
+class TestAdminControllerWithoutContext:
+    @pytest.mark.usefixtures('user_context')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    def test_check_organization_admin_role_with_using_org_admin(
+        self, mock_toolkit_abort
+    ):
+        mocked_obj = make_mocked_object('owner_org')
+
+        user_obj = g.userobj.return_value
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+        mocked_obj.resource.package.owner_org = organization_dict['id']
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user_obj.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        AdminController._check_organization_admin_role([mocked_obj])
+        mock_toolkit_abort.assert_not_called()
+
+    @pytest.mark.usefixtures('user_context')
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    def test_check_organization_admin_role_with_using_user(self, mock_toolkit_abort):
+        mocked_obj = MagicMock()
+
+        organization_dict = factories.Organization()
+        mocked_obj.resource.package.owner_org = organization_dict['id']
+
+        AdminController._check_organization_admin_role([mocked_obj])
+        mock_toolkit_abort.assert_called_once_with(
+            404,
+            (
+                'The requested URL was not found on the server. If you entered the URL'
+                ' manually please check your spelling and try again.'
+            ),
+        )
+
+    @pytest.mark.usefixtures('user_context')
+    @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.toolkit.render')
+    def test_aggregation_with_org_admin(
+        self,
+        mock_render,
+        mock_organization_service,
+    ):
+        user_obj = g.userobj.return_value
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user_obj.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        today = datetime.now()
+        max_month = today.strftime('%Y-%m')
+        end_date = today - relativedelta(months=1)
+        default_month = end_date.strftime('%Y-%m')
+        max_year = today.strftime('%Y')
+        year = today - relativedelta(years=1)
+        default_year = year.strftime('%Y')
+
+        org_list = [
+            {'name': organization_dict['name'], 'title': organization_dict['title']},
+        ]
+
+        mock_organization_service.get_org_list.return_value = org_list
+
+        AdminController.aggregation()
+
+        mock_render.assert_called_once_with(
+            'admin/aggregation.html',
+            {
+                "max_month": max_month,
+                "default_month": default_month,
+                "max_year": int(max_year),
+                "default_year": int(default_year),
+                "org_list": org_list,
+            },
+        )
+
+    @patch('ckanext.feedback.controllers.admin.request.args')
+    @patch('ckanext.feedback.controllers.admin.get_pagination_value')
+    @patch('ckanext.feedback.controllers.admin.organization_service')
+    @patch('ckanext.feedback.controllers.admin.feedback_service')
+    @patch('ckanext.feedback.controllers.admin.AdminController.create_filter_dict')
+    @patch('ckanext.feedback.controllers.admin.toolkit.render')
+    @patch('ckanext.feedback.controllers.admin.helpers.Page')
+    def test_approval_and_delete_with_org_admin(
+        self,
+        mock_page,
+        mock_render,
+        mock_create_filter_dict,
+        mock_feedback_service,
+        mock_organization_service,
+        mock_pagination,
+        mock_args,
+    ):
+        user_obj = g.userobj.return_value
+        user_obj.sysadmin = False
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+
+        member = model.Member(
+            group=organization,
+            group_id=organization_dict['id'],
+            table_id=user_obj.id,
+            table_name='user',
+            capacity='admin',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        with patch.object(
+            user_obj, 'get_group_ids'
+        ) as mock_get_group_ids, patch.object(
+            user_obj, 'get_groups'
+        ) as mock_get_groups:
+
+            mock_get_group_ids.return_value = [organization_dict['id']]
+            mock_get_groups.return_value = [organization]
+
+            org_list = [
+                {'name': organization_dict['name'], 'title': organization_dict['title']}
+            ]
+            feedback_list = []
+
+            mock_args.getlist.return_value = []
+            mock_args.get.return_value = 'newest'
+            mock_pagination.return_value = [1, 20, 0, 'pager_url']
+            mock_organization_service.get_org_list.return_value = org_list
+            mock_feedback_service.get_feedbacks.return_value = feedback_list, len(
+                feedback_list
+            )
+            mock_create_filter_dict.return_value = 'mock_filter'
+            mock_page.return_value = 'mock_page'
+
+            AdminController.approval_and_delete()
+
+            mock_get_group_ids.assert_called_with(
+                group_type='organization', capacity='admin'
+            )
+            mock_get_groups.assert_called_once_with(group_type='organization')
+            mock_organization_service.get_org_list.assert_called_once_with(
+                mock_get_group_ids.return_value
+            )
+
+            mock_render.assert_called_once_with(
+                'admin/approval_and_delete.html',
+                {
+                    "org_list": org_list,
+                    "filters": ['mock_filter', 'mock_filter', 'mock_filter'],
+                    "sort": 'newest',
+                    "page": 'mock_page',
+                },
+            )
