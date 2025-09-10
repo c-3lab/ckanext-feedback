@@ -37,7 +37,7 @@ def get_registered_utilization_summary(resource_id):
 
 @pytest.mark.db_test
 class TestUtilization:
-    @pytest.mark.db_test
+
     def test_get_utilizations_query(self, organization):
 
         org_list = [{'name': organization['name'], 'title': organization['title']}]
@@ -58,7 +58,6 @@ class TestUtilization:
         assert "created" in sql_str
         assert "is_approved" in sql_str
 
-    @pytest.mark.db_test
     def test_get_simple_utilizations_query(self, organization):
 
         org_list = [{'name': organization['name'], 'title': organization['title']}]
@@ -70,7 +69,6 @@ class TestUtilization:
         assert "feedback_type" in sql_str
         assert "is_approved" in sql_str
 
-    @pytest.mark.db_test
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilizations_by_comment_ids(self, resource, multiple_utilizations):
         utils = multiple_utilizations(count=2)
@@ -110,7 +108,6 @@ class TestUtilization:
         assert result[0].id == util1.id
         assert result[1].id == util2.id
 
-    @pytest.mark.db_test
     def test_get_utilization_details_by_ids(
         self, dataset, resource, multiple_utilizations
     ):
@@ -137,7 +134,6 @@ class TestUtilization:
         assert result_util.resource.package.name == dataset['name']
         assert result_util.resource.package.owner_org == dataset['owner_org']
 
-    @pytest.mark.db_test
     def test_get_utilization_ids(self, resource, multiple_utilizations):
         utils = multiple_utilizations(count=1, approval=False)
         util1 = utils[0]
@@ -149,7 +145,6 @@ class TestUtilization:
 
         assert utilization_ids == [util1.id]
 
-    @pytest.mark.db_test
     def test_get_utilization_resource_ids(self, resource, multiple_utilizations):
         utils = multiple_utilizations(count=1, approval=False)
         util1 = utils[0]
@@ -163,7 +158,6 @@ class TestUtilization:
 
         assert resource_ids == [resource['id']]
 
-    @pytest.mark.db_test
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch('ckanext.feedback.services.admin.utilization.session.bulk_update_mappings')
     def test_approve_utilization(
@@ -192,7 +186,6 @@ class TestUtilization:
 
         assert mock_mappings.call_args[0] == expected_args
 
-    @pytest.mark.db_test
     def test_delete_utilization(self, resource, multiple_utilizations):
         utils = multiple_utilizations(count=1, approval=False)
         util = utils[0]
@@ -208,7 +201,6 @@ class TestUtilization:
         utilization = get_registered_utilization(resource['id'])
         assert len(utilization) == 0
 
-    @pytest.mark.db_test
     @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_refresh_utilization_summary(self, resource, utilization):
 
