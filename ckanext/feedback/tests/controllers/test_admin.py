@@ -112,10 +112,6 @@ class TestAdminControllerWithContext:
         org_list = [{'name': organization['name'], 'title': organization['title']}]
 
         def _href_side_effect(*args, **kwargs):
-            """
-            get_href の呼び出し引数から filter 名（approved/unapproved）を抽出して
-            それに対応する href を返す。呼び出し順に依存しない。
-            """
             candidate = None
 
             for a in args:
