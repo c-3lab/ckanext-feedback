@@ -19,12 +19,15 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentCategory,
+    UtilizationCommentReply,
 )
 from ckanext.feedback.services.utilization.details import (
     approve_utilization,
     approve_utilization_comment,
+    approve_utilization_comment_reply,
     create_issue_resolution,
     create_utilization_comment,
+    create_utilization_comment_reply,
     get_attached_image_path,
     get_comment_attached_image_files,
     get_issue_resolutions,
@@ -32,6 +35,8 @@ from ckanext.feedback.services.utilization.details import (
     get_utilization,
     get_utilization_comment,
     get_utilization_comment_categories,
+    get_utilization_comment_replies,
+    get_utilization_comment_replies_for_display,
     get_utilization_comments,
     refresh_utilization_comments,
 )
@@ -731,3 +736,299 @@ class TestAttachedImageService:
         result = get_comment_attached_image_files()
 
         assert result == ['test_attached_image.jpg']
+
+    def test_get_utilization_comment_replies_filters_and_order(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        title = 't'
+        url = 'u'
+        desc = 'd'
+        register_utilization(utilization_id, resource['id'], title, url, desc, False)
+        utilization = get_registered_utilization(resource['id'])
+        created_uc = datetime.now()
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.QUESTION,
+            'c',
+            created_uc,
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        r_old = UtilizationCommentReply(
+            utilization_comment_id=uc.id,
+            content='older',
+            created=datetime(2020, 1, 1),
+            approval=False,
+        )
+        r_new = UtilizationCommentReply(
+            utilization_comment_id=uc.id,
+            content='newer',
+            created=datetime(2021, 1, 1),
+            approval=True,
+        )
+        session.add_all([r_old, r_new])
+        session.commit()
+
+        rows = get_utilization_comment_replies(uc.id)
+        assert [r.content for r in rows] == ['older', 'newer']
+
+        rows_appr = get_utilization_comment_replies(uc.id, approval=True)
+        assert [r.content for r in rows_appr] == ['newer']
+
+    def test_create_utilization_comment_reply(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
+        utilization = get_registered_utilization(resource['id'])
+
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.REQUEST,
+            'content',
+            datetime.now(),
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        create_utilization_comment_reply(uc.id, 'reply content', None)
+        session.commit()
+
+        replies = get_utilization_comment_replies(uc.id)
+        assert len(replies) == 1
+        assert replies[0].content == 'reply content'
+
+    def test_approve_utilization_comment_reply_not_found(self):
+        with pytest.raises(ValueError):
+            approve_utilization_comment_reply('non-exists', None)
+
+    def test_approve_utilization_comment_reply_parent_not_found(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
+        utilization = get_registered_utilization(resource['id'])
+
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.REQUEST,
+            'content',
+            datetime.now(),
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        create_utilization_comment_reply(uc.id, 'reply content', None)
+        session.commit()
+        reply = session.query(UtilizationCommentReply).first()
+
+        from types import SimpleNamespace
+
+        real_session = session
+
+        class QueryRouter:
+            def query(self, model_cls):
+                if model_cls is UtilizationComment:
+                    return SimpleNamespace(get=lambda _id: None)
+                return real_session.query(model_cls)
+
+        with patch(
+            'ckanext.feedback.services.utilization.details.session', new=QueryRouter()
+        ):
+            with pytest.raises(ValueError):
+                approve_utilization_comment_reply(reply.id, None)
+
+    def test_approve_utilization_comment_reply_parent_not_approved(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
+        utilization = get_registered_utilization(resource['id'])
+
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.REQUEST,
+            'content',
+            datetime.now(),
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        create_utilization_comment_reply(uc.id, 'reply content', None)
+        session.commit()
+        reply = session.query(UtilizationCommentReply).first()
+
+        with pytest.raises(PermissionError):
+            approve_utilization_comment_reply(reply.id, None)
+
+    @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
+    def test_approve_utilization_comment_reply_success(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
+        utilization = get_registered_utilization(resource['id'])
+
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.REQUEST,
+            'content',
+            datetime.now(),
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        approve_utilization_comment(uc.id, None)
+        create_utilization_comment_reply(uc.id, 'reply content', None)
+        session.commit()
+        reply = session.query(UtilizationCommentReply).first()
+
+        approve_utilization_comment_reply(reply.id, None)
+        session.commit()
+
+        updated = session.query(UtilizationCommentReply).get(reply.id)
+        assert updated.approval is True
+        assert updated.approved == datetime(2000, 1, 2, 3, 4)
+        assert updated.approval_user_id is None
+
+    def _prepare_uc_with_replies(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
+        utilization = get_registered_utilization(resource['id'])
+
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.REQUEST,
+            'content',
+            datetime.now(),
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        r1 = UtilizationCommentReply(
+            utilization_comment_id=uc.id, content='u', approval=False
+        )
+        r2 = UtilizationCommentReply(
+            utilization_comment_id=uc.id, content='a', approval=True
+        )
+        session.add_all([r1, r2])
+        session.commit()
+        return organization, dataset, uc
+
+    @patch('flask_login.utils._get_user')
+    def test_get_utilization_comment_replies_for_display_non_admin(self, current_user):
+        organization, dataset, uc = self._prepare_uc_with_replies()
+        with patch(
+            'ckanext.feedback.services.utilization.details.current_user', new=object()
+        ):
+            rows = get_utilization_comment_replies_for_display(
+                uc.id, dataset['owner_org']
+            )
+        assert [r.content for r in rows] == ['a']
+
+    @patch('flask_login.utils._get_user')
+    def test_get_utilization_comment_replies_for_display_sysadmin(self, current_user):
+        sysadm = factories.Sysadmin()
+        user_obj = model.User.get(sysadm['id'])
+        current_user.return_value = user_obj
+
+        organization, dataset, uc = self._prepare_uc_with_replies()
+        rows = get_utilization_comment_replies_for_display(uc.id, dataset['owner_org'])
+        assert sorted([r.content for r in rows]) == ['a', 'u']
+
+    @patch('flask_login.utils._get_user')
+    def test_get_utilization_comment_replies_for_display_org_admin(self, current_user):
+        user_dict = factories.User()
+        user = model.User.get(user_dict['id'])
+        current_user.return_value = user
+
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+        member = model.Member(
+            group=organization,
+            group_id=organization.id,
+            table_id=user.id,
+            capacity='admin',
+            table_name='user',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        dataset = factories.Dataset(owner_org=organization.id)
+        resource = factories.Resource(package_id=dataset['id'])
+
+        utilization_id = str(uuid.uuid4())
+        register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
+        utilization = get_registered_utilization(resource['id'])
+
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.REQUEST,
+            'content',
+            datetime.now(),
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        r1 = UtilizationCommentReply(
+            utilization_comment_id=uc.id, content='u', approval=False
+        )
+        r2 = UtilizationCommentReply(
+            utilization_comment_id=uc.id, content='a', approval=True
+        )
+        session.add_all([r1, r2])
+        session.commit()
+
+        rows = get_utilization_comment_replies_for_display(uc.id, dataset['owner_org'])
+        assert sorted([r.content for r in rows]) == ['a', 'u']

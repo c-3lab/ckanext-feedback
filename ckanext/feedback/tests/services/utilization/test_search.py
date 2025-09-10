@@ -12,7 +12,10 @@ from ckanext.feedback.command.feedback import (
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization
-from ckanext.feedback.services.utilization.search import get_utilizations
+from ckanext.feedback.services.utilization.search import (
+    get_organization_name_from_pkg,
+    get_utilizations,
+)
 
 
 def register_utilization(id, resource_id, title, description, approval, created):
@@ -167,3 +170,16 @@ class TestUtilizationDetailsService:
             ],
             2,
         )
+
+    def test_get_organization_name_from_pkg_returns_none_for_missing(self):
+        assert get_organization_name_from_pkg('non-existent') is None
+
+    def test_get_organization_name_from_pkg_returns_org_name(self):
+        org = factories.Organization(
+            is_organization=True,
+            name='org_name',
+            type='organization',
+            title='org_title',
+        )
+        dataset = factories.Dataset(owner_org=org['id'])
+        assert get_organization_name_from_pkg(dataset['id']) == org['name']

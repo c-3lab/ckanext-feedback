@@ -34,6 +34,12 @@ rules = [
         {'methods': ['POST']},
     ),
     (
+        '/<utilization_id>/comment/reply',
+        'reply',
+        utilization.UtilizationController.reply,
+        {'methods': ['POST']},
+    ),
+    (
         '/<utilization_id>/comment/suggested',
         'suggested_comment',
         utilization.UtilizationController.suggested_comment,
@@ -55,6 +61,12 @@ rules = [
         '/<utilization_id>/comment/<comment_id>/approve',
         'approve_comment',
         utilization.UtilizationController.approve_comment,
+        {'methods': ['POST']},
+    ),
+    (
+        '/<utilization_id>/comment/reply/<reply_id>/approve',
+        'approve_reply',
+        utilization.UtilizationController.approve_reply,
         {'methods': ['POST']},
     ),
     (

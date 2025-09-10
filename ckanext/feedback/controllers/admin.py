@@ -14,6 +14,7 @@ from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.admin import aggregation as aggregation_service
 from ckanext.feedback.services.admin import feedbacks as feedback_service
+from ckanext.feedback.services.admin import resource_comment_replies as reply_service
 from ckanext.feedback.services.admin import (
     resource_comments as resource_comments_service,
 )
@@ -47,7 +48,7 @@ class AdminController:
                 ),
             },
             {
-                'name': _('aggregation'),
+                'name': _('Aggregation'),
                 'url': 'feedback.aggregation',
                 'description': _(
                     "A screen where users can download aggregated feedback data "
@@ -61,6 +62,7 @@ class AdminController:
             {'management_list': management_list},
         )
 
+    @staticmethod
     def get_href(name, active_list):
         if name in active_list:
             active_list.remove(name)
@@ -79,6 +81,7 @@ class AdminController:
 
         return url
 
+    @staticmethod
     def create_filter_dict(filter_set_name, name_label_dict, active_filters, org_list):
         filter_item_list = []
         filter_item_counts = feedback_service.get_feedbacks_total_count(
@@ -122,9 +125,10 @@ class AdminController:
             owner_orgs = current_user.get_group_ids(
                 group_type='organization', capacity='admin'
             )
+            user_orgs = current_user.get_groups(group_type='organization')
             g.pkg_dict = {
                 'organization': {
-                    'name': current_user.get_groups(group_type='organization')[0].name,
+                    'name': user_orgs[0].name if user_orgs else '',
                 }
             }
             org_list = organization_service.get_org_list(owner_orgs)
@@ -158,6 +162,8 @@ class AdminController:
             "resource": _('Resource Comment'),
             "utilization": _('Utilization'),
             "util-comment": _('Utilization Comment'),
+            "reply": _('Resource Comment Reply'),
+            "util-reply": _('Utilization Comment Reply'),
         }
 
         if org_list:
@@ -180,6 +186,17 @@ class AdminController:
                     _('Organization'), filter_org, active_filters, org_list
                 )
             )
+
+        # minimal debug log for traceability
+        try:
+            log.debug(
+                'approval_and_delete: filters=%s sort=%s total=%s',
+                active_filters,
+                sort,
+                total_count,
+            )
+        except Exception:
+            pass
 
         return toolkit.render(
             'admin/approval_and_delete.html',
@@ -204,6 +221,8 @@ class AdminController:
         resource_comments = request.form.getlist('resource-comments-checkbox')
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
+        replies = request.form.getlist('resource-comment-replies-checkbox')
+        util_replies = request.form.getlist('utilization-comment-replies-checkbox')
 
         target = 0
 
@@ -213,7 +232,40 @@ class AdminController:
             target += AdminController.approve_utilization(utilization)
         if utilization_comments:
             target += AdminController.approve_utilization_comments(utilization_comments)
+        if replies:
+            approved_count = reply_service.approve_resource_comment_replies(
+                replies, current_user.id
+            )
+            target += approved_count
+            if approved_count < len(replies):
+                helpers.flash_error(
+                    _(
+                        'Some replies were not approved '
+                        'because their parent comments '
+                        'are not approved.'
+                    ),
+                    allow_html=True,
+                )
+        if util_replies:
+            from ckanext.feedback.services.admin import (
+                utilization_comment_replies as util_reply_service,
+            )
 
+            approved_count = util_reply_service.approve_utilization_comment_replies(
+                util_replies, current_user.id
+            )
+            target += approved_count
+            if approved_count < len(util_replies):
+                helpers.flash_error(
+                    _(
+                        'Some replies were not approved '
+                        'because their parent comments '
+                        'are not approved.'
+                    ),
+                    allow_html=True,
+                )
+        # Commit all DB changes in one transaction
+        session.commit()
         helpers.flash_success(
             f'{target} ' + _('item(s) were approved.'),
             allow_html=True,
@@ -228,7 +280,8 @@ class AdminController:
         resource_comments = request.form.getlist('resource-comments-checkbox')
         utilization = request.form.getlist('utilization-checkbox')
         utilization_comments = request.form.getlist('utilization-comments-checkbox')
-
+        replies = request.form.getlist('resource-comment-replies-checkbox')
+        util_replies = request.form.getlist('utilization-comment-replies-checkbox')
         target = 0
 
         if resource_comments:
@@ -237,7 +290,18 @@ class AdminController:
             target += AdminController.delete_utilization(utilization)
         if utilization_comments:
             target += AdminController.delete_utilization_comments(utilization_comments)
+        if replies:
+            reply_service.delete_resource_comment_replies(replies)
+            target += len(replies)
+        if util_replies:
+            from ckanext.feedback.services.admin import (
+                utilization_comment_replies as util_reply_service,
+            )
 
+            util_reply_service.delete_utilization_comment_replies(util_replies)
+            target += len(util_replies)
+        # Commit all DB changes in one transaction
+        session.commit()
         helpers.flash_success(
             f'{target} ' + _('item(s) were completely deleted.'),
             allow_html=True,
@@ -257,8 +321,6 @@ class AdminController:
             target, current_user.id
         )
         utilization_comments_service.refresh_utilizations_comments(utilizations)
-        session.commit()
-
         return len(target)
 
     @staticmethod
@@ -270,8 +332,6 @@ class AdminController:
         resource_ids = utilization_service.get_utilization_resource_ids(target)
         utilization_service.approve_utilization(target, current_user.id)
         utilization_service.refresh_utilization_summary(resource_ids)
-        session.commit()
-
         return len(target)
 
     @staticmethod
@@ -286,8 +346,6 @@ class AdminController:
         )
         resource_comments_service.approve_resource_comments(target, current_user.id)
         resource_comments_service.refresh_resources_comments(resource_comment_summaries)
-        session.commit()
-
         return len(target)
 
     @staticmethod
@@ -299,8 +357,6 @@ class AdminController:
         )
         utilization_comments_service.delete_utilization_comments(target)
         utilization_comments_service.refresh_utilizations_comments(utilizations)
-        session.commit()
-
         return len(target)
 
     @staticmethod
@@ -311,8 +367,6 @@ class AdminController:
         resource_ids = utilization_service.get_utilization_resource_ids(target)
         utilization_service.delete_utilization(target)
         utilization_service.refresh_utilization_summary(resource_ids)
-        session.commit()
-
         return len(target)
 
     @staticmethod
@@ -326,8 +380,6 @@ class AdminController:
         )
         resource_comments_service.delete_resource_comments(target)
         resource_comments_service.refresh_resources_comments(resource_comment_summaries)
-        session.commit()
-
         return len(target)
 
     @staticmethod
@@ -349,7 +401,7 @@ class AdminController:
     def _check_organization_admin_role_with_utilization(utilizations):
         for utilization in utilizations:
             if (
-                not has_organization_admin_role(utilization)
+                not has_organization_admin_role(utilization.owner_org)
                 and not current_user.sysadmin
             ):
                 toolkit.abort(

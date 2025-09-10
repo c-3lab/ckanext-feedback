@@ -5,8 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const textareas = document.getElementsByName('comment-content');
   const charCounts = document.getElementsByName('comment-count');
   const imageUpload = document.getElementById('imageUpload');
+  const replyTextarea = document.getElementById('reply_content');
+  const replyCount = document.getElementById('reply-count');
 
-  imageUpload.addEventListener('change', handleImageChange);
+  if (imageUpload) {
+    imageUpload.addEventListener('change', handleImageChange);
+  }
 
   function updateCharCount(textarea, charCount) {
     const currentLength = textarea.value.length;
@@ -20,6 +24,39 @@ document.addEventListener('DOMContentLoaded', () => {
       charCounts[index].textContent = currentLength;
     });
   });
+
+  if (replyTextarea && replyCount) {
+    replyCount.textContent = replyTextarea.value.length;
+    replyTextarea.addEventListener('input', () => {
+      replyCount.textContent = replyTextarea.value.length;
+    });
+  }
+
+  // Ensure reactions form always submits with a valid resource_comment_id
+  const reactionsForm = document.getElementById('reactions-form');
+  if (reactionsForm) {
+    reactionsForm.addEventListener('submit', (e) => {
+      const hidden = document.getElementById('reactions-comment-id');
+      if (hidden && !hidden.value) {
+        // Try to recover from last set value or focused button's data attribute
+        if (window.lastReactionsCommentId) {
+          hidden.value = window.lastReactionsCommentId;
+        }
+        if (!hidden.value && reactionsForm.dataset && reactionsForm.dataset.resourceCommentId) {
+          hidden.value = reactionsForm.dataset.resourceCommentId;
+        }
+        if (!hidden.value) {
+          const active = document.activeElement;
+          const dataId = active && active.getAttribute ? active.getAttribute('data-resource-comment-id') : null;
+          if (dataId) hidden.value = dataId;
+        }
+        // If still empty, block submit to avoid server error
+        if (!hidden.value) {
+          e.preventDefault();
+        }
+      }
+    });
+  }
 });
 
 function selectRating(selectedStar) {
@@ -39,10 +76,6 @@ function selectRating(selectedStar) {
 }
 
 window.addEventListener('pageshow', (event) => {
-  if (event.persisted || performance.getEntriesByType("navigation")[0]?.type === "back_forward") {
-    resetFileInput();
-  }
-
   const sendButtons = document.getElementsByName('send-button');
   sendButtons.forEach(sendButton => {
     sendButton.style.pointerEvents = "auto";
@@ -65,6 +98,7 @@ function handleImageChange(e) {
 
 function uploadClicked() {
   const imageUpload = document.getElementById('imageUpload');
+  if (!imageUpload) return;
   imageUpload.value = '';
   imageUpload.click();
 }
@@ -86,7 +120,7 @@ function createPreview(src) {
 
   closeBtn.addEventListener('click', () => {
     const imageUpload = document.getElementById('imageUpload');
-    imageUpload.value = '';
+    if (imageUpload) imageUpload.value = '';
     previewContainer.innerHTML = '';
     uploadBtn.style.display = 'inline-block';
   });
@@ -99,29 +133,7 @@ function createPreview(src) {
   uploadBtn.style.display = 'none';
 }
 
-function resetFileInput() {
-  const oldInput = document.getElementById('imageUpload');
 
-  const oldInputType = oldInput.type;
-  const oldInputId = oldInput.id;
-  const oldInputClassName = oldInput.className;
-  const oldInputName = oldInput.name;
-  const oldInputAccept = oldInput.accept;
-  const parent = oldInput.parentNode;
-
-  parent.removeChild(oldInput);
-
-  const newInput = document.createElement('input');
-  newInput.type = oldInputType;
-  newInput.id = oldInputId;
-  newInput.className = oldInputClassName;
-  newInput.name = oldInputName;
-  newInput.accept = oldInputAccept;
-
-  newInput.addEventListener('change', handleImageChange);
-
-  parent.insertBefore(newInput, parent.firstChild);
-}
 
 function checkCommentExists(button, bs3=false) {
   let comment
@@ -163,13 +175,17 @@ function checkCommentExists(button, bs3=false) {
   return true;
 }
 
-function checkReplyExists(button) {
+function checkReplyExists(button, bs3=false) {
   button.style.pointerEvents = 'none';
 
   const errorElement = document.getElementById('reply-error');
+  const overErrorElement = document.getElementById('reply-over-error');
   const reply = document.getElementById('reply_content').value;
 
   errorElement.style.display = 'none';
+  if (overErrorElement) {
+    overErrorElement.style.display = 'none';
+  }
   
   let is_reply_exists = true;
 
@@ -177,8 +193,27 @@ function checkReplyExists(button) {
     errorElement.style.display = 'block';
     is_reply_exists = false;
   }
+  if (reply && reply.length>1000) {
+    if (overErrorElement) {
+      overErrorElement.style.display = 'block';
+    }
+    is_reply_exists = false;
+  }
 
   button.style.pointerEvents = 'auto';
+
+  if (is_reply_exists) {
+    const sendButtons = document.getElementsByName('send-button');
+    sendButtons.forEach(button => {
+      button.style.pointerEvents = "none";
+      button.style.background = "#333333";
+      if (!bs3) {
+        button.innerHTML = spinner + button.innerHTML;
+      } else {
+        button.innerHTML = spinner_bs3 + button.innerHTML;
+      }
+    });
+  }
 
   return is_reply_exists;
 }
@@ -211,9 +246,45 @@ function setReactionsFormContent(resourceCommentId) {
   }
   document.getElementById('admin-liked').checked = adminLikeIndicator ? true : false;
   document.getElementById('reactions-comment').innerHTML = content;
-  document.getElementById('reactions-comment-id').value = resourceCommentId;
+  const hidden = document.getElementById('reactions-comment-id');
+  hidden.value = resourceCommentId;
+  // keep last id globally for submit fallback
+  try { window.lastReactionsCommentId = resourceCommentId; } catch (e) {}
+  // also store on form dataset as a reliable place
+  try {
+    const reactionsForm = document.getElementById('reactions-form');
+    if (reactionsForm && reactionsForm.dataset) {
+      reactionsForm.dataset.resourceCommentId = resourceCommentId;
+    }
+  } catch (e) {}
+  // Fallback: if empty, recover from data attribute on the triggering button
+  if (!hidden.value) {
+    try {
+      const active = document.activeElement;
+      const dataId = active && active.getAttribute ? active.getAttribute('data-resource-comment-id') : null;
+      if (dataId) hidden.value = dataId;
+      if (!hidden.value && window.lastReactionsCommentId) hidden.value = window.lastReactionsCommentId;
+    } catch (e) {
+      // no-op
+    }
+  }
 }
 
 function setButtonDisable(button) {
   button.style.pointerEvents = "none"
+}
+
+function toggleReplies(commentId) {
+  const hidden = document.getElementById(`replies-hidden-${commentId}`);
+  const toggle = document.getElementById(`replies-toggle-${commentId}`);
+  if (!hidden || !toggle) return;
+
+  const isHidden = window.getComputedStyle(hidden).display === 'none';
+  if (isHidden) {
+    hidden.style.display = '';
+    toggle.textContent = `${toggle.dataset.hideText} (${toggle.dataset.count})`;
+  } else {
+    hidden.style.display = 'none';
+    toggle.textContent = `${toggle.dataset.showText} (${toggle.dataset.count})`;
+  }
 }

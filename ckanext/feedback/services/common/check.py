@@ -1,9 +1,12 @@
+from functools import wraps
+
 from ckan.common import _, current_user
 from ckan.model import User
 from ckan.plugins import toolkit
 
 
 def check_administrator(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         if isinstance(current_user, User):
             if is_organization_admin() or current_user.sysadmin:
@@ -32,4 +35,19 @@ def has_organization_admin_role(owner_org):
         return False
 
     ids = current_user.get_group_ids(group_type='organization', capacity='admin')
+    return owner_org in ids
+
+
+def user_has_organization_admin_role(user_id, owner_org):
+    if not user_id:
+        return False
+
+    user = User.get(user_id)
+    if not isinstance(user, User):
+        return False
+
+    if getattr(user, 'sysadmin', False):
+        return True
+
+    ids = user.get_group_ids(group_type='organization', capacity='admin')
     return owner_org in ids

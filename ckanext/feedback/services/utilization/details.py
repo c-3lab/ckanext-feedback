@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import ckan.model as model
+from ckan.common import current_user
 from ckan.lib.uploader import get_uploader
 from ckan.model.package import Package
 from ckan.model.resource import Resource
@@ -11,7 +13,9 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentCategory,
+    UtilizationCommentReply,
 )
+from ckanext.feedback.services.common.check import has_organization_admin_role
 
 
 # Get details from the Utilization record
@@ -100,6 +104,20 @@ def get_utilization_comments(
     return results
 
 
+# Get replies for a utilization comment
+def get_utilization_comment_replies(utilization_comment_id, approval=None):
+    query = (
+        session.query(UtilizationCommentReply)
+        .filter(
+            UtilizationCommentReply.utilization_comment_id == utilization_comment_id
+        )
+        .order_by(UtilizationCommentReply.created.asc())
+    )
+    if approval is not None:
+        query = query.filter(UtilizationCommentReply.approval == approval)
+    return query.all()
+
+
 # Create comment for currently displayed utilization
 def create_utilization_comment(
     utilization_id, category, content, attached_image_filename=None
@@ -113,12 +131,40 @@ def create_utilization_comment(
     session.add(comment)
 
 
+def create_utilization_comment_reply(utilization_comment_id, content, creator_user_id):
+    reply = UtilizationCommentReply(
+        utilization_comment_id=utilization_comment_id,
+        content=content,
+        creator_user_id=creator_user_id,
+    )
+    session.add(reply)
+
+
 # Approve selected utilization comment
 def approve_utilization_comment(comment_id, approval_user_id):
     comment = session.query(UtilizationComment).get(comment_id)
     comment.approval = True
     comment.approved = datetime.now()
     comment.approval_user_id = approval_user_id
+
+
+# Approve a reply for a utilization comment
+def approve_utilization_comment_reply(reply_id: str, approval_user_id: str):
+    reply = session.query(UtilizationCommentReply).get(reply_id)
+    if reply is None:
+        raise ValueError('Reply not found')
+
+    parent_comment = session.query(UtilizationComment).get(reply.utilization_comment_id)
+    if parent_comment is None:
+        raise ValueError('Parent comment not found')
+
+    if not parent_comment.approval:
+        # Keep parity with resource side: cannot approve reply before parent
+        raise PermissionError('Cannot approve reply before parent comment is approved')
+
+    reply.approval = True
+    reply.approved = datetime.now()
+    reply.approval_user_id = approval_user_id
 
 
 # Get comment category enum names and values
@@ -181,3 +227,15 @@ def get_comment_attached_image_files():
     )
 
     return [filename for (filename,) in image_files]
+
+
+def get_utilization_comment_replies_for_display(utilization_comment_id, owner_org_id):
+    approval = (
+        None
+        if (
+            isinstance(current_user, model.User)
+            and (current_user.sysadmin or has_organization_admin_role(owner_org_id))
+        )
+        else True
+    )
+    return get_utilization_comment_replies(utilization_comment_id, approval=approval)

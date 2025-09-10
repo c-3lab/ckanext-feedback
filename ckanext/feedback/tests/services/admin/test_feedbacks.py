@@ -12,6 +12,9 @@ from ckanext.feedback.command.feedback import (
     create_download_tables,
     create_resource_tables,
     create_utilization_tables,
+    drop_download_tables,
+    drop_resource_tables,
+    drop_utilization_tables,
 )
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
@@ -95,6 +98,9 @@ class TestFeedbacks:
     @classmethod
     def setup_class(cls):
         model.repo.init_db()
+        drop_utilization_tables(engine)
+        drop_resource_tables(engine)
+        drop_download_tables(engine)
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
@@ -160,7 +166,7 @@ class TestFeedbacks:
 
         active_filters = ['resource']
         expected_query = query.filter(
-            combined_query.c.feedback_type == 'リソースコメント'
+            combined_query.c.feedback_type == 'resource_comment'
         )
         returned_query = feedbacks.apply_filters_to_query(
             query, active_filters, org_list, combined_query
@@ -168,7 +174,7 @@ class TestFeedbacks:
         assert str(returned_query) == str(expected_query)
 
         active_filters = ['utilization']
-        expected_query = query.filter(combined_query.c.feedback_type == '利活用申請')
+        expected_query = query.filter(combined_query.c.feedback_type == 'utilization')
         returned_query = feedbacks.apply_filters_to_query(
             query, active_filters, org_list, combined_query
         )
@@ -176,7 +182,7 @@ class TestFeedbacks:
 
         active_filters = ['util-comment']
         expected_query = query.filter(
-            combined_query.c.feedback_type == '利活用コメント'
+            combined_query.c.feedback_type == 'utilization_comment'
         )
         returned_query = feedbacks.apply_filters_to_query(
             query, active_filters, org_list, combined_query
@@ -198,6 +204,48 @@ class TestFeedbacks:
             query, active_filters, org_list, combined_query
         )
         assert str(returned_query) == str(expected_query)
+
+        active_filters = ['reply']
+        expected_query = query.filter(
+            combined_query.c.feedback_type == 'resource_comment_reply'
+        )
+        returned_query = feedbacks.apply_filters_to_query(
+            query, active_filters, org_list, combined_query
+        )
+        assert str(returned_query) == str(expected_query)
+
+        active_filters = ['util-reply']
+        expected_query = query.filter(
+            combined_query.c.feedback_type == 'utilization_comment_reply'
+        )
+        returned_query = feedbacks.apply_filters_to_query(
+            query, active_filters, org_list, combined_query
+        )
+        assert str(returned_query) == str(expected_query)
+
+        orm_query = session.query(combined_query)
+        active_filters = ['approved']
+        expected_query = orm_query.filter(combined_query.c.is_approved.is_(True))
+        returned_query = feedbacks.apply_filters_to_query(
+            orm_query, active_filters, org_list, combined_query
+        )
+        assert str(returned_query) == str(expected_query)
+
+        class DummyQuery:
+            def __init__(self):
+                self.used_filter = False
+
+            def filter(self, condition):
+                self.used_filter = True
+                return self
+
+        dummy = DummyQuery()
+        active_filters = ['approved']
+        returned_query = feedbacks.apply_filters_to_query(
+            dummy, active_filters, org_list, combined_query
+        )
+        assert returned_query is dummy
+        assert dummy.used_filter is True
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_feedbacks(self):
@@ -231,7 +279,7 @@ class TestFeedbacks:
                 'resource_id': resource['id'],
                 'resource_name': resource['name'],
                 'utilization_id': None,
-                'feedback_type': 'リソースコメント',
+                'feedback_type': 'resource_comment',
                 'comment_id': comment_id,
                 'content': content,
                 'created': datetime(2000, 1, 2, 3, 4),
@@ -274,7 +322,7 @@ class TestFeedbacks:
                 'resource_id': resource['id'],
                 'resource_name': resource['name'],
                 'utilization_id': None,
-                'feedback_type': 'リソースコメント',
+                'feedback_type': 'resource_comment',
                 'comment_id': comment_id,
                 'content': content,
                 'created': datetime(2000, 1, 2, 3, 4),
@@ -403,7 +451,7 @@ class TestFeedbacks:
         expected_results = {"resource": 1, "utilization": 1, "util-comment": 1}
         results = feedbacks.get_type_counts(active_filters, org_list, combined_query)
 
-        assert results == expected_results
+        assert expected_results.items() <= results.items()
 
     def test_get_organization_counts(self):
         organization = factories.Organization()

@@ -23,7 +23,7 @@ def get_utilization_comments_query(org_list):
             Resource.id.label('resource_id'),
             Resource.name.label('resource_name'),
             Utilization.id.label('utilization_id'),
-            literal('利活用コメント').label('feedback_type'),
+            literal('utilization_comment').label('feedback_type'),
             UtilizationComment.id.label('comment_id'),
             UtilizationComment.content.label('content'),
             UtilizationComment.created.label('created'),
@@ -50,7 +50,7 @@ def get_simple_utilization_comments_query(org_list):
     query = (
         session.query(
             Group.name.label('group_name'),
-            literal("利活用コメント").label("feedback_type"),
+            literal('utilization_comment').label('feedback_type'),
             UtilizationComment.approval.label('is_approved'),
         )
         .join(Package, Group.id == Package.owner_org)

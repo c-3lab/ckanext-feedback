@@ -21,6 +21,7 @@ from ckanext.feedback.models.resource_comment import (
 from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
+    UtilizationCommentReply,
     UtilizationSummary,
 )
 
@@ -44,19 +45,20 @@ class TestFeedbackCommand:
         model.repo.metadata.drop_all(
             engine,
             [
-                Utilization.__table__,
-                UtilizationComment.__table__,
-                UtilizationSummary.__table__,
-                IssueResolution.__table__,
-                IssueResolutionSummary.__table__,
-                ResourceComment.__table__,
-                ResourceCommentReply.__table__,
-                ResourceCommentSummary.__table__,
-                ResourceLike.__table__,
-                ResourceLikeMonthly.__table__,
                 ResourceCommentReactions.__table__,
-                DownloadSummary.__table__,
+                ResourceLikeMonthly.__table__,
+                ResourceLike.__table__,
+                ResourceCommentSummary.__table__,
+                ResourceCommentReply.__table__,
+                ResourceComment.__table__,
                 DownloadMonthly.__table__,
+                DownloadSummary.__table__,
+                UtilizationCommentReply.__table__,
+                UtilizationComment.__table__,
+                IssueResolutionSummary.__table__,
+                IssueResolution.__table__,
+                UtilizationSummary.__table__,
+                Utilization.__table__,
             ],
             checkfirst=True,
         )

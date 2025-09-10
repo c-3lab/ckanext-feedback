@@ -26,7 +26,7 @@ def get_utilizations_query(org_list):
             Resource.id.label('resource_id'),
             Resource.name.label('resource_name'),
             Utilization.id.label('utilization_id'),
-            literal('利活用申請').label('feedback_type'),
+            literal('utilization').label('feedback_type'),
             literal(None).label('comment_id'),
             Utilization.title.label('content'),
             Utilization.created.label('created'),
@@ -52,7 +52,7 @@ def get_simple_utilizations_query(org_list):
     query = (
         session.query(
             Group.name.label('group_name'),
-            literal("利活用申請").label("feedback_type"),
+            literal('utilization').label('feedback_type'),
             Utilization.approval.label('is_approved'),
         )
         .join(Package, Group.id == Package.owner_org)

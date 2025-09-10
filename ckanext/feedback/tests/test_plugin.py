@@ -267,3 +267,49 @@ class TestPlugin:
         instance.get_uploader(upload_to, old_filename)
 
         mock_feedback_upload.assert_not_called()
+
+    def test_get_commands(self):
+        instance = FeedbackPlugin()
+        with patch('ckanext.feedback.plugin.feedback.feedback', new='fb_cmd'):
+            assert instance.get_commands() == ['fb_cmd']
+
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.utilization_summary_service')
+    @patch('ckanext.feedback.plugin.resource_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    def test_before_resource_show_with_translation(
+        self,
+        mock_resource_likes_service,
+        mock_resource_summary_service,
+        mock_utilization_summary_service,
+        mock_download_summary_service,
+    ):
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
+        config[
+            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
+        ] = True
+        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
+
+        mock_resource_summary_service.get_resource_comments.return_value = 9999
+        mock_resource_summary_service.get_resource_rating.return_value = 23.333
+        mock_utilization_summary_service.get_resource_utilizations.return_value = 9999
+        mock_utilization_summary_service.get_resource_issue_resolutions.return_value = (
+            9999
+        )
+        mock_download_summary_service.get_resource_downloads.return_value = 9999
+        mock_resource_likes_service.get_resource_like_count.return_value = 9999
+
+        instance = FeedbackPlugin()
+        resource = factories.Resource()
+
+        with patch('ckanext.feedback.plugin._', new=lambda s: f'*{s}*'):
+            updated = instance.before_resource_show(resource)
+
+        assert updated['*Downloads*'] == 9999
+        assert updated['*Utilizations*'] == 9999
+        assert updated['*Issue Resolutions*'] == 9999
+        assert updated['*Comments*'] == 9999
+        assert updated['*Rating*'] == 23.3
+        assert updated['*Number of Likes*'] == 9999

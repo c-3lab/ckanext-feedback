@@ -110,11 +110,6 @@ class BaseConfig:
                 value = value.get(key)
             except AttributeError as e:
                 toolkit.error_shout(e)
-                log.debug(
-                    f"module[{self.name}]\nfeedback_config:{feedback_config}"
-                    f" feedback_conf_path:{self.fb_conf_prefix + fb_conf_path} "
-                    "target-key:'{key}'"
-                )
         if value is not None:
             config[ckan_conf_path_str] = value
 
@@ -260,6 +255,12 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment = BaseConfig('image_attachment', parents)
         self.image_attachment.default = False
 
+        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
+        self.reply_open.default = False
+
+        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
+        self.reply_open.default = False
+
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
@@ -277,6 +278,15 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.image_attachment.name],
+        )
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=fb_comments_conf_path + ['reply_open'],
+        )
+
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=fb_comments_conf_path + ['reply_open'],
         )
 
 
@@ -297,11 +307,18 @@ class UtilizationCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment = BaseConfig('image_attachment', parents)
         self.image_attachment.default = False
 
+        self.reply_open = BaseConfig('reply_open', parents)
+        self.reply_open.default = False
+
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=self.conf_path + ['comments', 'image_attachment'],
+        )
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            feedback_config=feedback_config,
+            fb_conf_path=self.conf_path + ['comments', 'reply_open'],
         )
 
 
@@ -326,6 +343,8 @@ class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
         self.publickey.default = ''
         self.score_threshold = BaseConfig('score_threshold', parents)
         self.score_threshold.default = 0.5
+        self.force_all = BaseConfig('force_all', parents)
+        self.force_all.default = False
 
     def load_config(self, feedback_config):
         self.set_config(
@@ -337,6 +356,7 @@ class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
         self.privatekey.set_config(feedback_config)
         self.publickey.set_config(feedback_config)
         self.score_threshold.set_config(feedback_config)
+        self.force_all.set_config(feedback_config)
 
 
 class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
