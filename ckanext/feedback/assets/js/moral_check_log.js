@@ -14,16 +14,20 @@ function isHistory(event) {
 
 function previousLog() {
 	const previousType = sessionStorage.getItem('current-type');
-
-	if (previousType === 'comment') {
-		return;
-	}
-
+	const currentType = document.getElementById('current-type').value;
 	const url = createUrl();
 	const inputComment = sessionStorage.getItem('input-comment');
 	const suggestedComment = sessionStorage.getItem('suggested-comment');
 
-	postPreviousLogFetch(url, previousType, inputComment, suggestedComment);
+	const shouldPost = (
+		(previousType === 'confirm' && currentType === 'comment') ||
+		(previousType === 'confirm' && currentType === 'suggestion') ||
+		(previousType === 'suggestion' && currentType === 'comment')
+	);
+
+	if (shouldPost) {
+		postPreviousLogFetch(url, previousType, inputComment, suggestedComment);
+	}
 }
 
 function createUrl() {
