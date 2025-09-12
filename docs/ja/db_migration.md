@@ -20,8 +20,6 @@ Alembic は「リビジョンファイル（マイグレーションファイル
 
 ## マイグレーションスクリプトの作成
 
-Docker環境で本Extensionの開発を行う手順を示します。
-
 ### 前提
 
 * 以下のDocker環境で CKAN 本体と本Extensionを実行することを想定しています。
@@ -29,10 +27,11 @@ Docker環境で本Extensionの開発を行う手順を示します。
   * ディストリビューション: Ubuntu 22.04
   * Python 3.10.13
   * Docker 27.4.0
-- **`CKAN_CONTAINER`や`REPO_ROOT` などは開発環境によって置き換えてください。**
+
+  **`REPO_ROOT` などは開発環境によって置き換えてください。**
+
 ### マイグレーションスクリプトの作成
 ```bash
-docker exec -it "$CKAN_CONTAINER" /bin/bash
 cd "$REPO_ROOT/ckanext/feedback/migration/feedback"
 alembic revision 
 ```
@@ -135,24 +134,14 @@ def downgrade():
 ### アップグレード
 ```bash
 # 最新へ
-docker exec -it "$CKAN_CONTAINER" bash -lc 'ckan db upgrade --plugin feedback'
+ckan db upgrade --plugin feedback
 ```
 ### ダウングレード
 ```bash
 # feedbackプラグイン適用前までダウングレード
-docker exec -it "$CKAN_CONTAINER" bash -lc 'ckan db downgrade --plugin '"$CKAN_PLUGIN"
+ckan db downgrade --plugin feedback
 # 指定リビジョンへ
-docker exec -it "$CKAN_CONTAINER" bash -lc 'ckan db downgrade --plugin '"$CKAN_PLUGIN"' -v <revision_id>'
-```
-
-- プラグイン読込が必要な場合
-```bash
-docker exec -it "$CKAN_CONTAINER" bash -lc 'export CKAN__PLUGINS="$CKAN__PLUGINS '"$CKAN_PLUGIN"'"; ckan db upgrade --plugin '"$CKAN_PLUGIN"
-```
-
-- ローカル仮想環境で実行
-```bash
-ckan db upgrade --plugin "$CKAN_PLUGIN"
+ckan db downgrade --plugin feedback -v <revision_id>
 ```
 
 ---
@@ -161,12 +150,12 @@ ckan db upgrade --plugin "$CKAN_PLUGIN"
 
 ### 現在のリビジョンIDの確認
 ```bash
-docker exec -it "$CKAN_CONTAINER" bash -lc 'ckan db version --plugin '"$CKAN_PLUGIN"
+ckan db version --plugin feedback
 ```
 
 ### 未適用が存在するかを確認
 ```bash
-docker exec -it "$CKAN_CONTAINER" bash -lc 'export CKAN__PLUGINS="$CKAN__PLUGINS '"$CKAN_PLUGIN"'"; ckan db pending-migrations'
+ckan db pending-migrations
 ```
 
 ## Alembicコマンドを直接実行したい場合
@@ -181,22 +170,15 @@ alembic history
 
 ## トラブルシューティング
 
-何らかの理由でリビジョンの進行状況とDB本体の同期にズレが生じた場合、`alembic stamp`によってリビジョンの設定を手動で変更することができます。  
-これは、カラムを追加するマイグレーションスクリプトを新たに作成したが既にDBにカラムが存在する場合や、何らかの理由でDBがロールバックした場合などに有効です。
-
-- [コマンドの説明](https://inspirehep.readthedocs.io/en/latest/alembic.html#alembic-stamp)をよく読み、慎重に作業してください。
+### 実DBと Alembic の履歴がずれた場合
+#### 何らかの理由でリビジョンの進行状況とDB本体の同期にズレが生じた場合、`alembic stamp`によってリビジョンの設定を手動で変更することができます。  
+#### これは、カラムを追加するマイグレーションスクリプトを新たに作成したが既にDBにカラムが存在する場合や、何らかの理由でDBがロールバックした場合などに有効です。
+#### [コマンドの説明](https://inspirehep.readthedocs.io/en/latest/alembic.html#alembic-stamp)をよく読み、慎重に作業してください。
 ```bash
 # 実データは変更せず、履歴だけ合わせる
 # 最新バージョンに変更
 alembic stamp head
 # 指定バージョンに変更
 alembic stamp <revision_id>
-ckan db upgrade --plugin "$CKAN_PLUGIN"
+ckan db upgrade --plugin feedback
 ```
-#### **注意:**
-- `stamp` は実体を変更しないため、実DBとの差分を必ず確認してから実行
-- 複数ヘッド（multiple heads）が発生した場合は、マージリビジョンを作成
-```bash
-alembic merge -m "merge heads" <head1> <head2>
-```
----
