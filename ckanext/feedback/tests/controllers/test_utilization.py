@@ -9,10 +9,6 @@ from werkzeug.exceptions import NotFound
 
 from ckanext.feedback.controllers.utilization import UtilizationController
 from ckanext.feedback.models.utilization import UtilizationCommentCategory
-from ckanext.feedback.tests.conftest import (
-    mock_resource_object,
-    mock_utilization_object,
-)
 
 engine = model.repo.session.get_bind()
 
@@ -3343,7 +3339,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.get_action')
-    def test_check_comment_POST_ai_check_true(
+    def test_check_comment_post_ai_check_true(
         self,
         mock_get_action,
         mock_get_resource,
@@ -3357,6 +3353,8 @@ class TestUtilizationController:
         mock_method,
         mock_render,
         mock_FeedbackConfig,
+        mock_utilization_object,
+        mock_resource_object,
     ):
         utilization_id = 'resource_id'
         category = 'category'
