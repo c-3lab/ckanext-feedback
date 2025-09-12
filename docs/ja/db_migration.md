@@ -139,7 +139,7 @@ docker exec -it "$CKAN_CONTAINER" bash -lc 'ckan db upgrade --plugin feedback'
 ```
 ### ダウングレード
 ```bash
-# 直前へ
+# feedbackプラグイン適用前までダウングレード
 docker exec -it "$CKAN_CONTAINER" bash -lc 'ckan db downgrade --plugin '"$CKAN_PLUGIN"
 # 指定リビジョンへ
 docker exec -it "$CKAN_CONTAINER" bash -lc 'ckan db downgrade --plugin '"$CKAN_PLUGIN"' -v <revision_id>'
