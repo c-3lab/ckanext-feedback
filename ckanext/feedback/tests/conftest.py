@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from ckan import model
@@ -56,6 +56,20 @@ def user():
 @pytest.fixture(scope="function")
 def sysadmin():
     return factories.Sysadmin()
+
+
+@pytest.fixture(scope='function')
+def sysadmin_env():
+    user = factories.SysadminWithToken()
+    env = {'Authorization': user['token']}
+    return env
+
+
+@pytest.fixture(scope='function')
+def user_env():
+    user = factories.UserWithToken()
+    env = {'Authorization': user['token']}
+    return env
 
 
 @pytest.fixture(scope="function")
@@ -276,3 +290,47 @@ def utilization_with_comment(resource, user):
         return utilization, comment
 
     return _create_with_comment
+
+
+@pytest.fixture(scope='function')
+def mock_resource_object():
+    def _create_mock_resource(org_id='mock_org_id', org_name='mock_organization_name'):
+        mock_resource = MagicMock()
+        mock_resource.Resource = MagicMock()
+        mock_resource.Resource.id = 'mock_resource_id'
+        mock_resource.Resource.name = 'mock_resource_name'
+        mock_resource.Resource.package = MagicMock()
+        mock_resource.Resource.package.id = 'mock_package_id'
+        mock_resource.Resource.package.owner_org = org_id
+        mock_resource.organization_id = org_id
+        mock_resource.organization_name = org_name
+        return mock_resource
+
+    return _create_mock_resource
+
+
+@pytest.fixture(scope='function')
+def mock_utilization_object():
+    def _create_mock_utilization(
+        resource_id='mock_resource_id', owner_org='mock_org_id'
+    ):
+        mock_utilization = MagicMock()
+        mock_utilization.id = 'mock_utilization_id'
+        mock_utilization.resource_id = resource_id
+        mock_utilization.owner_org = owner_org
+        mock_utilization.title = 'mock_title'
+        mock_utilization.url = 'mock_url'
+        mock_utilization.description = 'mock_description'
+        return mock_utilization
+
+    return _create_mock_utilization
+
+
+@pytest.fixture(scope='function')
+def mock_current_user_fixture():
+    def _mock_current_user(current_user, user):
+        user_obj = model.User.get(user['name'])
+        # mock current_user
+        current_user.return_value = user_obj
+
+    return _mock_current_user
