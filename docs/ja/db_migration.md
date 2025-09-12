@@ -20,6 +20,15 @@ Alembic は「リビジョンファイル（マイグレーションファイル
 
 ## マイグレーションスクリプトの作成
 
+Docker環境で本Extensionの開発を行う手順を示します。
+
+### 前提
+
+* 以下のDocker環境で CKAN 本体と本Extensionを実行することを想定しています。
+  * OS: Linux
+  * ディストリビューション: Ubuntu 22.04
+  * Python 3.10.13
+  * Docker 27.4.0
 - **`CKAN_CONTAINER`や`REPO_ROOT` などは開発環境によって置き換えてください。**
 ### マイグレーションスクリプトの作成
 ```bash
