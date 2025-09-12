@@ -12,7 +12,6 @@ log = logging.getLogger(__name__)
 @pytest.mark.db_test
 @pytest.mark.usefixtures('with_plugins', 'with_request_context')
 class TestRankingDataset:
-    pass
 
     def test_get_download_ranking(self, organization, dataset, resource):
         assert (
