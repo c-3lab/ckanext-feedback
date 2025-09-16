@@ -8,11 +8,6 @@ from ckan import model
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.issue import IssueResolution
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import (
@@ -128,20 +123,10 @@ def convert_utilization_comment_to_tuple(utilization_comment):
 engine = model.repo.session.get_bind()
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.usefixtures('with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestUtilizationDetailsService:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
-    def test_get_utilization(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_utilization(self, organization, dataset, resource):
         assert get_registered_utilization(resource['id']) is None
 
         id = str(uuid.uuid4())
@@ -166,10 +151,7 @@ class TestUtilizationDetailsService:
         assert result == expected_utilization
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_approve_utilization(self):
-        dataset = factories.Dataset()
-        user = factories.User()
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_approve_utilization(self, organization, dataset, resource, user):
         test_datetime = datetime.now()
 
         id = str(uuid.uuid4())
@@ -234,10 +216,9 @@ class TestUtilizationDetailsService:
         mock_query.first.assert_called_once()
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_utilization_id_and_approval_are_None(self):
-        dataset = factories.Dataset()
-        user = factories.User()
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_utilization_comments_utilization_id_and_approval_are_None(
+        self, organization, dataset, resource, user
+    ):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -311,10 +292,9 @@ class TestUtilizationDetailsService:
         assert approved_result == approved_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_approval_is_False(self):
-        dataset = factories.Dataset()
-        user = factories.User()
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_utilization_comments_approval_is_False(
+        self, organization, dataset, resource, user
+    ):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -427,11 +407,9 @@ class TestUtilizationDetailsService:
         assert approved_comment == fake_utilization_comment_approved
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_owner_org(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        user = factories.User()
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_utilization_comments_owner_org(
+        self, organization, dataset, resource, user
+    ):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -486,9 +464,9 @@ class TestUtilizationDetailsService:
         assert approved_comment == fake_utilization_comment_approved
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_limit_offset(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_utilization_comments_limit_offset(
+        self, organization, dataset, resource
+    ):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -536,9 +514,7 @@ class TestUtilizationDetailsService:
         )
         assert comment == unapproved_comment
 
-    def test_create_utilization_comment(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_create_utilization_comment(self, organization, dataset, resource):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -563,10 +539,7 @@ class TestUtilizationDetailsService:
         assert comment.approval_user_id is None
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_approve_utilization_comment(self):
-        dataset = factories.Dataset()
-        user = factories.User()
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_approve_utilization_comment(self, organization, dataset, resource, user):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -604,10 +577,7 @@ class TestUtilizationDetailsService:
     def test_get_utilization_comment_categories(self):
         assert get_utilization_comment_categories() == UtilizationCommentCategory
 
-    def test_get_issue_resolutions(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-        user = factories.User()
+    def test_get_issue_resolutions(self, organization, dataset, resource, user):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -639,10 +609,7 @@ class TestUtilizationDetailsService:
         assert issue_resolution.created == time
         assert issue_resolution.creator_user_id == user['id']
 
-    def test_create_issue_resolution(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-        user = factories.Sysadmin()
+    def test_create_issue_resolution(self, organization, dataset, resource, user):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -666,10 +633,7 @@ class TestUtilizationDetailsService:
         assert result == issue_resolution
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_refresh_utilization_comments(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-        user = factories.Sysadmin()
+    def test_refresh_utilization_comments(self, organization, dataset, resource, user):
 
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -737,10 +701,9 @@ class TestAttachedImageService:
 
         assert result == ['test_attached_image.jpg']
 
-    def test_get_utilization_comment_replies_filters_and_order(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_utilization_comment_replies_filters_and_order(
+        self, organization, dataset, resource
+    ):
 
         utilization_id = str(uuid.uuid4())
         title = 't'
@@ -818,10 +781,9 @@ class TestAttachedImageService:
         with pytest.raises(ValueError):
             approve_utilization_comment_reply('non-exists', None)
 
-    def test_approve_utilization_comment_reply_parent_not_found(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_approve_utilization_comment_reply_parent_not_found(
+        self, organization, dataset, resource
+    ):
 
         utilization_id = str(uuid.uuid4())
         register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
@@ -861,10 +823,9 @@ class TestAttachedImageService:
             with pytest.raises(ValueError):
                 approve_utilization_comment_reply(reply.id, None)
 
-    def test_approve_utilization_comment_reply_parent_not_approved(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_approve_utilization_comment_reply_parent_not_approved(
+        self, organization, dataset, resource
+    ):
 
         utilization_id = str(uuid.uuid4())
         register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
@@ -892,10 +853,9 @@ class TestAttachedImageService:
             approve_utilization_comment_reply(reply.id, None)
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_approve_utilization_comment_reply_success(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_approve_utilization_comment_reply_success(
+        self, organization, dataset, resource
+    ):
 
         utilization_id = str(uuid.uuid4())
         register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
@@ -928,10 +888,7 @@ class TestAttachedImageService:
         assert updated.approved == datetime(2000, 1, 2, 3, 4)
         assert updated.approval_user_id is None
 
-    def _prepare_uc_with_replies(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def _prepare_uc_with_replies(self, organization, dataset, resource):
 
         utilization_id = str(uuid.uuid4())
         register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
@@ -962,8 +919,12 @@ class TestAttachedImageService:
         return organization, dataset, uc
 
     @patch('flask_login.utils._get_user')
-    def test_get_utilization_comment_replies_for_display_non_admin(self, current_user):
-        organization, dataset, uc = self._prepare_uc_with_replies()
+    def test_get_utilization_comment_replies_for_display_non_admin(
+        self, organization, dataset, resource
+    ):
+        organization, dataset, uc = self._prepare_uc_with_replies(
+            organization, dataset, resource
+        )
         with patch(
             'ckanext.feedback.services.utilization.details.current_user', new=object()
         ):
@@ -973,35 +934,35 @@ class TestAttachedImageService:
         assert [r.content for r in rows] == ['a']
 
     @patch('flask_login.utils._get_user')
-    def test_get_utilization_comment_replies_for_display_sysadmin(self, current_user):
-        sysadm = factories.Sysadmin()
-        user_obj = model.User.get(sysadm['id'])
+    def test_get_utilization_comment_replies_for_display_sysadmin(
+        self, current_user, sysadmin, organization, dataset, resource
+    ):
+        user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
 
-        organization, dataset, uc = self._prepare_uc_with_replies()
+        organization, dataset, uc = self._prepare_uc_with_replies(
+            organization, dataset, resource
+        )
         rows = get_utilization_comment_replies_for_display(uc.id, dataset['owner_org'])
         assert sorted([r.content for r in rows]) == ['a', 'u']
 
     @patch('flask_login.utils._get_user')
-    def test_get_utilization_comment_replies_for_display_org_admin(self, current_user):
-        user_dict = factories.User()
-        user = model.User.get(user_dict['id'])
-        current_user.return_value = user
+    def test_get_utilization_comment_replies_for_display_org_admin(
+        self, current_user, user, organization, dataset, resource
+    ):
+        user_obj = model.User.get(user['id'])
+        current_user.return_value = user_obj
 
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
+        org_obj = model.Group.get(organization['id'])
         member = model.Member(
-            group=organization,
-            group_id=organization.id,
-            table_id=user.id,
+            group=org_obj,
+            group_id=org_obj.id,
+            table_id=user_obj.id,
             capacity='admin',
             table_name='user',
         )
         model.Session.add(member)
         model.Session.commit()
-
-        dataset = factories.Dataset(owner_org=organization.id)
-        resource = factories.Resource(package_id=dataset['id'])
 
         utilization_id = str(uuid.uuid4())
         register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
@@ -1020,7 +981,6 @@ class TestAttachedImageService:
         )
         session.commit()
         uc = get_registered_utilization_comment(utilization.id)[0]
-
         r1 = UtilizationCommentReply(
             utilization_comment_id=uc.id, content='u', approval=False
         )
@@ -1032,3 +992,33 @@ class TestAttachedImageService:
 
         rows = get_utilization_comment_replies_for_display(uc.id, dataset['owner_org'])
         assert sorted([r.content for r in rows]) == ['a', 'u']
+
+    def test_create_utilization_comment_reply_with_attached_image(
+        self, organization, dataset, resource
+    ):
+        utilization_id = str(uuid.uuid4())
+        register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)
+        utilization = get_registered_utilization(resource['id'])
+
+        uc_id = str(uuid.uuid4())
+        register_utilization_comment(
+            uc_id,
+            utilization.id,
+            UtilizationCommentCategory.REQUEST,
+            'content',
+            datetime.now(),
+            False,
+            None,
+            None,
+        )
+        session.commit()
+        uc = get_registered_utilization_comment(utilization.id)[0]
+
+        create_utilization_comment_reply(
+            uc.id, 'reply content', None, 'u_reply_img.jpg'
+        )
+        session.commit()
+
+        reply = session.query(UtilizationCommentReply).first()
+        assert reply.content == 'reply content'
+        assert reply.attached_image_filename == 'u_reply_img.jpg'
