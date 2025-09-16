@@ -82,6 +82,7 @@ class ResourceCommentReply(Base):
         Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
     )
     approval_user = relationship(User, foreign_keys=[approval_user_id])
+    attached_image_filename = Column(Text)
 
 
 class ResourceCommentSummary(Base):
