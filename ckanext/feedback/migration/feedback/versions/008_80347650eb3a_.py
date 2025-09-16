@@ -1,5 +1,4 @@
 """squash: replies approval cols, utilization_comment_reply, unique constraints
-Revises: 64f3177a129c ←motomoto
 
 
 Revision ID: 80347650eb3a
@@ -22,7 +21,9 @@ def upgrade():
     # 008_81aede0d41b3_
     op.add_column(
         'resource_comment_reply',
-        sa.Column('approval', sa.BOOLEAN(), server_default=sa.false(), nullable=False),
+        sa.Column(
+            'approval', sa.BOOLEAN(), server_default=sa.text('FALSE'), nullable=False
+        ),
     )
     op.add_column(
         'resource_comment_reply', sa.Column('approved', sa.TIMESTAMP(), nullable=True)
@@ -91,7 +92,7 @@ def upgrade():
     # 011_16f60ff92113_
     # Add UNIQUE constraint to resource_id column
     op.create_unique_constraint(
-        constraint_name='unique_resource_id',
+        constraint_name='uq_download_summary_resource_id',
         table_name='download_summary',
         columns=['resource_id'],
     )
@@ -106,20 +107,13 @@ def upgrade():
 
 
 def downgrade():
-    # 008_81aede0d41b3_
-    op.drop_constraint(
-        'resource_comment_reply_approval_user_id_fkey',
-        'resource_comment_reply',
-        type_='foreignkey',
-    )
-    op.drop_column('resource_comment_reply', 'approval_user_id')
-    op.drop_column('resource_comment_reply', 'approved')
-    op.drop_column('resource_comment_reply', 'approval')
+    # 011_16f60ff92113_
+    # Remove UNIQUE constraint from resource_id column
+    op.drop_column('resource_comment_reply', 'attached_image_filename')
 
-    # 009_8293443a0ff2_
     op.drop_constraint(
-        'uq_utilization_summary_resource_id',
-        'utilization_summary',
+        constraint_name='uq_download_summary_resource_id',
+        table_name='download_summary',
         type_='unique',
     )
 
@@ -129,12 +123,19 @@ def downgrade():
     )
     op.drop_table('utilization_comment_reply')
 
-    # 011_16f60ff92113_
-    # Remove UNIQUE constraint from resource_id column
+    # 009_8293443a0ff2_
     op.drop_constraint(
-        constraint_name='unique_resource_id',
-        table_name='download_summary',
+        'uq_utilization_summary_resource_id',
+        'utilization_summary',
         type_='unique',
     )
-    op.drop_column('utilization_comment_reply', 'attached_image_filename')
-    op.drop_column('resource_comment_reply', 'attached_image_filename')
+
+    # 008_81aede0d41b3_
+    op.drop_constraint(
+        'resource_comment_reply_approval_user_id_fkey',
+        'resource_comment_reply',
+        type_='foreignkey',
+    )
+    op.drop_column('resource_comment_reply', 'approval_user_id')
+    op.drop_column('resource_comment_reply', 'approved')
+    op.drop_column('resource_comment_reply', 'approval')
