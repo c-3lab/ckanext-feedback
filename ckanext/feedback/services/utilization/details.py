@@ -132,7 +132,7 @@ def create_utilization_comment(
 
 
 def create_utilization_comment_reply(
-    utilization_comment_id, content, creator_user_id, attached_image_filename
+    utilization_comment_id, content, creator_user_id, attached_image_filename=None
 ):
     reply = UtilizationCommentReply(
         utilization_comment_id=utilization_comment_id,

@@ -185,7 +185,7 @@ def get_comment_replies_for_display(resource_comment_id, owner_org_id):
 
 # Create new reply
 def create_reply(
-    resource_comment_id, content, creator_user_id, attached_image_filename
+    resource_comment_id, content, creator_user_id, attached_image_filename=None
 ):
     reply = ResourceCommentReply(
         resource_comment_id=resource_comment_id,
