@@ -294,22 +294,30 @@ class TestFeedbackCommand:
             f"[DRY RUN] Deletion Schedule: {file_path}", fg='blue'
         )
 
-    @patch('ckanext.feedback.command.feedback.create_moral_check_log_excel_workbook')
+    @patch('ckanext.feedback.command.feedback.generate_moral_check_log_excel_bytes')
     @patch('ckanext.feedback.command.feedback.click.secho')
-    def test_moral_check_log(self, mock_secho, mock_create_workbook):
-        mock_create_workbook.return_value = MagicMock(getvalue=lambda: b'test data')
+    def test_moral_check_log(
+        self, mock_secho, mock_generate_moral_check_log_excel_bytes
+    ):
+        mock_generate_moral_check_log_excel_bytes.return_value = MagicMock(
+            getvalue=lambda: b'test data'
+        )
 
         self.runner.invoke(feedback, ['moral-check-log'])
 
-        mock_create_workbook.assert_called_once_with(False)
+        mock_generate_moral_check_log_excel_bytes.assert_called_once_with(False)
         mock_secho.assert_called_once_with(
             'Exported moral check log to moral_check_log.xlsx', fg='green'
         )
 
-    @patch('ckanext.feedback.command.feedback.create_moral_check_log_excel_workbook')
+    @patch('ckanext.feedback.command.feedback.generate_moral_check_log_excel_bytes')
     @patch('ckanext.feedback.command.feedback.click.secho')
-    def test_moral_check_log_with_separation(self, mock_secho, mock_create_workbook):
-        mock_create_workbook.return_value = MagicMock(getvalue=lambda: b'test data')
+    def test_moral_check_log_with_separation(
+        self, mock_secho, mock_generate_moral_check_log_excel_bytes
+    ):
+        mock_generate_moral_check_log_excel_bytes.return_value = MagicMock(
+            getvalue=lambda: b'test data'
+        )
 
         self.runner.invoke(
             feedback,
@@ -321,18 +329,22 @@ class TestFeedbackCommand:
             ],
         )
 
-        mock_create_workbook.assert_called_once_with(True)
+        mock_generate_moral_check_log_excel_bytes.assert_called_once_with(True)
         mock_secho.assert_called_once_with(
             'Exported moral check log to moral_check_log_separation.xlsx', fg='green'
         )
 
-    @patch('ckanext.feedback.command.feedback.create_moral_check_log_excel_workbook')
+    @patch('ckanext.feedback.command.feedback.generate_moral_check_log_excel_bytes')
     @patch('ckanext.feedback.command.feedback.click.echo')
-    def test_moral_check_log_exception(self, mock_echo, mock_create_workbook):
-        mock_create_workbook.side_effect = Exception('test exception')
+    def test_moral_check_log_exception(
+        self, mock_echo, mock_generate_moral_check_log_excel_bytes
+    ):
+        mock_generate_moral_check_log_excel_bytes.side_effect = Exception(
+            'test exception'
+        )
 
         result = self.runner.invoke(feedback, ['moral-check-log'])
 
         assert result.exit_code != 0
-        mock_create_workbook.assert_called_once_with(False)
+        mock_generate_moral_check_log_excel_bytes.assert_called_once_with(False)
         mock_echo.assert_called_once_with("Error: test exception", err=True)
