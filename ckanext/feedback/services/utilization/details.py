@@ -131,11 +131,14 @@ def create_utilization_comment(
     session.add(comment)
 
 
-def create_utilization_comment_reply(utilization_comment_id, content, creator_user_id):
+def create_utilization_comment_reply(
+    utilization_comment_id, content, creator_user_id, attached_image_filename
+):
     reply = UtilizationCommentReply(
         utilization_comment_id=utilization_comment_id,
         content=content,
         creator_user_id=creator_user_id,
+        attached_image_filename=attached_image_filename,
     )
     session.add(reply)
 
