@@ -17,10 +17,7 @@ Alembic は「リビジョンファイル（マイグレーションファイル
 - `upgrade()`: リビジョン適用時に進める操作（例: カラム追加、インデックス作成）
 - `downgrade()`: ロールバック時に戻す操作（例: カラム削除、インデックス削除）
 ---
-
-## マイグレーションスクリプトの作成
-
-### 前提
+## 前提
 
 * 以下のDocker環境で CKAN 本体と本Extensionを実行することを想定しています。
   * OS: Linux
@@ -29,6 +26,7 @@ Alembic は「リビジョンファイル（マイグレーションファイル
   * Docker 27.4.0
 
   **`REPO_ROOT` などは開発環境によって置き換えてください。**
+---
 
 ### マイグレーションスクリプトの作成
 ```bash
@@ -39,8 +37,8 @@ alembic revision
 ```bash 
 alembic revision -m "message"
 ```
-- マイグレーションに関するファイルはリポジトリの `ckanext/feedback/migration/feedback`以下に配置されます。
-- 生成物: `versions/xxxxxxxxxxxx_<message>.py`
+- マイグレーションに関するファイルはリポジトリの `$REPO_ROOT/ckanext/feedback/migration/feedback`以下に配置されます。
+- 生成物: `versions/<revision_id>_<message>.py`
   - `down_revision` が正しい親リビジョンを指すか、docstring の「Revises」と一致しているか確認。
 
 ### テンプレート例:
@@ -171,14 +169,15 @@ alembic history
 ## トラブルシューティング
 
 ### 実DBと Alembic の履歴がずれた場合
-#### 何らかの理由でリビジョンの進行状況とDB本体の同期にズレが生じた場合、`alembic stamp`によってリビジョンの設定を手動で変更することができます。  
-#### これは、カラムを追加するマイグレーションスクリプトを新たに作成したが既にDBにカラムが存在する場合や、何らかの理由でDBがロールバックした場合などに有効です。
-#### [コマンドの説明](https://inspirehep.readthedocs.io/en/latest/alembic.html#alembic-stamp)をよく読み、慎重に作業してください。
+ 何らかの理由でリビジョンの進行状況とDB本体の同期にズレが生じた場合、`alembic stamp`によってリビジョンの設定を手動で変更することができます。  
+ これは、カラムを追加するマイグレーションスクリプトを新たに作成したが既にDBにカラムが存在する場合や、何らかの理由でDBがロールバックした場合などに有効です。
+ [コマンドの説明](https://inspirehep.readthedocs.io/en/latest/alembic.html#alembic-stamp)をよく読み、慎重に作業してください。
+#### 実データは変更せず、履歴だけ合わせる
 ```bash
-# 実データは変更せず、履歴だけ合わせる
 # 最新バージョンに変更
 alembic stamp head
+```
+```bash
 # 指定バージョンに変更
 alembic stamp <revision_id>
-ckan db upgrade --plugin feedback
 ```
