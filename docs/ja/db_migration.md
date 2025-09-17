@@ -168,11 +168,10 @@ alembic history
 
 ## トラブルシューティング
 
-### 実DBと Alembic の履歴がずれた場合
- 何らかの理由でリビジョンの進行状況とDB本体の同期にズレが生じた場合、`alembic stamp`によってリビジョンの設定を手動で変更することができます。  
- これは、カラムを追加するマイグレーションスクリプトを新たに作成したが既にDBにカラムが存在する場合や、何らかの理由でDBがロールバックした場合などに有効です。
- [コマンドの説明](https://inspirehep.readthedocs.io/en/latest/alembic.html#alembic-stamp)をよく読み、慎重に作業してください。
-#### 実データは変更せず、履歴だけ合わせる
+### Alembicのマイグレーション履歴の調整
+ データベースの構造と Alembic のマイグレーション履歴が一致しなくなった場合に有効です。  
+ `alembic stamp` コマンドを使用してデータベースの構造は変更せず、Alembic のバージョン履歴のみを調整できます。  
+ [コマンドの説明](https://inspirehep.readthedocs.io/en/latest/alembic.html#alembic-stamp)をよく読み、慎重に作業してください。  
 ```bash
 # 最新バージョンに変更
 alembic stamp head
