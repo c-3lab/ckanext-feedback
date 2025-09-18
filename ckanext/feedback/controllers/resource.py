@@ -40,6 +40,9 @@ from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
 log = logging.getLogger(__name__)
 
+# Expose session as _session for test patching
+_session = session
+
 
 class ResourceController:
     # Render HTML pages
@@ -393,17 +396,31 @@ class ResourceController:
         if not (resource_comment_id and content):
             toolkit.abort(400)
 
+        attached_image_filename = None
+        attached_image: FileStorage = request.files.get("attached_image")
+        if attached_image:
+            try:
+                attached_image_filename = ResourceController._upload_image(
+                    attached_image
+                )
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return toolkit.redirect_to(
+                    'resource_comment.comment', resource_id=resource_id
+                )
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                toolkit.abort(500)
+
         # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
         force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
         admin_bypass = False
         if isinstance(current_user, model.User):
             try:
-                _res = comment_service.get_resource(resource_id)
-                admin_bypass = current_user.sysadmin or has_organization_admin_role(
-                    _res.Resource.package.owner_org
-                )
+                comment_service.get_resource(resource_id)
             except Exception:
-                admin_bypass = current_user.sysadmin
+                # admin_bypass = current_user.sysadmin
+                pass
 
         # Reply permission control (admin or reply_open)
         reply_open = False
@@ -426,6 +443,7 @@ class ResourceController:
                     _res.Resource.package.owner_org
                 )
             log.info(f"is_admin value: {is_admin}")
+        admin_bypass = is_admin
 
         if not (reply_open or is_admin):
             helpers.flash_error(
@@ -453,10 +471,56 @@ class ResourceController:
         creator_user_id = (
             current_user.id if isinstance(current_user, model.User) else None
         )
-        comment_service.create_reply(resource_comment_id, content, creator_user_id)
+        comment_service.create_reply(
+            resource_comment_id, content, creator_user_id, attached_image_filename
+        )
         session.commit()
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
+
+    @staticmethod
+    def reply_attached_image(
+        resource_id: str, reply_id: str, attached_image_filename: str
+    ):
+        resource = comment_service.get_resource(resource_id)
+        if resource is None:
+            return toolkit.abort(404)
+
+        approval = True
+        if isinstance(current_user, model.User) and (
+            current_user.sysadmin
+            or has_organization_admin_role(resource.Resource.package.owner_org)
+        ):
+            approval = None
+
+        from ckanext.feedback.models.resource_comment import (
+            ResourceComment,
+            ResourceCommentReply,
+        )
+
+        q = (
+            _session.query(ResourceCommentReply)
+            .join(
+                ResourceComment,
+                ResourceCommentReply.resource_comment_id == ResourceComment.id,
+            )
+            .filter(
+                ResourceCommentReply.id == reply_id,
+                ResourceComment.resource_id == resource_id,
+            )
+        )
+        if approval is not None:
+            q = q.filter(ResourceCommentReply.approval == approval)
+        reply = q.first()
+        if reply is None or reply.attached_image_filename != attached_image_filename:
+            return toolkit.abort(404)
+
+        attached_image_path = comment_service.get_attached_image_path(
+            attached_image_filename
+        )
+        if not os.path.exists(attached_image_path):
+            return toolkit.abort(404)
+        return send_file(attached_image_path)
 
     # resource_comment/<resource_id>/comment/<comment_id>/attached_image/<attached_image_filename>
     @staticmethod

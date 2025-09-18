@@ -6,55 +6,19 @@ from ckan.common import _, config
 from ckan.logic import get_action
 from ckan.model import User
 from ckan.plugins import toolkit
-from ckan.tests import factories
-from flask import Flask, g
+from flask import g
 from werkzeug.exceptions import NotFound
 
 import ckanext.feedback.services.resource.comment as comment_service
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.types import ResourceCommentResponseStatus
 
-engine = model.repo.session.get_bind()
 
-
-@pytest.fixture
-def sysadmin_env():
-    user = factories.SysadminWithToken()
-    env = {'Authorization': user['token']}
-    return env
-
-
-@pytest.fixture
-def user_env():
-    user = factories.UserWithToken()
-    env = {'Authorization': user['token']}
-    return env
-
-
-def mock_current_user(current_user, user):
-    user_obj = model.User.get(user['name'])
-    current_user.return_value = user_obj
-
-
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.usefixtures('with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestResourceController:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
-    def setup_method(self, method):
-        self.app = Flask(__name__)
-
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.get_pagination_value')
     @patch('ckanext.feedback.controllers.resource.helpers.Page')
@@ -69,19 +33,13 @@ class TestResourceController:
         mock_page,
         mock_pagination,
         current_user,
-        app,
-        sysadmin_env,
+        admin_context,
+        sysadmin,
+        organization,
+        resource,
     ):
+        current_user.return_value = model.User.get(sysadmin['id'])
         mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-
-        organization_dict = factories.Organization(
-            name='org_name',
-        )
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-        resource['package'] = package
         resource_id = resource['id']
 
         page = 1
@@ -98,12 +56,10 @@ class TestResourceController:
 
         mock_page.return_value = 'mock_page'
 
-        with app.get(url='/', environ_base=sysadmin_env):
-            g.userobj = current_user
-            ResourceController.comment(resource_id)
+        ResourceController.comment(resource_id)
 
         approval = None
-        resource = comment_service.get_resource(resource_id)
+        res_obj = comment_service.get_resource(resource_id)
         comments, total_count = comment_service.get_resource_comments(
             resource_id,
             approval,
@@ -114,7 +70,28 @@ class TestResourceController:
 
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
+            context, {'id': res_obj.Resource.package_id}
+        )
+
+        mock_page.assert_called_once_with(
+            collection=comments,
+            page=page,
+            item_count=total_count,
+            items_per_page=limit,
+        )
+
+        mock_render.assert_called_once_with(
+            'resource/comment.html',
+            {
+                'resource': res_obj.Resource,
+                'pkg_dict': package,
+                'categories': categories,
+                'cookie': 'mock_cookie',
+                'selected_category': 'REQUEST',
+                'content': '',
+                'attached_image_filename': None,
+                'page': 'mock_page',
+            },
         )
 
         mock_page.assert_called_once_with(
@@ -124,12 +101,12 @@ class TestResourceController:
             items_per_page=limit,
         )
         g.pkg_dict = package
-        assert g.pkg_dict["organization"]['name'] == 'org_name'
+        assert g.pkg_dict["organization"]['name'] == organization['name']
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
-                'resource': resource.Resource,
+                'resource': res_obj.Resource,
                 'pkg_dict': package,
                 'categories': categories,
                 'cookie': 'mock_cookie',
@@ -153,19 +130,11 @@ class TestResourceController:
         mock_render,
         mock_page,
         mock_pagination,
-        current_user,
-        app,
-        user_env,
+        user_context,
+        organization,
+        resource,
     ):
         mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        organization_dict = factories.Organization(
-            name='org_name',
-        )
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-        resource['package'] = package
         resource_id = resource['id']
 
         page = 1
@@ -182,12 +151,10 @@ class TestResourceController:
 
         mock_page.return_value = 'mock_page'
 
-        with app.get(url='/', environ_base=user_env):
-            g.userobj = current_user
-            ResourceController.comment(resource_id)
+        ResourceController.comment(resource_id)
 
         approval = True
-        resource = comment_service.get_resource(resource_id)
+        res_obj = comment_service.get_resource(resource_id)
         comments, total_count = comment_service.get_resource_comments(
             resource_id,
             approval,
@@ -196,9 +163,75 @@ class TestResourceController:
         )
         categories = comment_service.get_resource_comment_categories()
 
+        package = get_action('package_show')(
+            {'model': model, 'session': session, 'for_view': True},
+            {'id': res_obj.Resource.package_id},
+        )
+        mock_page.assert_called_once_with(
+            collection=comments, page=page, item_count=total_count, items_per_page=limit
+        )
+        mock_render.assert_called_once_with(
+            'resource/comment.html',
+            {
+                'resource': res_obj.Resource,
+                'pkg_dict': package,
+                'categories': categories,
+                'cookie': 'mock_cookie',
+                'selected_category': 'REQUEST',
+                'content': '',
+                'attached_image_filename': None,
+                'page': 'mock_page',
+            },
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.resource.has_organization_admin_role',
+        return_value=True,
+    )
+    @patch('ckanext.feedback.controllers.resource.get_pagination_value')
+    @patch('ckanext.feedback.controllers.resource.helpers.Page')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.request')
+    @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
+    def test_comment_with_org_admin(
+        self,
+        mock_get_repeat_post_limit_cookie,
+        mock_request,
+        mock_render,
+        mock_page,
+        mock_pagination,
+        _mock_has_org_admin,
+        current_user,
+        user_context,
+        organization,
+        resource,
+    ):
+        mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
+        resource_id = resource['id']
+
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        mock_pagination.return_value = [page, limit, offset, _]
+        mock_page.return_value = 'mock_page'
+
+        ResourceController.comment(resource_id)
+
+        approval = None
+        res_obj = comment_service.get_resource(resource_id)
+        comments, total_count = comment_service.get_resource_comments(
+            resource_id,
+            approval,
+            limit=limit,
+            offset=offset,
+        )
+        categories = comment_service.get_resource_comment_categories()
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
+            context, {'id': res_obj.Resource.package_id}
         )
 
         mock_page.assert_called_once_with(
@@ -209,12 +242,12 @@ class TestResourceController:
         )
 
         g.pkg_dict = package
-        assert g.pkg_dict["organization"]['name'] == 'org_name'
+        assert g.pkg_dict["organization"]['name'] == organization['name']
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
-                'resource': resource.Resource,
+                'resource': res_obj.Resource,
                 'pkg_dict': package,
                 'categories': categories,
                 'cookie': 'mock_cookie',
@@ -238,15 +271,10 @@ class TestResourceController:
         mock_render,
         mock_page,
         mock_pagination,
-        current_user,
-        app,
-        user_env,
+        user_context,
+        organization,
+        resource,
     ):
-        user_dict = factories.User()
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
-        mock_current_user(current_user, user_dict)
-        resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
 
         page = 1
@@ -264,12 +292,10 @@ class TestResourceController:
         mock_page.return_value = 'mock_page'
         mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
 
-        with app.get(url='/', environ_base=user_env):
-            g.userobj = current_user
-            ResourceController.comment(resource_id, category='QUESTION')
+        ResourceController.comment(resource_id, category='QUESTION')
 
         approval = True
-        resource = comment_service.get_resource(resource_id)
+        res_obj = comment_service.get_resource(resource_id)
         comments, total_count = comment_service.get_resource_comments(
             resource_id,
             approval,
@@ -279,7 +305,7 @@ class TestResourceController:
         categories = comment_service.get_resource_comment_categories()
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
+            context, {'id': res_obj.Resource.package_id}
         )
 
         mock_page.assert_called_once_with(
@@ -292,11 +318,82 @@ class TestResourceController:
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
-                'resource': resource.Resource,
+                'resource': res_obj.Resource,
                 'pkg_dict': package,
                 'categories': categories,
                 'cookie': 'mock_cookie',
                 'selected_category': 'QUESTION',
+                'content': '',
+                'attached_image_filename': None,
+                'page': 'mock_page',
+            },
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.resource.has_organization_admin_role',
+        return_value=False,
+    )
+    @patch('ckanext.feedback.controllers.resource.get_pagination_value')
+    @patch('ckanext.feedback.controllers.resource.helpers.Page')
+    @patch('ckanext.feedback.controllers.resource.toolkit.render')
+    @patch('ckanext.feedback.controllers.resource.request')
+    @patch('ckanext.feedback.controllers.resource.get_repeat_post_limit_cookie')
+    def test_comment_with_non_admin_user(
+        self,
+        mock_get_repeat_post_limit_cookie,
+        mock_request,
+        mock_render,
+        mock_page,
+        mock_pagination,
+        _mock_has_org_admin,
+        current_user,
+        user_context,
+        organization,
+        resource,
+        user,
+    ):
+        mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
+        resource_id = resource['id']
+
+        page = 1
+        limit = 20
+        offset = 0
+        _ = ''
+
+        current_user.return_value = model.User.get(user['id'])
+        mock_pagination.return_value = [page, limit, offset, _]
+        mock_page.return_value = 'mock_page'
+
+        ResourceController.comment(resource_id)
+
+        res_obj = comment_service.get_resource(resource_id)
+        comments, total_count = comment_service.get_resource_comments(
+            resource_id,
+            True,
+            limit=limit,
+            offset=offset,
+        )
+        categories = comment_service.get_resource_comment_categories()
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(
+            context, {'id': res_obj.Resource.package_id}
+        )
+
+        mock_page.assert_called_once_with(
+            collection=comments,
+            page=page,
+            item_count=total_count,
+            items_per_page=limit,
+        )
+        mock_render.assert_called_once_with(
+            'resource/comment.html',
+            {
+                'resource': res_obj.Resource,
+                'pkg_dict': package,
+                'categories': categories,
+                'cookie': 'mock_cookie',
+                'selected_category': 'REQUEST',
                 'content': '',
                 'attached_image_filename': None,
                 'page': 'mock_page',
@@ -315,13 +412,9 @@ class TestResourceController:
         mock_render,
         mock_page,
         mock_pagination,
-        app,
+        organization,
+        resource,
     ):
-        organization_dict = factories.Organization(
-            name='org_name',
-        )
-        dataset = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
 
         page = 1
@@ -338,12 +431,10 @@ class TestResourceController:
 
         mock_page.return_value = 'mock_page'
         mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
-        with app.get(url='/'):
-            g.userobj = None
-            ResourceController.comment(resource_id)
+        ResourceController.comment(resource_id)
 
         approval = True
-        resource = comment_service.get_resource(resource_id)
+        res_obj = comment_service.get_resource(resource_id)
         comments, total_count = comment_service.get_resource_comments(
             resource_id,
             approval,
@@ -353,7 +444,7 @@ class TestResourceController:
         categories = comment_service.get_resource_comment_categories()
         context = {'model': model, 'session': session, 'for_view': True}
         package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
+            context, {'id': res_obj.Resource.package_id}
         )
 
         mock_page.assert_called_once_with(
@@ -364,12 +455,12 @@ class TestResourceController:
         )
 
         g.pkg_dict = package
-        assert g.pkg_dict["organization"]['name'] == 'org_name'
+        assert g.pkg_dict["organization"]['name'] == organization['name']
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
             {
-                'resource': resource.Resource,
+                'resource': res_obj.Resource,
                 'pkg_dict': package,
                 'categories': categories,
                 'cookie': 'mock_cookie',
@@ -1061,9 +1152,6 @@ class TestResourceController:
         resource_id = 'resource_id'
         mock_method.return_value = 'POST'
 
-        mock_MoralKeeperAI = MagicMock()
-        mock_MoralKeeperAI.return_value = None
-
         ResourceController.check_comment(resource_id)
         mock_redirect_to.assert_called_once_with(
             'resource_comment.comment', resource_id=resource_id
@@ -1296,13 +1384,13 @@ class TestResourceController:
         mock_summary_service,
         mock_form,
         current_user,
+        admin_context,
+        sysadmin,
     ):
         resource_id = 'resource id'
         resource_comment_id = 'resource comment id'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         mock_form.get.side_effect = [resource_comment_id]
 
@@ -1310,7 +1398,7 @@ class TestResourceController:
         ResourceController.approve_comment(resource_id)
 
         mock_comment_service.approve_resource_comment.assert_called_once_with(
-            resource_comment_id, user_dict['id']
+            resource_comment_id, sysadmin['id']
         )
         mock_summary_service.refresh_resource_summary.assert_called_once_with(
             resource_id
@@ -1322,12 +1410,10 @@ class TestResourceController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
-    def test_approve_comment_with_user(self, mock_toolkit_abort, current_user):
+    def test_approve_comment_with_user(
+        self, mock_toolkit_abort, current_user, user_context
+    ):
         resource_id = 'resource id'
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
 
         ResourceController.approve_comment(resource_id)
         mock_toolkit_abort.assert_called_once_with(
@@ -1348,23 +1434,21 @@ class TestResourceController:
         mock_comment_service,
         mock_toolkit_abort,
         current_user,
+        admin_context,
+        organization,
+        resource,
+        user,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-
-        dummy_organization_dict = factories.Organization()
+        dummy_organization_dict = organization
         dummy_organization = model.Group.get(dummy_organization_dict['id'])
 
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        user_obj = User.get(user['id'])
+        current_user.return_value = model.User.get(user['id'])
 
         member = model.Member(
             group=dummy_organization,
             group_id=dummy_organization_dict['id'],
-            table_id=user.id,
+            table_id=user_obj.id,
             table_name='user',
             capacity='admin',
         )
@@ -1395,12 +1479,12 @@ class TestResourceController:
         mock_summary_service,
         mock_toolkit_abort,
         current_user,
+        admin_context,
+        sysadmin,
     ):
         resource_id = 'resource id'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         mock_form.get.side_effect = [None]
 
@@ -1421,14 +1505,14 @@ class TestResourceController:
         mock_summary_service,
         mock_form,
         current_user,
+        admin_context,
+        sysadmin,
     ):
         resource_id = 'resource id'
         resource_comment_id = 'resource comment id'
         reply_content = 'reply content'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         mock_form.get.side_effect = [
             resource_comment_id,
@@ -1439,7 +1523,7 @@ class TestResourceController:
         ResourceController.reply(resource_id)
 
         mock_comment_service.create_reply.assert_called_once_with(
-            resource_comment_id, reply_content, user_dict['id']
+            resource_comment_id, reply_content, sysadmin['id'], None
         )
         mock_session_commit.assert_called_once()
         mock_redirect_to.assert_called_once_with(
@@ -1460,19 +1544,27 @@ class TestResourceController:
         mock_redirect_to,
         mock_flash_error,
         current_user,
+        user_context,
+        user,
     ):
         resource_id = 'resource id'
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
 
         mock_form.get.side_effect = ['resource_comment_id', 'reply_content']
 
         mock_resource = MagicMock()
         mock_resource.Resource.package.owner_org = 'org-id'
         mock_comment_service.get_resource.return_value = mock_resource
-        ResourceController.reply(resource_id)
+        current_user.return_value = model.User.get(user['id'])
+        from unittest.mock import patch as _patch
+
+        with _patch(
+            'ckanext.feedback.controllers.resource.FeedbackConfig'
+        ) as MockFeedbackConfig:
+            cfg = MagicMock()
+            cfg.recaptcha.force_all.get.return_value = False
+            cfg.resource_comment.reply_open.is_enable.return_value = False
+            MockFeedbackConfig.return_value = cfg
+            ResourceController.reply(resource_id)
 
         mock_flash_error.assert_called_once()
         mock_redirect_to.assert_called_once_with(
@@ -1484,30 +1576,32 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     def test_reply_with_other_organization_admin_user(
         self,
         mock_redirect_to,
+        MockFeedbackConfig,
         mock_form,
         mock_comment_service,
         mock_flash_error,
         current_user,
+        admin_context,
+        organization,
+        another_organization,
+        resource,
+        user,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-
-        dummy_organization_dict = factories.Organization()
+        dummy_organization_dict = another_organization
         dummy_organization = model.Group.get(dummy_organization_dict['id'])
 
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        user_obj = User.get(user['id'])
+        current_user.return_value = model.User.get(user['id'])
 
         member = model.Member(
             group=dummy_organization,
             group_id=dummy_organization_dict['id'],
-            table_id=user_dict['id'],
+            table_id=user_obj.id,
             table_name='user',
             capacity='admin',
         )
@@ -1515,10 +1609,15 @@ class TestResourceController:
         model.Session.commit()
 
         mock_resource = MagicMock()
-        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_resource.Resource.package.owner_org = organization['id']
         mock_comment_service.get_resource.return_value = mock_resource
 
         mock_form.get.side_effect = ['resource_comment_id', 'reply_content']
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        cfg.resource_comment.reply_open.is_enable.return_value = False
+        MockFeedbackConfig.return_value = cfg
 
         ResourceController.reply(resource['id'])
         mock_comment_service.create_reply.assert_not_called()
@@ -1538,12 +1637,12 @@ class TestResourceController:
         mock_summary_service,
         mock_toolkit_abort,
         current_user,
+        admin_context,
+        sysadmin,
     ):
         resource_id = 'resource id'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         mock_form.get.side_effect = [
             None,
@@ -1571,14 +1670,14 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        admin_context,
+        sysadmin,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         mock_resource = MagicMock()
         mock_resource.Resource.package.owner_org = 'owner_org'
@@ -1649,6 +1748,41 @@ class TestResourceController:
 
         assert response == 'mock_response'
 
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
+    def test_attached_image_with_org_admin(
+        self,
+        mock_get_resource_comment,
+        mock_get_resource,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        with patch(
+            'ckanext.feedback.controllers.resource.has_organization_admin_role',
+            return_value=True,
+        ), patch(
+            'ckanext.feedback.controllers.resource.os.path.exists', return_value=True
+        ), patch(
+            'ckanext.feedback.controllers.resource.send_file', return_value='resp'
+        ):
+            mock_resource = MagicMock()
+            mock_resource.Resource.package.owner_org = 'owner_org'
+            mock_get_resource.return_value = mock_resource
+            mock_get_resource_comment.return_value = 'c'
+            # fmt: off
+            with patch(
+                'ckanext.feedback.controllers.resource.comment_service'
+                '.get_attached_image_path',
+                return_value='p',
+            ):
+                # fmt: on
+                resp = ResourceController.attached_image(
+                    resource_id, comment_id, attached_image_filename
+                )
+        assert resp == 'resp'
+
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
@@ -1665,14 +1799,11 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        user_context,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
 
         mock_resource = MagicMock()
         mock_resource.Resource.package.owner_org = 'owner_org'
@@ -1683,6 +1814,54 @@ class TestResourceController:
         mock_get_attached_image_path.return_value = 'attached_image_path'
         mock_exists.return_value = True
 
+        mock_send_file.return_value = 'mock_response'
+
+        response = ResourceController.attached_image(
+            resource_id, comment_id, attached_image_filename
+        )
+
+        mock_get_resource.assert_called_once_with(resource_id)
+        mock_get_resource_comment.assert_called_once_with(
+            comment_id, resource_id, True, attached_image_filename
+        )
+        mock_get_attached_image_path.assert_called_once_with(attached_image_filename)
+        mock_exists.assert_called_once_with('attached_image_path')
+        mock_send_file.assert_called_once_with('attached_image_path')
+
+        assert response == 'mock_response'
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path'
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists')
+    @patch('ckanext.feedback.controllers.resource.send_file')
+    def test_attached_image_with_logged_in_non_admin(
+        self,
+        mock_send_file,
+        mock_exists,
+        mock_get_attached_image_path,
+        mock_get_resource_comment,
+        mock_get_resource,
+        current_user,
+        user_context,
+        user,
+    ):
+        resource_id = 'resource_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'attached_image_filename'
+
+        current_user.return_value = model.User.get(user['id'])
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'owner_org'
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_resource_comment.return_value = 'mock_comment'
+        mock_get_attached_image_path.return_value = 'attached_image_path'
+        mock_exists.return_value = True
         mock_send_file.return_value = 'mock_response'
 
         response = ResourceController.attached_image(
@@ -1725,14 +1904,11 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        user_context,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
 
         mock_resource = MagicMock()
         mock_resource.Resource.package.owner_org = 'owner_org'
@@ -1764,14 +1940,11 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        user_context,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
-
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
 
         mock_resource = MagicMock()
         mock_resource.Resource.package.owner_org = 'owner_org'
@@ -1836,10 +2009,10 @@ class TestResourceController:
         mock_set_like_status_cookie,
         mock_response,
         mock_get_json,
+        dataset,
+        resource,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
+        package = dataset
 
         mock_get_json.return_value = {'likeStatus': True}
 
@@ -1878,10 +2051,10 @@ class TestResourceController:
         mock_set_like_status_cookie,
         mock_response,
         mock_get_json,
+        dataset,
+        resource,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
+        package = dataset
 
         mock_get_json.return_value = {'likeStatus': False}
 
@@ -1904,6 +2077,7 @@ class TestResourceController:
 
 
 @pytest.mark.usefixtures('with_request_context')
+@pytest.mark.db_test
 class TestResourceCommentReactions:
     @patch('flask_login.utils._get_user')
     @patch(
@@ -1930,7 +2104,7 @@ class TestResourceCommentReactions:
         response_status = 'completed'
         admin_liked = False
 
-        mock_current_user(current_user, sysadmin)
+        current_user.return_value = model.User.get(sysadmin['id'])
         g.userobj = current_user
 
         mock_check_organization_admin_role.return_value = None
@@ -1987,7 +2161,7 @@ class TestResourceCommentReactions:
         response_status = 'completed'
         admin_liked = False
 
-        mock_current_user(current_user, sysadmin)
+        current_user.return_value = model.User.get(sysadmin['id'])
         g.userobj = current_user
 
         mock_form.get.side_effect = [
@@ -2039,7 +2213,7 @@ class TestResourceCommentReactions:
     ):
         resource_id = resource_comment.resource_id
 
-        mock_current_user(current_user, user)
+        current_user.return_value = model.User.get(user['id'])
         g.userobj = current_user
 
         ResourceController.reactions(resource_id)
@@ -2107,11 +2281,11 @@ class TestResourceCommentReactions:
         mock_get_resource,
         MockFeedbackConfig,
         current_user,
+        admin_context,
+        sysadmin,
         app,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
-        current_user.return_value = user_obj
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         cfg = MagicMock()
         cfg.recaptcha.force_all.get.return_value = False
@@ -2162,11 +2336,11 @@ class TestResourceCommentReactions:
         mock_get_resource,
         MockFeedbackConfig,
         current_user,
+        admin_context,
+        sysadmin,
         app,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
-        current_user.return_value = user_obj
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         cfg = MagicMock()
         cfg.recaptcha.force_all.get.return_value = False
@@ -2218,11 +2392,13 @@ class TestResourceCommentReactions:
         _mock_recaptcha,
         MockFeedbackConfig,
         current_user,
+        admin_context,
+        sysadmin,
         app,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
+        user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
+        g.userobj = user_obj
 
         cfg = MagicMock()
         cfg.recaptcha.force_all.get.return_value = False
@@ -2277,10 +2453,12 @@ class TestResourceCommentReactions:
         mock_approve,
         mock_get_resource,
         current_user,
+        admin_context,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
-        g.userobj = current_user
+        user_obj = model.User.get(sysadmin['id'])
+        current_user.return_value = user_obj
+        g.userobj = user_obj
 
         pkg = MagicMock()
         pkg.owner_org = 'org-x'
@@ -2318,10 +2496,12 @@ class TestResourceCommentReactions:
         mock_flash_error,
         mock_get_resource,
         current_user,
+        admin_context,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
-        g.userobj = current_user
+        user_obj = model.User.get(sysadmin['id'])
+        current_user.return_value = user_obj
+        g.userobj = user_obj
 
         pkg = MagicMock()
         pkg.owner_org = 'org-x'
@@ -2359,10 +2539,12 @@ class TestResourceCommentReactions:
         mock_abort,
         mock_get_resource,
         current_user,
+        admin_context,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
-        g.userobj = current_user
+        user_obj = model.User.get(sysadmin['id'])
+        current_user.return_value = user_obj
+        g.userobj = user_obj
 
         pkg = MagicMock()
         pkg.owner_org = 'org-x'
@@ -2401,10 +2583,10 @@ class TestResourceCommentReactions:
         _mock_recaptcha,
         MockFeedbackConfig,
         current_user,
+        admin_context,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
-        current_user.return_value = user_obj
+        current_user.return_value = model.User.get(sysadmin['id'])
 
         cfg = MagicMock()
         cfg.recaptcha.force_all.get.return_value = False
@@ -2445,9 +2627,9 @@ class TestResourceCommentReactions:
         _mock_recaptcha,
         MockFeedbackConfig,
         current_user,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
+        user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
 
         cfg = MagicMock()
@@ -2489,9 +2671,9 @@ class TestResourceCommentReactions:
         _mock_recaptcha,
         MockFeedbackConfig,
         current_user,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
+        user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
 
         pkg = MagicMock()
@@ -2532,10 +2714,11 @@ class TestResourceCommentReactions:
         MockFeedbackConfig,
         mock_flash_error,
         current_user,
+        user_context,
+        user,
     ):
-        user = factories.User()
-        user_obj = model.User.get(user['id'])
-        current_user.return_value = user_obj
+
+        current_user.return_value = model.User.get(user['id'])
 
         cfg = MagicMock()
         cfg.recaptcha.force_all.get.return_value = False
@@ -2575,9 +2758,9 @@ class TestResourceCommentReactions:
         _mock_recaptcha,
         MockFeedbackConfig,
         current_user,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
+        user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
 
         cfg = MagicMock()
@@ -2620,12 +2803,18 @@ class TestResourceCommentReactions:
         mock_form_get,
         _mock_check_org,
         current_user,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
+        current_user.return_value = model.User.get(sysadmin['id'])
         g.userobj = current_user
 
-        mock_form_get.side_effect = ['   ', 'status-none', False]
+        from ckanext.feedback.models.types import ResourceCommentResponseStatus
+
+        mock_form_get.side_effect = [
+            '   ',
+            ResourceCommentResponseStatus.STATUS_NONE.name,
+            False,
+        ]
 
         ResourceController.reactions('res-id')
         mock_flash_error.assert_called_once()
@@ -2656,12 +2845,21 @@ class TestResourceCommentReactions:
         mock_form_get,
         _mock_check_org,
         current_user,
+        admin_context,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
-        g.userobj = current_user
+        _mock_check_org.return_value = None
+        user_obj = model.User.get(sysadmin['id'])
+        current_user.return_value = user_obj
+        g.userobj = user_obj
 
-        mock_form_get.side_effect = ['cid', 'status-none', False]
+        from ckanext.feedback.models.types import ResourceCommentResponseStatus
+
+        mock_form_get.side_effect = [
+            'cid',
+            ResourceCommentResponseStatus.STATUS_NONE.name,
+            False,
+        ]
 
         ResourceController.reactions('res-id')
         mock_flash_error.assert_called_once()
@@ -2688,10 +2886,13 @@ class TestResourceCommentReactions:
         mock_form_get,
         _mock_check_org,
         current_user,
+        admin_context,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
-        g.userobj = current_user
+        _mock_check_org.return_value = None
+        user_obj = model.User.get(sysadmin['id'])
+        current_user.return_value = user_obj
+        g.userobj = user_obj
 
         mock_comment = MagicMock()
         mock_comment.id = 'cid'
@@ -2738,9 +2939,9 @@ class TestResourceCommentReactions:
         MockFeedbackConfig,
         current_user,
         app,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        user_obj = model.User.get(user['id'])
+        user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
 
         cfg = MagicMock()
@@ -2781,9 +2982,9 @@ class TestResourceCommentReactions:
         mock_abort,
         mock_get_resource,
         current_user,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
+        current_user.return_value = model.User.get(sysadmin['id'])
         g.userobj = current_user
 
         pkg = MagicMock()
@@ -2845,15 +3046,415 @@ class TestResourceCommentReactions:
         mock_form_get,
         _mock_check_org,
         current_user,
+        admin_context,
+        sysadmin,
     ):
-        user = factories.Sysadmin()
-        mock_current_user(current_user, user)
-        g.userobj = current_user
 
-        mock_form_get.side_effect = [None, 'status-none', False]
+        current_user.return_value = model.User.get(sysadmin['id'])
+
+        from ckanext.feedback.models.types import ResourceCommentResponseStatus
+
+        mock_form_get.side_effect = [
+            None,
+            ResourceCommentResponseStatus.STATUS_NONE.name,
+            False,
+        ]
 
         ResourceController.reactions('res-id')
         mock_flash_error.assert_called_once()
         mock_redirect_to.assert_called_once_with(
             'resource_comment.comment', resource_id='res-id'
         )
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.resource.is_recaptcha_verified', return_value=True
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.resource.ResourceController._upload_image',
+        return_value='reply.png',
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_reply_with_image_success(
+        self,
+        mock_redirect_to,
+        mock_commit,
+        mock_create_reply,
+        _mock_upload_image,
+        mock_files_get,
+        mock_get_resource,
+        _mock_is_recaptcha,
+        MockFeedbackConfig,
+        current_user,
+        sysadmin,
+        admin_context,
+        user,
+    ):
+        current_user.return_value = model.User.get(sysadmin['id'])
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        cfg.resource_comment.reply_open.is_enable.return_value = True
+        MockFeedbackConfig.return_value = cfg
+
+        pkg = MagicMock()
+        pkg.owner_org = 'org-x'
+        res_obj = MagicMock()
+        res_obj.package = pkg
+        mock_res = MagicMock()
+        mock_res.Resource = res_obj
+        mock_get_resource.return_value = mock_res
+
+        mock_file = MagicMock()
+        mock_files_get.return_value = mock_file
+
+        with patch('ckanext.feedback.controllers.resource.request.form.get') as gf:
+            gf.side_effect = ['cid', 'reply content']
+            ResourceController.reply('res-id')
+
+        mock_create_reply.assert_called_once_with(
+            'cid', 'reply content', sysadmin['id'], 'reply.png'
+        )
+        mock_commit.assert_called_once()
+        mock_redirect_to.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.resource.is_recaptcha_verified', return_value=True
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.resource.ResourceController._upload_image',
+        side_effect=toolkit.ValidationError({'upload': ['invalid']}),
+    )
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_reply_with_image_validation_error(
+        self,
+        mock_redirect_to,
+        _mock_create_reply,
+        mock_flash_error,
+        _mock_upload_image,
+        mock_files_get,
+        mock_get_resource,
+        _mock_is_recaptcha,
+        MockFeedbackConfig,
+        current_user,
+        sysadmin,
+        admin_context,
+        user,
+    ):
+        current_user.return_value = model.User.get(user['id'])
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        cfg.resource_comment.reply_open.is_enable.return_value = True
+        MockFeedbackConfig.return_value = cfg
+
+        pkg = MagicMock()
+        pkg.owner_org = 'org-x'
+        res_obj = MagicMock()
+        res_obj.package = pkg
+        mock_res = MagicMock()
+        mock_res.Resource = res_obj
+        mock_get_resource.return_value = mock_res
+
+        mock_files_get.return_value = MagicMock()
+
+        with patch('ckanext.feedback.controllers.resource.request.form.get') as gf:
+            gf.side_effect = ['cid', 'reply content']
+            ResourceController.reply('res-id')
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once()
+        _mock_create_reply.assert_not_called()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.resource.is_recaptcha_verified', return_value=True
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.resource.ResourceController._upload_image',
+        side_effect=Exception('boom'),
+    )
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_reply_with_image_exception(
+        self,
+        mock_abort,
+        _mock_upload_image,
+        mock_files_get,
+        mock_get_resource,
+        _mock_is_recaptcha,
+        MockFeedbackConfig,
+        current_user,
+        sysadmin,
+        admin_context,
+        user,
+    ):
+
+        current_user.return_value = model.User.get(user['id'])
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        cfg.resource_comment.reply_open.is_enable.return_value = True
+        MockFeedbackConfig.return_value = cfg
+
+        pkg = MagicMock()
+        pkg.owner_org = 'org-x'
+        res_obj = MagicMock()
+        res_obj.package = pkg
+        mock_res = MagicMock()
+        mock_res.Resource = res_obj
+        mock_get_resource.return_value = mock_res
+
+        mock_files_get.return_value = MagicMock()
+
+        with patch('ckanext.feedback.controllers.resource.request.form.get') as gf:
+            gf.side_effect = ['cid', 'reply content']
+            mock_abort.side_effect = Exception('abort')
+            with pytest.raises(Exception):
+                ResourceController.reply('res-id')
+
+        mock_abort.assert_called_once_with(500)
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.resource.has_organization_admin_role',
+        return_value=True,
+    )
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.resource.is_recaptcha_verified', return_value=True
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.files.get', return_value=None)
+    @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_reply_is_admin_org_admin_path(
+        self,
+        mock_redirect_to,
+        mock_commit,
+        mock_create_reply,
+        _mock_files_get,
+        mock_get_resource,
+        _mock_is_recaptcha,
+        MockFeedbackConfig,
+        _mock_has_org_admin,
+        current_user,
+        sysadmin,
+        admin_context,
+        user,
+    ):
+        current_user.return_value = model.User.get(user['id'])
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        cfg.resource_comment.reply_open.is_enable.return_value = False
+        MockFeedbackConfig.return_value = cfg
+
+        pkg = MagicMock()
+        pkg.owner_org = 'org-x'
+        res_obj = MagicMock()
+        res_obj.package = pkg
+        mock_res = MagicMock()
+        mock_res.Resource = res_obj
+        mock_get_resource.return_value = mock_res
+
+        with patch('ckanext.feedback.controllers.resource.request.form.get') as gf:
+            gf.side_effect = ['cid', 'reply content']
+            ResourceController.reply('res-id')
+
+        mock_create_reply.assert_called_once_with(
+            'cid', 'reply content', user['id'], None
+        )
+        mock_commit.assert_called_once()
+        mock_redirect_to.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource._session')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path',
+        return_value='p',
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists', return_value=True)
+    @patch('ckanext.feedback.controllers.resource.send_file', return_value='resp')
+    def test_reply_attached_image_ok(
+        self,
+        mock_send_file,
+        _mock_exists,
+        _mock_get_path,
+        mock_session,
+        mock_get_resource,
+    ):
+        mock_get_resource.return_value = MagicMock()
+
+        reply_obj = MagicMock()
+        reply_obj.attached_image_filename = 'f.png'
+        mock_q = MagicMock()
+        mock_q.join.return_value = mock_q
+        mock_q.filter.return_value = mock_q
+        mock_q.first.return_value = reply_obj
+        mock_session.query.return_value = mock_q
+
+        resp = ResourceController.reply_attached_image('rid', 'rpyid', 'f.png')
+        assert resp == 'resp'
+        mock_send_file.assert_called_once_with('p')
+
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_resource',
+        return_value=MagicMock(),
+    )
+    @patch('ckanext.feedback.controllers.resource._session')
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_reply_attached_image_not_found(
+        self,
+        mock_abort,
+        mock_session,
+        _mock_get_resource,
+    ):
+        mock_q = MagicMock()
+        mock_q.join.return_value = mock_q
+        mock_q.filter.return_value = mock_q
+        mock_q.first.return_value = None
+        mock_session.query.return_value = mock_q
+
+        ResourceController.reply_attached_image('rid', 'rpyid', 'f.png')
+        mock_abort.assert_called_once_with(404)
+
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_resource',
+        return_value=MagicMock(),
+    )
+    @patch('ckanext.feedback.controllers.resource._session')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path',
+        return_value='p',
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists', return_value=False)
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_reply_attached_image_file_missing(
+        self,
+        mock_abort,
+        _mock_exists,
+        _mock_get_path,
+        mock_session,
+        _mock_get_resource,
+    ):
+        reply_obj = MagicMock()
+        reply_obj.attached_image_filename = 'f.png'
+        mock_q = MagicMock()
+        mock_q.join.return_value = mock_q
+        mock_q.filter.return_value = mock_q
+        mock_q.first.return_value = reply_obj
+        mock_session.query.return_value = mock_q
+
+        ResourceController.reply_attached_image('rid', 'rpyid', 'f.png')
+        mock_abort.assert_called_once_with(404)
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.resource.is_recaptcha_verified', return_value=True
+    )
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    def test_reply_is_admin_block_with_res_none(
+        self,
+        mock_redirect_to,
+        mock_flash_error,
+        mock_session_commit,
+        mock_create_reply,
+        mock_get_resource,
+        _mock_is_recaptcha,
+        MockFeedbackConfig,
+        mock_has_org_admin,
+        current_user,
+        user,
+    ):
+        current_user.return_value = model.User.get(user['id'])
+
+        pkg = MagicMock()
+        pkg.owner_org = 'org-x'
+        res_obj = MagicMock()
+        res_obj.package = pkg
+        mock_res = MagicMock()
+        mock_res.Resource = res_obj
+        mock_get_resource.side_effect = [mock_res, Exception('boom')]
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        MockFeedbackConfig.return_value = cfg
+
+        with patch('ckanext.feedback.controllers.resource.request.form.get') as gf:
+            gf.side_effect = ['cid', 'reply content']
+            ResourceController.reply('res-id')
+
+        mock_has_org_admin.assert_not_called()
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'resource_comment.comment', resource_id='res-id'
+        )
+
+    @patch('flask_login.utils._get_user')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_resource',
+        return_value=MagicMock(),
+    )
+    @patch('ckanext.feedback.controllers.resource._session')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_attached_image_path',
+        return_value='p',
+    )
+    @patch('ckanext.feedback.controllers.resource.os.path.exists', return_value=True)
+    @patch('ckanext.feedback.controllers.resource.send_file', return_value='resp')
+    def test_reply_attached_image_ok_sysadmin(
+        self,
+        mock_send_file,
+        _mock_exists,
+        _mock_get_path,
+        mock_session,
+        _mock_get_resource,
+        current_user,
+        sysadmin,
+    ):
+        current_user.return_value = model.User.get(sysadmin['id'])
+        reply_obj = MagicMock()
+        reply_obj.attached_image_filename = 'f.png'
+        mock_q = MagicMock()
+        mock_q.join.return_value = mock_q
+        mock_q.filter.return_value = mock_q
+        mock_q.first.return_value = reply_obj
+        mock_session.query.return_value = mock_q
+
+        resp = ResourceController.reply_attached_image('rid', 'rpyid', 'f.png')
+        assert resp == 'resp'
+        mock_send_file.assert_called_once_with('p')
+
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.get_resource',
+        return_value=None,
+    )
+    @patch('ckanext.feedback.controllers.resource.toolkit.abort')
+    def test_reply_attached_image_without_resource(
+        self, mock_abort, _mock_get_resource
+    ):
+        mock_abort.side_effect = Exception('abort')
+        with pytest.raises(Exception):
+            ResourceController.reply_attached_image('rid', 'rpyid', 'f.png')
+        mock_abort.assert_called_once_with(404)
