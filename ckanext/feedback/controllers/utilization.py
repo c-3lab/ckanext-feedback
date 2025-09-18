@@ -37,6 +37,10 @@ from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 log = logging.getLogger(__name__)
 
 
+# Expose session as _session for test patching (parity with resource controller)
+_session = session
+
+
 class UtilizationController:
     # Render HTML pages
     # utilization/search
@@ -395,7 +399,7 @@ class UtilizationController:
         utilization_comment_id = request.form.get('utilization_comment_id', '')
         content = request.form.get('reply_content', '')
         if not (utilization_comment_id and content):
-            toolkit.abort(400)
+            return toolkit.abort(400)
 
         # Get utilization first to avoid UnboundLocalError
         try:
@@ -471,7 +475,7 @@ class UtilizationController:
                 )
             except Exception as e:
                 log.exception(f'Exception: {e}')
-                toolkit.abort(500)
+                return toolkit.abort(500)
 
         detail_service.create_utilization_comment_reply(
             utilization_comment_id, content, creator_user_id, attached_image_filename
@@ -487,7 +491,7 @@ class UtilizationController:
     ):
         utilization = detail_service.get_utilization(utilization_id)
         if utilization is None:
-            toolkit.abort(404)
+            return toolkit.abort(404)
 
         approval = True
         if isinstance(current_user, model.User) and (
@@ -495,7 +499,6 @@ class UtilizationController:
         ):
             approval = None
 
-        from ckanext.feedback.models.session import session as _session
         from ckanext.feedback.models.utilization import (
             UtilizationComment,
             UtilizationCommentReply,
@@ -516,13 +519,13 @@ class UtilizationController:
             q = q.filter(UtilizationCommentReply.approval == approval)
         reply = q.first()
         if reply is None or reply.attached_image_filename != attached_image_filename:
-            toolkit.abort(404)
+            return toolkit.abort(404)
 
         attached_image_path = detail_service.get_attached_image_path(
             attached_image_filename
         )
         if not os.path.exists(attached_image_path):
-            toolkit.abort(404)
+            return toolkit.abort(404)
         return send_file(attached_image_path)
 
     # utilization/<utilization_id>/comment/suggested
