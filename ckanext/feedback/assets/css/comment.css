@@ -257,19 +257,6 @@ input[type="file"].imageUpload {
   display: none;
 }
 
-.reply-modal .reply-image-upload .btn,
-.reply-modal .reply-send-buttons .btn {
-  height: 34px !important;
-  line-height: 1.42857143 !important;
-  padding: 6px 12px !important;
-  border-width: 1px !important;
-  box-sizing: border-box !important;
-  font-size: 14px !important;
-  vertical-align: middle;
-  display: inline-block;
-  margin: 0 !important;
-}
-
 .reply-modal .reply-image-upload .btn i,
 .reply-modal .reply-send-buttons .btn i {
   vertical-align: middle;
@@ -300,13 +287,13 @@ input[type="file"].imageUpload {
 }
 
 .reply-modal .modal-footer.bs3-flex-footer .btn {
-  height: 34px !important;
-  line-height: 1.42857143 !important;
-  padding: 6px 12px !important;
-  border-width: 1px !important;
-  box-sizing: border-box !important;
-  font-size: 14px !important;
+  height: 34px;
+  line-height: 1.42857143;
+  padding: 6px 12px;
+  border-width: 1px;
+  box-sizing: border-box;
+  font-size: 14px;
   vertical-align: middle;
   display: inline-block;
-  margin: 0 !important;
+  margin: 0;
 }
