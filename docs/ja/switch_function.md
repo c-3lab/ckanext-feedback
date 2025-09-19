@@ -33,7 +33,7 @@
 - **[image attachment](./utilization.md)** - 利活用方法へのコメントに画像を添付する機能  
   **デフォルト**: 🟢**ON**
 
-- **[reply_open](./utilization.md)** - コメントに複数回返信できる機能  
+- **[reply_open](./utilization.md)** - 管理者以外でもコメントに返信できるようになる機能  
   **デフォルト**: 🔴**OFF**
 
 #### Resource モジュールのサブ機能
@@ -50,7 +50,7 @@
 - **[image attachment](./resource.md)** - コメントに画像を添付する機能  
   **デフォルト**: 🔴**OFF**
 
-- **[reply_open](./resource.md)** - コメントに複数回返信できる機能  
+- **[reply_open](./resource.md)** - 管理者以外でもコメントに返信できるようになる機能  
   **デフォルト**: 🔴**OFF**
   
 #### Download モジュールのサブ機能
@@ -232,10 +232,13 @@ ckan.feedback.moral_keeper_ai.enable = True
         "utilizations": {
             "enable": true,
             "comments": {
-                "image_attachment"  :{
+                "image_attachment": {
+                    "enable": true
+                },
+                "reply_open": {
                     "enable": true
                 }
-           }
+            }
         },
         "resources": {
             "enable": true,
@@ -248,14 +251,17 @@ ckan.feedback.moral_keeper_ai.enable = True
                 },
                 "image_attachment": {
                     "enable": true
+                },
+                "reply_open": {
+                    "enable": true
                 }
             }
         },
         "downloads": {
-            "enable": true
-            "feedback_prompt":{
-                "modal":{
-                    "enable":true
+            "enable": true,
+            "feedback_prompt": {
+                "modal": {
+                    "enable": true
                 }
             }
         },
