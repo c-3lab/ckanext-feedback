@@ -54,8 +54,10 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.utilization')
     @patch('ckanext.feedback.plugin.likes')
     @patch('ckanext.feedback.plugin.admin')
+    @patch('ckanext.feedback.plugin.api')
     def test_get_blueprint(
         self,
+        mock_api,
         mock_admin,
         mock_likes,
         mock_utilization,
@@ -68,6 +70,7 @@ class TestPlugin:
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
+        mock_api.get_feedback_api_blueprint.return_value = 'api_bp'
         mock_admin.get_admin_blueprint.return_value = 'admin_bp'
         mock_likes.get_likes_blueprint.return_value = 'likes_bp'
         mock_download.get_download_blueprint.return_value = 'download_bp'
@@ -80,6 +83,7 @@ class TestPlugin:
             'utilization_bp',
             'likes_bp',
             'admin_bp',
+            'api_bp',
         ]
 
         actual_blueprints = instance.get_blueprint()
@@ -92,7 +96,7 @@ class TestPlugin:
         )
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
-        expected_blueprints = ['admin_bp']
+        expected_blueprints = ['admin_bp', 'api_bp']
         actual_blueprints = instance.get_blueprint()
 
         assert actual_blueprints == expected_blueprints

@@ -13,6 +13,8 @@
 
   {% block primary %}
     <div class="module-content">
+      <input type="hidden" id="resource-id" name="resource-id" value="{{ resource.id }}">
+      <input type="hidden" id="current-type" name="current-type" value="suggestion">
       <div>
         <h1 class="p-2">{{ _('Suggested comment content') }}</h1>
         <br>
@@ -30,7 +32,7 @@
         <br>
         <div class="comment" style="display: flex;">
           <h5 class="p-2" style="flex: 1;">{{ _('Input Comments') }}</h5>
-          <h5 class="p-2" style="flex: 1;">{{ _('Proposal Comments') }}</h5>
+          <h5 class="p-2" style="flex: 1;">{{ _('Suggested Comments') }}</h5>
         </div>
 
         <div class="comment-contents" style="display: flex; gap: 10px;">
@@ -39,6 +41,9 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            <input type="hidden" name="action" value="{{ action.INPUT_SELECTED.name }}">
+            <input type="hidden" id="input-comment" name="input-comment" value="{{ content }}">
+            <input type="hidden" id="suggested-comment" name="suggested-comment" value="{{ softened }}">
             {% if attached_image_filename %}
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
@@ -70,22 +75,25 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" id="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            <input type="hidden" name="action" value="{{ action.SUGGESTION_SELECTED.name }}">
+            <input type="hidden" name="input-comment" value="{{ content }}">
+            <input type="hidden" name="suggested-comment" value="{{ softened }}">
             {% if attached_image_filename %}
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
             <div style="flex: 1;">
-              <textarea class="p-2 resize-vertical" id="proposal-comment-content" name="comment-content" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ softened }}</textarea>
+              <textarea class="p-2 resize-vertical" id="suggested-comment-content" name="comment-content" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ softened }}</textarea>
               <div class="char-count"><span name="comment-count">0</span>/1000</div>
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 {% if h.is_base_public_folder_bs3() %}
-                <button class="btn btn-primary pull-right" id="proposal-comment-button" onclick="return checkCommentExists(this, bs3=true);">
+                <button class="btn btn-primary pull-right" id="suggested-comment-button" onclick="return checkCommentExists(this, bs3=true);">
                   <i class="fa-solid fa-chevron-right"></i>
-                  {{ _('Review the proposal comment') }}
+                  {{ _('Review the suggested comment') }}
                 </button>
                 {% else %}
-                <button class="btn btn-primary" id="proposal-comment-button" onclick="return checkCommentExists(this);">
+                <button class="btn btn-primary" id="suggested-comment-button" onclick="return checkCommentExists(this);">
                   <i class="fa-solid fa-chevron-right"></i>
-                  {{ _('Review the proposal comment') }}
+                  {{ _('Review the suggested comment') }}
                 </button>
                 {% endif %}
               </div>
@@ -101,6 +109,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>

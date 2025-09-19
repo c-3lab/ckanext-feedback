@@ -8,11 +8,15 @@ from ckan.plugins import toolkit
 import ckanext.feedback.services.common.upload as upload_service
 import ckanext.feedback.services.resource.comment as comment_service
 import ckanext.feedback.services.utilization.details as detail_service
+from ckanext.feedback.controllers.api.moral_check_log import (
+    generate_moral_check_log_excel_bytes,
+)
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
 from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummary
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
+    ResourceCommentMoralCheckLog,
     ResourceCommentReactions,
     ResourceCommentReply,
     ResourceCommentSummary,
@@ -20,6 +24,7 @@ from ckanext.feedback.models.resource_comment import (
 from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
+    UtilizationCommentMoralCheckLog,
     UtilizationSummary,
 )
 
@@ -70,6 +75,7 @@ def init(modules):
 def drop_utilization_tables(engine):
     IssueResolutionSummary.__table__.drop(engine, checkfirst=True)
     IssueResolution.__table__.drop(engine, checkfirst=True)
+    UtilizationCommentMoralCheckLog.__table__.drop(engine, checkfirst=True)
     UtilizationSummary.__table__.drop(engine, checkfirst=True)
     UtilizationComment.__table__.drop(engine, checkfirst=True)
     Utilization.__table__.drop(engine, checkfirst=True)
@@ -79,11 +85,13 @@ def create_utilization_tables(engine):
     Utilization.__table__.create(engine, checkfirst=True)
     UtilizationComment.__table__.create(engine, checkfirst=True)
     UtilizationSummary.__table__.create(engine, checkfirst=True)
+    UtilizationCommentMoralCheckLog.__table__.create(engine, checkfirst=True)
     IssueResolution.__table__.create(engine, checkfirst=True)
     IssueResolutionSummary.__table__.create(engine, checkfirst=True)
 
 
 def drop_resource_tables(engine):
+    ResourceCommentMoralCheckLog.__table__.drop(engine, checkfirst=True)
     ResourceCommentReactions.__table__.drop(engine, checkfirst=True)
     ResourceLikeMonthly.__table__.drop(engine, checkfirst=True)
     ResourceLike.__table__.drop(engine, checkfirst=True)
@@ -99,6 +107,7 @@ def create_resource_tables(engine):
     ResourceLike.__table__.create(engine, checkfirst=True)
     ResourceLikeMonthly.__table__.create(engine, checkfirst=True)
     ResourceCommentReactions.__table__.create(engine, checkfirst=True)
+    ResourceCommentMoralCheckLog.__table__.create(engine, checkfirst=True)
 
 
 def drop_download_tables(engine):
@@ -187,3 +196,33 @@ def handle_file_deletion(dry_run, file_path):
         except Exception as e:
             # Exception handling when deletion fails
             click.secho(f"Deletion failure: {file_path}. {e}", fg='red', err=True)
+
+
+@feedback.command(
+    name='moral-check-log',
+    short_help='Export as a joined sheet (default) or separate sheets in Excel.',
+)
+@click.option(
+    '-s',
+    '--separation',
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help='Export each table to a separate sheet.',
+)
+@click.option(
+    '-o',
+    '--output',
+    default='moral_check_log.xlsx',
+    show_default=True,
+    help='Output file name. (default: moral_check_log.xlsx)',
+)
+def moral_check_log(separation, output):
+    try:
+        result = generate_moral_check_log_excel_bytes(separation)
+        with open(output, 'wb') as f:
+            f.write(result.getvalue())
+        click.secho(f'Exported moral check log to {output}', fg='green')
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
