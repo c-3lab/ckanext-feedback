@@ -241,6 +241,13 @@
                             <div class="comment-container">
                               <span class="comment-content">{{ reply.content }}</span>
                             </div>
+                            {% if reply.attached_image_filename %}
+                              <div>
+                                <a href="{{h.url_for('utilization.reply_attached_image', utilization_id=utilization_id, reply_id=reply.id, attached_image_filename=reply.attached_image_filename ) }}" target="_blank">
+                                  <img src="{{h.url_for('utilization.reply_attached_image', utilization_id=utilization_id, reply_id=reply.id, attached_image_filename=reply.attached_image_filename ) }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                                </a>
+                              </div>
+                            {% endif %}
                           </div>
                           {% if not loop.last %}<hr>{% endif %}
                         {% endfor %}
@@ -294,6 +301,13 @@
                           <div class="comment-container">
                             <span class="comment-content">{{ reply.content }}</span>
                           </div>
+                          {% if reply.attached_image_filename %}
+                            <div>
+                              <a href="{{h.url_for('utilization.reply_attached_image', utilization_id=utilization_id, reply_id=reply.id, attached_image_filename=reply.attached_image_filename ) }}" target="_blank">
+                                <img src="{{h.url_for('utilization.reply_attached_image', utilization_id=utilization_id, reply_id=reply.id, attached_image_filename=reply.attached_image_filename ) }}" alt="{{ _('Attached Image') }}" class="attached-image">
+                              </a>
+                            </div>
+                          {% endif %}
                         </div>
                         {% if not loop.last %}<hr>{% endif %}
                       {% endfor %}
@@ -314,9 +328,9 @@
     </article>
 
     <div id="reply-form-window" class="modal fade" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog reply-modal">
         <div class="modal-content">
-          <form id="reply-form" name="reply_form" action="{{h.url_for('utilization.reply', utilization_id=utilization_id ) }}" method="post">
+          <form id="reply-form" name="reply_form" action="{{h.url_for('utilization.reply', utilization_id=utilization_id ) }}" method="post" enctype="multipart/form-data">
             <input type="hidden" id="reply-comment-id" name="utilization_comment_id">
             <div class="modal-header">
               {% if h.is_base_public_folder_bs3() %}
@@ -342,19 +356,37 @@
                   <p id="reply-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
                 </div>
               </div>
-            </div>
-            <div class="modal-footer">
-              {% if h.is_base_public_folder_bs3() %}
-              <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">
-                <i class="fa-solid fa-paper-plane"></i>
-                {{ _('Send') }}
-              </button>
-              {% else %}
-              <button class="btn btn-primary" onclick="return checkReplyExists(this);">
-                <i class="fa-solid fa-paper-plane"></i>
-                {{ _('Send') }}
-              </button>
+              {% if h.is_enabled_utilization_comment_image_attachment(utilization.owner_org) %}
+                <div id="replyPreviewContainer" class="reply-preview-container" style="display: none;">
+                  <span class="text-muted">{{ _('Image preview will appear here') }}</span>
+                </div>
               {% endif %}
+            </div>
+            <div class="modal-footer {% if not h.is_base_public_folder_bs3() %}d-flex justify-content-between align-items-center{% endif %}">
+              {% if h.is_enabled_utilization_comment_image_attachment(utilization.owner_org) %}
+                <div class="reply-image-upload {% if not h.is_base_public_folder_bs3() %}d-flex align-items-center{% else %}pull-left{% endif %}">
+                  <button id="replyUploadBtn" type="button" class="btn btn-default" onclick="utilizationReplyUploadClicked();">
+                    <i class="fa-solid fa-image"></i>
+                    {{ _('Image Attachment') }}
+                  </button>
+                  <input type="file" id="replyImageUpload" class="imageUpload" name="attached_image" accept="image/*">
+                </div>
+              {% else %}
+                <div></div>
+              {% endif %}
+              <div class="reply-send-buttons {% if not h.is_base_public_folder_bs3() %}d-flex align-items-center{% else %}pull-right{% endif %}">
+                {% if h.is_base_public_folder_bs3() %}
+                <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  {{ _('Send') }}
+                </button>
+                {% else %}
+                <button class="btn btn-primary" onclick="return checkReplyExists(this);">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  {{ _('Send') }}
+                </button>
+                {% endif %}
+              </div>
             </div>
           </form>
         </div>
@@ -443,87 +475,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-detail-js' %}
-    <script>
-      function toggleReplies(commentId) {
-        const hidden = document.getElementById(`replies-hidden-${commentId}`);
-        const toggle = document.getElementById(`replies-toggle-${commentId}`);
-        if (!hidden || !toggle) return;
-        const isHidden = window.getComputedStyle(hidden).display === 'none';
-        if (isHidden) {
-          hidden.style.display = '';
-          toggle.textContent = `${toggle.dataset.hideText} (${toggle.dataset.count})`;
-        } else {
-          hidden.style.display = 'none';
-          toggle.textContent = `${toggle.dataset.showText} (${toggle.dataset.count})`;
-        }
-      }
-
-      function setReplyFormContent(commentId) {
-        const commentHeader = document.getElementById('comment-header-' + commentId);
-        const replyCommentHeader = document.getElementById('reply-comment-header');
-        const content = document.getElementById('comment-content-' + commentId).textContent;
-
-        const commentHeaderClone = commentHeader.cloneNode(true);
-        replyCommentHeader.innerHTML = '';
-        replyCommentHeader.appendChild(commentHeaderClone);
-        document.getElementById('reply-comment').innerHTML = content;
-        document.getElementById('reply-comment-id').value = commentId;
-      }
-
-      function checkReplyExists(button, bs3=false) {
-        button.style.pointerEvents = 'none';
-
-        const errorElement = document.getElementById('reply-error');
-        const overErrorElement = document.getElementById('reply-over-error');
-        const reply = document.getElementById('reply_content').value;
-
-        errorElement.style.display = 'none';
-        if (overErrorElement) {
-          overErrorElement.style.display = 'none';
-        }
-
-        let is_reply_exists = true;
-
-        if (!reply) {
-          errorElement.style.display = 'block';
-          is_reply_exists = false;
-        }
-        if (reply && reply.length > 1000) {
-          if (overErrorElement) {
-            overErrorElement.style.display = 'block';
-          }
-          is_reply_exists = false;
-        }
-
-        button.style.pointerEvents = 'auto';
-
-        if (is_reply_exists) {
-          const sendButtons = document.getElementsByName('send-button');
-          sendButtons.forEach(btn => {
-            btn.style.pointerEvents = 'none';
-            btn.style.background = '#333333';
-            if (!bs3) {
-              btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>' + btn.innerHTML;
-            } else {
-              btn.innerHTML = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>' + btn.innerHTML;
-            }
-          });
-        }
-
-        return is_reply_exists;
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        const replyTextarea = document.getElementById('reply_content');
-        const replyCount = document.getElementById('reply-count');
-        if (replyTextarea && replyCount) {
-          replyCount.textContent = replyTextarea.value.length;
-          replyTextarea.addEventListener('input', () => {
-            replyCount.textContent = replyTextarea.value.length;
-          });
-        }
-      });
-    </script>
+    {% asset 'feedback/feedback-comment-js' %}
     {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not (c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)))) %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
