@@ -33,6 +33,9 @@
 - **[image attachment](./utilization.md)** - 利活用方法へのコメントに画像を添付する機能  
   **デフォルト**: 🟢**ON**
 
+- **[reply_open](./utilization.md)** - コメントに複数回返信できる機能  
+  **デフォルト**: 🔴**OFF**
+
 #### Resource モジュールのサブ機能
 
 > [!IMPORTANT]
@@ -46,12 +49,17 @@
 
 - **[image attachment](./resource.md)** - コメントに画像を添付する機能  
   **デフォルト**: 🔴**OFF**
+
+- **[reply_open](./resource.md)** - コメントに複数回返信できる機能  
+  **デフォルト**: 🔴**OFF**
+  
 #### Download モジュールのサブ機能
 > [!IMPORTANT]
 > 以下の機能は、[download](./download.md)が🟢**ON**になっている場合にのみON/OFFを切り替えることができます。
 
 - **[feedback_prompt](./download.md)** - ダウンロード時にフィードバックを求めるモーダルウィンドウが表示される機能  
   **デフォルト**: 🟢**ON**
+
 
 ## 設定方法
 
@@ -207,11 +215,11 @@ ckan.feedback.moral_keeper_ai.enable = True
 ・・・
 ```
 
-| No. | 組織名 | utilization | utilization_comment_image_attachment | resource | repeated_post_limit | rating | resource_comment_image_attachment | download | modal | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| No. | 組織名 | utilization | utilization_comment_image_attachment | utilization_comment_reply_open | resource | repeated_post_limit | rating | resource_comment_image_attachment | resource_comment_reply_open | download | modal | like | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
 
 
 ### `feedback_config.json`でON/OFFの設定を行う
@@ -262,11 +270,11 @@ ckan.feedback.moral_keeper_ai.enable = True
 ```
 
 
-| No. | 組織名 | utilization | utilization_comment_image_attachment | resource | repeated_post_limit | rating | resource_comment_image_attachment | download | modal | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| No. | 組織名 | utilization | utilization_comment_image_attachment | utilization_comment_reply_open | resource | repeated_post_limit | rating | resource_comment_image_attachment | resource_comment_reply_open | download | modal | like | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
+| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
 
 
 #### 例2: 組織毎にモジュールや機能のON/OFFを設定する場合
@@ -325,11 +333,11 @@ ckan.feedback.moral_keeper_ai.enable = True
 ```
 
 
-| No. | 組織名 | utilization | utilization_comment_image_attachment | resource | repeated_post_limit | rating | resource_comment_image_attachment | download | modal | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
-| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+| No. | 組織名 | utilization | utilization_comment_image_attachment | utilization_comment_reply_open | resource | repeated_post_limit | rating | resource_comment_image_attachment | resource_comment_reply_open | download | modal | like | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
 
 
 ## 外部プラグインとの連携
