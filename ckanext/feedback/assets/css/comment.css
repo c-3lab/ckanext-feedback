@@ -275,3 +275,17 @@ input[type="file"].imageUpload {
   vertical-align: middle;
   margin-right: 5px;
 }
+
+/* bs3 fallback */
+.reply-modal .modal-footer:not(.d-flex) {
+  position: relative;
+  height: 50px;
+}
+
+.reply-modal .modal-footer:not(.d-flex) .reply-image-upload.pull-left {
+  float: left;
+}
+
+.reply-modal .modal-footer:not(.d-flex) .reply-send-buttons.pull-right {
+  float: right;
+}
