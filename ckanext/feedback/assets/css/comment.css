@@ -277,15 +277,21 @@ input[type="file"].imageUpload {
 }
 
 /* bs3 fallback */
-.reply-modal .modal-footer:not(.d-flex) {
+.reply-modal .modal-footer.clearfix {
   position: relative;
-  height: 50px;
+  min-height: 50px;
 }
 
-.reply-modal .modal-footer:not(.d-flex) .reply-image-upload.pull-left {
+.reply-modal .modal-footer.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.reply-modal .modal-footer .pull-left {
   float: left;
 }
 
-.reply-modal .modal-footer:not(.d-flex) .reply-send-buttons.pull-right {
+.reply-modal .modal-footer .pull-right {
   float: right;
 }

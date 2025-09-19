@@ -432,9 +432,9 @@
                 </div>
               {% endif %}
             </div>
-            <div class="modal-footer d-flex justify-content-between align-items-center">
+            <div class="modal-footer {% if h.is_base_public_folder_bs3() %}clearfix{% else %}d-flex justify-content-between align-items-center{% endif %}">
               {% if h.is_enabled_image_attachment(pkg_dict.owner_org) %}
-                <div class="reply-image-upload d-flex align-items-center">
+                <div class="reply-image-upload {% if h.is_base_public_folder_bs3() %}pull-left{% else %}d-flex align-items-center{% endif %}">
                   <button id="replyUploadBtn" type="button" class="btn btn-default" onclick="replyUploadClicked();">
                     <i class="fa-solid fa-image"></i>
                     {{ _('Image Attachment') }}
@@ -444,7 +444,7 @@
               {% else %}
                 <div></div>
               {% endif %}
-              <div class="reply-send-buttons d-flex align-items-center">
+              <div class="reply-send-buttons {% if h.is_base_public_folder_bs3() %}pull-right{% else %}d-flex align-items-center{% endif %}">
                 {% if h.is_base_public_folder_bs3() %}
                 <button class="btn btn-primary" onclick="return checkReplyExists(this, bs3=true);">
                   <i class="fa-solid fa-paper-plane"></i>
