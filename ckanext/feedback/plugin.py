@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Any, Dict, Optional
 
 import ckan.model as model
@@ -26,9 +27,6 @@ from ckanext.feedback.views import admin, download, likes, resource, utilization
 
 log = logging.getLogger(__name__)
 
-# グローバル変数でミドルウェア登録状態を管理
-_middleware_registered = False
-
 
 class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Declare class implements
@@ -41,6 +39,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IUploader, inherit=True)
+    # 新しいインターフェースを追加
+    plugins.implements(plugins.IRequestHooks, inherit=True)
 
     # IConfigurer
 
@@ -59,35 +59,35 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         log.error("=== FEEDBACK CONFIG LOADED ===")
         log.error(f"=== DOWNLOAD ENABLED: {self.fb_config.download.is_enable()} ===")
 
-    def _register_middleware(self):
-        """アプリケーションコンテキスト内でミドルウェアを登録"""
-        global _middleware_registered
+    # IRequestHooks - リクエストごとに呼ばれる
+    def before_request(self, request):
+        """リクエスト前にDataStoreダウンロードをチェック"""
+        path = request.path
 
-        if _middleware_registered:
-            return
+        # DataStoreダウンロードのパターンをチェック
+        datastore_pattern = re.compile(r'/datastore/dump/([^?/]+)')
+        match = datastore_pattern.match(path)
 
-        cfg = getattr(self, 'fb_config', FeedbackConfig())
-        if not cfg.download.is_enable():
-            log.error("=== DOWNLOAD NOT ENABLED, SKIPPING MIDDLEWARE ===")
-            return
+        if match:
+            resource_id = match.group(1)
+            log.error("=== BEFORE_REQUEST: DATASTORE DOWNLOAD DETECTED ===")
+            log.error(f"=== Resource ID: {resource_id} ===")
 
-        try:
-            import flask
+            cfg = getattr(self, 'fb_config', FeedbackConfig())
+            if cfg.download.is_enable():
+                try:
+                    from ckanext.feedback.services.download.monthly import (
+                        increment_resource_downloads_monthly,
+                    )
+                    from ckanext.feedback.services.download.summary import (
+                        increment_resource_downloads,
+                    )
 
-            from ckanext.feedback.middleware.datastore_download import (
-                DataStoreDownloadMiddleware,
-            )
-
-            app = flask.current_app._get_current_object()
-            app.wsgi_app = DataStoreDownloadMiddleware(app.wsgi_app)
-
-            _middleware_registered = True
-            log.error("=== DATASTORE MIDDLEWARE REGISTERED SUCCESSFULLY ===")
-        except Exception as e:
-            log.error(f"=== ERROR REGISTERING MIDDLEWARE: {str(e)} ===")
-            import traceback
-
-            log.error(f"=== TRACEBACK: {traceback.format_exc()} ===")
+                    increment_resource_downloads(resource_id)
+                    increment_resource_downloads_monthly(resource_id)
+                    log.error("=== BEFORE_REQUEST: COUNT INCREMENTED SUCCESSFULLY ===")
+                except Exception as e:
+                    log.error(f"=== BEFORE_REQUEST: ERROR: {str(e)} ===")
 
     # IClick
 
@@ -97,9 +97,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # IBlueprint
 
     def get_blueprint(self):
-        # ここでミドルウェアを登録（Blueprintが呼ばれる時点ではアプリケーションコンテキストが存在）
-        self._register_middleware()
-
         blueprints = []
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
