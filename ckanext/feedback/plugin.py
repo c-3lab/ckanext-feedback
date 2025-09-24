@@ -23,7 +23,8 @@ from ckanext.feedback.services.resource import summary as resource_summary_servi
 from ckanext.feedback.services.utilization import details as utilization_details_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import admin, download, likes, resource, utilization
-from ckanext.feedback.views.datastore_download import get_datastore_download_blueprint
+
+# from ckanext.feedback.views.datastore_download import get_datastore_download_blueprint
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +55,22 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         self.fb_config = FeedbackConfig()
         self.fb_config.load_feedback_config()
 
+        # 案2: DataStore download middleware を登録
+        if self.fb_config.download.is_enable():
+            try:
+                import flask
+
+                from ckanext.feedback.middleware.datastore_download import (
+                    DataStoreDownloadMiddleware,
+                )
+
+                app = flask.current_app._get_current_object()
+                app.wsgi_app = DataStoreDownloadMiddleware(app.wsgi_app)
+
+                log.error("=== DATASTORE MIDDLEWARE REGISTERED SUCCESSFULLY ===")
+            except Exception as e:
+                log.error(f"=== ERROR REGISTERING MIDDLEWARE: {str(e)} ===")
+
     # IClick
 
     def get_commands(self):
@@ -68,7 +85,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         if cfg.download.is_enable():
             blueprints.append(download.get_download_blueprint())
-            blueprints.append(get_datastore_download_blueprint())
+            # blueprints.append(get_datastore_download_blueprint())
 
         if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
