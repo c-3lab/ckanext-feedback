@@ -2910,7 +2910,6 @@ class TestUtilizationController:
         mock_uploader.update_data_dict.assert_called_once()
         mock_uploader.upload.assert_called_once()
 
-
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.registration_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
@@ -3439,6 +3438,7 @@ class TestUtilizationController:
         )
 
         assert result == 'mock_render_result'
+
 
 @pytest.mark.usefixtures('with_request_context')
 @pytest.mark.db_test

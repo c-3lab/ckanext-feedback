@@ -344,7 +344,8 @@ def mock_current_user_fixture():
         current_user.return_value = user_obj
 
     return _mock_current_user
-  
+
+
 def resource_comment_moral_check_log(resource):
     moral_check_log = ResourceCommentMoralCheckLog(
         id=str(uuid.uuid4()),
