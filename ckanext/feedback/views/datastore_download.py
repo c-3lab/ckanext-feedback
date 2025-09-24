@@ -1,4 +1,3 @@
-# datastore_download.py の修正版
 import logging
 
 from flask import Blueprint
@@ -10,13 +9,17 @@ from ckanext.feedback.services.download.summary import increment_resource_downlo
 
 log = logging.getLogger(__name__)
 
+# より具体的なBlueprint名を使用
 datastore_blueprint = Blueprint(
-    'datastore_download',
+    'feedback_datastore_override',
     __name__,
+    url_prefix='',  # URL prefixを明示的に設定
 )
 
 
+# 複数のURLパターンで同じ関数を登録
 @datastore_blueprint.route('/datastore/dump/<resource_id>')
+@datastore_blueprint.route('/datastore/dump/<resource_id>/')
 def datastore_dump(resource_id):
     # より目立つログを追加
     log.error("=== FEEDBACK PLUGIN INTERCEPTED DATASTORE DOWNLOAD ===")
