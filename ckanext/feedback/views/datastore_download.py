@@ -9,22 +9,22 @@ from ckanext.feedback.services.download.summary import increment_resource_downlo
 
 log = logging.getLogger(__name__)
 
-# より具体的なBlueprint名を使用
+# DataStoreダウンロード用Blueprint
 datastore_blueprint = Blueprint(
     'feedback_datastore_override',
     __name__,
-    url_prefix='',  # URL prefixを明示的に設定
+    url_prefix='',
 )
 
 
-# 複数のURLパターンで同じ関数を登録
 @datastore_blueprint.route('/datastore/dump/<resource_id>')
 @datastore_blueprint.route('/datastore/dump/<resource_id>/')
 def datastore_dump(resource_id):
-    # より目立つログを追加
+    """DataStoreダウンロードをインターセプトしてカウントを増加"""
     log.error("=== FEEDBACK PLUGIN INTERCEPTED DATASTORE DOWNLOAD ===")
     log.error(f"=== Resource ID: {resource_id} ===")
 
+    # ダウンロードカウントを増加
     try:
         increment_resource_downloads(resource_id)
         increment_resource_downloads_monthly(resource_id)
@@ -34,8 +34,8 @@ def datastore_dump(resource_id):
         log.error(f"=== ERROR INCREMENTING COUNT: {str(e)} ===")
         count_success = False
 
+    # 元のDataStore dump関数を呼び出し
     try:
-        # 元のDataStoreのdump関数を呼び出す
         from ckanext.datastore.blueprint import dump as original_dump
 
         response = original_dump(resource_id)
@@ -54,5 +54,6 @@ def datastore_dump(resource_id):
 
 
 def get_datastore_download_blueprint():
+    """Blueprint取得関数"""
     log.error("=== DATASTORE BLUEPRINT REQUESTED ===")
     return datastore_blueprint

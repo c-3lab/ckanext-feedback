@@ -69,15 +69,17 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         if cfg.download.is_enable():
             blueprints.append(download.get_download_blueprint())
-            # DataStoreダウンロードのカウント用Blueprint追加 - 一時的に無効化
-            # try:
-            #     from ckanext.feedback.views.datastore_download import (
-            #         get_datastore_download_blueprint,
-            #     )
-            #     blueprints.append(get_datastore_download_blueprint())
-            #     log.error("=== DATASTORE DOWNLOAD BLUEPRINT ADDED ===")
-            # except Exception as e:
-            #     log.error(f"=== ERROR ADDING DATASTORE BLUEPRINT: {str(e)} ===")
+
+            # DataStoreダウンロードのカウント用Blueprint追加
+            try:
+                from ckanext.feedback.views.datastore_download import (
+                    get_datastore_download_blueprint,
+                )
+
+                blueprints.append(get_datastore_download_blueprint())
+                log.error("=== DATASTORE DOWNLOAD BLUEPRINT ADDED ===")
+            except Exception as e:
+                log.error(f"=== ERROR ADDING DATASTORE BLUEPRINT: {str(e)} ===")
 
         if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
