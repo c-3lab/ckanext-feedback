@@ -8,6 +8,7 @@ from ckan.tests import factories
 from werkzeug.exceptions import NotFound
 
 from ckanext.feedback.controllers.utilization import UtilizationController
+from ckanext.feedback.models.types import MoralCheckAction
 from ckanext.feedback.models.utilization import UtilizationCommentCategory
 
 engine = model.repo.session.get_bind()
@@ -1679,6 +1680,7 @@ class TestUtilizationController:
                 'content': content,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
+                'action': MoralCheckAction,
             },
         )
 
@@ -1722,6 +1724,7 @@ class TestUtilizationController:
                 'selected_category': category,
                 'content': content,
                 'attached_image_filename': attached_image_filename,
+                'action': MoralCheckAction,
             },
         )
 
@@ -1783,7 +1786,6 @@ class TestUtilizationController:
             'category': category,
             'comment-content': content,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': False,
         }.get(x, default)
 
         mock_file = MagicMock()
@@ -1919,10 +1921,15 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
     @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_check_comment_POST_judgement_True(
         self,
         mock_render,
+        mock_create_utilization_comment_moral_check_log,
         mock_get_action,
         mock_check_ai_comment,
         mock_get_resource,
@@ -1969,6 +1976,8 @@ class TestUtilizationController:
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
         mock_get_action.return_value = mock_package_show
+
+        mock_create_utilization_comment_moral_check_log.return_value = None
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -2084,10 +2093,15 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_check_comment_POST_suggested(
         self,
         mock_render,
+        mock_create_utilization_comment_moral_check_log,
         mock_get_action,
         mock_get_resource,
         mock_get_utilization,
@@ -2104,12 +2118,17 @@ class TestUtilizationController:
         content = 'comment_content'
         attached_image_filename = None
 
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
             'category': category,
             'comment-content': content,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': True,
+            'comment-suggested': 'True',
+            'action': MoralCheckAction.INPUT_SELECTED,
+            'input-comment': 'test_input_comment',
+            'suggested-comment': 'test_suggested_comment',
         }.get(x, default)
 
         mock_files.return_value = None
@@ -2127,6 +2146,8 @@ class TestUtilizationController:
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
         mock_get_action.return_value = mock_package_show
+
+        mock_create_utilization_comment_moral_check_log.return_value = None
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -2860,7 +2881,8 @@ class TestUtilizationController:
         )
 
     @patch(
-        'ckanext.feedback.controllers.utilization.detail_service.get_upload_destination'
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_upload_destination'
     )
     @patch('ckanext.feedback.controllers.utilization.get_uploader')
     def test_upload_image(
@@ -2887,6 +2909,7 @@ class TestUtilizationController:
         mock_get_uploader.assert_called_once_with('/test/upload/path')
         mock_uploader.update_data_dict.assert_called_once()
         mock_uploader.upload.assert_called_once()
+
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.registration_service')
@@ -3416,3 +3439,141 @@ class TestUtilizationController:
         )
 
         assert result == 'mock_render_result'
+
+@pytest.mark.usefixtures('with_request_context')
+@pytest.mark.db_test
+class TestUtilizationCreatePreviousLog:
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_moral_keeper_ai_disabled(
+        self,
+        mock_create_utilization_comment_moral_check_log,
+        mock_get_resource,
+        utilization,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = False
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+
+        return_value = UtilizationController.create_previous_log(utilization.id)
+
+        mock_create_utilization_comment_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_suggestion(
+        self,
+        mock_create_utilization_comment_moral_check_log,
+        mock_get_json,
+        mock_get_resource,
+        utilization,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'suggestion',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+        mock_create_utilization_comment_moral_check_log.return_value = None
+
+        return_value = UtilizationController.create_previous_log(utilization.id)
+
+        mock_create_utilization_comment_moral_check_log.assert_called_once_with(
+            utilization_id=utilization.id,
+            action=MoralCheckAction.PREVIOUS_SUGGESTION.name,
+            input_comment='test_input_comment',
+            suggested_comment='test_suggested_comment',
+            output_comment=None,
+        )
+        assert return_value == ('', 204)
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_confirm(
+        self,
+        mock_create_utilization_comment_moral_check_log,
+        mock_get_json,
+        mock_get_resource,
+        utilization,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'confirm',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+        mock_create_utilization_comment_moral_check_log.return_value = None
+
+        return_value = UtilizationController.create_previous_log(utilization.id)
+
+        mock_create_utilization_comment_moral_check_log.assert_called_once_with(
+            utilization_id=utilization.id,
+            action=MoralCheckAction.PREVIOUS_CONFIRM.name,
+            input_comment='test_input_comment',
+            suggested_comment='test_suggested_comment',
+            output_comment=None,
+        )
+        assert return_value == ('', 204)
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_none(
+        self,
+        mock_create_utilization_comment_moral_check_log,
+        mock_get_json,
+        mock_get_resource,
+        utilization,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'none',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+
+        return_value = UtilizationController.create_previous_log(utilization.id)
+
+        mock_create_utilization_comment_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)

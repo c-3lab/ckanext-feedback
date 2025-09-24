@@ -88,6 +88,12 @@ rules = [
         utilization.UtilizationController.attached_image,
         {'methods': ['GET']},
     ),
+    (
+        '/<utilization_id>/comment/create_previous_log',
+        'create_previous_log',
+        utilization.UtilizationController.create_previous_log,
+        {'methods': ['POST']},
+    ),
 ]
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})
