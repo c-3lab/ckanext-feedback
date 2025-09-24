@@ -24,9 +24,10 @@ from ckanext.feedback.services.utilization import details as utilization_details
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import admin, download, likes, resource, utilization
 
-# from ckanext.feedback.views.datastore_download import get_datastore_download_blueprint
-
 log = logging.getLogger(__name__)
+
+# グローバル変数でミドルウェア登録状態を管理
+_middleware_registered = False
 
 
 class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
@@ -55,21 +56,38 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         self.fb_config = FeedbackConfig()
         self.fb_config.load_feedback_config()
 
-        # 案2: DataStore download middleware を登録
-        if self.fb_config.download.is_enable():
-            try:
-                import flask
+        log.error("=== FEEDBACK CONFIG LOADED ===")
+        log.error(f"=== DOWNLOAD ENABLED: {self.fb_config.download.is_enable()} ===")
 
-                from ckanext.feedback.middleware.datastore_download import (
-                    DataStoreDownloadMiddleware,
-                )
+    def _register_middleware(self):
+        """アプリケーションコンテキスト内でミドルウェアを登録"""
+        global _middleware_registered
 
-                app = flask.current_app._get_current_object()
-                app.wsgi_app = DataStoreDownloadMiddleware(app.wsgi_app)
+        if _middleware_registered:
+            return
 
-                log.error("=== DATASTORE MIDDLEWARE REGISTERED SUCCESSFULLY ===")
-            except Exception as e:
-                log.error(f"=== ERROR REGISTERING MIDDLEWARE: {str(e)} ===")
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+        if not cfg.download.is_enable():
+            log.error("=== DOWNLOAD NOT ENABLED, SKIPPING MIDDLEWARE ===")
+            return
+
+        try:
+            import flask
+
+            from ckanext.feedback.middleware.datastore_download import (
+                DataStoreDownloadMiddleware,
+            )
+
+            app = flask.current_app._get_current_object()
+            app.wsgi_app = DataStoreDownloadMiddleware(app.wsgi_app)
+
+            _middleware_registered = True
+            log.error("=== DATASTORE MIDDLEWARE REGISTERED SUCCESSFULLY ===")
+        except Exception as e:
+            log.error(f"=== ERROR REGISTERING MIDDLEWARE: {str(e)} ===")
+            import traceback
+
+            log.error(f"=== TRACEBACK: {traceback.format_exc()} ===")
 
     # IClick
 
@@ -78,14 +96,15 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IBlueprint
 
-    # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
+        # ここでミドルウェアを登録（Blueprintが呼ばれる時点ではアプリケーションコンテキストが存在）
+        self._register_middleware()
+
         blueprints = []
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
         if cfg.download.is_enable():
             blueprints.append(download.get_download_blueprint())
-            # blueprints.append(get_datastore_download_blueprint())
 
         if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
