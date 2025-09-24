@@ -346,6 +346,7 @@ def mock_current_user_fixture():
     return _mock_current_user
 
 
+@pytest.fixture(scope='function')
 def resource_comment_moral_check_log(resource):
     moral_check_log = ResourceCommentMoralCheckLog(
         id=str(uuid.uuid4()),
