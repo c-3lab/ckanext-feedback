@@ -23,6 +23,7 @@ from ckanext.feedback.services.resource import summary as resource_summary_servi
 from ckanext.feedback.services.utilization import details as utilization_details_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import admin, download, likes, resource, utilization
+from ckanext.feedback.views.datastore_download import get_datastore_download_blueprint
 
 log = logging.getLogger(__name__)
 
@@ -66,6 +67,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         cfg = getattr(self, 'fb_config', FeedbackConfig())
         if cfg.download.is_enable():
             blueprints.append(download.get_download_blueprint())
+            blueprints.append(get_datastore_download_blueprint())
+        if cfg.resource_comment.is_enable():
+            blueprints.append(resource.get_resource_comment_blueprint())
+        if cfg.utilization.is_enable():
+            blueprints.append(utilization.get_utilization_blueprint())
+        if cfg.like.is_enable():
+            blueprints.append(likes.get_likes_blueprint())
+        blueprints.append(admin.get_admin_blueprint())
         if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
         if cfg.utilization.is_enable():
