@@ -65,23 +65,22 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def get_blueprint(self):
         blueprints = []
         cfg = getattr(self, 'fb_config', FeedbackConfig())
+
         if cfg.download.is_enable():
             blueprints.append(download.get_download_blueprint())
             blueprints.append(get_datastore_download_blueprint())
+
         if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
+
         if cfg.utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
+
         if cfg.like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
+
         blueprints.append(admin.get_admin_blueprint())
-        if cfg.resource_comment.is_enable():
-            blueprints.append(resource.get_resource_comment_blueprint())
-        if cfg.utilization.is_enable():
-            blueprints.append(utilization.get_utilization_blueprint())
-        if cfg.like.is_enable():
-            blueprints.append(likes.get_likes_blueprint())
-        blueprints.append(admin.get_admin_blueprint())
+
         return blueprints
 
     # Check production.ini settings
