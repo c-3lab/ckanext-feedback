@@ -1774,7 +1774,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = 'attached_image_filename'
@@ -1796,9 +1799,6 @@ class TestUtilizationController:
 
         mock_upload_image.return_value = attached_image_filename
 
-        mock_utilization = mock_utilization_object(
-            resource_id='mock_resource_id', owner_org='mock_org_id'
-        )
         mock_get_utilization.return_value = mock_utilization
 
         mock_resource = mock_resource_object(
@@ -1942,7 +1942,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -1962,9 +1965,6 @@ class TestUtilizationController:
 
         mock_check_ai_comment.return_value = judgement
 
-        mock_utilization = mock_utilization_object(
-            resource_id='mock_resource_id', owner_org='mock_org_id'
-        )
         mock_get_utilization.return_value = mock_utilization
 
         mock_resource = mock_resource_object(
@@ -2035,7 +2035,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -2055,9 +2058,6 @@ class TestUtilizationController:
         mock_files.return_value = None
         mock_is_recaptcha_verified.return_value = True
 
-        mock_utilization = mock_utilization_object(
-            resource_id='mock_resource_id', owner_org='mock_org_id'
-        )
         mock_get_utilization.return_value = mock_utilization
 
         mock_resource = mock_resource_object(
@@ -2113,7 +2113,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -2133,9 +2136,6 @@ class TestUtilizationController:
 
         mock_files.return_value = None
 
-        mock_utilization = mock_utilization_object(
-            resource_id='mock_resource_id', owner_org='mock_org_id'
-        )
         mock_get_utilization.return_value = mock_utilization
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='mock_organization_name'
@@ -3061,7 +3061,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -3083,9 +3086,6 @@ class TestUtilizationController:
         mock_files.return_value = None
         mock_is_recaptcha_verified.return_value = True
 
-        mock_utilization = mock_utilization_object(
-            resource_id='mock_resource_id', owner_org='mock_org_id'
-        )
         mock_get_utilization.return_value = mock_utilization
 
         mock_resource = mock_resource_object(
@@ -3297,7 +3297,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -3319,9 +3322,6 @@ class TestUtilizationController:
         mock_files.return_value = None
         mock_is_recaptcha_verified.return_value = True
 
-        mock_utilization = mock_utilization_object(
-            resource_id='mock_resource_id', owner_org='mock_org_id'
-        )
         mock_get_utilization.return_value = mock_utilization
 
         mock_resource = mock_resource_object(
@@ -3361,8 +3361,13 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
     def test_check_comment_post_ai_check_true(
         self,
+        mock_create_utilization_comment_moral_check_log,
         mock_get_action,
         mock_get_resource,
         mock_get_utilization,
@@ -3378,7 +3383,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -3400,9 +3408,6 @@ class TestUtilizationController:
         mock_files.return_value = None
         mock_is_recaptcha_verified.return_value = True
 
-        mock_utilization = mock_utilization_object(
-            resource_id='mock_resource_id', owner_org='mock_org_id'
-        )
         mock_get_utilization.return_value = mock_utilization
 
         mock_resource = mock_resource_object(
@@ -3417,11 +3422,19 @@ class TestUtilizationController:
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
+        mock_create_utilization_comment_moral_check_log.return_value = None
         mock_render.return_value = 'mock_render_result'
 
         result = UtilizationController.check_comment(utilization_id)
 
         mock_check_ai_comment.assert_called_once_with(comment=content)
+        mock_create_utilization_comment_moral_check_log.assert_called_once_with(
+            utilization_id=utilization_id,
+            action=MoralCheckAction.CHECK_COMPLETED.name,
+            input_comment=content,
+            suggested_comment=None,
+            output_comment=content,
+        )
 
         mock_suggested_comment.assert_not_called()
         mock_render.assert_called_once_with(
