@@ -62,9 +62,23 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
-        if FeedbackConfig().download.is_enable():
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+        # DataStore Blueprint を最初に登録（最優先）
+        if cfg.download.is_enable():
+            try:
+                from ckanext.feedback.views.datastore_download import (
+                    get_datastore_download_blueprint,
+                )
+
+                blueprints.insert(0, get_datastore_download_blueprint())  # 最初に挿入
+                log.error("=== DATASTORE DOWNLOAD BLUEPRINT ADDED FIRST ===")
+            except Exception as e:
+                log.error(f"=== ERROR ADDING DATASTORE BLUEPRINT: {str(e)} ===")
+
             blueprints.append(download.get_download_blueprint())
-        if FeedbackConfig().resource_comment.is_enable():
+
+        if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
         if FeedbackConfig().utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
