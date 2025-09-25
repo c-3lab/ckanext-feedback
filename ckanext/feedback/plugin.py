@@ -41,14 +41,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # IConfigurer
 
     def update_config(self, config):
-        # Add this plugin's directories to CKAN's extra paths, so that
-        # CKAN will use this plugin's custom files.
-        # Paths are relative to this plugin.py file.
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('assets', 'feedback')
 
-        # load the settings from feedback config json
         self.fb_config = FeedbackConfig()
         self.fb_config.load_feedback_config()
 
@@ -59,23 +55,17 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IBlueprint
 
-    # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
-        # DataStore Blueprint を最初に登録（最優先）
+        # Register DataStore Blueprint with highest priority
         if cfg.download.is_enable():
-            try:
-                from ckanext.feedback.views.datastore_download import (
-                    get_datastore_download_blueprint,
-                )
+            from ckanext.feedback.views.datastore_download import (
+                get_datastore_download_blueprint,
+            )
 
-                blueprints.insert(0, get_datastore_download_blueprint())  # 最初に挿入
-                log.error("=== DATASTORE DOWNLOAD BLUEPRINT ADDED FIRST ===")
-            except Exception as e:
-                log.error(f"=== ERROR ADDING DATASTORE BLUEPRINT: {str(e)} ===")
-
+            blueprints.insert(0, get_datastore_download_blueprint())
             blueprints.append(download.get_download_blueprint())
 
         if cfg.resource_comment.is_enable():
@@ -88,7 +78,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
 
-    # Check production.ini settings
     def is_base_public_folder_bs3(self):
         base_templates_folder = config.get('ckan.base_public_folder', 'public')
         return base_templates_folder == 'public-bs3'
