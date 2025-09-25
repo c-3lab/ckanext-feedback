@@ -52,5 +52,7 @@ def get_organization_name_by_name(name):
 
 
 def get_organization_name_by_id(org_id):
-    org_name = session.query(Group.name.label('name')).filter(Group.id == org_id)
+    org_name = (
+        session.query(Group.name.label('name')).filter(Group.id == org_id).first()
+    )
     return org_name
