@@ -43,6 +43,7 @@ def register_utilization(id, resource_id, title, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 def resister_issue_resolution_summary(id, utilization_id, created, updated):
@@ -54,6 +55,7 @@ def resister_issue_resolution_summary(id, utilization_id, created, updated):
         updated=updated,
     )
     session.add(issue_resolution_summary)
+    session.commit()
 
 
 @pytest.mark.db_test

@@ -25,6 +25,7 @@ def register_utilization(id, resource_id, title, description, approval, created)
         created=created,
     )
     session.add(utilization)
+    session.commit()
 
 
 engine = model.repo.session.get_bind()
