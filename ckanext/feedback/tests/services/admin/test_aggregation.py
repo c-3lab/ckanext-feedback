@@ -28,7 +28,10 @@ class TestFeedbacks:
     def test_get_resource_details(
         self,
     ):
-        organization = factories.Organization()
+        import uuid
+
+        unique_name = f"test-org-{uuid.uuid4().hex[:8]}"
+        organization = factories.Organization(name=unique_name)
         dataset = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=dataset['id'])
 
@@ -48,7 +51,10 @@ class TestFeedbacks:
 
     @patch('ckanext.feedback.services.admin.aggregation.session.query')
     def test_create_resource_report_query(self, mock_query):
-        organization = factories.Organization()
+        import uuid
+
+        unique_name = f"test-org-{uuid.uuid4().hex[:8]}"
+        organization = factories.Organization(name=unique_name)
 
         mock_session = MagicMock()
         mock_query.return_value = mock_session
@@ -100,7 +106,10 @@ class TestFeedbacks:
 
     @patch('ckanext.feedback.services.admin.aggregation.create_resource_report_query')
     def test_get_monthly_data(self, mock_create_query):
-        organization = factories.Organization()
+        import uuid
+
+        unique_name = f"test-org-{uuid.uuid4().hex[:8]}"
+        organization = factories.Organization(name=unique_name)
 
         select_month = '2024-03'
 
@@ -112,7 +121,10 @@ class TestFeedbacks:
 
     @patch('ckanext.feedback.services.admin.aggregation.create_resource_report_query')
     def test_get_yearly_data(self, mock_create_query):
-        organization = factories.Organization()
+        import uuid
+
+        unique_name = f"test-org-{uuid.uuid4().hex[:8]}"
+        organization = factories.Organization(name=unique_name)
 
         select_year = '2024'
 
@@ -124,7 +136,10 @@ class TestFeedbacks:
 
     @patch('ckanext.feedback.services.admin.aggregation.create_resource_report_query')
     def test_get_all_time_data(self, mock_create_query):
-        organization = factories.Organization()
+        import uuid
+
+        unique_name = f"test-org-{uuid.uuid4().hex[:8]}"
+        organization = factories.Organization(name=unique_name)
 
         mock_create_query.return_value = "final_query"
 
