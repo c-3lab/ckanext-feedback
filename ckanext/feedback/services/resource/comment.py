@@ -122,7 +122,6 @@ def create_resource_comment(
         },
     )
     session.execute(reactions)
-    session.commit()
 
 
 # Approve selected resource comment
@@ -131,7 +130,7 @@ def approve_resource_comment(resource_comment_id, approval_user_id):
     comment.approval = True
     comment.approved = datetime.now()
     comment.approval_user_id = approval_user_id
-    session.commit()
+    session.flush()
 
 
 # Get reply for target comment
@@ -189,7 +188,6 @@ def create_resource_comment_reactions(
         },
     )
     session.execute(reactions)
-    session.commit()
 
 
 def update_resource_comment_reactions(
