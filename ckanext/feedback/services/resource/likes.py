@@ -29,6 +29,7 @@ def increment_resource_like_count(resource_id):
         },
     )
     session.execute(resource_like)
+    session.commit()
 
 
 def decrement_resource_like_count(resource_id):
@@ -41,6 +42,7 @@ def decrement_resource_like_count(resource_id):
     if resource_like is not None:
         resource_like.like_count = resource_like.like_count - 1
         resource_like.updated = datetime.now()
+        session.commit()
 
 
 def increment_resource_like_count_monthly(resource_id):
@@ -69,6 +71,7 @@ def increment_resource_like_count_monthly(resource_id):
     else:
         resource_like_monthly.like_count = resource_like_monthly.like_count + 1
         resource_like_monthly.updated = datetime.now()
+    session.commit()
 
 
 def decrement_resource_like_count_monthly(resource_id):
@@ -88,6 +91,7 @@ def decrement_resource_like_count_monthly(resource_id):
     if resource_like_monthly is not None:
         resource_like_monthly.like_count = resource_like_monthly.like_count - 1
         resource_like_monthly.updated = datetime.now()
+        session.commit()
 
 
 def get_resource_like_count(resource_id):

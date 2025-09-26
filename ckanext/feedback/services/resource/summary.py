@@ -74,6 +74,7 @@ def create_resource_summary(resource_id):
     )
     summary = summary.on_conflict_do_nothing(index_elements=['resource_id'])
     session.execute(summary)
+    session.commit()
 
 
 # Recalculate approved ratings and comments related to the resource summary
@@ -135,3 +136,4 @@ def refresh_resource_summary(resource_id):
         },
     )
     session.execute(summary)
+    session.commit()
