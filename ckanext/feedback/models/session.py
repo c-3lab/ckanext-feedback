@@ -4,4 +4,4 @@ from sqlalchemy.orm import Session
 
 Base = declarative_base(metadata=model.meta.metadata)
 
-session = Session()
+session = Session(bind=model.meta.engine)
