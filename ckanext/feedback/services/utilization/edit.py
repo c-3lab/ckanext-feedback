@@ -37,3 +37,4 @@ def update_utilization(utilization_id, title, url, description):
 def delete_utilization(utilization_id):
     utilization = session.query(Utilization).get(utilization_id)
     session.delete(utilization)
+    session.flush()

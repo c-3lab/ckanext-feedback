@@ -12,11 +12,14 @@ from ckanext.feedback.services.download.summary import (
 
 
 def get_downloads(resource_id):
-    return (
+    obj = (
         session.query(DownloadSummary)
         .filter(DownloadSummary.resource_id == resource_id)
         .first()
     )
+    if obj is not None:
+        session.refresh(obj)
+    return obj
 
 
 @pytest.mark.db_test
@@ -32,12 +35,14 @@ class TestDownloadServices:
     @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_increment_resource_downloads(self, resource):
         increment_resource_downloads(resource['id'])
+        session.commit()
         download_summary = get_downloads(resource['id'])
 
         assert download_summary.download == 1
         assert download_summary.updated is None
 
         increment_resource_downloads(resource['id'])
+        session.commit()
         download_summary = get_downloads(resource['id'])
 
         assert download_summary.download == 2

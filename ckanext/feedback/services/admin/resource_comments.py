@@ -83,6 +83,7 @@ def get_resource_comment_ids(comment_id_list):
 
 # Get resource comment summaries using comment_id_list
 def get_resource_comment_summaries(comment_id_list):
+    session.flush()
     resource_comment_summaries = (
         session.query(ResourceCommentSummary)
         .join(Resource)

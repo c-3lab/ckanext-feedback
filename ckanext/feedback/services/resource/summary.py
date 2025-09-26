@@ -79,6 +79,7 @@ def create_resource_summary(resource_id):
 # Recalculate approved ratings and comments related to the resource summary
 def refresh_resource_summary(resource_id):
     now = datetime.now()
+    session.flush()
 
     total_rating = (
         session.query(
@@ -135,3 +136,4 @@ def refresh_resource_summary(resource_id):
         },
     )
     session.execute(summary)
+    session.expire_all()

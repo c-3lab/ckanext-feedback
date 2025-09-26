@@ -33,6 +33,7 @@ def register_utilization(id, resource_id, title, url, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 engine = model.repo.session.get_bind()

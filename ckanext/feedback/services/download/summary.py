@@ -51,4 +51,4 @@ def increment_resource_downloads(resource_id):
         },
     )
     session.execute(download_summary)
-    session.commit()
+    session.expire_all()

@@ -130,6 +130,7 @@ def approve_resource_comment(resource_comment_id, approval_user_id):
     comment.approval = True
     comment.approved = datetime.now()
     comment.approval_user_id = approval_user_id
+    session.flush()
 
 
 # Get reply for target comment

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from ckan import model
 from ckan.common import config
-from ckan.tests import factories
 from sqlalchemy.sql import column
 
 from ckanext.feedback.command.feedback import (
@@ -16,7 +15,8 @@ from ckanext.feedback.services.admin import aggregation
 engine = model.repo.session.get_bind()
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.usefixtures('with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestFeedbacks:
     @classmethod
     def setup_class(cls):
@@ -25,12 +25,7 @@ class TestFeedbacks:
         create_resource_tables(engine)
         create_download_tables(engine)
 
-    def test_get_resource_details(
-        self,
-    ):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_resource_details(self, organization, dataset, resource):
 
         site_url = config.get('ckan.site_url', '')
 
@@ -47,8 +42,7 @@ class TestFeedbacks:
         )
 
     @patch('ckanext.feedback.services.admin.aggregation.session.query')
-    def test_create_resource_report_query(self, mock_query):
-        organization = factories.Organization()
+    def test_create_resource_report_query(self, mock_query, organization):
 
         mock_session = MagicMock()
         mock_query.return_value = mock_session
@@ -99,8 +93,7 @@ class TestFeedbacks:
         assert result_query is not None
 
     @patch('ckanext.feedback.services.admin.aggregation.create_resource_report_query')
-    def test_get_monthly_data(self, mock_create_query):
-        organization = factories.Organization()
+    def test_get_monthly_data(self, mock_create_query, organization):
 
         select_month = '2024-03'
 
@@ -111,8 +104,7 @@ class TestFeedbacks:
         assert result == "final_query"
 
     @patch('ckanext.feedback.services.admin.aggregation.create_resource_report_query')
-    def test_get_yearly_data(self, mock_create_query):
-        organization = factories.Organization()
+    def test_get_yearly_data(self, mock_create_query, organization):
 
         select_year = '2024'
 
@@ -123,8 +115,7 @@ class TestFeedbacks:
         assert result == "final_query"
 
     @patch('ckanext.feedback.services.admin.aggregation.create_resource_report_query')
-    def test_get_all_time_data(self, mock_create_query):
-        organization = factories.Organization()
+    def test_get_all_time_data(self, mock_create_query, organization):
 
         mock_create_query.return_value = "final_query"
 

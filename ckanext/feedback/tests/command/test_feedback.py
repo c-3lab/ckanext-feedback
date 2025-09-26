@@ -33,37 +33,55 @@ engine = model.repo.session.get_bind()
 class TestFeedbackCommand:
     @classmethod
     def setup_class(cls):
+        cls._cleanup_feedback_tables()
         model.repo.metadata.clear()
         model.repo.init_db()
 
+    @classmethod
     def teardown_class(cls):
+        cls._cleanup_feedback_tables()
         model.repo.metadata.reflect()
+
+    @classmethod
+    def _cleanup_feedback_tables(cls):
+        from sqlalchemy import text
+
+        try:
+            with engine.connect() as connection:
+                with connection.begin():
+                    feedback_tables = [
+                        'utilization_comment_moral_check_log',
+                        'resource_comment_moral_check_log',
+                        'resource_comment_reactions',
+                        'resource_comment_reply',
+                        'issue_resolution',
+                        'issue_resolution_summary',
+                        'utilization_summary',
+                        'resource_comment_summary',
+                        'resource_like',
+                        'resource_like_monthly',
+                        'download_summary',
+                        'download_monthly',
+                        'utilization_comment',
+                        'utilization',
+                        'resource_comment',
+                    ]
+
+                    for table_name in feedback_tables:
+                        try:
+                            connection.execute(
+                                text(f"DROP TABLE IF EXISTS {table_name} CASCADE")
+                            )
+                        except Exception:
+                            pass
+        except Exception:
+            pass
 
     def setup_method(self, method):
         self.runner = CliRunner()
 
     def teardown_method(self, method):
-        model.repo.metadata.drop_all(
-            engine,
-            [
-                Utilization.__table__,
-                UtilizationComment.__table__,
-                UtilizationSummary.__table__,
-                UtilizationCommentMoralCheckLog.__table__,
-                IssueResolution.__table__,
-                IssueResolutionSummary.__table__,
-                ResourceComment.__table__,
-                ResourceCommentReply.__table__,
-                ResourceCommentSummary.__table__,
-                ResourceLike.__table__,
-                ResourceLikeMonthly.__table__,
-                ResourceCommentReactions.__table__,
-                ResourceCommentMoralCheckLog.__table__,
-                DownloadSummary.__table__,
-                DownloadMonthly.__table__,
-            ],
-            checkfirst=True,
-        )
+        self._cleanup_feedback_tables()
 
     def test_feedback_default(self):
         result = self.runner.invoke(feedback, ['init'])
