@@ -103,6 +103,7 @@ def get_resource_issue_resolutions(resource_id):
 
 def increment_issue_resolution_summary(utilization_id):
     now = datetime.now()
+    session.flush()
 
     insert_issue_resolution_summary = insert(IssueResolutionSummary).values(
         utilization_id=utilization_id,
@@ -118,3 +119,5 @@ def increment_issue_resolution_summary(utilization_id):
         },
     )
     session.execute(issue_resolution_summary)
+    session.expire_all()
+    session.flush()
