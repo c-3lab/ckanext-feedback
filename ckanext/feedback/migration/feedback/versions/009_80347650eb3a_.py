@@ -12,13 +12,12 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '80347650eb3a'
-down_revision = '8293443a0ff2'
+down_revision = 'c64333d190eb'
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    # 008_81aede0d41b3_
     op.add_column(
         'resource_comment_reply',
         sa.Column(
@@ -42,7 +41,6 @@ def upgrade():
         ondelete='SET NULL',
     )
 
-    # 009_8293443a0ff2_
     # Create a unique index to support ON CONFLICT (resource_id)
     op.create_unique_constraint(
         'uq_utilization_summary_resource_id',
@@ -50,7 +48,6 @@ def upgrade():
         ['resource_id'],
     )
 
-    # 010_1d5459051d3a_
     op.create_table(
         'utilization_comment_reply',
         sa.Column('id', sa.Text(), primary_key=True, nullable=False),
@@ -89,7 +86,6 @@ def upgrade():
         ['utilization_comment_id'],
     )
 
-    # 011_16f60ff92113_
     # Add UNIQUE constraint to resource_id column
     op.create_unique_constraint(
         constraint_name='uq_download_summary_resource_id',
@@ -107,7 +103,6 @@ def upgrade():
 
 
 def downgrade():
-    # 011_16f60ff92113_
     # Remove UNIQUE constraint from resource_id column
     op.drop_column('resource_comment_reply', 'attached_image_filename')
 
@@ -117,20 +112,17 @@ def downgrade():
         type_='unique',
     )
 
-    # 010_16f60ff92113_
     op.drop_index(
         'ix_ucreply_utilization_comment_id', table_name='utilization_comment_reply'
     )
     op.drop_table('utilization_comment_reply')
 
-    # 009_8293443a0ff2_
     op.drop_constraint(
         'uq_utilization_summary_resource_id',
         'utilization_summary',
         type_='unique',
     )
 
-    # 008_81aede0d41b3_
     op.drop_constraint(
         'resource_comment_reply_approval_user_id_fkey',
         'resource_comment_reply',
