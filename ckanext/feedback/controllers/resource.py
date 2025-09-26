@@ -419,7 +419,7 @@ class ResourceController:
             try:
                 comment_service.get_resource(resource_id)
             except Exception:
-                # admin_bypass = current_user.sysadmin
+                admin_bypass = current_user.sysadmin
                 pass
 
         # Reply permission control (admin or reply_open)
@@ -498,7 +498,7 @@ class ResourceController:
             ResourceCommentReply,
         )
 
-        q = (
+        reply_query = (
             _session.query(ResourceCommentReply)
             .join(
                 ResourceComment,
@@ -510,8 +510,8 @@ class ResourceController:
             )
         )
         if approval is not None:
-            q = q.filter(ResourceCommentReply.approval == approval)
-        reply = q.first()
+            reply_query = reply_query.filter(ResourceCommentReply.approval == approval)
+        reply = reply_query.first()
         if reply is None or reply.attached_image_filename != attached_image_filename:
             return toolkit.abort(404)
 
