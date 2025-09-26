@@ -100,7 +100,15 @@ rules = [
         utilization.UtilizationController.attached_image,
         {'methods': ['GET']},
     ),
-]
+    # fmt: off
+    (
+        '/<utilization_id>/comment/reply/<reply_id>'
+        '/attached_image/<attached_image_filename>',
+        'reply_attached_image',
+        utilization.UtilizationController.reply_attached_image,
+        {'methods': ['GET']},
+    ),
+]  # fmt: on
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})
     blueprint.add_url_rule(rule, endpoint, view_func, **options)
