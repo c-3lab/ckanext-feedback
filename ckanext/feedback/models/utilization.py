@@ -92,6 +92,7 @@ class UtilizationCommentReply(Base):
     creator_user_id = Column(
         Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
     )
+    attached_image_filename = Column(Text)
 
 
 class UtilizationSummary(Base):
