@@ -44,7 +44,12 @@ class TestFeedbackCommand:
 
     @classmethod
     def _cleanup_feedback_tables(cls):
+        import logging
+
         from sqlalchemy import text
+        from sqlalchemy.exc import OperationalError, ProgrammingError
+
+        log = logging.getLogger(__name__)
 
         try:
             with engine.connect() as connection:
@@ -72,10 +77,17 @@ class TestFeedbackCommand:
                             connection.execute(
                                 text(f"DROP TABLE IF EXISTS {table_name} CASCADE")
                             )
-                        except Exception:
-                            pass
-        except Exception:
-            pass
+                            log.debug(f"Successfully dropped table: {table_name}")
+                        except (ProgrammingError, OperationalError) as e:
+                            log.debug(
+                                f"Expected error dropping table {table_name}: {e}"
+                            )
+                        except Exception as e:
+                            log.warning(
+                                f"Unexpected error dropping table {table_name}: {e}"
+                            )
+        except Exception as e:
+            log.warning(f"Failed to cleanup feedback tables: {e}")
 
     def setup_method(self, method):
         self.runner = CliRunner()
