@@ -480,7 +480,6 @@
     {% asset 'feedback/feedback-comment-js' %}
     {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not (c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org)))) %}
     {% asset 'feedback/feedback-moral_check_log-js' %}
-    {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
         window.feedbackRecaptchaForms = [
