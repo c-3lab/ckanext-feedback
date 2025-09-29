@@ -5,11 +5,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const textareas = document.getElementsByName('comment-content');
   const charCounts = document.getElementsByName('comment-count');
   const imageUpload = document.getElementById('imageUpload');
+  const replyImageUpload = document.getElementById('replyImageUpload');
   const replyTextarea = document.getElementById('reply_content');
   const replyCount = document.getElementById('reply-count');
 
   if (imageUpload) {
     imageUpload.addEventListener('change', handleImageChange);
+  }
+
+  if (replyImageUpload) {
+    replyImageUpload.addEventListener('change', handleReplyImageChange);
   }
 
   function updateCharCount(textarea, charCount) {
@@ -96,11 +101,29 @@ function handleImageChange(e) {
   }
 }
 
+function handleReplyImageChange(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      createReplyPreview(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
 function uploadClicked() {
   const imageUpload = document.getElementById('imageUpload');
   if (!imageUpload) return;
   imageUpload.value = '';
   imageUpload.click();
+}
+
+function replyUploadClicked() {
+  const replyImageUpload = document.getElementById('replyImageUpload');
+  if (!replyImageUpload) return;
+  replyImageUpload.value = '';
+  replyImageUpload.click();
 }
 
 function createPreview(src) {
@@ -131,6 +154,36 @@ function createPreview(src) {
   previewContainer.innerHTML = '';
   previewContainer.appendChild(wrapper);
   uploadBtn.style.display = 'none';
+}
+
+function createReplyPreview(src) {
+  const replyUploadBtn = document.getElementById('replyUploadBtn');
+  const replyPreviewContainer = document.getElementById('replyPreviewContainer');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'image-preview-wrapper';
+
+  const img = document.createElement('img');
+  img.className = 'image-preview';
+  img.src = src;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'close-button';
+  closeBtn.innerHTML = '✖';
+
+  closeBtn.addEventListener('click', () => {
+    const replyImageUpload = document.getElementById('replyImageUpload');
+    if (replyImageUpload) replyImageUpload.value = '';
+    replyPreviewContainer.innerHTML = '<span class="text-muted">Image preview will appear here</span>';
+    replyPreviewContainer.style.display = 'none';
+  });
+
+  wrapper.appendChild(img);
+  wrapper.appendChild(closeBtn);
+
+  replyPreviewContainer.innerHTML = '';
+  replyPreviewContainer.appendChild(wrapper);
+  replyPreviewContainer.style.display = 'flex';
 }
 
 
