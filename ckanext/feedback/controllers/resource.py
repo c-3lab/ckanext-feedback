@@ -414,35 +414,26 @@ class ResourceController:
 
         # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
         force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
-        admin_bypass = False
-        if isinstance(current_user, model.User):
-            try:
-                comment_service.get_resource(resource_id)
-            except Exception:
-                admin_bypass = current_user.sysadmin
-                pass
 
         # Reply permission control (admin or reply_open)
         reply_open = False
         _res = None
-        try:
-            _res = comment_service.get_resource(resource_id)
-            reply_open = FeedbackConfig().resource_comment.reply_open.is_enable(
-                _res.Resource.package.owner_org
-            )
-            log.info(f"reply_open value: {reply_open}")
-        except Exception as e:
-            log.exception(f"Error getting reply_open: {e}")
-            reply_open = False
-
         is_admin = False
-        if current_user and hasattr(current_user, 'sysadmin'):
-            is_admin = current_user.sysadmin
-            if _res:
-                is_admin = is_admin or has_organization_admin_role(
+        admin_bypass = False
+
+        if isinstance(current_user, model.User):
+            try:
+                _res = comment_service.get_resource(resource_id)
+                is_admin = current_user.sysadmin or has_organization_admin_role(
                     _res.Resource.package.owner_org
                 )
-            log.info(f"is_admin value: {is_admin}")
+                reply_open = FeedbackConfig().resource_comment.reply_open.is_enable(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                is_admin = current_user.sysadmin
+                reply_open = False
+
         admin_bypass = is_admin
 
         if not (reply_open or is_admin):
