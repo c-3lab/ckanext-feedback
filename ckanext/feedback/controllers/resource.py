@@ -419,7 +419,6 @@ class ResourceController:
         reply_open = False
         _res = None
         is_admin = False
-        admin_bypass = False
 
         if isinstance(current_user, model.User):
             try:
@@ -434,8 +433,6 @@ class ResourceController:
                 is_admin = current_user.sysadmin
                 reply_open = False
 
-        admin_bypass = is_admin
-
         if not (reply_open or is_admin):
             helpers.flash_error(
                 _('Reply is restricted to administrators.'), allow_html=True
@@ -444,7 +441,7 @@ class ResourceController:
                 'resource_comment.comment', resource_id=resource_id
             )
 
-        if (force_all or not admin_bypass) and is_recaptcha_verified(request) is False:
+        if (force_all or not is_admin) and is_recaptcha_verified(request) is False:
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return toolkit.redirect_to(
                 'resource_comment.comment', resource_id=resource_id
