@@ -3389,13 +3389,7 @@ class TestResourceCommentReactions:
     ):
         current_user.return_value = model.User.get(user['id'])
 
-        pkg = MagicMock()
-        pkg.owner_org = 'org-x'
-        res_obj = MagicMock()
-        res_obj.package = pkg
-        mock_res = MagicMock()
-        mock_res.Resource = res_obj
-        mock_get_resource.side_effect = [mock_res, Exception('boom')]
+        mock_get_resource.side_effect = Exception('boom')
 
         cfg = MagicMock()
         cfg.recaptcha.force_all.get.return_value = False
