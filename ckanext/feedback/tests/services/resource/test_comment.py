@@ -6,13 +6,7 @@ from ckan import model
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from ckan.model.user import User
-from ckan.tests import factories
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
@@ -41,26 +35,14 @@ from ckanext.feedback.services.resource.comment import (
 )
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.usefixtures('with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestComments:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        engine = model.meta.engine
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
-    def test_get_resource(self):
-        organization_dict = factories.Organization(
-            name='org_name',
-        )
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-        session.commit()
-        assert get_resource(resource['id'])
-        assert get_resource(resource['id']).organization_id == package['id']
-        assert get_resource(resource['id']).organization_name == "org_name"
+    def test_get_resource(self, organization, dataset, resource):
+        row = get_resource(resource['id'])
+        assert row
+        assert row.organization_id == dataset['id']
+        assert row.organization_name == organization['name']
 
     @patch('ckanext.feedback.services.resource.comment.session')
     def test_get_resource_comment(self, mock_session):
@@ -107,11 +89,9 @@ class TestComments:
         mock_query.join.assert_not_called()
         mock_query.first.assert_called_once()
 
-    def test_get_resource_comments(self):
+    def test_get_resource_comments(self, organization, resource):
         assert not get_resource_comments()
-        organization = factories.Organization()
-        package = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=package['id'])
+
         limit = 20
         offset = 0
 
@@ -131,8 +111,7 @@ class TestComments:
     def test_get_resource_comment_categories(self):
         assert get_resource_comment_categories() == ResourceCommentCategory
 
-    def test_approve_resource_comment(self):
-        resource = factories.Resource()
+    def test_approve_resource_comment(self, resource):
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
@@ -148,8 +127,7 @@ class TestComments:
     def test_get_comment_reply(self):
         pass
 
-    def test_create_reply(self):
-        resource = factories.Resource()
+    def test_create_reply(self, resource):
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         comment_id = session.query(ResourceComment).first().id
@@ -299,11 +277,7 @@ class TestAttachedImageService:
 
         assert result == ['test_attached_image.jpg']
 
-    def test_get_comment_replies_filters_and_order(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_comment_replies_filters_and_order(self, resource):
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
@@ -334,11 +308,7 @@ class TestAttachedImageService:
         with pytest.raises(ValueError):
             approve_reply('non-exists-id', approval_user_id=None)
 
-    def test_approve_reply_parent_not_found(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_approve_reply_parent_not_found(self, resource):
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
@@ -365,11 +335,7 @@ class TestAttachedImageService:
             with pytest.raises(ValueError):
                 approve_reply(reply.id, approval_user_id=None)
 
-    def test_approve_reply_parent_not_approved(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_approve_reply_parent_not_approved(self, resource):
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
@@ -381,11 +347,7 @@ class TestAttachedImageService:
         with pytest.raises(PermissionError):
             approve_reply(reply.id, approval_user_id=None)
 
-    def test_approve_reply_success(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_approve_reply_success(self, resource):
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
@@ -406,13 +368,8 @@ class TestAttachedImageService:
         assert updated.approval_user_id is None
         assert isinstance(updated.approved, datetime)
 
-    @patch('flask_login.utils._get_user')
-    def test_get_comment_replies_for_display_non_admin(self, current_user):
+    def test_get_comment_replies_for_display_non_admin(self, dataset, resource):
         from unittest.mock import patch as _patch
-
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
 
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
@@ -435,16 +392,11 @@ class TestAttachedImageService:
         assert [r.content for r in rows] == ['a']
 
     @patch('flask_login.utils._get_user')
-    def test_get_comment_replies_for_display_sysadmin(self, current_user):
-
-        sysadm = factories.Sysadmin()
-        user_obj = model.User.get(sysadm['id'])
+    def test_get_comment_replies_for_display_sysadmin(
+        self, current_user, sysadmin, dataset, resource
+    ):
+        user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
-
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
-
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
         session.commit()
@@ -463,25 +415,22 @@ class TestAttachedImageService:
         assert sorted([r.content for r in rows]) == ['a', 'u']
 
     @patch('flask_login.utils._get_user')
-    def test_get_comment_replies_for_display_org_admin(self, current_user):
-        user_dict = factories.User()
-        user = model.User.get(user_dict['id'])
-        current_user.return_value = user
+    def test_get_comment_replies_for_display_org_admin(
+        self, current_user, user, organization, dataset, resource
+    ):
+        user_obj = model.User.get(user['id'])
+        current_user.return_value = user_obj
 
-        organization_dict = factories.Organization()
-        organization = model.Group.get(organization_dict['id'])
+        organization_obj = model.Group.get(organization['id'])
         member = model.Member(
-            group=organization,
-            group_id=organization.id,
-            table_id=user.id,
+            group=organization_obj,
+            group_id=organization_obj.id,
+            table_id=user_obj.id,
             capacity='admin',
             table_name='user',
         )
         model.Session.add(member)
         model.Session.commit()
-
-        dataset = factories.Dataset(owner_org=organization.id)
-        resource = factories.Resource(package_id=dataset['id'])
 
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 1)
@@ -500,22 +449,31 @@ class TestAttachedImageService:
         rows = get_comment_replies_for_display(parent.id, dataset['owner_org'])
         assert sorted([r.content for r in rows]) == ['a', 'u']
 
-    def test_get_resource_comment_replies_query(self):
+    def test_get_resource_comment_replies_query(self, organization):
         from ckanext.feedback.services.admin import resource_comments as rc
 
-        organization = factories.Organization()
         org_list = [{'name': organization['name'], 'title': organization['title']}]
-
         q = rc.get_resource_comment_replies_query(org_list)
         s = str(q.statement)
         assert "resource_comment_reply" in s
 
-    def test_get_simple_resource_comment_replies_query(self):
+    def test_get_simple_resource_comment_replies_query(self, organization):
         from ckanext.feedback.services.admin import resource_comments as rc
 
-        organization = factories.Organization()
         org_list = [{'name': organization['name'], 'title': organization['title']}]
 
         q = rc.get_simple_resource_comment_replies_query(org_list)
         s = str(q.statement)
         assert "resource_comment_reply" in s
+
+    def test_create_reply_with_attached_image(self, resource):
+        category = get_resource_comment_categories().REQUEST
+        create_resource_comment(resource['id'], category, 'parent', 1)
+        session.commit()
+        parent = session.query(ResourceComment).first()
+        user_id = session.query(model.User).first().id
+
+        create_reply(parent.id, 'reply with image', user_id, 'reply_img.jpg')
+        session.commit()
+        reply = session.query(ResourceCommentReply).first()
+        assert reply.attached_image_filename == 'reply_img.jpg'
