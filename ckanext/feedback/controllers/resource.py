@@ -25,7 +25,10 @@ from ckanext.feedback.controllers.cookie import (
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.resource_comment import ResourceCommentCategory
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.types import ResourceCommentResponseStatus
+from ckanext.feedback.models.types import (
+    MoralCheckAction,
+    ResourceCommentResponseStatus,
+)
 from ckanext.feedback.services.common.ai_functions import (
     check_ai_comment,
     suggest_ai_comment,
@@ -235,6 +238,7 @@ class ResourceController:
                     'rating': rating,
                     'content': content,
                     'attached_image_filename': attached_image_filename,
+                    'action': MoralCheckAction,
                 },
             )
 
@@ -248,6 +252,7 @@ class ResourceController:
                 'content': content,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
+                'action': MoralCheckAction,
             },
         )
 
@@ -318,19 +323,44 @@ class ResourceController:
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
-        if not request.form.get(
-            'comment-suggested', False
-        ) and FeedbackConfig().moral_keeper_ai.is_enable(
+        if FeedbackConfig().moral_keeper_ai.is_enable(
             resource.Resource.package.owner_org
         ):
-            if check_ai_comment(comment=content) is False:
-                return ResourceController.suggested_comment(
-                    resource_id=resource_id,
-                    rating=rating,
-                    category=category,
-                    content=content,
-                    attached_image_filename=attached_image_filename,
+            is_suggested = request.form.get('comment-suggested', False) == 'True'
+
+            if is_suggested:
+                action = request.form.get('action', None)
+                input_comment = request.form.get('input-comment', None)
+                suggested_comment = request.form.get(
+                    'suggested-comment', 'AUTO_SUGGEST_FAILED'
                 )
+
+                comment_service.create_resource_comment_moral_check_log(
+                    resource_id=resource_id,
+                    action=action,
+                    input_comment=input_comment,
+                    suggested_comment=suggested_comment,
+                    output_comment=content,
+                )
+            else:
+                if check_ai_comment(comment=content) is False:
+                    return ResourceController.suggested_comment(
+                        resource_id=resource_id,
+                        rating=rating,
+                        category=category,
+                        content=content,
+                        attached_image_filename=attached_image_filename,
+                    )
+
+                comment_service.create_resource_comment_moral_check_log(
+                    resource_id=resource_id,
+                    action=MoralCheckAction.CHECK_COMPLETED.name,
+                    input_comment=content,
+                    suggested_comment=None,
+                    output_comment=content,
+                )
+
+            session.commit()
 
         return toolkit.render(
             'resource/comment_check.html',
@@ -685,3 +715,34 @@ class ResourceController:
         attached_image_filename = data_dict["image_url"]
         uploader.upload()
         return attached_image_filename
+
+    # resource_comment/<resource_id>/comment/create_previous_log
+    @staticmethod
+    def create_previous_log(resource_id):
+        resource = comment_service.get_resource(resource_id)
+        if FeedbackConfig().moral_keeper_ai.is_enable(
+            resource.Resource.package.owner_org
+        ):
+            data = request.get_json()
+            previous_type = data.get('previous_type', None)
+            input_comment = data.get('input_comment', None)
+            suggested_comment = data.get('suggested_comment', None)
+
+            action_map = {
+                'suggestion': MoralCheckAction.PREVIOUS_SUGGESTION.name,
+                'confirm': MoralCheckAction.PREVIOUS_CONFIRM.name,
+            }
+            action = action_map.get(previous_type, None)
+            if action is None:
+                return '', 204
+
+            comment_service.create_resource_comment_moral_check_log(
+                resource_id=resource_id,
+                action=action,
+                input_comment=input_comment,
+                suggested_comment=suggested_comment,
+                output_comment=None,
+            )
+            session.commit()
+
+        return '', 204

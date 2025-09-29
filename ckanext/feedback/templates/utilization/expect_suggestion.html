@@ -13,6 +13,8 @@
 
   {% block primary %}
     <div class="module-content">
+      <input type="hidden" id="utilization-id" name="utilization-id" value="{{ utilization_id }}">
+      <input type="hidden" id="current-type" name="current-type" value="suggestion">
       <div>
         <h1 class="p-2">{{ _('Please confirm') }}</h1>
         <br>
@@ -32,6 +34,8 @@
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
             <input type="hidden" name="comment-suggested" value="True">
+            <input type="hidden" name="action" value="{{ action.INPUT_SELECTED.name }}">
+            <input type="hidden" id="input-comment" name="input-comment" value="{{ content }}">
             <div style="flex: 1;">
               <textarea class="p-2 resize-vertical" id="comment-content" name="comment-content" maxlength="1000" style="height: 200px; width: 100%; resize: none; overflow: auto; border-radius: 10px;">{{ content }}</textarea>
               <div class="char-count text-end"><span name="comment-count">0</span>/1000</div>
@@ -65,6 +69,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>

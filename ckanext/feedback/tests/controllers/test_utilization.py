@@ -7,6 +7,7 @@ from ckan.plugins import toolkit
 from werkzeug.exceptions import NotFound
 
 from ckanext.feedback.controllers.utilization import UtilizationController
+from ckanext.feedback.models.types import MoralCheckAction
 from ckanext.feedback.models.utilization import UtilizationCommentCategory
 
 engine = model.repo.session.get_bind()
@@ -336,6 +337,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.current_user', None)
     def test_search_without_user(
         self,
+        mock_current_user_fixture,
         mock_args,
         mock_get_utilizations,
         mock_get_resource,
@@ -1868,6 +1870,7 @@ class TestUtilizationController:
         mock_upload_image,
         mock_files,
         mock_form,
+        mock_current_user_fixture,
     ):
         utilization_id = 'utilization id'
         category = UtilizationCommentCategory.REQUEST.name
@@ -2098,6 +2101,7 @@ class TestUtilizationController:
                 'content': content,
                 'attached_image_filename': attached_image_filename,
                 'softened': softened,
+                'action': MoralCheckAction,
             },
         )
 
@@ -2141,6 +2145,7 @@ class TestUtilizationController:
                 'selected_category': category,
                 'content': content,
                 'attached_image_filename': attached_image_filename,
+                'action': MoralCheckAction,
             },
         )
 
@@ -2190,7 +2195,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = 'attached_image_filename'
@@ -2202,7 +2210,6 @@ class TestUtilizationController:
             'category': category,
             'comment-content': content,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': False,
         }.get(x, default)
 
         mock_file = MagicMock()
@@ -2338,10 +2345,15 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
     @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_check_comment_POST_judgement_True(
         self,
         mock_render,
+        mock_create_utilization_comment_moral_check_log,
         mock_get_action,
         mock_check_ai_comment,
         mock_get_resource,
@@ -2354,7 +2366,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -2388,6 +2403,8 @@ class TestUtilizationController:
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
         mock_get_action.return_value = mock_package_show
+
+        mock_create_utilization_comment_moral_check_log.return_value = None
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -2445,7 +2462,10 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -2503,10 +2523,15 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.create_utilization_comment_moral_check_log'
+    )
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_check_comment_POST_suggested(
         self,
         mock_render,
+        mock_create_utilization_comment_moral_check_log,
         mock_get_action,
         mock_get_resource,
         mock_get_utilization,
@@ -2518,17 +2543,25 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        utilization_id = mock_utilization.id
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
+
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
 
         mock_method.return_value = 'POST'
         mock_form.get.side_effect = lambda x, default: {
             'category': category,
             'comment-content': content,
             'attached_image_filename': attached_image_filename,
-            'comment-suggested': True,
+            'comment-suggested': 'True',
+            'action': MoralCheckAction.INPUT_SELECTED,
+            'input-comment': 'test_input_comment',
+            'suggested-comment': 'test_suggested_comment',
         }.get(x, default)
 
         mock_files.return_value = None
@@ -2546,6 +2579,8 @@ class TestUtilizationController:
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
         mock_get_action.return_value = mock_package_show
+
+        mock_create_utilization_comment_moral_check_log.return_value = None
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -3280,7 +3315,8 @@ class TestUtilizationController:
         )
 
     @patch(
-        'ckanext.feedback.controllers.utilization.detail_service.get_upload_destination'
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_upload_destination'
     )
     @patch('ckanext.feedback.controllers.utilization.get_uploader')
     def test_upload_image(

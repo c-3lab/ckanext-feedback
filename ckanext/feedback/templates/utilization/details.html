@@ -17,6 +17,8 @@
 
   {% block primary %}
     <article class="module" role="main">
+      <input type="hidden" id="utilization-id" value="{{ utilization_id }}">
+      <input type="hidden" id="current-type" name="current-type" value="comment">
       <div class="module-content">
         {% set row = utilization %}
         <div>
@@ -477,6 +479,8 @@
     {% asset 'feedback/feedback-detail-js' %}
     {% asset 'feedback/feedback-comment-js' %}
     {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not (c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)))) %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
+    {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
         window.feedbackRecaptchaForms = [

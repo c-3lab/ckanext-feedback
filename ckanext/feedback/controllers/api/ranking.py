@@ -9,6 +9,10 @@ from ckan.plugins import toolkit
 from dateutil.relativedelta import relativedelta
 
 import ckanext.feedback.services.ranking.dataset as dataset_ranking_service
+from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
+from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
+from ckanext.feedback.models.resource_comment import ResourceCommentSummary
+from ckanext.feedback.models.utilization import Utilization
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.organization import organization as organization_service
 
@@ -34,6 +38,9 @@ class RankingConfig:
     AGGREGATION_METRIC_DEFAULT = 'download'
     AGGREGATION_METRIC_LIST = [
         'download',
+        'likes',
+        'resource_comments',
+        'utilization_comments',
     ]
 
 
@@ -161,6 +168,39 @@ class RankingValidator:
                 }
             )
 
+    def validate_likes_function(self):
+        if not FeedbackConfig().like.is_enable():
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "Likes function is off."
+                        "Please contact the site administrator for assintance."
+                    )
+                }
+            )
+
+    def validate_resource_comments_function(self):
+        if not FeedbackConfig().resource_comment.is_enable():
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "ResourceComments function is off."
+                        "Please contact the site administrator for assintance."
+                    )
+                }
+            )
+
+    def validate_utilization_comments_function(self):
+        if not FeedbackConfig().utilization_comment.is_enable():
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "UtilizationComments function is off."
+                        "Please contact the site administrator for assintance."
+                    )
+                }
+            )
+
     def validate_organization_name_in_group(self, organization_name):
         org_name = organization_service.get_organization_name_by_name(organization_name)
 
@@ -180,6 +220,46 @@ class RankingValidator:
                 {
                     "message": (
                         "An organization with the download feature disabled "
+                        "has been selected. "
+                        "Please contact the site administrator for assistance."
+                    )
+                }
+            )
+
+    def validate_organization_likes_enabled(self, organization_name, enable_orgs):
+        if organization_name not in enable_orgs:
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "An organization with the likes feature disabled "
+                        "has been selected. "
+                        "Please contact the site administrator for assistance."
+                    )
+                }
+            )
+
+    def validate_organization_resource_comments_enabled(
+        self, organization_name, enable_orgs
+    ):
+        if organization_name not in enable_orgs:
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "An organization with the resourceComment feature disabled "
+                        "has been selected. "
+                        "Please contact the site administrator for assistance."
+                    )
+                }
+            )
+
+    def validate_organization_utilization_comments_enabled(
+        self, organization_name, enable_orgs
+    ):
+        if organization_name not in enable_orgs:
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        "An organization with the utilizationComment feature disabled "
                         "has been selected. "
                         "Please contact the site administrator for assistance."
                     )
@@ -239,33 +319,80 @@ class DatasetRankingService:
         self.config = config
         self.validator = validator
 
-    def get_dataset_download_ranking(
-        self, top_ranked_limit, start_year_month, end_year_month, organization_name
+    def get_dataset_ranking(
+        self,
+        metric,
+        top_ranked_limit,
+        start_year_month,
+        end_year_month,
+        organization_name,
     ):
-        self.validator.validate_download_function()
+        if organization_name:
+            self.validator.validate_organization_name_in_group(organization_name)
 
-        if not FeedbackConfig().is_feedback_config_file:
-            return dataset_ranking_service.get_download_ranking(
-                top_ranked_limit, start_year_month, end_year_month
-            )
+        if metric == 'download':
+            self.validator.validate_download_function()
+            enable_orgs = FeedbackConfig().download.get_enable_org_names()
+            period_model = DownloadMonthly
+            period_column = "download_count"
+            total_model = DownloadSummary
+            total_column = "download"
+        elif metric == 'likes':
+            self.validator.validate_likes_function()
+            enable_orgs = FeedbackConfig().like.get_enable_org_names()
+            period_model = ResourceLikeMonthly
+            period_column = "like_count"
+            total_model = ResourceLike
+            total_column = "like_count"
+        elif metric == 'resource_comments':
+            self.validator.validate_resource_comments_function()
+            enable_orgs = FeedbackConfig().resource_comment.get_enable_org_names()
+            period_model = ResourceCommentSummary
+            period_column = "comment"
+            total_model = ResourceCommentSummary
+            total_column = "comment"
+        elif metric == 'utilization_comments':
+            self.validator.validate_utilization_comments_function()
+            enable_orgs = FeedbackConfig().utilization_comment.get_enable_org_names()
+            period_model = Utilization
+            period_column = "comment"
+            total_model = Utilization
+            total_column = "comment"
+        else:
+            raise toolkit.ValidationError({"message": "Invalid metric specified."})
 
-        enable_orgs = FeedbackConfig().download.get_enable_org_names()
+        if organization_name:
+            if metric == 'likes':
+                self.validator.validate_organization_likes_enabled(
+                    organization_name, enable_orgs
+                )
+            elif metric == 'resource_comments':
+                self.validator.validate_organization_resource_comments_enabled(
+                    organization_name, enable_orgs
+                )
+            elif metric == 'utilization_comments':
+                self.validator.validate_organization_utilization_comments_enabled(
+                    organization_name, enable_orgs
+                )
+            else:
+                self.validator.validate_organization_download_enabled(
+                    organization_name, enable_orgs
+                )
 
-        if not organization_name:
-            return dataset_ranking_service.get_download_ranking(
-                top_ranked_limit, start_year_month, end_year_month, enable_orgs
-            )
-
-        self.validator.validate_organization_name_in_group(organization_name)
-        self.validator.validate_organization_download_enabled(
-            organization_name, enable_orgs
+        get_ranking_result = dataset_ranking_service.get_generic_ranking(
+            top_ranked_limit,
+            start_year_month,
+            end_year_month,
+            period_model,
+            period_column,
+            total_model,
+            total_column,
+            enable_org=None,
+            organization_name=organization_name,
         )
+        return get_ranking_result
 
-        return dataset_ranking_service.get_download_ranking(
-            top_ranked_limit, start_year_month, end_year_month, [organization_name]
-        )
-
-    def generate_dataset_ranking_list(self, results):
+    def generate_dataset_ranking_list(self, results, metric_name='download'):
         dataset_ranking_list = []
 
         for index, (
@@ -274,8 +401,8 @@ class DatasetRankingService:
             dataset_name,
             dataset_title,
             dataset_notes,
-            download_count_by_period,
-            total_download_count,
+            count_by_period,
+            total_count,
         ) in enumerate(results):
             site_url = config.get('ckan.site_url', '')
             dataset_path = toolkit.url_for('dataset.read', id=dataset_name)
@@ -288,8 +415,8 @@ class DatasetRankingService:
                 'dataset_title': dataset_title,
                 'dataset_notes': dataset_notes,
                 'dataset_link': dataset_link,
-                'download_count_by_period': download_count_by_period,
-                'total_download_count': total_download_count,
+                f'{metric_name}_count_by_period': count_by_period,
+                f'total_{metric_name}_count': total_count,
             }
 
             dataset_ranking_list.append(dataset_ranking_dict)
@@ -306,11 +433,9 @@ class DatasetRankingController:
 
     def get_datasets_ranking(self, data_dict):
         self.validator.validate_input_parameters(data_dict)
-
         params = self._extract_parameters(data_dict)
 
         self.validator.validate_top_ranked_limit(params['top_ranked_limit'])
-
         today = datetime.now()
         start_year_month, end_year_month = self.date_calculator.get_year_months(
             today,
@@ -318,20 +443,19 @@ class DatasetRankingController:
             params['start_year_month'],
             params['end_year_month'],
         )
-
         self.validator.validate_aggregation_metric(params['aggregation_metric'])
 
-        if params['aggregation_metric'] == 'download':
-            results = self.ranking_service.get_dataset_download_ranking(
-                params['top_ranked_limit'],
-                start_year_month,
-                end_year_month,
-                params['organization_name'],
-            )
+        results = self.ranking_service.get_dataset_ranking(
+            metric=params['aggregation_metric'],
+            top_ranked_limit=params['top_ranked_limit'],
+            start_year_month=start_year_month,
+            end_year_month=end_year_month,
+            organization_name=params['organization_name'],
+        )
 
-            return self.ranking_service.generate_dataset_ranking_list(results)
-
-        return []
+        return self.ranking_service.generate_dataset_ranking_list(
+            results, metric_name=params['aggregation_metric']
+        )
 
     def _extract_parameters(self, data_dict):
         return {

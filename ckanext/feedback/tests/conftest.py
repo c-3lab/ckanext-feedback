@@ -18,14 +18,19 @@ from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
+    ResourceCommentMoralCheckLog,
     ResourceCommentReactions,
 )
 from ckanext.feedback.models.session import session
-from ckanext.feedback.models.types import ResourceCommentResponseStatus
+from ckanext.feedback.models.types import (
+    MoralCheckAction,
+    ResourceCommentResponseStatus,
+)
 from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentCategory,
+    UtilizationCommentMoralCheckLog,
 )
 
 
@@ -90,6 +95,11 @@ def dataset(organization):
 @pytest.fixture(scope="function")
 def resource(dataset):
     return factories.Resource(package_id=dataset['id'])
+
+
+@pytest.fixture(scope="function")
+def api_token(user):
+    return factories.APIToken(user_id=user['id'])
 
 
 @pytest.fixture(scope='function')
@@ -338,3 +348,40 @@ def mock_current_user_fixture():
         current_user.return_value = user_obj
 
     return _mock_current_user
+    #     user_obj = model.User.get(user['name'])
+    #     # mock current_user
+    #     current_user.return_value = user_obj
+
+    # return _mock_current_user
+
+
+@pytest.fixture(scope='function')
+def resource_comment_moral_check_log(resource):
+    moral_check_log = ResourceCommentMoralCheckLog(
+        id=str(uuid.uuid4()),
+        resource_id=resource['id'],
+        action=MoralCheckAction.INPUT_SELECTED,
+        input_comment='test_input_comment',
+        suggested_comment='test_suggested_comment',
+        output_comment='test_output_comment',
+        timestamp=datetime(2024, 1, 1, 15, 0, 0),
+    )
+    session.add(moral_check_log)
+    session.flush()
+    return moral_check_log
+
+
+@pytest.fixture(scope='function')
+def utilization_comment_moral_check_log(utilization):
+    moral_check_log = UtilizationCommentMoralCheckLog(
+        id=str(uuid.uuid4()),
+        utilization_id=utilization.id,
+        action=MoralCheckAction.INPUT_SELECTED,
+        input_comment='test_input_comment',
+        suggested_comment='test_suggested_comment',
+        output_comment='test_output_comment',
+        timestamp=datetime(2024, 1, 1, 15, 0, 0),
+    )
+    session.add(moral_check_log)
+    session.flush()
+    return moral_check_log

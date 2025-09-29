@@ -314,9 +314,7 @@ class AdminController:
     def approve_utilization_comments(target):
         target = utilization_comments_service.get_utilization_comment_ids(target)
         utilizations = utilization_service.get_utilizations_by_comment_ids(target)
-        AdminController._check_organization_admin_role_with_utilization_comment(
-            utilizations
-        )
+        AdminController._check_organization_admin_role(utilizations)
         utilization_comments_service.approve_utilization_comments(
             target, current_user.id
         )
@@ -328,7 +326,7 @@ class AdminController:
     def approve_utilization(target):
         target = utilization_service.get_utilization_ids(target)
         utilizations = utilization_service.get_utilization_details_by_ids(target)
-        AdminController._check_organization_admin_role_with_utilization(utilizations)
+        AdminController._check_organization_admin_role(utilizations)
         resource_ids = utilization_service.get_utilization_resource_ids(target)
         utilization_service.approve_utilization(target, current_user.id)
         utilization_service.refresh_utilization_summary(resource_ids)
@@ -341,9 +339,7 @@ class AdminController:
         resource_comment_summaries = (
             resource_comments_service.get_resource_comment_summaries(target)
         )
-        AdminController._check_organization_admin_role_with_resource(
-            resource_comment_summaries
-        )
+        AdminController._check_organization_admin_role(resource_comment_summaries)
         resource_comments_service.approve_resource_comments(target, current_user.id)
         resource_comments_service.refresh_resources_comments(resource_comment_summaries)
         return len(target)
@@ -352,9 +348,7 @@ class AdminController:
     @check_administrator
     def delete_utilization_comments(target):
         utilizations = utilization_service.get_utilizations_by_comment_ids(target)
-        AdminController._check_organization_admin_role_with_utilization_comment(
-            utilizations
-        )
+        AdminController._check_organization_admin_role(utilizations)
         utilization_comments_service.delete_utilization_comments(target)
         utilization_comments_service.refresh_utilizations_comments(utilizations)
         return len(target)
@@ -363,7 +357,7 @@ class AdminController:
     @check_administrator
     def delete_utilization(target):
         utilizations = utilization_service.get_utilization_details_by_ids(target)
-        AdminController._check_organization_admin_role_with_utilization(utilizations)
+        AdminController._check_organization_admin_role(utilizations)
         resource_ids = utilization_service.get_utilization_resource_ids(target)
         utilization_service.delete_utilization(target)
         utilization_service.refresh_utilization_summary(resource_ids)
@@ -375,9 +369,7 @@ class AdminController:
         resource_comment_summaries = (
             resource_comments_service.get_resource_comment_summaries(target)
         )
-        AdminController._check_organization_admin_role_with_resource(
-            resource_comment_summaries
-        )
+        AdminController._check_organization_admin_role(resource_comment_summaries)
         resource_comments_service.delete_resource_comments(target)
         resource_comments_service.refresh_resources_comments(resource_comment_summaries)
         return len(target)

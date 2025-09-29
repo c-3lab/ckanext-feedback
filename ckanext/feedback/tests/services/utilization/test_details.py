@@ -10,6 +10,7 @@ from ckan.model.resource import Resource
 
 from ckanext.feedback.models.issue import IssueResolution
 from ckanext.feedback.models.session import session
+from ckanext.feedback.models.types import MoralCheckAction
 from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
@@ -22,14 +23,17 @@ from ckanext.feedback.services.utilization.details import (
     approve_utilization_comment_reply,
     create_issue_resolution,
     create_utilization_comment,
+    create_utilization_comment_moral_check_log,
     create_utilization_comment_reply,
     get_attached_image_path,
     get_comment_attached_image_files,
     get_issue_resolutions,
+    get_resource_by_utilization_id,
     get_upload_destination,
     get_utilization,
     get_utilization_comment,
     get_utilization_comment_categories,
+    get_utilization_comment_moral_check_logs,
     get_utilization_comment_replies,
     get_utilization_comment_replies_for_display,
     get_utilization_comments,
@@ -671,6 +675,16 @@ class TestUtilizationDetailsService:
 
         assert result.comment == 1
 
+    @pytest.mark.db_test
+    def test_get_resource_by_utilization_id(
+        self, organization, dataset, resource, utilization
+    ):
+        result = get_resource_by_utilization_id(utilization.id)
+
+        assert result
+        assert result.organization_id == dataset['id']
+        assert result.organization_name == organization['name']
+
 
 class TestAttachedImageConfig:
     @patch('ckanext.feedback.services.utilization.details.get_upload_destination')
@@ -700,6 +714,62 @@ class TestAttachedImageService:
         result = get_comment_attached_image_files()
 
         assert result == ['test_attached_image.jpg']
+
+
+@pytest.mark.db_test
+class TestUtilizationCommentMoralCheckLog:
+    @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
+    def test_create_utilization_comment_moral_check_log(self, utilization):
+        utilization_id = utilization.id
+        action = MoralCheckAction.INPUT_SELECTED
+        input_comment = 'test_input_comment'
+        suggested_comment = 'test_suggested_comment'
+        output_comment = 'test_output_comment'
+
+        create_utilization_comment_moral_check_log(
+            utilization_id,
+            action,
+            input_comment,
+            suggested_comment,
+            output_comment,
+        )
+        session.flush()
+
+        results = get_utilization_comment_moral_check_logs()
+
+        assert results is not None
+        assert results[0].utilization_id == utilization_id
+        assert results[0].action == action
+        assert results[0].input_comment == input_comment
+        assert results[0].suggested_comment == suggested_comment
+        assert results[0].output_comment == output_comment
+        assert results[0].timestamp == datetime(2024, 1, 1, 15, 0, 0)
+
+    def test_get_utilization_comment_moral_check_logs(
+        self, utilization_comment_moral_check_log
+    ):
+        results = get_utilization_comment_moral_check_logs()
+
+        assert results is not None
+        assert results[0].id == utilization_comment_moral_check_log.id
+        assert (
+            results[0].utilization_id
+            == utilization_comment_moral_check_log.utilization_id
+        )
+        assert results[0].action == utilization_comment_moral_check_log.action
+        assert (
+            results[0].input_comment
+            == utilization_comment_moral_check_log.input_comment
+        )
+        assert (
+            results[0].suggested_comment
+            == utilization_comment_moral_check_log.suggested_comment
+        )
+        assert (
+            results[0].output_comment
+            == utilization_comment_moral_check_log.output_comment
+        )
+        assert results[0].timestamp == utilization_comment_moral_check_log.timestamp
 
     def test_get_utilization_comment_replies_filters_and_order(
         self, organization, dataset, resource

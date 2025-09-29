@@ -13,6 +13,7 @@
 
   {% block primary %}
     <div class="module-content">
+      <input type="hidden" id="current-type" name="current-type" value="confirm">
       <div>
         <h1 class="p-2">{{ _('Check comment content') }}</h1>
         <br>
@@ -59,7 +60,7 @@
               <input type="hidden" name="package_name" value="{{ pkg_dict.name }}">
               <input type="hidden" name="category" value="{{ selected_category }}">
               <input type="hidden" name="rating" value="{{ rating }}"/>
-              <input type="hidden" name="comment-content" value="{{ content }}">
+              <input type="hidden" id="input-comment" name="comment-content" value="{{ content }}">
               {% if attached_image_filename %}
               <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
               {% endif %}
@@ -97,6 +98,8 @@
     {% asset 'feedback/feedback-comment-js' %}
     {% set is_admin = c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org)) %}
     {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not is_admin) %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
+    {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
         window.feedbackRecaptchaTargetForm = 'comment_form'

@@ -8,6 +8,7 @@ from sqlalchemy import BOOLEAN, TIMESTAMP, Column, Enum, ForeignKey, Integer, Te
 from sqlalchemy.orm import relationship
 
 from ckanext.feedback.models.session import Base
+from ckanext.feedback.models.types import MoralCheckAction
 
 
 # TODO: Organize and consolidate Enum definitions and sa.Enum wrappers.
@@ -109,3 +110,20 @@ class UtilizationSummary(Base):
     updated = Column(TIMESTAMP)
 
     resource = relationship(Resource)
+
+
+class UtilizationCommentMoralCheckLog(Base):
+    __tablename__ = 'utilization_comment_moral_check_log'
+    id = Column(Text, default=uuid.uuid4, primary_key=True, nullable=False)
+    utilization_id = Column(
+        Text,
+        ForeignKey('utilization.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    )
+    action = Column(Enum(MoralCheckAction, name='utilizationcomment_moralcheckaction'))
+    input_comment = Column(Text)
+    suggested_comment = Column(Text)
+    output_comment = Column(Text)
+    timestamp = Column(TIMESTAMP, default=datetime.now)
+
+    utilization = relationship(Utilization)

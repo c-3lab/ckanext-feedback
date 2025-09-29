@@ -13,6 +13,8 @@
 
   {% block primary %}
     <div class="module-content">
+      <input type="hidden" id="resource-id" name="resource-id" value="{{ resource.id }}">
+      <input type="hidden" id="current-type" name="current-type" value="suggestion">
       <div>
         <h1 class="p-2">{{ _('Please confirm') }}</h1>
         <br>
@@ -31,6 +33,8 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
             <input type="hidden" name="rating" value="{{ rating }}">
             <input type="hidden" name="comment-suggested" value="True">
+            <input type="hidden" name="action" value="{{ action.INPUT_SELECTED.name }}">
+            <input type="hidden" id="input-comment" name="input-comment" value="{{ content }}">
             {% if attached_image_filename %}
             <input type="hidden" name="attached_image_filename" value="{{ attached_image_filename }}">
             {% endif %}
@@ -64,6 +68,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>

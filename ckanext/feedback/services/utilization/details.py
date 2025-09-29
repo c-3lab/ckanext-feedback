@@ -3,6 +3,7 @@ from datetime import datetime
 import ckan.model as model
 from ckan.common import current_user
 from ckan.lib.uploader import get_uploader
+from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
 from ckan.types import PUploader
@@ -13,6 +14,7 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentCategory,
+    UtilizationCommentMoralCheckLog,
     UtilizationCommentReply,
 )
 from ckanext.feedback.services.common.check import has_organization_admin_role
@@ -242,3 +244,38 @@ def get_utilization_comment_replies_for_display(utilization_comment_id, owner_or
         else True
     )
     return get_utilization_comment_replies(utilization_comment_id, approval=approval)
+
+
+def create_utilization_comment_moral_check_log(
+    utilization_id, action, input_comment, suggested_comment, output_comment
+):
+    now = datetime.now()
+
+    moral_check_log = UtilizationCommentMoralCheckLog(
+        utilization_id=utilization_id,
+        action=action,
+        input_comment=input_comment,
+        suggested_comment=suggested_comment,
+        output_comment=output_comment,
+        timestamp=now,
+    )
+    session.add(moral_check_log)
+
+
+def get_resource_by_utilization_id(utilization_id):
+    return (
+        session.query(
+            Resource,
+            Package.id.label('organization_id'),
+            Group.name.label('organization_name'),
+        )
+        .join(Utilization, Utilization.resource_id == Resource.id)
+        .join(Package, Resource.package_id == Package.id)
+        .join(Group, Package.owner_org == Group.id)
+        .filter(Utilization.id == utilization_id)
+        .first()
+    )
+
+
+def get_utilization_comment_moral_check_logs():
+    return session.query(UtilizationCommentMoralCheckLog).all()

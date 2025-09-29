@@ -16,6 +16,7 @@
 
   {% block primary %}
     <div class="module-content">
+      <input type="hidden" id="current-type" name="current-type" value="confirm">
       <div>
         <h1 class="p-2">{{ _('Check comment content') }}</h1>
         <br>
@@ -47,7 +48,7 @@
           <div style="display: flex; flex-direction: column; align-items: stretch;">
             <div class="select-button ml-2" style="display: flex; justify-content: center;">
               <input type="hidden" name="category" value="{{ selected_category }}">
-              <input type="hidden" name="comment-content" value="{{ content }}">
+              <input type="hidden" id="input-comment" name="comment-content" value="{{ content }}">
               <input type="hidden" name="comment-suggested" value="True">
               <input type="hidden" name="comment-checked" value="True">
               {% if attached_image_filename %}
@@ -82,6 +83,7 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
+    {% asset 'feedback/feedback-moral_check_log-js' %}
     {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>

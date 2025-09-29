@@ -100,6 +100,12 @@ rules = [
         utilization.UtilizationController.attached_image,
         {'methods': ['GET']},
     ),
+    (
+        '/<utilization_id>/comment/create_previous_log',
+        'create_previous_log',
+        utilization.UtilizationController.create_previous_log,
+        {'methods': ['POST']},
+    ),
     # fmt: off
     (
         '/<utilization_id>/comment/reply/<reply_id>'

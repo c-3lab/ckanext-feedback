@@ -62,6 +62,12 @@ rules = [
         {'methods': ['GET']},
     ),
     (
+        '/<resource_id>/comment/create_previous_log',
+        'create_previous_log',
+        resource.ResourceController.create_previous_log,
+        {'methods': ['POST']},
+    ),
+    (
         '/<resource_id>/comment/reply/approve',
         'approve_reply',
         resource.ResourceController.approve_reply,

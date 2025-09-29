@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from ckan import model
@@ -14,6 +14,7 @@ from ckanext.feedback.models.issue import IssueResolution, IssueResolutionSummar
 from ckanext.feedback.models.likes import ResourceLike, ResourceLikeMonthly
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
+    ResourceCommentMoralCheckLog,
     ResourceCommentReactions,
     ResourceCommentReply,
     ResourceCommentSummary,
@@ -21,6 +22,7 @@ from ckanext.feedback.models.resource_comment import (
 from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
+    UtilizationCommentMoralCheckLog,
     UtilizationCommentReply,
     UtilizationSummary,
 )
@@ -55,7 +57,19 @@ class TestFeedbackCommand:
                 DownloadSummary.__table__,
                 UtilizationCommentReply.__table__,
                 UtilizationComment.__table__,
+                UtilizationSummary.__table__,
+                UtilizationCommentMoralCheckLog.__table__,
+                IssueResolution.__table__,
                 IssueResolutionSummary.__table__,
+                ResourceComment.__table__,
+                ResourceCommentReply.__table__,
+                ResourceCommentSummary.__table__,
+                ResourceLike.__table__,
+                ResourceLikeMonthly.__table__,
+                ResourceCommentReactions.__table__,
+                ResourceCommentMoralCheckLog.__table__,
+                DownloadSummary.__table__,
+                DownloadMonthly.__table__,
                 IssueResolution.__table__,
                 UtilizationSummary.__table__,
                 Utilization.__table__,
@@ -69,6 +83,7 @@ class TestFeedbackCommand:
         assert engine.has_table(Utilization.__table__)
         assert engine.has_table(UtilizationComment.__table__)
         assert engine.has_table(UtilizationSummary.__table__)
+        assert engine.has_table(UtilizationCommentMoralCheckLog.__table__)
         assert engine.has_table(IssueResolution.__table__)
         assert engine.has_table(IssueResolutionSummary.__table__)
         assert engine.has_table(ResourceComment.__table__)
@@ -77,6 +92,7 @@ class TestFeedbackCommand:
         assert engine.has_table(ResourceLike.__table__)
         assert engine.has_table(ResourceLikeMonthly.__table__)
         assert engine.has_table(ResourceCommentReactions.__table__)
+        assert engine.has_table(ResourceCommentMoralCheckLog.__table__)
         assert engine.has_table(DownloadSummary.__table__)
         assert engine.has_table(DownloadMonthly.__table__)
 
@@ -89,6 +105,7 @@ class TestFeedbackCommand:
         assert engine.has_table(Utilization.__table__)
         assert engine.has_table(UtilizationComment.__table__)
         assert engine.has_table(UtilizationSummary.__table__)
+        assert engine.has_table(UtilizationCommentMoralCheckLog.__table__)
         assert engine.has_table(IssueResolution.__table__)
         assert engine.has_table(IssueResolutionSummary.__table__)
         assert not engine.has_table(ResourceComment.__table__)
@@ -97,6 +114,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceLike.__table__)
         assert not engine.has_table(ResourceLikeMonthly.__table__)
         assert not engine.has_table(ResourceCommentReactions.__table__)
+        assert not engine.has_table(ResourceCommentMoralCheckLog.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)
 
@@ -106,6 +124,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(Utilization.__table__)
         assert not engine.has_table(UtilizationComment.__table__)
         assert not engine.has_table(UtilizationSummary.__table__)
+        assert not engine.has_table(UtilizationCommentMoralCheckLog.__table__)
         assert not engine.has_table(IssueResolution.__table__)
         assert not engine.has_table(IssueResolutionSummary.__table__)
         assert engine.has_table(ResourceComment.__table__)
@@ -114,6 +133,7 @@ class TestFeedbackCommand:
         assert engine.has_table(ResourceLike.__table__)
         assert engine.has_table(ResourceLikeMonthly.__table__)
         assert engine.has_table(ResourceCommentReactions.__table__)
+        assert engine.has_table(ResourceCommentMoralCheckLog.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)
 
@@ -123,6 +143,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(Utilization.__table__)
         assert not engine.has_table(UtilizationComment.__table__)
         assert not engine.has_table(UtilizationSummary.__table__)
+        assert not engine.has_table(UtilizationCommentMoralCheckLog.__table__)
         assert not engine.has_table(IssueResolution.__table__)
         assert not engine.has_table(IssueResolutionSummary.__table__)
         assert not engine.has_table(ResourceComment.__table__)
@@ -131,6 +152,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceLike.__table__)
         assert not engine.has_table(ResourceLikeMonthly.__table__)
         assert not engine.has_table(ResourceCommentReactions.__table__)
+        assert not engine.has_table(ResourceCommentMoralCheckLog.__table__)
         assert engine.has_table(DownloadSummary.__table__)
         assert engine.has_table(DownloadMonthly.__table__)
 
@@ -145,6 +167,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(Utilization.__table__)
         assert not engine.has_table(UtilizationComment.__table__)
         assert not engine.has_table(UtilizationSummary.__table__)
+        assert not engine.has_table(UtilizationCommentMoralCheckLog.__table__)
         assert not engine.has_table(IssueResolution.__table__)
         assert not engine.has_table(IssueResolutionSummary.__table__)
         assert not engine.has_table(ResourceComment.__table__)
@@ -153,6 +176,7 @@ class TestFeedbackCommand:
         assert not engine.has_table(ResourceLike.__table__)
         assert not engine.has_table(ResourceLikeMonthly.__table__)
         assert not engine.has_table(ResourceCommentReactions.__table__)
+        assert not engine.has_table(ResourceCommentMoralCheckLog.__table__)
         assert not engine.has_table(DownloadSummary.__table__)
         assert not engine.has_table(DownloadMonthly.__table__)
 
@@ -201,7 +225,6 @@ class TestFeedbackCommand:
         )
         mock_comment_service.get_comment_attached_image_files.assert_called_once_with()
         mock_detail_service.get_comment_attached_image_files.assert_called_once_with()
-        print(mock_delete_invalid_files.call_args_list)
         mock_delete_invalid_files.assert_has_calls(
             [
                 call(
@@ -282,3 +305,58 @@ class TestFeedbackCommand:
         mock_secho.assert_called_once_with(
             f"[DRY RUN] Deletion Schedule: {file_path}", fg='blue'
         )
+
+    @patch('ckanext.feedback.command.feedback.generate_moral_check_log_excel_bytes')
+    @patch('ckanext.feedback.command.feedback.click.secho')
+    def test_moral_check_log(
+        self, mock_secho, mock_generate_moral_check_log_excel_bytes
+    ):
+        mock_generate_moral_check_log_excel_bytes.return_value = MagicMock(
+            getvalue=lambda: b'test data'
+        )
+
+        self.runner.invoke(feedback, ['moral-check-log'])
+
+        mock_generate_moral_check_log_excel_bytes.assert_called_once_with(False)
+        mock_secho.assert_called_once_with(
+            'Exported moral check log to moral_check_log.xlsx', fg='green'
+        )
+
+    @patch('ckanext.feedback.command.feedback.generate_moral_check_log_excel_bytes')
+    @patch('ckanext.feedback.command.feedback.click.secho')
+    def test_moral_check_log_with_separation(
+        self, mock_secho, mock_generate_moral_check_log_excel_bytes
+    ):
+        mock_generate_moral_check_log_excel_bytes.return_value = MagicMock(
+            getvalue=lambda: b'test data'
+        )
+
+        self.runner.invoke(
+            feedback,
+            [
+                'moral-check-log',
+                '--separation',
+                '--output',
+                'moral_check_log_separation.xlsx',
+            ],
+        )
+
+        mock_generate_moral_check_log_excel_bytes.assert_called_once_with(True)
+        mock_secho.assert_called_once_with(
+            'Exported moral check log to moral_check_log_separation.xlsx', fg='green'
+        )
+
+    @patch('ckanext.feedback.command.feedback.generate_moral_check_log_excel_bytes')
+    @patch('ckanext.feedback.command.feedback.click.echo')
+    def test_moral_check_log_exception(
+        self, mock_echo, mock_generate_moral_check_log_excel_bytes
+    ):
+        mock_generate_moral_check_log_excel_bytes.side_effect = Exception(
+            'test exception'
+        )
+
+        result = self.runner.invoke(feedback, ['moral-check-log'])
+
+        assert result.exit_code != 0
+        mock_generate_moral_check_log_excel_bytes.assert_called_once_with(False)
+        mock_echo.assert_called_once_with("Error: test exception", err=True)

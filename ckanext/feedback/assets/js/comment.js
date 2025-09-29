@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     charCount.textContent = currentLength;
   }
 
-  textareas.forEach((textarea, index) => {
+  Array.from(textareas).forEach((textarea, index) => {
     updateCharCount(textarea, charCounts[index]);
     textarea.addEventListener('input', () => {
       const currentLength = textarea.value.length;
@@ -82,9 +82,9 @@ function selectRating(selectedStar) {
 
 window.addEventListener('pageshow', (event) => {
   const sendButtons = document.getElementsByName('send-button');
-  sendButtons.forEach(sendButton => {
+  Array.from(sendButtons).forEach(sendButton => {
     sendButton.style.pointerEvents = "auto";
-    sendButton.style.background = "#206b82";
+    sendButton.style.background = "";
     sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
     sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
   });
@@ -193,8 +193,8 @@ function checkCommentExists(button, bs3=false) {
   if ( button.id === "comment-button" ) {
     comment = document.getElementById('comment-content').value;
   }
-  if ( button.id === "proposal-comment-button" ) {
-    comment = document.getElementById('proposal-comment-content').value;
+  if ( button.id === "suggested-comment-button" ) {
+    comment = document.getElementById('suggested-comment-content').value;
   }
 
   const rating = document.getElementById('rating').value;
@@ -215,7 +215,7 @@ function checkCommentExists(button, bs3=false) {
     return false;
   }
   const sendButtons = document.getElementsByName('send-button');
-  sendButtons.forEach(button => {
+  Array.from(sendButtons).forEach(button => {
     button.style.pointerEvents = "none";
     button.style.background = "#333333";
     if (!bs3) {
@@ -224,6 +224,7 @@ function checkCommentExists(button, bs3=false) {
       button.innerHTML = spinner_bs3 + button.innerHTML;
     }
   });
+  sessionStorage.removeItem('is_suggestion');
 
   return true;
 }
