@@ -221,3 +221,79 @@ input[type="file"].imageUpload {
   background-color: #2b7cff;
   color: #fff;
 }
+
+
+.reply-modal .modal-footer {
+  padding: 15px;
+  position: relative;
+}
+
+.reply-modal .reply-preview-container {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  max-width: 100%;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reply-modal .reply-preview-container .image-preview {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 4px;
+}
+
+.reply-modal .reply-preview-container .image-preview-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.reply-modal .modal-body .image-upload-section {
+  display: none;
+}
+
+.reply-modal .reply-image-upload .btn i,
+.reply-modal .reply-send-buttons .btn i {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+/* image attachment bs3*/
+.reply-modal .modal-footer.bs3-flex-footer {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  padding: 15px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.reply-modal .modal-footer.bs3-flex-footer .bs3-flex-left {
+  display: table-cell;
+  vertical-align: middle;
+  width: 50%;
+  text-align: left;
+}
+
+.reply-modal .modal-footer.bs3-flex-footer .bs3-flex-right {
+  display: table-cell;
+  vertical-align: middle;
+  width: 50%;
+  text-align: right;
+}
+
+.reply-modal .modal-footer.bs3-flex-footer .btn {
+  height: 34px;
+  line-height: 1.42857143;
+  padding: 6px 12px;
+  border-width: 1px;
+  box-sizing: border-box;
+  font-size: 14px;
+  vertical-align: middle;
+  display: inline-block;
+  margin: 0;
+}

@@ -80,6 +80,7 @@ def drop_utilization_tables(engine):
 def create_utilization_tables(engine):
     Utilization.__table__.create(engine, checkfirst=True)
     UtilizationComment.__table__.create(engine, checkfirst=True)
+    UtilizationCommentReply.__table__.drop(engine, checkfirst=True)
     UtilizationCommentReply.__table__.create(engine, checkfirst=True)
     UtilizationSummary.__table__.create(engine, checkfirst=True)
     IssueResolution.__table__.create(engine, checkfirst=True)
@@ -97,6 +98,7 @@ def drop_resource_tables(engine):
 
 def create_resource_tables(engine):
     ResourceComment.__table__.create(engine, checkfirst=True)
+    ResourceCommentReply.__table__.drop(engine, checkfirst=True)
     ResourceCommentReply.__table__.create(engine, checkfirst=True)
     ResourceCommentSummary.__table__.create(engine, checkfirst=True)
     ResourceLike.__table__.create(engine, checkfirst=True)
