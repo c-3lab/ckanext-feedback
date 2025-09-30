@@ -245,7 +245,8 @@ class UtilizationController:
         if not isinstance(current_user, model.User):
             approval = True
         elif (
-            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
+            has_organization_admin_role(utilization.resource.package.owner_org)
+            or current_user.sysadmin
         ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
@@ -332,7 +333,7 @@ class UtilizationController:
             try:
                 _uti = detail_service.get_utilization(utilization_id)
                 admin_bypass = current_user.sysadmin or has_organization_admin_role(
-                    _uti.owner_org
+                    _uti.resource.package.owner_org
                 )
             except Exception:
                 admin_bypass = current_user.sysadmin
@@ -416,8 +417,9 @@ class UtilizationController:
         admin_bypass = False
         if isinstance(current_user, model.User):
             try:
+                owner_org = _uti.resource.package.owner_org
                 admin_bypass = current_user.sysadmin or has_organization_admin_role(
-                    _uti.owner_org
+                    owner_org
                 )
             except Exception:
                 admin_bypass = current_user.sysadmin
@@ -425,14 +427,16 @@ class UtilizationController:
         # Reply permission control (admin or reply_open)
         reply_open = False
         try:
+            owner_org = _uti.resource.package.owner_org
             reply_open = FeedbackConfig().utilization_comment.reply_open.is_enable(
-                _uti.owner_org
+                owner_org
             )
         except Exception:
             reply_open = False
         is_org_admin = False
         try:
-            is_org_admin = has_organization_admin_role(_uti.owner_org)
+            owner_org = _uti.resource.package.owner_org
+            is_org_admin = has_organization_admin_role(owner_org)
         except Exception:
             is_org_admin = False
         if not reply_open and not (
@@ -498,7 +502,8 @@ class UtilizationController:
 
         approval = True
         if isinstance(current_user, model.User) and (
-            current_user.sysadmin or has_organization_admin_role(utilization.owner_org)
+            current_user.sysadmin
+            or has_organization_admin_role(utilization.resource.package.owner_org)
         ):
             approval = None
 
@@ -614,7 +619,7 @@ class UtilizationController:
             try:
                 _uti = detail_service.get_utilization(utilization_id)
                 admin_bypass = current_user.sysadmin or has_organization_admin_role(
-                    _uti.owner_org
+                    _uti.resource.package.owner_org
                 )
             except Exception:
                 admin_bypass = current_user.sysadmin
@@ -852,7 +857,8 @@ class UtilizationController:
             # if the user is not logged in, display only approved comments
             approval = True
         elif (
-            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
+            has_organization_admin_role(utilization.resource.package.owner_org)
+            or current_user.sysadmin
         ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
@@ -874,7 +880,7 @@ class UtilizationController:
     def _check_organization_admin_role(utilization_id):
         utilization = detail_service.get_utilization(utilization_id)
         if (
-            not has_organization_admin_role(utilization.owner_org)
+            not has_organization_admin_role(utilization.resource.package.owner_org)
             and not current_user.sysadmin
         ):
             toolkit.abort(
