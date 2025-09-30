@@ -21,7 +21,7 @@
       <input type="hidden" id="current-type" name="current-type" value="comment">
       <div class="module-content">
         {% set row = utilization %}
-        {% set owner_org = utilization.resource.package.owner_org %}
+        {% set owner_org = utilization.owner_org %}
         <div>
           {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) %}
             <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
