@@ -1323,7 +1323,7 @@ class TestAdminControllerWithoutContext:
         mock_has_org_admin_role.return_value = False
 
         mock_utilization = MagicMock()
-        mock_utilization.owner_org = organization['id']
+        mock_utilization.resource.package.owner_org = organization['id']
 
         AdminController._check_organization_admin_role_with_utilization(
             [mock_utilization]
