@@ -245,8 +245,7 @@ class UtilizationController:
         if not isinstance(current_user, model.User):
             approval = True
         elif (
-            has_organization_admin_role(utilization.resource.package.owner_org)
-            or current_user.sysadmin
+            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
         ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
@@ -502,8 +501,7 @@ class UtilizationController:
 
         approval = True
         if isinstance(current_user, model.User) and (
-            current_user.sysadmin
-            or has_organization_admin_role(utilization.resource.package.owner_org)
+            current_user.sysadmin or has_organization_admin_role(utilization.owner_org)
         ):
             approval = None
 
@@ -857,8 +855,7 @@ class UtilizationController:
             # if the user is not logged in, display only approved comments
             approval = True
         elif (
-            has_organization_admin_role(utilization.resource.package.owner_org)
-            or current_user.sysadmin
+            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
         ):
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
@@ -880,7 +877,7 @@ class UtilizationController:
     def _check_organization_admin_role(utilization_id):
         utilization = detail_service.get_utilization(utilization_id)
         if (
-            not has_organization_admin_role(utilization.resource.package.owner_org)
+            not has_organization_admin_role(utilization.owner_org)
             and not current_user.sysadmin
         ):
             toolkit.abort(
