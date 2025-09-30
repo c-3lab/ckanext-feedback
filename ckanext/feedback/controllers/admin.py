@@ -401,7 +401,7 @@ class AdminController:
     def _check_organization_admin_role_with_utilization(utilizations):
         for utilization in utilizations:
             if (
-                not has_organization_admin_role(utilization.owner_org)
+                not has_organization_admin_role(utilization.resource.package.owner_org)
                 and not current_user.sysadmin
             ):
                 toolkit.abort(
