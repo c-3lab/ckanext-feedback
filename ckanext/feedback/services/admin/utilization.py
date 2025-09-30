@@ -73,6 +73,7 @@ def get_simple_utilizations_query(org_list):
 def get_utilizations_by_comment_ids(comment_id_list):
     utilizations = (
         session.query(Utilization)
+        .options(joinedload(Utilization.resource).joinedload(Resource.package))
         .join(UtilizationComment)
         .filter(UtilizationComment.id.in_(comment_id_list))
     ).all()
