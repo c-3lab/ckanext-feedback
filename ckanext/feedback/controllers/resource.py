@@ -450,18 +450,23 @@ class ResourceController:
         _res = None
         is_admin = False
 
+        # Get resource and check reply_open setting
+        try:
+            _res = comment_service.get_resource(resource_id)
+            reply_open = FeedbackConfig().resource_comment.reply_open.is_enable(
+                _res.Resource.package.owner_org
+            )
+        except Exception:
+            reply_open = False
+
+        # Check if user is admin (only for logged-in users)
         if isinstance(current_user, model.User):
             try:
-                _res = comment_service.get_resource(resource_id)
                 is_admin = current_user.sysadmin or has_organization_admin_role(
-                    _res.Resource.package.owner_org
-                )
-                reply_open = FeedbackConfig().resource_comment.reply_open.is_enable(
                     _res.Resource.package.owner_org
                 )
             except Exception:
                 is_admin = current_user.sysadmin
-                reply_open = False
 
         if not (reply_open or is_admin):
             helpers.flash_error(
