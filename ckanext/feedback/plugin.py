@@ -58,13 +58,21 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return [feedback.feedback]
 
     # IBlueprint
-
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
-        if FeedbackConfig().download.is_enable():
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+        # Register DataStore Blueprint with highest priority
+        if cfg.download.is_enable():
+            from ckanext.feedback.views.datastore_download import (
+                get_datastore_download_blueprint,
+            )
+
+            blueprints.insert(0, get_datastore_download_blueprint())
             blueprints.append(download.get_download_blueprint())
-        if FeedbackConfig().resource_comment.is_enable():
+
+        if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
         if FeedbackConfig().utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
@@ -74,7 +82,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
 
-    # Check production.ini settings
+        # Check production.ini settings
+
     def is_base_public_folder_bs3(self):
         base_templates_folder = config.get('ckan.base_public_folder', 'public')
         return base_templates_folder == 'public-bs3'

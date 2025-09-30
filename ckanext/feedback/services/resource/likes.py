@@ -29,6 +29,8 @@ def increment_resource_like_count(resource_id):
         },
     )
     session.execute(resource_like)
+    # Expire cache after direct SQL execution
+    session.expire_all()
 
 
 def decrement_resource_like_count(resource_id):

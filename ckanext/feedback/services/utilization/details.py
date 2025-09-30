@@ -18,6 +18,8 @@ from ckanext.feedback.models.utilization import (
 
 # Get details from the Utilization record
 def get_utilization(utilization_id):
+    # Flush pending changes to make them visible in the query
+    session.flush()
     return (
         session.query(
             Utilization.title,
@@ -44,6 +46,7 @@ def approve_utilization(utilization_id, approval_user_id):
     utilization.approval = True
     utilization.approved = datetime.now()
     utilization.approval_user_id = approval_user_id
+    session.flush()
 
 
 # Get a comment related to the Utilization record
@@ -54,6 +57,7 @@ def get_utilization_comment(
     attached_image_filename: str = None,
     owner_orgs=None,
 ):
+    session.flush()
     query = session.query(UtilizationComment).filter(
         UtilizationComment.id == comment_id
     )
@@ -80,6 +84,7 @@ def get_utilization_comment(
 def get_utilization_comments(
     utilization_id=None, approval=None, owner_orgs=None, limit=None, offset=None
 ):
+    session.flush()
     query = session.query(UtilizationComment).order_by(
         UtilizationComment.created.desc()
     )
@@ -113,6 +118,7 @@ def create_utilization_comment(
         attached_image_filename=attached_image_filename,
     )
     session.add(comment)
+    session.flush()
 
 
 # Approve selected utilization comment
@@ -121,6 +127,7 @@ def approve_utilization_comment(comment_id, approval_user_id):
     comment.approval = True
     comment.approved = datetime.now()
     comment.approval_user_id = approval_user_id
+    session.flush()
 
 
 # Get comment category enum names and values
@@ -130,6 +137,7 @@ def get_utilization_comment_categories():
 
 # Get issues resolved related to the Utilization record
 def get_issue_resolutions(utilization_id):
+    session.flush()
     return (
         session.query(IssueResolution)
         .filter(IssueResolution.utilization_id == utilization_id)
@@ -146,10 +154,12 @@ def create_issue_resolution(utilization_id, description, creator_user_id):
         creator_user_id=creator_user_id,
     )
     session.add(issue_resolution)
+    session.flush()
 
 
 # Recalculate total approved utilization comments
 def refresh_utilization_comments(utilization_id):
+    session.flush()
     count = (
         session.query(UtilizationComment)
         .filter(
@@ -161,6 +171,7 @@ def refresh_utilization_comments(utilization_id):
     utilization = session.query(Utilization).get(utilization_id)
     utilization.comment = count
     utilization.updated = datetime.now()
+    session.flush()
 
 
 # Get path for attached image
@@ -202,6 +213,7 @@ def create_utilization_comment_moral_check_log(
 
 
 def get_resource_by_utilization_id(utilization_id):
+    session.flush()
     return (
         session.query(
             Resource,

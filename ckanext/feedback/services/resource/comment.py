@@ -104,6 +104,7 @@ def create_resource_comment(
         created=now,
     )
     session.add(comment)
+    # Flush to generate comment ID for use in reactions
     session.flush()
 
     insert_reactions = insert(ResourceCommentReactions).values(
@@ -130,6 +131,7 @@ def approve_resource_comment(resource_comment_id, approval_user_id):
     comment.approval = True
     comment.approved = datetime.now()
     comment.approval_user_id = approval_user_id
+    session.flush()
 
 
 # Get reply for target comment
