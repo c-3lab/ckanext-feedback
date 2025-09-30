@@ -104,6 +104,7 @@ def create_resource_comment(
         created=now,
     )
     session.add(comment)
+    # Flush to generate comment ID for use in reactions
     session.flush()
 
     insert_reactions = insert(ResourceCommentReactions).values(

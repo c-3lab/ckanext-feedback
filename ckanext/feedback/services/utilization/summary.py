@@ -119,5 +119,6 @@ def increment_issue_resolution_summary(utilization_id):
         },
     )
     session.execute(issue_resolution_summary)
+    # Expire cache after direct SQL execution
     session.expire_all()
     session.flush()

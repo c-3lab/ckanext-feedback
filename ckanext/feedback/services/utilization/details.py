@@ -18,6 +18,7 @@ from ckanext.feedback.models.utilization import (
 
 # Get details from the Utilization record
 def get_utilization(utilization_id):
+    # Flush pending changes to make them visible in the query
     session.flush()
     return (
         session.query(

@@ -41,10 +41,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # IConfigurer
 
     def update_config(self, config):
+        # Add this plugin's directories to CKAN's extra paths, so that
+        # CKAN will use this plugin's custom files.
+        # Paths are relative to this plugin.py file.
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('assets', 'feedback')
 
+        # load the settings from feedback config json
         self.fb_config = FeedbackConfig()
         self.fb_config.load_feedback_config()
 
@@ -54,7 +58,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return [feedback.feedback]
 
     # IBlueprint
-
+    # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
         cfg = getattr(self, 'fb_config', FeedbackConfig())
@@ -77,6 +81,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         blueprints.append(admin.get_admin_blueprint())
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
+
+        # Check production.ini settings
 
     def is_base_public_folder_bs3(self):
         base_templates_folder = config.get('ckan.base_public_folder', 'public')

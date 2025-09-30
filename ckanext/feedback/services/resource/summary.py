@@ -136,4 +136,5 @@ def refresh_resource_summary(resource_id):
         },
     )
     session.execute(summary)
+    # Expire cache after direct SQL execution
     session.expire_all()

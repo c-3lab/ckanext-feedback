@@ -51,4 +51,5 @@ def increment_resource_downloads(resource_id):
         },
     )
     session.execute(download_summary)
+    # Expire cache after direct SQL execution
     session.expire_all()
