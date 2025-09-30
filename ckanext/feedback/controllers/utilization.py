@@ -332,7 +332,7 @@ class UtilizationController:
             try:
                 _uti = detail_service.get_utilization(utilization_id)
                 admin_bypass = current_user.sysadmin or has_organization_admin_role(
-                    _uti.resource.package.owner_org
+                    _uti.owner_org
                 )
             except Exception:
                 admin_bypass = current_user.sysadmin
@@ -416,7 +416,7 @@ class UtilizationController:
         admin_bypass = False
         if isinstance(current_user, model.User):
             try:
-                owner_org = _uti.resource.package.owner_org
+                owner_org = _uti.owner_org
                 admin_bypass = current_user.sysadmin or has_organization_admin_role(
                     owner_org
                 )
@@ -426,7 +426,7 @@ class UtilizationController:
         # Reply permission control (admin or reply_open)
         reply_open = False
         try:
-            owner_org = _uti.resource.package.owner_org
+            owner_org = _uti.owner_org
             reply_open = FeedbackConfig().utilization_comment.reply_open.is_enable(
                 owner_org
             )
@@ -434,7 +434,7 @@ class UtilizationController:
             reply_open = False
         is_org_admin = False
         try:
-            owner_org = _uti.resource.package.owner_org
+            owner_org = _uti.owner_org
             is_org_admin = has_organization_admin_role(owner_org)
         except Exception:
             is_org_admin = False
@@ -617,7 +617,7 @@ class UtilizationController:
             try:
                 _uti = detail_service.get_utilization(utilization_id)
                 admin_bypass = current_user.sysadmin or has_organization_admin_role(
-                    _uti.resource.package.owner_org
+                    _uti.owner_org
                 )
             except Exception:
                 admin_bypass = current_user.sysadmin
