@@ -41,10 +41,19 @@
 
  ### Image Attachment（画像添付）
 
-コメントに画像を添付することを可能にします。
+コメントや返信に画像を添付することを可能にします。
 
 
 ![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilization_image_40.jpeg)  
+
+![utilization モジュール　利活用方法詳細画面　イメージ図](../assets/utilization_image_50.jpg) 
+
+### Reply Open（返信機能）
+
+管理者以外でも、コメントに対して返信することができます。
+
+![画像添付](../assets/resource_comment_90.jpg)
+
 
 
 

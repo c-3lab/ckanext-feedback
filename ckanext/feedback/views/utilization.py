@@ -34,6 +34,12 @@ rules = [
         {'methods': ['POST']},
     ),
     (
+        '/<utilization_id>/comment/reply',
+        'reply',
+        utilization.UtilizationController.reply,
+        {'methods': ['POST']},
+    ),
+    (
         '/<utilization_id>/comment/suggested',
         'suggested_comment',
         utilization.UtilizationController.suggested_comment,
@@ -55,6 +61,12 @@ rules = [
         '/<utilization_id>/comment/<comment_id>/approve',
         'approve_comment',
         utilization.UtilizationController.approve_comment,
+        {'methods': ['POST']},
+    ),
+    (
+        '/<utilization_id>/comment/reply/<reply_id>/approve',
+        'approve_reply',
+        utilization.UtilizationController.approve_reply,
         {'methods': ['POST']},
     ),
     (
@@ -94,7 +106,15 @@ rules = [
         utilization.UtilizationController.create_previous_log,
         {'methods': ['POST']},
     ),
-]
+    # fmt: off
+    (
+        '/<utilization_id>/comment/reply/<reply_id>'
+        '/attached_image/<attached_image_filename>',
+        'reply_attached_image',
+        utilization.UtilizationController.reply_attached_image,
+        {'methods': ['GET']},
+    ),
+]  # fmt: on
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})
     blueprint.add_url_rule(rule, endpoint, view_func, **options)

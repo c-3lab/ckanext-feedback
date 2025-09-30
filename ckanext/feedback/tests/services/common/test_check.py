@@ -16,6 +16,7 @@ from ckanext.feedback.services.common.check import (
     check_administrator,
     has_organization_admin_role,
     is_organization_admin,
+    user_has_organization_admin_role,
 )
 
 engine = model.repo.session.get_bind()
@@ -206,3 +207,51 @@ class TestCheck:
         result = has_organization_admin_role(organization1.id)
 
         assert result is False
+
+    def test_user_has_organization_admin_role_without_user_id(self):
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+        assert user_has_organization_admin_role(None, organization.id) is False
+
+    def test_user_has_organization_admin_role_with_invalid_user(self):
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+        assert (
+            user_has_organization_admin_role('invalid-user-id', organization.id)
+            is False
+        )
+
+    def test_user_has_organization_admin_role_with_sysadmin(self):
+        sysadmin_dict = factories.Sysadmin()
+        organization_dict = factories.Organization()
+        organization = model.Group.get(organization_dict['id'])
+        assert (
+            user_has_organization_admin_role(sysadmin_dict['id'], organization.id)
+            is True
+        )
+
+    def test_user_has_organization_admin_role_with_org_admin_and_non_admin(self):
+        user_dict = factories.User()
+        user = User.get(user_dict['id'])
+
+        organization_dict1 = factories.Organization()
+        organization_dict2 = factories.Organization()
+        organization1 = model.Group.get(organization_dict1['id'])
+        organization2 = model.Group.get(organization_dict2['id'])
+
+        member = model.Member(
+            group=organization1,
+            group_id=organization1.id,
+            table_id=user.id,
+            capacity='admin',
+            table_name='user',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        assert (
+            user_has_organization_admin_role(user_dict['id'], organization1.id) is True
+        )
+        assert (
+            user_has_organization_admin_role(user_dict['id'], organization2.id) is False
+        )

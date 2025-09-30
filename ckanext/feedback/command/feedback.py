@@ -25,6 +25,7 @@ from ckanext.feedback.models.utilization import (
     Utilization,
     UtilizationComment,
     UtilizationCommentMoralCheckLog,
+    UtilizationCommentReply,
     UtilizationSummary,
 )
 
@@ -47,19 +48,7 @@ def feedback():
 def init(modules):
     engine = meta.engine
     try:
-        if 'utilization' in modules:
-            drop_utilization_tables(engine)
-            create_utilization_tables(engine)
-            click.secho('Initialize utilization: SUCCESS', fg='green', bold=True)
-        elif 'resource' in modules:
-            drop_resource_tables(engine)
-            create_resource_tables(engine)
-            click.secho('Initialize resource: SUCCESS', fg='green', bold=True)
-        elif 'download' in modules:
-            drop_download_tables(engine)
-            create_download_tables(engine)
-            click.secho('Initialize download: SUCCESS', fg='green', bold=True)
-        else:
+        if not modules:
             drop_utilization_tables(engine)
             create_utilization_tables(engine)
             drop_resource_tables(engine)
@@ -67,6 +56,19 @@ def init(modules):
             drop_download_tables(engine)
             create_download_tables(engine)
             click.secho('Initialize all modules: SUCCESS', fg='green', bold=True)
+        else:
+            if 'utilization' in modules:
+                drop_utilization_tables(engine)
+                create_utilization_tables(engine)
+                click.secho('Initialize utilization: SUCCESS', fg='green', bold=True)
+            if 'resource' in modules:
+                drop_resource_tables(engine)
+                create_resource_tables(engine)
+                click.secho('Initialize resource: SUCCESS', fg='green', bold=True)
+            if 'download' in modules:
+                drop_download_tables(engine)
+                create_download_tables(engine)
+                click.secho('Initialize download: SUCCESS', fg='green', bold=True)
     except Exception as e:
         toolkit.error_shout(e)
         sys.exit(1)
@@ -77,6 +79,7 @@ def drop_utilization_tables(engine):
     IssueResolution.__table__.drop(engine, checkfirst=True)
     UtilizationCommentMoralCheckLog.__table__.drop(engine, checkfirst=True)
     UtilizationSummary.__table__.drop(engine, checkfirst=True)
+    UtilizationCommentReply.__table__.drop(engine, checkfirst=True)
     UtilizationComment.__table__.drop(engine, checkfirst=True)
     Utilization.__table__.drop(engine, checkfirst=True)
 
@@ -84,6 +87,7 @@ def drop_utilization_tables(engine):
 def create_utilization_tables(engine):
     Utilization.__table__.create(engine, checkfirst=True)
     UtilizationComment.__table__.create(engine, checkfirst=True)
+    UtilizationCommentReply.__table__.create(engine, checkfirst=True)
     UtilizationSummary.__table__.create(engine, checkfirst=True)
     UtilizationCommentMoralCheckLog.__table__.create(engine, checkfirst=True)
     IssueResolution.__table__.create(engine, checkfirst=True)

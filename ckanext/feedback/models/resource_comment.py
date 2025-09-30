@@ -51,9 +51,16 @@ class ResourceComment(Base):
     attached_image_filename = Column(Text)
 
     resource = relationship(Resource)
-    approval_user = relationship(User)
-    reply = relationship('ResourceCommentReply', uselist=False)
-    reactions = relationship('ResourceCommentReactions', uselist=False)
+    approval_user = relationship(User, foreign_keys=[approval_user_id])
+    replies = relationship(
+        'ResourceCommentReply',
+        back_populates='resource_comment',
+        uselist=True,
+        order_by="ResourceCommentReply.created",
+    )
+    reactions = relationship(
+        'ResourceCommentReactions', back_populates='resource_comment', uselist=False
+    )
 
 
 class ResourceCommentReply(Base):
@@ -70,8 +77,15 @@ class ResourceCommentReply(Base):
         Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
     )
 
-    resource_comment = relationship('ResourceComment', back_populates='reply')
-    creator_user = relationship(User)
+    resource_comment = relationship('ResourceComment', back_populates='replies')
+    creator_user = relationship(User, foreign_keys=[creator_user_id])
+    approval = Column(BOOLEAN, default=False)
+    approved = Column(TIMESTAMP)
+    approval_user_id = Column(
+        Text, ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')
+    )
+    approval_user = relationship(User, foreign_keys=[approval_user_id])
+    attached_image_filename = Column(Text)
 
 
 class ResourceCommentSummary(Base):

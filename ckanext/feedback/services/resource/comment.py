@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import ckan.model as model
+from ckan.common import current_user
 from ckan.lib.uploader import get_uploader
 from ckan.model.group import Group
 from ckan.model.package import Package
@@ -17,6 +19,7 @@ from ckanext.feedback.models.resource_comment import (
 )
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.types import ResourceCommentResponseStatus
+from ckanext.feedback.services.common.check import has_organization_admin_role
 
 
 # Get resource from the selected resource_id
@@ -141,12 +144,55 @@ def get_comment_reply(resource_comment_id):
     )
 
 
+def get_comment_replies(resource_comment_id, approval=None):
+    query = (
+        session.query(ResourceCommentReply)
+        .filter(ResourceCommentReply.resource_comment_id == resource_comment_id)
+        .order_by(ResourceCommentReply.created.asc())
+    )
+    if approval is not None:
+        query = query.filter(ResourceCommentReply.approval == approval)
+    return query.all()
+
+
+def approve_reply(resource_comment_reply_id, approval_user_id):
+    reply = session.query(ResourceCommentReply).get(resource_comment_reply_id)
+    if reply is None:
+        raise ValueError("Reply not found")
+
+    parent_comment = session.query(ResourceComment).get(reply.resource_comment_id)
+    if parent_comment is None:
+        raise ValueError("Parent comment not found")
+
+    if not parent_comment.approval:
+        raise PermissionError("Cannot approve reply before parent comment is approved")
+
+    reply.approval = True
+    reply.approved = datetime.now()
+    reply.approval_user_id = approval_user_id
+
+
+def get_comment_replies_for_display(resource_comment_id, owner_org_id):
+    approval = (
+        None
+        if (
+            isinstance(current_user, model.User)
+            and (current_user.sysadmin or has_organization_admin_role(owner_org_id))
+        )
+        else True
+    )
+    return get_comment_replies(resource_comment_id, approval=approval)
+
+
 # Create new reply
-def create_reply(resource_comment_id, content, creator_user_id):
+def create_reply(
+    resource_comment_id, content, creator_user_id, attached_image_filename=None
+):
     reply = ResourceCommentReply(
         resource_comment_id=resource_comment_id,
         content=content,
         creator_user_id=creator_user_id,
+        attached_image_filename=attached_image_filename,
     )
     session.add(reply)
 

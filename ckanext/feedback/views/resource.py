@@ -67,7 +67,21 @@ rules = [
         resource.ResourceController.create_previous_log,
         {'methods': ['POST']},
     ),
-]
+    (
+        '/<resource_id>/comment/reply/approve',
+        'approve_reply',
+        resource.ResourceController.approve_reply,
+        {'methods': ['POST']},
+    ),
+    # fmt: off
+    (
+        '/<resource_id>/comment/reply/<reply_id>'
+        '/attached_image/<attached_image_filename>',
+        'reply_attached_image',
+        resource.ResourceController.reply_attached_image,
+        {'methods': ['GET']},
+    ),
+]  # fmt: on
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})
     blueprint.add_url_rule(rule, endpoint, view_func, **options)

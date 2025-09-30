@@ -96,13 +96,14 @@
   {%- block scripts %}
     {{ super() }}
     {% asset 'feedback/feedback-comment-js' %}
+    {% set is_admin = c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(resource.package.owner_org)) %}
+    {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not is_admin) %}
     {% asset 'feedback/feedback-moral_check_log-js' %}
-    {% if h.is_enabled_feedback_recaptcha() %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
-        const feedbackRecaptchaTargetForm = 'comment_form'
-        const feedbackRecaptchaAction = 'resource_comment_check'
-        const feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
+        window.feedbackRecaptchaTargetForm = 'comment_form'
+        window.feedbackRecaptchaAction = 'resource_comment_check'
+        window.feedbackRecaptchaPublickey = '{{ h.get_feedback_recaptcha_publickey() }}'
       </script>
       {% asset 'feedback/feedback-recaptcha-js'%}
     {% endif %}
