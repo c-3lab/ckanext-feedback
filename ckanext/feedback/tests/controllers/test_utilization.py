@@ -328,23 +328,21 @@ class TestUtilizationController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
-    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
-    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.request.args')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.current_user', None)
     def test_search_without_user(
         self,
-        mock_current_user_fixture,
-        mock_args,
-        mock_get_utilizations,
-        mock_get_resource,
-        mock_render,
-        mock_page,
         mock_pagination,
-        app,
+        mock_page,
+        mock_render,
+        mock_get_resource,
+        mock_get_utilizations,
+        mock_args,
         resource,
         organization,
         mock_resource_object,
@@ -3791,6 +3789,10 @@ class TestUtilizationController:
         'ckanext.feedback.controllers.utilization.detail_service'
         '.get_utilization_comment_categories'
     )
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
     # fmt: on
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -3800,6 +3802,7 @@ class TestUtilizationController:
         mock_get_action,
         mock_get_resource,
         mock_get_utilization,
+        mock_create_moral_check_log,
         mock_get_utilization_comment_categories,
         mock_suggested_comment,
         mock_check_ai_comment,
@@ -3812,7 +3815,7 @@ class TestUtilizationController:
         mock_utilization_object,
         mock_resource_object,
     ):
-        utilization_id = 'resource_id'
+        utilization_id = 'test_utilization_id'
         category = 'category'
         content = 'comment_content'
         attached_image_filename = None
@@ -4302,3 +4305,145 @@ class TestUtilizationController:
         self._assert_approve_reply_common(
             mock_redirect, mock_commit, should_commit=True
         )
+
+
+@pytest.mark.usefixtures('with_request_context')
+@pytest.mark.db_test
+class TestUtilizationCreatePreviousLog:
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch(
+        'ckanext.feedback.controllers.'
+        'utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_moral_keeper_ai_disabled(
+        self,
+        mock_create_moral_check_log,
+        mock_get_resource_by_utilization_id,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = False
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource_by_utilization_id.return_value = resource
+
+        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
+
+        mock_create_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_suggestion(
+        self,
+        mock_create_moral_check_log,
+        mock_session_commit,
+        mock_get_json,
+        mock_get_resource_by_utilization_id,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource_by_utilization_id.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'suggestion',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+        mock_create_moral_check_log.return_value = None
+
+        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
+
+        mock_create_moral_check_log.assert_called_once_with(
+            utilization_id=TEST_UTILIZATION_ID,
+            action=MoralCheckAction.PREVIOUS_SUGGESTION.name,
+            input_comment='test_input_comment',
+            suggested_comment='test_suggested_comment',
+            output_comment=None,
+        )
+        mock_session_commit.assert_called_once()
+        assert return_value == ('', 204)
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_confirm(
+        self,
+        mock_create_moral_check_log,
+        mock_session_commit,
+        mock_get_json,
+        mock_get_resource_by_utilization_id,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource_by_utilization_id.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'confirm',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+        mock_create_moral_check_log.return_value = None
+
+        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
+
+        mock_create_moral_check_log.assert_called_once_with(
+            utilization_id=TEST_UTILIZATION_ID,
+            action=MoralCheckAction.PREVIOUS_CONFIRM.name,
+            input_comment='test_input_comment',
+            suggested_comment='test_suggested_comment',
+            output_comment=None,
+        )
+        mock_session_commit.assert_called_once()
+        assert return_value == ('', 204)
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_previous_type_none(
+        self,
+        mock_create_moral_check_log,
+        mock_get_json,
+        mock_get_resource_by_utilization_id,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource_by_utilization_id.return_value = resource
+        mock_get_json.return_value = {
+            'previous_type': 'invalid_type',
+            'input_comment': 'test_input_comment',
+            'suggested_comment': 'test_suggested_comment',
+        }
+
+        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
+
+        mock_create_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)
