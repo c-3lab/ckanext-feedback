@@ -21,8 +21,9 @@
       <input type="hidden" id="current-type" name="current-type" value="comment">
       <div class="module-content">
         {% set row = utilization %}
+        {% set owner_org = utilization.resource.package.owner_org %}
         <div>
-          {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
+          {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) %}
             <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
               <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">
                 <i class="fa-solid fa-pen"></i>
@@ -65,7 +66,7 @@
             {% endif %}
             {{ issue_resolutions|length }}
           </a>
-          {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
+          {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) %}
             {% if h.is_base_public_folder_bs3() %}
               <button class="btn btn-primary right-aligned" data-toggle="modal" data-target="#issue-resolution-form">
                 <i class="fa-solid fa-award"></i>
@@ -101,7 +102,7 @@
               <p id="comment-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
             </div>
             <div class="comment-form-footer">
-              {% if h.is_enabled_utilization_comment_image_attachment(utilization.owner_org) %}
+              {% if h.is_enabled_utilization_comment_image_attachment(owner_org) %}
                 <div class="image-upload-section">
                   <button id="uploadBtn" type="button" class="btn btn-default" onclick="uploadClicked();">
                     <i class="fa-solid fa-image"></i>
@@ -161,7 +162,7 @@
                   </span>
                 </div>
                 <div id="comment-action-buttons" class="comment-action-buttons">
-                  {% if (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) and comment.approval == false %}
+                  {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) and comment.approval == false %}
                     <form class="inline-form pull-left float-start" name="approval_form" style="margin-bottom: 0;" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
                       <button class="btn btn-primary" onclick="setButtonDisable(this);">
                         <i class="fa-solid fa-check"></i>
@@ -169,8 +170,8 @@
                       </button>
                     </form>
                   {% endif %}
-                  {% set reply_open = h.is_utilization_reply_open(utilization.owner_org) %}
-                  {% if comment.approval and (reply_open or c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)) %}
+                  {% set reply_open = h.is_utilization_reply_open(owner_org) %}
+                  {% if comment.approval and (reply_open or (c.userobj and c.userobj.sysadmin) or h.has_organization_admin_role(owner_org)) %}
                     {% if h.is_base_public_folder_bs3() %}
                       <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reply-form-window" onclick="setReplyFormContent('{{ comment.id }}')">
                         <i class="fa-solid fa-reply"></i>
@@ -200,7 +201,7 @@
                 {% endif %}
 
                 {# replies block #}
-                {% set replies = h.get_utilization_comment_replies_for_display(comment.id, utilization.owner_org) %}
+                {% set replies = h.get_utilization_comment_replies_for_display(comment.id, owner_org) %}
                 {% if replies and replies|length %}
                   <hr>
                   <div class="reply">
@@ -209,7 +210,7 @@
                         {% for reply in replies %}
                           <div class="{{ 'unapproved' if not reply.approval }}">
                             <div class="comment-top-section">
-                              {% set is_admin_reply = h.user_has_organization_admin_role(reply.creator_user_id, utilization.owner_org) %}
+                              {% set is_admin_reply = h.user_has_organization_admin_role(reply.creator_user_id, owner_org) %}
                               <i class="fa-solid fa-reply"></i>
                               {% if is_admin_reply %}
                                 <i class="fa-solid fa-user-tie"></i>
@@ -227,7 +228,7 @@
                               <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(reply.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
                                 {{ h.render_datetime(reply.created, with_hours=True) }}
                               </span>
-                              {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
+                              {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) %}
                                 <div class="comment-action-buttons">
                                   {% if not reply.approval %}
                                     <form class="inline-form" name="approve_reply_form" style="margin-bottom: 0;" action="{{ h.url_for('utilization.approve_reply', utilization_id=utilization_id, reply_id=reply.id) }}" method="post">
@@ -269,7 +270,7 @@
                       {% for reply in replies %}
                         <div class="{{ 'unapproved' if not reply.approval }}">
                           <div class="comment-top-section">
-                            {% set is_admin_reply = h.user_has_organization_admin_role(reply.creator_user_id, utilization.owner_org) %}
+                            {% set is_admin_reply = h.user_has_organization_admin_role(reply.creator_user_id, owner_org) %}
                             <i class="fa-solid fa-reply"></i>
                             {% if is_admin_reply %}
                               <i class="fa-solid fa-user-tie"></i>
@@ -287,7 +288,7 @@
                             <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(reply.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
                               {{ h.render_datetime(reply.created, with_hours=True) }}
                             </span>
-                            {% if c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org) %}
+                            {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) %}
                               <div class="comment-action-buttons">
                                 {% if not reply.approval %}
                                   <form class="inline-form" name="approve_reply_form" style="margin-bottom: 0;" action="{{ h.url_for('utilization.approve_reply', utilization_id=utilization_id, reply_id=reply.id) }}" method="post">
@@ -358,14 +359,14 @@
                   <p id="reply-over-error" class="alert alert-error" style="display: none;">{{ _('Please keep the comment length below 1000') }}</p>
                 </div>
               </div>
-              {% if h.is_enabled_utilization_comment_image_attachment(utilization.owner_org) %}
+              {% if h.is_enabled_utilization_comment_image_attachment(owner_org) %}
                 <div id="replyPreviewContainer" class="reply-preview-container" style="display: none;">
                   <span class="text-muted">{{ _('Image preview will appear here') }}</span>
                 </div>
               {% endif %}
             </div>
             <div class="modal-footer {% if not h.is_base_public_folder_bs3() %}d-flex justify-content-between align-items-center{% endif %}">
-              {% if h.is_enabled_utilization_comment_image_attachment(utilization.owner_org) %}
+              {% if h.is_enabled_utilization_comment_image_attachment(owner_org) %}
                 <div class="reply-image-upload {% if not h.is_base_public_folder_bs3() %}d-flex align-items-center{% else %}pull-left{% endif %}">
                   <button id="replyUploadBtn" type="button" class="btn btn-default" onclick="utilizationReplyUploadClicked();">
                     <i class="fa-solid fa-image"></i>
@@ -478,7 +479,7 @@
     {{ super() }}
     {% asset 'feedback/feedback-detail-js' %}
     {% asset 'feedback/feedback-comment-js' %}
-    {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not (c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(utilization.owner_org)))) %}
+    {% if h.is_enabled_feedback_recaptcha() and (h.is_feedback_recaptcha_force_all() or not (c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)))) %}
     {% asset 'feedback/feedback-moral_check_log-js' %}
       <script src="https://www.google.com/recaptcha/api.js?render={{ h.get_feedback_recaptcha_publickey() }}"></script>
       <script>
