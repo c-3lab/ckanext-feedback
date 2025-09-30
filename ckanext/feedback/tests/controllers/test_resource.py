@@ -940,9 +940,6 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.resource.check_ai_comment')
-    @patch(
-        'ckanext.feedback.controllers.resource.' 'ResourceController.suggested_comment'
-    )
     @patch.object(ResourceController, 'suggested_comment')
     @patch(
         'ckanext.feedback.controllers.resource.'
