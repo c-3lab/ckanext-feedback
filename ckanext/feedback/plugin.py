@@ -22,6 +22,7 @@ from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import admin, api, download, likes, resource, utilization
+from ckanext.feedback.views.datastore_download import get_datastore_download_blueprint
 
 log = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def get_blueprint(self):
         blueprints = []
         if FeedbackConfig().download.is_enable():
+            blueprints.insert(0, get_datastore_download_blueprint())
             blueprints.append(download.get_download_blueprint())
         if FeedbackConfig().resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
