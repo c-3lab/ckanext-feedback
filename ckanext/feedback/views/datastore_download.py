@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, request
+from flask import Blueprint
 
 from ckanext.datastore.blueprint import dump as original_dump
 from ckanext.feedback.services.download.monthly import (
@@ -20,29 +20,13 @@ datastore_blueprint = Blueprint(
 
 @datastore_blueprint.route('/datastore/dump/<resource_id>')
 @datastore_blueprint.route('/datastore/dump/<resource_id>/')
-@datastore_blueprint.before_app_request
-def datastore_dump(resource_id=None):
+def datastore_dump(resource_id):
     """Intercept DataStore downloads"""
 
-    # Check if this is a DataStore download request
-    if '/datastore/dump/' not in request.path:
-        return
+    increment_resource_downloads(resource_id)
+    increment_resource_downloads_monthly(resource_id)
 
-    # Extract resource_id from URL if not provided
-    if not resource_id:
-        import re
-
-        match = re.search(r'/datastore/dump/([^/?]+)', request.path)
-        resource_id = match.group(1) if match else None
-
-    # Increment download count
-    if resource_id:
-        increment_resource_downloads(resource_id)
-        increment_resource_downloads_monthly(resource_id)
-
-    # Call original DataStore dump function
-    response = original_dump(resource_id)
-    return response
+    return original_dump(resource_id)
 
 
 def get_datastore_download_blueprint():
