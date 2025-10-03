@@ -221,6 +221,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def before_resource_show(self, resource_dict: dict[str, Any]) -> dict[str, Any]:
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
         resource_id = resource_dict['id']
+
+        # If datastore plugin is not loaded, set datastore_active to False
+        # to prevent template errors when trying to build datastore.dump URLs
+        if not plugins.plugin_loaded('datastore'):
+            resource_dict['datastore_active'] = False
+
         if FeedbackConfig().download.is_enable(owner_org):
             if _('Downloads') != 'Downloads':
                 resource_dict.pop('Downloads', None)
