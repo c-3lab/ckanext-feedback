@@ -7,6 +7,7 @@ from ckanext.feedback.services.download.monthly import (
     increment_resource_downloads_monthly,
 )
 from ckanext.feedback.services.download.summary import increment_resource_downloads
+from ckanext.feedback.views.error_handler import add_error_handler
 
 log = logging.getLogger(__name__)
 
@@ -24,16 +25,8 @@ datastore_blueprint = Blueprint(
 
 @datastore_blueprint.before_app_request
 def intercept_datastore_download():
-    """Intercept DataStore downloads and increment counters.
+    "Intercept DataStore downloads and increment counters."
 
-    This function runs BEFORE Flask's routing, allowing us to track
-    downloads even when the datastore plugin's route is matched first.
-
-    How it works:
-    1. Checks if the request path matches /datastore/dump/<resource_id>
-    2. If yes, increments the download counters
-    3. Returns None to let Flask continue normal routing to datastore plugin
-    """
     # Match DataStore download URLs: /datastore/dump/<resource_id>
     match = re.match(r'^/datastore/dump/([^/?]+)', request.path)
 
@@ -44,15 +37,14 @@ def intercept_datastore_download():
             # Increment download counters
             increment_resource_downloads(resource_id)
             increment_resource_downloads_monthly(resource_id)
-            log.info(f"Download count incremented for resource: {resource_id}")
+            log.debug(f"Download count incremented for resource: {resource_id}")
         except Exception as e:
             # Don't fail the request if counting fails
             log.warning(f"Failed to increment download count for {resource_id}: {e}")
 
-    # Return None to continue normal request handling
-    # Flask will route the request to datastore plugin's dump function
     return None
 
 
+@add_error_handler
 def get_datastore_download_blueprint():
     return datastore_blueprint
