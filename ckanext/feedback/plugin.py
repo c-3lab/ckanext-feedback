@@ -59,13 +59,39 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         blueprints = []
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
-        # Register DataStore Blueprint with highest priority
+        # Register download-related blueprints
         if cfg.download.is_enable():
-            from ckanext.feedback.views.datastore_download import (
-                get_datastore_download_blueprint,
-            )
+            # Check if datastore plugin is enabled
+            if plugins.plugin_loaded('datastore'):
+                try:
+                    from ckanext.feedback.views.datastore_download import (
+                        get_datastore_download_blueprint,
+                    )
 
-            blueprints.insert(0, get_datastore_download_blueprint())
+                    ds_blueprint = get_datastore_download_blueprint()
+                    if ds_blueprint:
+                        blueprints.insert(0, ds_blueprint)
+                        log.info(
+                            "DataStore download interception "
+                            "enabled for feedback plugin"
+                        )
+                    else:
+                        log.debug(
+                            "DataStore download blueprint "
+                            "returned None, skipping registration"
+                        )
+                except ImportError as e:
+                    log.warning(
+                        f"Failed to import DataStore download blueprint: {e}. "
+                        "DataStore downloads will not be tracked."
+                    )
+            else:
+                log.info(
+                    "DataStore plugin is not enabled. "
+                    "DataStore download tracking will be skipped."
+                )
+
+            # Always register regular download blueprint
             blueprints.append(download.get_download_blueprint())
 
         if cfg.resource_comment.is_enable():
