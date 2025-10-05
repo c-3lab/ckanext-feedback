@@ -27,8 +27,19 @@ datastore_blueprint = Blueprint(
 def intercept_datastore_download():
     "Intercept DataStore downloads and increment counters."
 
+    # Early return for non-datastore paths (performance optimization)
+    if not request.path.startswith('/datastore/dump/'):
+        return None
+
     # Match DataStore download URLs: /datastore/dump/<resource_id>
-    match = re.match(r'^/datastore/dump/([^/?]+)', request.path)
+    # UUID pattern: 8-4-4-4-12 hex characters with dashes
+    # Note: request.path does not include query parameters
+    UUID_PATTERN = (
+        r'^/datastore/dump/'
+        r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})'
+        r'/?$'
+    )
+    match = re.match(UUID_PATTERN, request.path, re.IGNORECASE)
 
     if match and request.method == 'GET':
         resource_id = match.group(1)
