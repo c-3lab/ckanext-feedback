@@ -48,7 +48,6 @@ def intercept_datastore_download():
             # Increment download counters
             increment_resource_downloads(resource_id)
             increment_resource_downloads_monthly(resource_id)
-            log.debug(f"Download count incremented for resource: {resource_id}")
         except Exception as e:
             # Don't fail the request if counting fails
             log.warning(f"Failed to increment download count for {resource_id}: {e}")
