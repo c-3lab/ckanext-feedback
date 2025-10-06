@@ -68,30 +68,18 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         if cfg.download.is_enable():
             # Check if datastore plugin is enabled
             if plugins.plugin_loaded('datastore'):
-                try:
-                    from ckanext.feedback.views.datastore_download import (
-                        get_datastore_download_blueprint,
-                    )
+                from ckanext.feedback.views.datastore_download import (
+                    get_datastore_download_blueprint,
+                )
 
-                    ds_blueprint = get_datastore_download_blueprint()
-                    if ds_blueprint:
-                        # Insert at the beginning for slight performance optimization
-                        # since before_app_request hooks run in registration order
-                        blueprints.insert(0, ds_blueprint)
-                        log.info(
-                            "DataStore download interception "
-                            "enabled for feedback plugin"
-                        )
-                    else:
-                        log.debug(
-                            "DataStore download blueprint "
-                            "returned None, skipping registration"
-                        )
-                except ImportError as e:
-                    log.warning(
-                        f"Failed to import DataStore download blueprint: {e}. "
-                        "DataStore downloads will not be tracked."
-                    )
+                ds_blueprint = get_datastore_download_blueprint()
+                if ds_blueprint:
+                    # Insert at the beginning for slight performance optimization
+                    # since before_app_request hooks run in registration order
+                    blueprints.insert(0, ds_blueprint)
+                    log.debug("DataStore download interception enabled")
+                else:
+                    log.warning("DataStore download blueprint returned None")
             else:
                 log.info(
                     "DataStore plugin is not enabled. "
