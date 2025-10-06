@@ -70,6 +70,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
                     ds_blueprint = get_datastore_download_blueprint()
                     if ds_blueprint:
+                        # Insert at the beginning for slight performance optimization
+                        # since before_app_request hooks run in registration order
                         blueprints.insert(0, ds_blueprint)
                         log.info(
                             "DataStore download interception "
