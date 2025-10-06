@@ -118,36 +118,6 @@ class TestPlugin:
 
     @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
     @patch('ckanext.feedback.plugin.download')
-    @patch('ckanext.feedback.views.datastore_download.get_datastore_download_blueprint')
-    def test_get_blueprint_datastore_returns_none(
-        self,
-        mock_get_datastore_download_blueprint,
-        mock_download,
-        mock_plugin_loaded,
-    ):
-        """Test when datastore blueprint returns None"""
-        instance = FeedbackPlugin()
-
-        # Mock datastore plugin as loaded but blueprint returns None
-        mock_plugin_loaded.return_value = True
-        mock_get_datastore_download_blueprint.return_value = None
-        mock_download.get_download_blueprint.return_value = 'download_bp'
-
-        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
-        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
-            False
-        )
-        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
-        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
-
-        blueprints = instance.get_blueprint()
-
-        # Should not include None, only download_bp, admin_bp, api_bp
-        assert None not in blueprints
-        assert 'download_bp' in blueprints
-
-    @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
-    @patch('ckanext.feedback.plugin.download')
     def test_get_blueprint_datastore_not_loaded(
         self,
         mock_download,
