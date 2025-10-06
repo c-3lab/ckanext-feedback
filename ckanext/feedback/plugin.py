@@ -66,27 +66,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         # Register download-related blueprints
         if cfg.download.is_enable():
-            # Check if datastore plugin is enabled
             if plugins.plugin_loaded('datastore'):
                 from ckanext.feedback.views.datastore_download import (
                     get_datastore_download_blueprint,
                 )
 
-                ds_blueprint = get_datastore_download_blueprint()
-                if ds_blueprint:
-                    # Insert at the beginning for slight performance optimization
-                    # since before_app_request hooks run in registration order
-                    blueprints.insert(0, ds_blueprint)
-                    log.debug("DataStore download interception enabled")
-                else:
-                    log.warning("DataStore download blueprint returned None")
-            else:
-                log.info(
-                    "DataStore plugin is not enabled. "
-                    "DataStore download tracking will be skipped."
-                )
-
-            # Always register regular download blueprint
+                # Insert at the beginning for slight performance optimization
+                # since before_app_request hooks run in registration order
+                blueprints.insert(0, get_datastore_download_blueprint())
             blueprints.append(download.get_download_blueprint())
 
         if cfg.resource_comment.is_enable():
