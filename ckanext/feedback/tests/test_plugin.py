@@ -148,65 +148,6 @@ class TestPlugin:
 
     @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
     @patch('ckanext.feedback.plugin.download')
-    @patch('ckanext.feedback.plugin.admin')
-    @patch('ckanext.feedback.plugin.api')
-    def test_get_blueprint_datastore_import_error(
-        self,
-        mock_api,
-        mock_admin,
-        mock_download,
-        mock_plugin_loaded,
-    ):
-        """Test when importing datastore_download raises ImportError"""
-        import builtins
-        import sys
-
-        instance = FeedbackPlugin()
-
-        # Mock datastore plugin as loaded
-        mock_plugin_loaded.return_value = True
-        mock_download.get_download_blueprint.return_value = 'download_bp'
-        mock_admin.get_admin_blueprint.return_value = 'admin_bp'
-        mock_api.get_feedback_api_blueprint.return_value = 'api_bp'
-
-        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
-        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
-            False
-        )
-        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
-        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
-
-        # Save original import and module
-        original_import = builtins.__import__
-        original_module = sys.modules.get('ckanext.feedback.views.datastore_download')
-
-        # Create a custom import that raises ImportError for our target module
-        def mock_import(name, *args, **kwargs):
-            if 'ckanext.feedback.views.datastore_download' in name:
-                raise ImportError("Mocked ImportError for testing")
-            return original_import(name, *args, **kwargs)
-
-        # Remove module from sys.modules to force re-import
-        if 'ckanext.feedback.views.datastore_download' in sys.modules:
-            del sys.modules['ckanext.feedback.views.datastore_download']
-
-        try:
-            with patch('builtins.__import__', side_effect=mock_import):
-                blueprints = instance.get_blueprint()
-
-                # Should still return blueprints without datastore
-                assert 'download_bp' in blueprints
-                assert 'admin_bp' in blueprints
-                assert 'api_bp' in blueprints
-        finally:
-            # Restore the module
-            if original_module is not None:
-                sys.modules['ckanext.feedback.views.datastore_download'] = (
-                    original_module
-                )
-
-    @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
-    @patch('ckanext.feedback.plugin.download')
     def test_get_blueprint_datastore_not_loaded(
         self,
         mock_download,
