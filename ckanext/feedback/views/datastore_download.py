@@ -1,16 +1,21 @@
 import logging
+import re
 
-from flask import Blueprint
+from flask import Blueprint, request
 
-from ckanext.datastore.blueprint import dump as original_dump
 from ckanext.feedback.services.download.monthly import (
     increment_resource_downloads_monthly,
 )
 from ckanext.feedback.services.download.summary import increment_resource_downloads
+from ckanext.feedback.views.error_handler import add_error_handler
 
 log = logging.getLogger(__name__)
 
-# Blueprint for overriding DataStore functionality
+# Blueprint for intercepting DataStore downloads
+# Note: We don't use @route decorators because the datastore plugin
+# registers /datastore/dump/<resource_id> first. Instead, we use
+# before_app_request to intercept ALL requests and check if they
+# match the DataStore download pattern.
 datastore_blueprint = Blueprint(
     'feedback_datastore_override',
     __name__,
@@ -18,16 +23,38 @@ datastore_blueprint = Blueprint(
 )
 
 
-@datastore_blueprint.route('/datastore/dump/<resource_id>')
-@datastore_blueprint.route('/datastore/dump/<resource_id>/')
-def datastore_dump(resource_id):
-    """Intercept DataStore downloads"""
+@datastore_blueprint.before_app_request
+def intercept_datastore_download():
+    "Intercept DataStore downloads and increment counters."
 
-    increment_resource_downloads(resource_id)
-    increment_resource_downloads_monthly(resource_id)
+    # Early return for non-datastore paths (performance optimization)
+    if not request.path.startswith('/datastore/dump/'):
+        return None
 
-    return original_dump(resource_id)
+    # Match DataStore download URLs: /datastore/dump/<resource_id>
+    # UUID pattern: 8-4-4-4-12 hex characters with dashes
+    # Note: request.path does not include query parameters
+    UUID_PATTERN = (
+        r'^/datastore/dump/'
+        r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})'
+        r'/?$'
+    )
+    match = re.match(UUID_PATTERN, request.path, re.IGNORECASE)
+
+    if match and request.method == 'GET':
+        resource_id = match.group(1)
+
+        try:
+            # Increment download counters
+            increment_resource_downloads(resource_id)
+            increment_resource_downloads_monthly(resource_id)
+        except Exception as e:
+            # Don't fail the request if counting fails
+            log.warning(f"Failed to increment download count for {resource_id}: {e}")
+
+    return None
 
 
+@add_error_handler
 def get_datastore_download_blueprint():
     return datastore_blueprint

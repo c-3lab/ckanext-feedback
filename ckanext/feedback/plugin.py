@@ -22,7 +22,6 @@ from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
 from ckanext.feedback.views import admin, api, download, likes, resource, utilization
-from ckanext.feedback.views.datastore_download import get_datastore_download_blueprint
 
 log = logging.getLogger(__name__)
 
@@ -42,14 +41,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # IConfigurer
 
     def update_config(self, config):
-        # Add this plugin's directories to CKAN's extra paths, so that
-        # CKAN will use this plugin's custom files.
-        # Paths are relative to this plugin.py file.
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('assets', 'feedback')
 
-        # load the settings from feedback config json
         self.fb_config = FeedbackConfig()
         self.fb_config.load_feedback_config()
 
@@ -60,23 +55,57 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IBlueprint
 
-    # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
-        if FeedbackConfig().download.is_enable():
-            blueprints.insert(0, get_datastore_download_blueprint())
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+        # Register download-related blueprints
+        if cfg.download.is_enable():
+            # Check if datastore plugin is enabled
+            if plugins.plugin_loaded('datastore'):
+                try:
+                    from ckanext.feedback.views.datastore_download import (
+                        get_datastore_download_blueprint,
+                    )
+
+                    ds_blueprint = get_datastore_download_blueprint()
+                    if ds_blueprint:
+                        # Insert at the beginning for slight performance optimization
+                        # since before_app_request hooks run in registration order
+                        blueprints.insert(0, ds_blueprint)
+                        log.info(
+                            "DataStore download interception "
+                            "enabled for feedback plugin"
+                        )
+                    else:
+                        log.debug(
+                            "DataStore download blueprint "
+                            "returned None, skipping registration"
+                        )
+                except ImportError as e:
+                    log.warning(
+                        f"Failed to import DataStore download blueprint: {e}. "
+                        "DataStore downloads will not be tracked."
+                    )
+            else:
+                log.info(
+                    "DataStore plugin is not enabled. "
+                    "DataStore download tracking will be skipped."
+                )
+
+            # Always register regular download blueprint
             blueprints.append(download.get_download_blueprint())
-        if FeedbackConfig().resource_comment.is_enable():
+
+        if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
-        if FeedbackConfig().utilization.is_enable():
+        if cfg.utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
-        if FeedbackConfig().like.is_enable():
+        if cfg.like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
         blueprints.append(admin.get_admin_blueprint())
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
 
-    # Check production.ini settings
     def is_base_public_folder_bs3(self):
         base_templates_folder = config.get('ckan.base_public_folder', 'public')
         return base_templates_folder == 'public-bs3'
@@ -194,6 +223,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def before_resource_show(self, resource_dict: dict[str, Any]) -> dict[str, Any]:
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
         resource_id = resource_dict['id']
+
+        # If datastore plugin is not loaded, set datastore_active to False
+        # to prevent template errors when trying to build datastore.dump URLs
+        if not plugins.plugin_loaded('datastore'):
+            resource_dict['datastore_active'] = False
+
         if FeedbackConfig().download.is_enable(owner_org):
             if _('Downloads') != 'Downloads':
                 resource_dict.pop('Downloads', None)
