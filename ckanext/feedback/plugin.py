@@ -98,9 +98,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
-        if FeedbackConfig().utilization.is_enable():
+        if cfg.utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
-        if FeedbackConfig().like.is_enable():
+        if cfg.like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
         blueprints.append(admin.get_admin_blueprint())
         blueprints.append(api.get_feedback_api_blueprint())
