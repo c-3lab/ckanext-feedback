@@ -22,8 +22,22 @@ class DownloadController:
     @staticmethod
     def extended_download(package_type, id, resource_id, filename=None):
         if filename is None:
-            filename = get_resource(resource_id).Resource.url
-
+            try:
+                resource_info = get_resource(resource_id)
+                if resource_info is None:
+                    log.warning(
+                        f"Resource {resource_id} not found via get_resource(), ..."
+                    )
+                    filename = None
+                else:
+                    filename = resource_info.Resource.url
+                    log.warning(
+                        f"Resource {resource_id} not found via get_resource()"
+                        f" in download()"
+                    )
+            except Exception as e:
+                log.warning(f"Failed to get resource {resource_id}: {e}, ...")
+                filename = None
         user_download = toolkit.asbool(request.args.get('user-download'))
         if request.headers.get('Sec-Fetch-Dest') == 'document' or user_download:
             increment_resource_downloads(resource_id)
