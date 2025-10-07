@@ -207,7 +207,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # If datastore plugin is not loaded, set datastore_active to False
         # to prevent template errors when trying to build datastore.dump URLs
         if not plugins.plugin_loaded('datastore'):
-            resource_dict['datastore_active'] = False
+            if resource_dict.get('datastore_active', False):
+                resource_dict['datastore_active'] = False
 
         if FeedbackConfig().download.is_enable(owner_org):
             if _('Downloads') != 'Downloads':
