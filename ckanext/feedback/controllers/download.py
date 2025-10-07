@@ -26,22 +26,29 @@ class DownloadController:
                 resource_info = get_resource(resource_id)
                 if resource_info is None:
                     log.warning(
-                        f"Resource {resource_id} not found via get_resource(), ..."
+                        f"Resource {resource_id} not found via get_resource(), "
+                        "falling back to default handler"
                     )
                     filename = None
                 else:
                     filename = resource_info.Resource.url
-                    log.warning(
-                        f"Resource {resource_id} not found via get_resource()"
-                        f" in download()"
-                    )
             except Exception as e:
-                log.warning(f"Failed to get resource {resource_id}: {e}, ...")
+                log.warning(
+                    f"Failed to get resource {resource_id}: {e}, "
+                    "falling back to default handler"
+                )
                 filename = None
         user_download = toolkit.asbool(request.args.get('user-download'))
         if request.headers.get('Sec-Fetch-Dest') == 'document' or user_download:
-            increment_resource_downloads(resource_id)
-            increment_resource_downloads_monthly(resource_id)
+            try:
+                increment_resource_downloads(resource_id)
+                increment_resource_downloads_monthly(resource_id)
+            except Exception as e:
+                # Don't fail the download if counting fails
+                log.warning(
+                    f"Failed to increment download"
+                    f"count for resource {resource_id}: {e}"
+                )
 
         handler = feedback_config.download_handler()
         if not handler:
