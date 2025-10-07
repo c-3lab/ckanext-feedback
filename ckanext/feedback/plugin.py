@@ -165,7 +165,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     def before_dataset_view(self, pkg_dict: Dict[str, Any]) -> Dict[str, Any]:
         package_id = pkg_dict['id']
-        owner_org = model.Package.get(package_id).owner_org
+        package = model.Package.get(package_id)
+
+        # パッケージが存在しない、または削除されている場合はスキップ
+        if package is None:
+            log.warning(f"Package {package_id} not found in before_dataset_view")
+            return pkg_dict
+
+        owner_org = package.owner_org
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
         if not pkg_dict['extras']:
@@ -265,8 +272,93 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return resource_dict
 
     def get_actions(self):
+        # Define custom package_search as a function
+        def custom_package_search(context, data_dict):
+            """
+            Custom package_search: Supports sorting by download count and like count
+            """
+            import ckan.logic.action.get as get_core
+
+            sort_param = data_dict.get('sort', '')
+            custom_sort = None
+
+            log.info(
+                f"[FEEDBACK SORT] custom_package_search called "
+                f"with sort={sort_param}"
+            )
+
+            # When custom sorting is specified
+            if sort_param in ['downloads desc', 'likes desc']:
+                custom_sort = sort_param
+                log.info(f"[FEEDBACK SORT] Custom sort detected: {custom_sort}")
+                # Set the default sort temporarily (to avoid Solr errors)
+                data_dict['sort'] = 'metadata_modified desc'
+
+            # Directly call the original package_search
+            result = get_core.package_search(context, data_dict)
+
+            log.info(f"[FEEDBACK SORT] Got {len(result.get('results', []))} results")
+
+            # Apply custom sort
+            if custom_sort and result.get('results'):
+                results = result['results']
+                log.info(f"[FEEDBACK SORT] Applying custom sort: {custom_sort}")
+
+                if custom_sort == 'downloads desc':
+                    # Sort by download count
+                    for pkg in results:
+                        pkg_id = pkg.get('id')
+                        downloads = (
+                            download_summary_service.get_package_downloads(pkg_id) or 0
+                        )
+                        pkg['_sort_value'] = int(downloads)
+                        log.debug(
+                            f"[FEEDBACK SORT] Package {pkg.get('name')}: "
+                            f"downloads={pkg['_sort_value']}"
+                        )
+                    results.sort(key=lambda x: x.get('_sort_value', 0), reverse=True)
+                    log.info(
+                        f"[FEEDBACK SORT] Sorted by downloads. "
+                        f"First package: {results[0].get('name')} "
+                        f"({results[0].get('_sort_value')} downloads)"
+                    )
+
+                elif custom_sort == 'likes desc':
+                    # Sort by like count
+                    for pkg in results:
+                        pkg_id = pkg.get('id')
+                        likes = (
+                            resource_likes_service.get_package_like_count(pkg_id) or 0
+                        )
+                        pkg['_sort_value'] = int(likes)
+                        log.debug(
+                            f"[FEEDBACK SORT] Package {pkg.get('name')}: "
+                            f"likes={pkg['_sort_value']}"
+                        )
+                    results.sort(key=lambda x: x.get('_sort_value', 0), reverse=True)
+                    log.info(
+                        f"[FEEDBACK SORT] Sorted by likes. "
+                        f"First package: {results[0].get('name')} "
+                        f"({results[0].get('_sort_value')} likes)"
+                    )
+
+                # Delete temporary fields for sorting
+                for pkg in results:
+                    pkg.pop('_sort_value', None)
+
+                result['results'] = results
+            else:
+                log.info(
+                    f"[FEEDBACK SORT] No custom sort applied. "
+                    f"custom_sort={custom_sort}, "
+                    f"has_results={bool(result.get('results'))}"
+                )
+                pass
+            return result
+
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
+            'package_search': custom_package_search,
         }
 
     # IUploader
