@@ -291,6 +291,14 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             if sort_param in ['downloads desc', 'likes desc']:
                 custom_sort = sort_param
                 log.info(f"[FEEDBACK SORT] Custom sort detected: {custom_sort}")
+                # Save pagination information
+                original_rows = data_dict.get('rows', 20)
+                original_start = data_dict.get('start', 0)
+
+                # Retrieve all data (up to 1000 records)
+                data_dict['rows'] = 1000
+                data_dict['start'] = 0
+
                 # Set the default sort temporarily (to avoid Solr errors)
                 data_dict['sort'] = 'metadata_modified desc'
 
@@ -346,7 +354,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 for pkg in results:
                     pkg.pop('_sort_value', None)
 
-                result['results'] = results
+                # Apply pagination to sorted results
+                end = original_start + original_rows
+                result['results'] = results[original_start:end]
+                log.info(
+                    f"[FEEDBACK SORT] Returning results {original_start} to {end} "
+                    f"(page size: {original_rows})"
+                )
             else:
                 log.info(
                     f"[FEEDBACK SORT] No custom sort applied. "
