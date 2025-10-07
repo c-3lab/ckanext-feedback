@@ -6,7 +6,6 @@ from flask import Blueprint
 from ckanext.feedback.controllers.download import DownloadController
 from ckanext.feedback.services.common.config import FeedbackConfig, download_handler
 from ckanext.feedback.services.resource.comment import get_resource
-from ckanext.feedback.views.error_handler import add_error_handler
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +27,6 @@ blueprint.add_url_rule(
 )
 
 
-@add_error_handler
 def get_download_blueprint():
     return blueprint
 

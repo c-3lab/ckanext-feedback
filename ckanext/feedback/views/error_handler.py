@@ -28,9 +28,9 @@ def add_error_handler(func):
             session.rollback()
             raise e
 
-        @blueprint.teardown_app_request
-        def close_session(e=None):
-            session.close()
+        # Note: session.close() is removed because the global session object
+        # is shared across all requests and should not be closed per-request.
+        # SQLAlchemy will manage connection pooling automatically.
 
         return blueprint
 
