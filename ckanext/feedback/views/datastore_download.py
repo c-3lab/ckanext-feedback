@@ -7,7 +7,6 @@ from ckanext.feedback.services.download.monthly import (
     increment_resource_downloads_monthly,
 )
 from ckanext.feedback.services.download.summary import increment_resource_downloads
-from ckanext.feedback.views.error_handler import add_error_handler
 
 log = logging.getLogger(__name__)
 
@@ -55,6 +54,8 @@ def intercept_datastore_download():
     return None
 
 
-@add_error_handler
 def get_datastore_download_blueprint():
+    # Note: We don't use add_error_handler here because this blueprint
+    # uses before_app_request which runs for ALL requests, not just /datastore/dump/
+    # The session management should only happen for actual datastore downloads
     return datastore_blueprint
