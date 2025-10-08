@@ -63,31 +63,64 @@ def get_package_rating(package_id):
 # Get rating of the target resource
 def get_resource_rating(resource_id):
     log.warning("─" * 80)
-    log.warning(f"[DEBUG] get_resource_rating called for resource_id: {resource_id}")
-    log.warning(f"[DEBUG] session type: {type(session)}")
-    log.warning(f"[DEBUG] session: {session}")
-    log.warning(f"[DEBUG] session.bind: {getattr(session, 'bind', 'N/A')}")
-    log.warning(
-        f"[DEBUG] session._transaction: {getattr(session, '_transaction', 'N/A')}"
-    )
-    log.warning(f"[DEBUG] session.is_active: {getattr(session, 'is_active', 'N/A')}")
+    log.warning(f"[QUERY] get_resource_rating called for resource_id: {resource_id}")
+    log.warning("[QUERY] Session state BEFORE query execution:")
+    log.warning(f"  - session object: {session}")
+    log.warning(f"  - session type: {type(session)}")
+
+    # 重要な内部状態を確認
+    trans_value = getattr(session, '_transaction', 'N/A')
+    log.warning(f"  - _transaction: {trans_value}")
+
+    if session._transaction is not None:
+        is_active_value = getattr(session._transaction, 'is_active', 'N/A')
+        log.warning(f"  - _transaction.is_active: {is_active_value}")
+        log.warning("  - ✅ _transaction exists (READY TO QUERY)")
+    else:
+        log.warning("  - ❌ _transaction is None (WILL FAIL!)")
+
+    is_active = getattr(session, 'is_active', 'N/A')
+    log.warning(f"  - session.is_active: {is_active}")
+    bind_value = getattr(session, 'bind', 'N/A')
+    log.warning(f"  - bind: {bind_value}")
 
     try:
-        log.warning("[DEBUG] Attempting to query ResourceCommentSummary...")
+        log.warning(
+            "[QUERY] Executing: session.query(ResourceCommentSummary.rating)..."
+        )
         rating = (
             session.query(ResourceCommentSummary.rating)
             .filter(ResourceCommentSummary.resource_id == resource_id)
             .scalar()
         )
-        log.warning(f"[DEBUG] Query successful! rating: {rating}")
+
+        # クエリ成功後の状態
+        log.warning("[QUERY] ✅ Query executed successfully!")
+        log.warning(f"  - Result: {rating}")
+        log.warning("[QUERY] Session state AFTER successful query:")
+        trans_after = getattr(session, '_transaction', 'N/A')
+        log.warning(f"  - _transaction: {trans_after}")
+        is_active_after = getattr(session, 'is_active', 'N/A')
+        log.warning(f"  - is_active: {is_active_after}")
         log.warning("─" * 80)
+
         return rating or 0
+
     except Exception as e:
-        log.warning(f"[DEBUG] Query FAILED with error: {type(e).__name__}: {e}")
-        log.warning("[DEBUG] Exception traceback:")
+        # クエリ失敗時の詳細情報
+        log.error("[QUERY] ❌ Query FAILED!")
+        log.error(f"  - Error type: {type(e).__name__}")
+        log.error(f"  - Error message: {e}")
+        log.error("[QUERY] Session state when error occurred:")
+        trans_error = getattr(session, '_transaction', 'N/A')
+        log.error(f"  - _transaction: {trans_error}")
+        is_active_error = getattr(session, 'is_active', 'N/A')
+        log.error(f"  - is_active: {is_active_error}")
+        log.error("[QUERY] Full traceback:")
+
         import traceback
 
-        log.warning(traceback.format_exc())
+        log.error(traceback.format_exc())
         log.warning("─" * 80)
         raise
 
