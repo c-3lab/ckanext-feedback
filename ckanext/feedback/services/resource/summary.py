@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from ckan.model.resource import Resource
@@ -9,6 +10,8 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentSummary,
 )
 from ckanext.feedback.models.session import session
+
+log = logging.getLogger(__name__)
 
 
 # Get comments of the target package
@@ -59,12 +62,34 @@ def get_package_rating(package_id):
 
 # Get rating of the target resource
 def get_resource_rating(resource_id):
-    rating = (
-        session.query(ResourceCommentSummary.rating)
-        .filter(ResourceCommentSummary.resource_id == resource_id)
-        .scalar()
+    log.warning("─" * 80)
+    log.warning(f"[DEBUG] get_resource_rating called for resource_id: {resource_id}")
+    log.warning(f"[DEBUG] session type: {type(session)}")
+    log.warning(f"[DEBUG] session: {session}")
+    log.warning(f"[DEBUG] session.bind: {getattr(session, 'bind', 'N/A')}")
+    log.warning(
+        f"[DEBUG] session._transaction: {getattr(session, '_transaction', 'N/A')}"
     )
-    return rating or 0
+    log.warning(f"[DEBUG] session.is_active: {getattr(session, 'is_active', 'N/A')}")
+
+    try:
+        log.warning("[DEBUG] Attempting to query ResourceCommentSummary...")
+        rating = (
+            session.query(ResourceCommentSummary.rating)
+            .filter(ResourceCommentSummary.resource_id == resource_id)
+            .scalar()
+        )
+        log.warning(f"[DEBUG] Query successful! rating: {rating}")
+        log.warning("─" * 80)
+        return rating or 0
+    except Exception as e:
+        log.warning(f"[DEBUG] Query FAILED with error: {type(e).__name__}: {e}")
+        log.warning("[DEBUG] Exception traceback:")
+        import traceback
+
+        log.warning(traceback.format_exc())
+        log.warning("─" * 80)
+        raise
 
 
 # Create new resource summary

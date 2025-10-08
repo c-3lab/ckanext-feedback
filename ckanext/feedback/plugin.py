@@ -224,6 +224,25 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
         resource_id = resource_dict['id']
 
+        # デバッグ: セッションの状態を確認
+        from ckanext.feedback.models.session import session as feedback_session
+
+        log.warning("=" * 80)
+        log.warning(
+            f"[DEBUG] before_resource_show called for resource_id: {resource_id}"
+        )
+        log.warning(f"[DEBUG] feedback_session type: {type(feedback_session)}")
+        log.warning(f"[DEBUG] feedback_session: {feedback_session}")
+        dict_value = getattr(feedback_session, '__dict__', 'N/A')
+        log.warning(f"[DEBUG] feedback_session.__dict__: {dict_value}")
+        bind_value = getattr(feedback_session, 'bind', 'N/A')
+        log.warning(f"[DEBUG] feedback_session.bind: {bind_value}")
+        trans_value = getattr(feedback_session, '_transaction', 'N/A')
+        log.warning(f"[DEBUG] feedback_session._transaction: {trans_value}")
+        active_value = getattr(feedback_session, 'is_active', 'N/A')
+        log.warning(f"[DEBUG] feedback_session.is_active: {active_value}")
+        log.warning("=" * 80)
+
         # If datastore plugin is not loaded, set datastore_active to False
         # to prevent template errors when trying to build datastore.dump URLs
         if not plugins.plugin_loaded('datastore'):
