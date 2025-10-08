@@ -30,6 +30,7 @@ def add_error_handler(func):
 
         @blueprint.teardown_app_request
         def cleanup_session(e=None):
+            log.warning("[ERROR_HANDLER] よばれ")
             """
             リクエスト終了時のセッションクリーンアップ
 
@@ -64,6 +65,7 @@ def add_error_handler(func):
                 log.warning("[CLEANUP] Step 1: Executing rollback()...")
                 if session.is_active:
                     log.warning("  → Transaction is active, rolling back")
+                    log.warning("[ERROR_HANDLER] ろーるばっく")
                     session.rollback()
                     log.warning("  → rollback() completed successfully")
                 else:
