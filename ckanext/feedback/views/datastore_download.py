@@ -27,7 +27,9 @@ def intercept_datastore_download():
     "Intercept DataStore downloads and increment counters."
 
     # Early return for non-datastore paths (performance optimization)
+    log.warning("[DataStore] if文上")
     if not request.path.startswith('/datastore/dump/'):
+        log.warning("[DataStore] if文中")
         return None
 
     # Match DataStore download URLs: /datastore/dump/<resource_id>
