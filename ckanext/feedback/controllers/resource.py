@@ -149,6 +149,7 @@ class ResourceController:
         summary_service.create_resource_summary(resource_id)
 
         session.commit()
+        session.expunge_all()  # PR #302対応: Identity Mapをクリア
 
         category_map = {
             ResourceCommentCategory.REQUEST.name: _('Request'),
@@ -330,6 +331,7 @@ class ResourceController:
                 )
 
             session.commit()
+            session.expunge_all()  # PR #302対応: Identity Mapをクリア
 
         return toolkit.render(
             'resource/comment_check.html',
@@ -364,6 +366,7 @@ class ResourceController:
         comment_service.approve_resource_comment(resource_comment_id, current_user.id)
         summary_service.refresh_resource_summary(resource_id)
         session.commit()
+        session.expunge_all()  # PR #302対応: Identity Mapをクリア
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -379,6 +382,7 @@ class ResourceController:
 
         comment_service.create_reply(resource_comment_id, content, current_user.id)
         session.commit()
+        session.expunge_all()  # PR #302対応: Identity Mapをクリア
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -447,6 +451,7 @@ class ResourceController:
             likes_service.decrement_resource_like_count_monthly(resource_id)
 
         session.commit()
+        session.expunge_all()  # PR #302対応: Identity Mapをクリア
 
         resp = Response("OK", status=200, mimetype='text/plain')
         resp_with_like = set_like_status_cookie(resp, resource_id, like_status)
@@ -489,6 +494,7 @@ class ResourceController:
             )
 
         session.commit()
+        session.expunge_all()  # PR #302対応: Identity Mapをクリア
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -534,5 +540,6 @@ class ResourceController:
                 output_comment=None,
             )
             session.commit()
+            session.expunge_all()  # PR #302対応: Identity Mapをクリア
 
         return '', 204
