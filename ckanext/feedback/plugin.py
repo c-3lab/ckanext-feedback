@@ -221,44 +221,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # IResourceController
 
     def before_resource_show(self, resource_dict: dict[str, Any]) -> dict[str, Any]:
-        owner_org = model.Package.get(resource_dict['package_id']).owner_org
-        resource_id = resource_dict['id']
-
-        # デバッグ: リクエスト開始時のセッション状態を確認
         from ckanext.feedback.models.session import session as feedback_session
 
-        log.warning("=" * 80)
-        log.warning(f"[REQUEST] before_resource_show called for: {resource_id}")
-        log.warning("[REQUEST] Session state at REQUEST START:")
-        log.warning(f"  - session object: {feedback_session}")
-        log.warning(f"  - session type: {type(feedback_session)}")
-
-        # 重要な内部状態を確認
-        trans_value = getattr(feedback_session, '_transaction', 'N/A')
-        log.warning(f"  - _transaction: {trans_value}")
-
-        # _transaction の詳細確認
-        if feedback_session._transaction is not None:
-            trans = feedback_session._transaction
-            trans_session = getattr(trans, 'session', 'N/A')
-            log.warning(f"  - _transaction.session: {trans_session}")
-            trans_parent = getattr(trans, '_parent', 'N/A')
-            log.warning(f"  - _transaction._parent: {trans_parent}")
-            is_active_value = getattr(trans, 'is_active', 'N/A')
-            log.warning(f"  - _transaction.is_active: {is_active_value}")
-            log.warning("  - ✅ _transaction exists (HEALTHY)")
-        else:
-            log.warning("  - ❌ _transaction is None (BROKEN!)")
-
-        is_active = getattr(feedback_session, 'is_active', 'N/A')
-        log.warning(f"  - session.is_active: {is_active}")
-        bind_value = getattr(feedback_session, 'bind', 'N/A')
-        log.warning(f"  - bind: {bind_value}")
-        identity_map_size = len(getattr(feedback_session, 'identity_map', {}))
-        log.warning(f"  - identity_map size: {identity_map_size}")
-
-        log.warning("[REQUEST] Now calling get_resource_rating() with this session...")
-        log.warning("=" * 80)
+        owner_org = model.Package.get(resource_dict['package_id']).owner_org
+        resource_id = resource_dict['id']
 
         # If datastore plugin is not loaded, set datastore_active to False
         # to prevent template errors when trying to build datastore.dump URLs
@@ -303,6 +269,15 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             resource_dict[_('Number of Likes')] = (
                 resource_likes_service.get_resource_like_count(resource_id)
             )
+
+        # PR #302対応: feedbackのsessionをクリーンアップ
+        # Identity Mapをクリアして、次のリクエストで古いキャッシュを参照しないようにする
+        # teardown_app_requestではなく、ここで明示的にクリーンアップすることで、
+        # feedbackのクエリが実行されたときのみクリーンアップが行われる
+        try:
+            feedback_session.expunge_all()
+        except Exception as e:
+            log.error(f"Failed to cleanup feedback session: {e}")
 
         return resource_dict
 
