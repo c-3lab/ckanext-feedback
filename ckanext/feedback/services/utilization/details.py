@@ -44,6 +44,7 @@ def approve_utilization(utilization_id, approval_user_id):
     utilization.approval = True
     utilization.approved = datetime.now()
     utilization.approval_user_id = approval_user_id
+    session.commit()
 
 
 # Get a comment related to the Utilization record
@@ -113,6 +114,7 @@ def create_utilization_comment(
         attached_image_filename=attached_image_filename,
     )
     session.add(comment)
+    session.commit()
 
 
 # Approve selected utilization comment
@@ -121,6 +123,7 @@ def approve_utilization_comment(comment_id, approval_user_id):
     comment.approval = True
     comment.approved = datetime.now()
     comment.approval_user_id = approval_user_id
+    session.commit()
 
 
 # Get comment category enum names and values
@@ -146,6 +149,7 @@ def create_issue_resolution(utilization_id, description, creator_user_id):
         creator_user_id=creator_user_id,
     )
     session.add(issue_resolution)
+    session.commit()
 
 
 # Recalculate total approved utilization comments
@@ -161,6 +165,7 @@ def refresh_utilization_comments(utilization_id):
     utilization = session.query(Utilization).get(utilization_id)
     utilization.comment = count
     utilization.updated = datetime.now()
+    session.commit()
 
 
 # Get path for attached image
