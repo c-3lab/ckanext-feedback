@@ -62,19 +62,30 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Return a flask Blueprint object to be registered by the extension
     def get_blueprint(self):
         blueprints = []
-        if FeedbackConfig().download.is_enable():
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+        # Register download-related blueprints
+        if cfg.download.is_enable():
+            if plugins.plugin_loaded('datastore'):
+                from ckanext.feedback.views.datastore_download import (
+                    get_datastore_download_blueprint,
+                )
+
+                # Insert at the beginning for slight performance optimization
+                # since before_app_request hooks run in registration order
+                blueprints.insert(0, get_datastore_download_blueprint())
             blueprints.append(download.get_download_blueprint())
-        if FeedbackConfig().resource_comment.is_enable():
+
+        if cfg.resource_comment.is_enable():
             blueprints.append(resource.get_resource_comment_blueprint())
-        if FeedbackConfig().utilization.is_enable():
+        if cfg.utilization.is_enable():
             blueprints.append(utilization.get_utilization_blueprint())
-        if FeedbackConfig().like.is_enable():
+        if cfg.like.is_enable():
             blueprints.append(likes.get_likes_blueprint())
         blueprints.append(admin.get_admin_blueprint())
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
 
-    # Check production.ini settings
     def is_base_public_folder_bs3(self):
         base_templates_folder = config.get('ckan.base_public_folder', 'public')
         return base_templates_folder == 'public-bs3'
@@ -192,6 +203,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def before_resource_show(self, resource_dict: dict[str, Any]) -> dict[str, Any]:
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
         resource_id = resource_dict['id']
+
+        # If datastore plugin is not loaded, set datastore_active to False
+        # to prevent template errors when trying to build datastore.dump URLs
+        if not plugins.plugin_loaded('datastore'):
+            if resource_dict.get('datastore_active', False):
+                resource_dict['datastore_active'] = False
+
         if FeedbackConfig().download.is_enable(owner_org):
             if _('Downloads') != 'Downloads':
                 resource_dict.pop('Downloads', None)
