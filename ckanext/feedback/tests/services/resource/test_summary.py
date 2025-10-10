@@ -119,12 +119,11 @@ class TestResourceServices:
         assert not summary.updated
         category = get_resource_comment_categories().REQUEST
         create_resource_comment(resource['id'], category, 'test', 3)
-        session.commit()
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
         approve_resource_comment(comment_id, user_id)
         refresh_resource_summary(resource['id'])
-        session.commit()
+        session.expire_all()
 
         summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 1
@@ -132,11 +131,10 @@ class TestResourceServices:
         assert summary.updated
 
         create_resource_comment(resource['id'], category, 'test2', 5)
-        session.commit()
         comment_id = session.query(ResourceComment).all()[1].id
         approve_resource_comment(comment_id, user_id)
         refresh_resource_summary(resource['id'])
-        session.commit()
+        session.expire_all()
 
         summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 2
