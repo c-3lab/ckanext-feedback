@@ -135,3 +135,4 @@ def refresh_resource_summary(resource_id):
         },
     )
     session.execute(summary)
+    session.commit()
