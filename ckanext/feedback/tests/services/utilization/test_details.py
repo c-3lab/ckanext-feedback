@@ -93,6 +93,7 @@ def register_utilization(id, resource_id, title, url, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 def register_utilization_comment(
@@ -109,6 +110,7 @@ def register_utilization_comment(
         approval_user_id=approval_user_id,
     )
     session.add(utilization_comment)
+    session.commit()
 
 
 def convert_utilization_comment_to_tuple(utilization_comment):
@@ -630,6 +632,7 @@ class TestUtilizationDetailsService:
                 creator_user_id=user['id'],
             )
         )
+        session.commit()
 
         issue_resolution = get_issue_resolutions(utilization.id)[0]
 
