@@ -36,7 +36,7 @@ class TestLikes:
     @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_increment_resource_like_count(self, resource):
         increment_resource_like_count(resource['id'])
-        session.commit()
+        session.expire_all()
         resource_like = get_resource_like(resource['id'])
 
         assert resource_like.like_count == 1
@@ -44,7 +44,7 @@ class TestLikes:
         assert resource_like.updated == datetime(2024, 1, 1, 15, 0, 0)
 
         increment_resource_like_count(resource['id'])
-        session.commit()
+        session.expire_all()
         resource_like = get_resource_like(resource['id'])
 
         assert resource_like.like_count == 2
