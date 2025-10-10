@@ -31,9 +31,11 @@ def update_utilization(utilization_id, title, url, description):
     utilization.title = title
     utilization.url = url
     utilization.description = description
+    session.commit()
 
 
 # Delete utilization
 def delete_utilization(utilization_id):
     utilization = session.query(Utilization).get(utilization_id)
     session.delete(utilization)
+    session.commit()
