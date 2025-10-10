@@ -118,3 +118,4 @@ def increment_issue_resolution_summary(utilization_id):
         },
     )
     session.execute(issue_resolution_summary)
+    session.commit()
