@@ -29,6 +29,7 @@ def register_utilization(id, resource_id, title, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 def register_utilization_comment(
@@ -45,6 +46,7 @@ def register_utilization_comment(
         approval_user_id=approval_user_id,
     )
     session.add(utilization_comment)
+    session.commit()
 
 
 def get_registered_utilization(resource_id):
