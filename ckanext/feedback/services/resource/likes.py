@@ -29,6 +29,7 @@ def increment_resource_like_count(resource_id):
         },
     )
     session.execute(resource_like)
+    session.commit()
 
 
 def decrement_resource_like_count(resource_id):
