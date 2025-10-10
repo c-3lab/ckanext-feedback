@@ -43,6 +43,7 @@ def register_utilization(id, resource_id, title, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 def resister_issue_resolution_summary(id, utilization_id, created, updated):
@@ -54,6 +55,7 @@ def resister_issue_resolution_summary(id, utilization_id, created, updated):
         updated=updated,
     )
     session.add(issue_resolution_summary)
+    session.commit()
 
 
 @pytest.mark.db_test
@@ -139,7 +141,7 @@ class TestUtilizationDetailsService:
     @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_increment_issue_resolution_summary(self, utilization):
         increment_issue_resolution_summary(utilization.id)
-        session.commit()
+        session.expire_all()
         issue_resolution_summary = get_issue_resolution_summary(utilization.id)
 
         assert issue_resolution_summary.utilization_id == utilization.id
@@ -148,7 +150,7 @@ class TestUtilizationDetailsService:
         assert issue_resolution_summary.updated == datetime(2024, 1, 1, 15, 0, 0)
 
         increment_issue_resolution_summary(utilization.id)
-        session.commit()
+        session.expire_all()
         issue_resolution_summary = get_issue_resolution_summary(utilization.id)
 
         assert issue_resolution_summary.utilization_id == utilization.id
