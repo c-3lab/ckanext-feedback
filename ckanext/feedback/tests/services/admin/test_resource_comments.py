@@ -44,6 +44,7 @@ def register_resource_comment(
         approval_user_id=approval_user_id,
     )
     session.add(resource_comment)
+    session.commit()
 
 
 def get_resource_comment_summary(resource_id):
@@ -154,7 +155,7 @@ class TestResourceComments:
         summary.refresh_resource_summary(resource['id'])
         summary.refresh_resource_summary(another_resource['id'])
 
-        session.commit()
+        session.expire_all()
 
         comment_id_list = [resource_comment[0].id, another_resource_comment[0].id]
 
