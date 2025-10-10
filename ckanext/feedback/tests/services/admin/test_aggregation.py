@@ -48,8 +48,6 @@ class TestFeedbacks:
 
     @patch('ckanext.feedback.services.admin.aggregation.session.query')
     def test_create_resource_report_query(self, mock_query):
-        organization = factories.Organization()
-
         mock_session = MagicMock()
         mock_query.return_value = mock_session
 
@@ -93,7 +91,7 @@ class TestFeedbacks:
             issue_resolution_subquery,
             like_subquery,
             rating_subquery,
-            organization['name'],
+            None,
         )
 
         assert result_query is not None
