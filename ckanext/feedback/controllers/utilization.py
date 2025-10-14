@@ -54,6 +54,23 @@ class UtilizationController:
 
         page, limit, offset, pager_url = get_pagination_value('utilization.search')
 
+        # If id parameter is specified, check package access authorization
+        if id:
+            context = {'model': model, 'session': session, 'for_view': True}
+            # Try to get package_id from the id parameter
+            # It could be a resource_id or package_id
+            resource = comment_service.get_resource(id)
+            if resource:
+                # id is a resource_id
+                get_action('package_show')(
+                    context, {'id': resource.Resource.package_id}
+                )
+            else:
+                # id might be a package_id
+                package = model.Package.get(id)
+                if package:
+                    get_action('package_show')(context, {'id': package.id})
+
         # If the login user is not an admin, display only approved utilizations
         approval = True
         admin_owner_orgs = None
