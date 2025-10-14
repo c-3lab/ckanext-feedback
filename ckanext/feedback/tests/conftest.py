@@ -322,12 +322,15 @@ def mock_resource_object():
 @pytest.fixture(scope='function')
 def mock_utilization_object():
     def _create_mock_utilization(
-        resource_id='mock_resource_id', owner_org='mock_org_id'
+        resource_id='mock_resource_id',
+        owner_org='mock_org_id',
+        package_id='mock_package_id',
     ):
         mock_utilization = MagicMock()
         mock_utilization.id = 'mock_utilization_id'
         mock_utilization.resource_id = resource_id
         mock_utilization.owner_org = owner_org
+        mock_utilization.package_id = package_id
         mock_utilization.title = 'mock_title'
         mock_utilization.url = 'mock_url'
         mock_utilization.description = 'mock_description'
