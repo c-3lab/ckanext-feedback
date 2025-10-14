@@ -57,18 +57,26 @@ class UtilizationController:
         # If the login user is not an admin, display only approved utilizations
         approval = True
         admin_owner_orgs = None
+        user_orgs = None
         if not isinstance(current_user, model.User):
             # If the user is not login, display only approved utilizations
             approval = True
+            user_orgs = None
         elif current_user.sysadmin:
             # If the user is an admin, display all utilizations
             approval = None
+            user_orgs = 'all'
         elif is_organization_admin():
             # If the user is an organization admin, display all utilizations
             approval = None
             admin_owner_orgs = current_user.get_group_ids(
                 group_type='organization', capacity='admin'
             )
+            user_orgs = current_user.get_group_ids(group_type='organization')
+        else:
+            # Regular logged-in user
+            approval = True
+            user_orgs = current_user.get_group_ids(group_type='organization')
 
         disable_keyword = request.args.get('disable_keyword', '')
         utilizations, total_count = search_service.get_utilizations(
@@ -79,6 +87,7 @@ class UtilizationController:
             org_name,
             limit,
             offset,
+            user_orgs,
         )
 
         # If the organization name can be identified,
@@ -226,8 +235,15 @@ class UtilizationController:
         content='',
         attached_image_filename: str | None = None,
     ):
-        approval = True
         utilization = detail_service.get_utilization(utilization_id)
+        if not utilization:
+            toolkit.abort(404, _('Utilization not found'))
+
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(context, {'id': utilization.package_id})
+
+        approval = True
         if not isinstance(current_user, model.User):
             approval = True
         elif (
@@ -236,7 +252,7 @@ class UtilizationController:
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
 
-        page, limit, offset, _ = get_pagination_value('utilization.details')
+        page, limit, offset, pager_url = get_pagination_value('utilization.details')
 
         comments, total_count = detail_service.get_utilization_comments(
             utilization_id, approval, limit=limit, offset=offset
@@ -244,15 +260,8 @@ class UtilizationController:
 
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
-        g.pkg_dict = {
-            'organization': {
-                'name': (
-                    comment_service.get_resource(
-                        utilization.resource_id
-                    ).organization_name
-                )
-            }
-        }
+        resource = comment_service.get_resource(utilization.resource_id)
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
         if not category:
             selected_category = UtilizationCommentCategory.REQUEST.name
         else:
@@ -263,6 +272,7 @@ class UtilizationController:
             {
                 'utilization_id': utilization_id,
                 'utilization': utilization,
+                'pkg_dict': package,
                 'categories': categories,
                 'issue_resolutions': issue_resolutions,
                 'selected_category': selected_category,
@@ -282,9 +292,16 @@ class UtilizationController:
     @check_administrator
     def approve(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        resource_id = detail_service.get_utilization(utilization_id).resource_id
+        utilization = detail_service.get_utilization(utilization_id)
+        if not utilization:
+            toolkit.abort(404, _('Utilization not found'))
+
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        get_action('package_show')(context, {'id': utilization.package_id})
+
         detail_service.approve_utilization(utilization_id, current_user.id)
-        summary_service.refresh_utilization_summary(resource_id)
+        summary_service.refresh_utilization_summary(utilization.resource_id)
         session.commit()
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
@@ -659,6 +676,10 @@ class UtilizationController:
         if utilization is None:
             toolkit.abort(404)
 
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        get_action('package_show')(context, {'id': utilization.package_id})
+
         approval = True
         if not isinstance(current_user, model.User):
             # if the user is not logged in, display only approved comments
@@ -685,6 +706,19 @@ class UtilizationController:
     @staticmethod
     def _check_organization_admin_role(utilization_id):
         utilization = detail_service.get_utilization(utilization_id)
+        if not utilization:
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
+
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        get_action('package_show')(context, {'id': utilization.package_id})
+
         if (
             not has_organization_admin_role(utilization.owner_org)
             and not current_user.sysadmin
