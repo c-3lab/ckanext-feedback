@@ -33,7 +33,8 @@ def register_utilization(id, resource_id, title, description, approval, created)
 engine = model.repo.session.get_bind()
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
+@pytest.mark.usefixtures('with_request_context')
 class TestUtilizationDetailsService:
     @classmethod
     def setup_class(cls):
@@ -43,7 +44,9 @@ class TestUtilizationDetailsService:
         create_download_tables(engine)
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilizations(self):
+    def test_get_utilizations(self, organization, dataset, resource):
+        # Note: Using factories for complex multi-organization scenario
+        # as fixtures don't support creating multiple organizations easily
         unapproved_org = factories.Organization(
             is_organization=True,
             name='unapproved_org_name',
@@ -256,19 +259,13 @@ class TestUtilizationDetailsService:
         results, count = get_utilizations(user_orgs='all')
         assert count == 2
 
-    def test_get_organization_name_from_pkg_with_valid_package(self):
+    def test_get_organization_name_from_pkg_with_valid_package(
+        self, organization, dataset
+    ):
         """Test get_organization_name_from_pkg with a valid package ID"""
-        org = factories.Organization(
-            is_organization=True,
-            name='test_org_name',
-            type='organization',
-            title='Test Organization',
-        )
-        dataset = factories.Dataset(owner_org=org['id'])
-
-        # Test with valid package ID
+        # Test with valid package ID using fixtures
         result = get_organization_name_from_pkg(dataset['id'])
-        assert result == 'test_org_name'
+        assert result == organization['name']
 
     def test_get_organization_name_from_pkg_with_invalid_package(self):
         """Test get_organization_name_from_pkg with an invalid package ID"""
