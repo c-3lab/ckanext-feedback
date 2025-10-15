@@ -4,7 +4,6 @@ import pytest
 from ckan import model
 from ckan.common import _, config
 from ckan.plugins import toolkit
-from ckan.tests import factories
 from werkzeug.exceptions import NotFound
 
 from ckanext.feedback.controllers.utilization import UtilizationController
@@ -12,20 +11,6 @@ from ckanext.feedback.models.types import MoralCheckAction
 from ckanext.feedback.models.utilization import UtilizationCommentCategory
 
 engine = model.repo.session.get_bind()
-
-
-@pytest.fixture
-def sysadmin_env():
-    user = factories.SysadminWithToken()
-    env = {'Authorization': user['token']}
-    return env
-
-
-@pytest.fixture
-def user_env():
-    user = factories.UserWithToken()
-    env = {'Authorization': user['token']}
-    return env
 
 
 @pytest.mark.db_test
