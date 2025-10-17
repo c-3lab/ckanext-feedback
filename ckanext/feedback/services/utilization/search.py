@@ -10,7 +10,7 @@ from ckanext.feedback.models.utilization import Utilization
 
 # Get records from the Utilization table
 def get_utilizations(
-    id=None,
+    resource_or_package_id=None,
     keyword=None,
     approval=None,
     admin_owner_orgs=None,
@@ -59,8 +59,13 @@ def get_utilizations(
         )
     # user_orgs == 'all' (sysadmin): no filter, show all packages
 
-    if id:
-        query = query.filter(or_(Resource.id == id, Package.id == id))
+    if resource_or_package_id:
+        query = query.filter(
+            or_(
+                Resource.id == resource_or_package_id,
+                Package.id == resource_or_package_id,
+            )
+        )
     if keyword:
         query = query.filter(
             or_(
