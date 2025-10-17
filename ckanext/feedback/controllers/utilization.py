@@ -45,7 +45,7 @@ class UtilizationController:
     # utilization/search
     @staticmethod
     def search():
-        id = request.args.get('id', '')
+        resource_or_package_id = request.args.get('id', '')
         keyword = request.args.get('keyword', '')
         org_name = request.args.get('organization', '')
 
@@ -55,11 +55,11 @@ class UtilizationController:
         page, limit, offset, pager_url = get_pagination_value('utilization.search')
 
         # If id parameter is specified, check package access authorization
-        if id:
+        if resource_or_package_id:
             context = {'model': model, 'session': session, 'for_view': True}
             # Try to get package_id from the id parameter
             # It could be a resource_id or package_id
-            resource = comment_service.get_resource(id)
+            resource = comment_service.get_resource(resource_or_package_id)
             if resource:
                 # id is a resource_id
                 get_action('package_show')(
@@ -67,7 +67,7 @@ class UtilizationController:
                 )
             else:
                 # id might be a package_id
-                package = model.Package.get(id)
+                package = model.Package.get(resource_or_package_id)
                 if package:
                     get_action('package_show')(context, {'id': package.id})
 
@@ -97,7 +97,7 @@ class UtilizationController:
 
         disable_keyword = request.args.get('disable_keyword', '')
         utilizations, total_count = search_service.get_utilizations(
-            id,
+            resource_or_package_id,
             keyword,
             approval,
             admin_owner_orgs,
@@ -109,12 +109,14 @@ class UtilizationController:
 
         # If the organization name can be identified,
         # set it as a global variable accessible from templates.
-        if id and not org_name:
-            resource = comment_service.get_resource(id)
+        if resource_or_package_id and not org_name:
+            resource = comment_service.get_resource(resource_or_package_id)
             if resource:
                 org_name = resource.organization_name
             else:
-                org_name = search_service.get_organization_name_from_pkg(id)
+                org_name = search_service.get_organization_name_from_pkg(
+                    resource_or_package_id
+                )
         if org_name:
             g.pkg_dict = {
                 'organization': {
