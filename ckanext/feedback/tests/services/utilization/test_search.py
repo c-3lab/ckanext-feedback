@@ -137,13 +137,17 @@ class TestUtilizationDetailsService:
         )
 
         # with package_id (sysadmin access)
-        assert get_utilizations(id=unapproved_dataset['id'], user_orgs='all') == (
+        assert get_utilizations(
+            resource_or_package_id=unapproved_dataset['id'], user_orgs='all'
+        ) == (
             [unapproved_utilization],
             1,
         )
 
         # with resource_id (sysadmin access)
-        assert get_utilizations(id=approved_resource['id'], user_orgs='all') == (
+        assert get_utilizations(
+            resource_or_package_id=approved_resource['id'], user_orgs='all'
+        ) == (
             [approved_utilization],
             1,
         )
