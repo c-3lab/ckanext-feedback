@@ -585,6 +585,7 @@ class TestUtilizationController:
         'ckanext.feedback.controllers.utilization.current_user',
         new_callable=lambda: str,
     )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.get_action')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.request.args')
@@ -593,13 +594,15 @@ class TestUtilizationController:
         mock_args,
         mock_get_resource,
         mock_get_action,
+        mock_abort,
         mock_current_user_fixture,
         resource,
         mock_resource_object,
         app,
     ):
-        """Test that accessing a private package's utilization raises NotAuthorized"""
+        """Test that accessing a private package's utilization calls abort(404)"""
         from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
 
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='mock_organization_name'
@@ -612,15 +615,79 @@ class TestUtilizationController:
         )
         mock_get_action.return_value = mock_package_show
 
-        mock_args.get.side_effect = lambda x, default: {
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        mock_args.get.side_effect = lambda x, default=None: {
             'id': resource['id'],
             'keyword': '',
             'disable_keyword': '',
             'organization': '',
         }.get(x, default)
 
-        with pytest.raises(NotAuthorized):
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
             UtilizationController.search()
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.current_user',
+        new_callable=lambda: str,
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.model.Package.get')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.request.args')
+    def test_search_with_private_package_unauthorized_package_id(
+        self,
+        mock_args,
+        mock_get_resource,
+        mock_package_get,
+        mock_get_action,
+        mock_abort,
+        mock_current_user_fixture,
+        app,
+    ):
+        """Test accessing private package utilization calls abort(404)
+        when using package_id"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        # Mock get_resource to return None (so it tries package_id path)
+        mock_get_resource.return_value = None
+
+        # Mock Package.get to return a mock package
+        mock_package = MagicMock()
+        mock_package.id = 'test_package_id'
+        mock_package_get.return_value = mock_package
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        mock_args.get.side_effect = lambda x, default=None: {
+            'id': 'test_package_id',
+            'keyword': '',
+            'disable_keyword': '',
+            'organization': '',
+        }.get(x, default)
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController.search()
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
 
     @patch(
         'ckanext.feedback.controllers.utilization.current_user',
@@ -849,6 +916,44 @@ class TestUtilizationController:
             },
         )
         mock_render.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    def test_new_with_private_package_unauthorized(
+        self,
+        mock_get_resource,
+        mock_get_action,
+        mock_abort,
+        resource,
+        mock_resource_object,
+    ):
+        """Test accessing new utilization form for private package
+        calls abort(404)"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        mock_resource = mock_resource_object(
+            org_id='mock_org_id', org_name='mock_organization_name'
+        )
+        mock_get_resource.return_value = mock_resource
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController.new(resource_id=resource['id'])
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.registration_service')
@@ -1607,6 +1712,110 @@ class TestUtilizationController:
         )
         mock_render.assert_called_once()
 
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_details_with_private_package_unauthorized(
+        self,
+        mock_detail_service,
+        mock_get_action,
+        mock_abort,
+    ):
+        """Test that accessing details for private package calls abort(404)"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        utilization_id = 'utilization_id'
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController.details(utilization_id)
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
+
+    @patch('ckanext.feedback.controllers.utilization.request.method', 'POST')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.validate_service')
+    def test_check_comment_with_private_package_unauthorized(
+        self,
+        mock_validate_service,
+        mock_detail_service,
+        mock_get_resource,
+        mock_get_action,
+        mock_abort,
+        mock_is_recaptcha_verified,
+        mock_files_get,
+        mock_form,
+    ):
+        """Test that check_comment for private package calls abort(404)"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        utilization_id = 'utilization_id'
+        mock_utilization = MagicMock()
+        mock_utilization.resource_id = 'resource_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        mock_detail_service.get_utilization_comment_categories.return_value = []
+
+        # Mock form data
+        mock_form.get.side_effect = lambda x, default=None: {
+            'category': 'COMMENT',
+            'comment-content': 'test content',
+            'attached_image_filename': None,
+        }.get(x, default)
+
+        # Mock no attached image
+        mock_files_get.return_value = None
+
+        # Mock recaptcha verified
+        mock_is_recaptcha_verified.return_value = True
+
+        # Mock validate_comment to return None (no error)
+        mock_validate_service.validate_comment.return_value = None
+
+        # Mock resource
+        mock_resource = MagicMock()
+        mock_resource.Resource = MagicMock()
+        mock_resource.Resource.package_id = 'package_id'
+        mock_get_resource.return_value = mock_resource
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController.check_comment(utilization_id)
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
+
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
@@ -1646,6 +1855,50 @@ class TestUtilizationController:
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'UtilizationController._check_organization_admin_role'
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_approve_with_private_package_unauthorized(
+        self,
+        mock_detail_service,
+        mock_get_action,
+        mock_abort,
+        mock_check_org_admin,
+        admin_context,
+    ):
+        """Test that approving utilization for private package calls abort(404)"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        utilization_id = 'utilization_id'
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        # Mock _check_organization_admin_role to pass (so we reach line 362-363)
+        mock_check_org_admin.return_value = None
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController.approve(utilization_id)
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.request.files.get')
@@ -2585,6 +2838,42 @@ class TestUtilizationController:
             },
         )
         mock_render.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_edit_with_private_package_unauthorized(
+        self,
+        mock_detail_service,
+        mock_get_action,
+        mock_abort,
+        admin_context,
+    ):
+        """Test that editing utilization for private package calls abort(404)"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        utilization_id = 'utilization_id'
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController.edit(utilization_id)
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
@@ -3885,3 +4174,81 @@ class TestUtilizationCreatePreviousLog:
 
         mock_create_utilization_comment_moral_check_log.assert_not_called()
         assert return_value == ('', 204)
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_attached_image_with_private_package_unauthorized(
+        self,
+        mock_detail_service,
+        mock_get_action,
+        mock_abort,
+    ):
+        """Test that accessing attached image for private package calls abort(404)"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        utilization_id = 'utilization_id'
+        comment_id = 'comment_id'
+        attached_image_filename = 'test.jpg'
+
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController.attached_image(
+                utilization_id, comment_id, attached_image_filename
+            )
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_check_organization_admin_role_with_private_package_unauthorized(
+        self,
+        mock_detail_service,
+        mock_get_action,
+        mock_abort,
+        admin_context,
+    ):
+        """Test _check_organization_admin_role for private package
+        calls abort(404)"""
+        from ckan.logic import NotAuthorized
+        from werkzeug.exceptions import NotFound
+
+        utilization_id = 'utilization_id'
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        # Mock package_show to raise NotAuthorized for private package
+        mock_package_show = MagicMock(
+            side_effect=NotAuthorized('User not authorized to view package')
+        )
+        mock_get_action.return_value = mock_package_show
+
+        # Mock abort to raise NotFound exception to stop execution
+        mock_abort.side_effect = NotFound('Not Found')
+
+        # Should raise NotFound due to abort(404)
+        with pytest.raises(NotFound):
+            UtilizationController._check_organization_admin_role(utilization_id)
+
+        # Verify that abort(404) was called
+        mock_abort.assert_called()
+        # The method calls abort twice (first for package check if NotAuthorized)
+        assert any(call[0][0] == 404 for call in mock_abort.call_args_list)
