@@ -5,7 +5,7 @@ import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.lib.uploader import get_uploader
-from ckan.logic import get_action
+from ckan.logic import NotAuthorized, get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 from flask import send_file
@@ -62,14 +62,34 @@ class UtilizationController:
             resource = comment_service.get_resource(resource_or_package_id)
             if resource:
                 # id is a resource_id
-                get_action('package_show')(
-                    context, {'id': resource.Resource.package_id}
-                )
+                try:
+                    get_action('package_show')(
+                        context, {'id': resource.Resource.package_id}
+                    )
+                except NotAuthorized:
+                    toolkit.abort(
+                        404,
+                        _(
+                            'The requested URL was not found on the server. If you'
+                            'entered the URL manually'
+                            'please check your spelling and try again.'
+                        ),
+                    )
             else:
                 # id might be a package_id
                 package = model.Package.get(resource_or_package_id)
                 if package:
-                    get_action('package_show')(context, {'id': package.id})
+                    try:
+                        get_action('package_show')(context, {'id': package.id})
+                    except NotAuthorized:
+                        toolkit.abort(
+                            404,
+                            _(
+                                'The requested URL was not found on the server. If you'
+                                'entered the URL manually'
+                                'please check your spelling and try again.'
+                            ),
+                        )
 
         # If the login user is not an admin, display only approved utilizations
         approval = True
@@ -149,9 +169,18 @@ class UtilizationController:
         return_to_resource = request.args.get('return_to_resource', False)
         resource = comment_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package.id}
-        )
+        try:
+            package = get_action('package_show')(
+                context, {'id': resource.Resource.package.id}
+            )
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return toolkit.render(
@@ -260,7 +289,18 @@ class UtilizationController:
 
         # Use CKAN's authorization system to check package access
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(context, {'id': utilization.package_id})
+        try:
+            package = get_action('package_show')(
+                context, {'id': utilization.package_id}
+            )
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -317,7 +357,16 @@ class UtilizationController:
 
         # Use CKAN's authorization system to check package access
         context = {'model': model, 'session': session, 'for_view': True}
-        get_action('package_show')(context, {'id': utilization.package_id})
+        try:
+            get_action('package_show')(context, {'id': utilization.package_id})
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
 
         detail_service.approve_utilization(utilization_id, current_user.id)
         summary_service.refresh_utilization_summary(utilization.resource_id)
@@ -505,9 +554,18 @@ class UtilizationController:
         utilization = detail_service.get_utilization(utilization_id)
         resource = comment_service.get_resource(utilization.resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
+        try:
+            package = get_action('package_show')(
+                context, {'id': resource.Resource.package_id}
+            )
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if FeedbackConfig().moral_keeper_ai.is_enable(
@@ -697,7 +755,16 @@ class UtilizationController:
 
         # Use CKAN's authorization system to check package access
         context = {'model': model, 'session': session, 'for_view': True}
-        get_action('package_show')(context, {'id': utilization.package_id})
+        try:
+            get_action('package_show')(context, {'id': utilization.package_id})
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -736,7 +803,16 @@ class UtilizationController:
 
         # Use CKAN's authorization system to check package access
         context = {'model': model, 'session': session, 'for_view': True}
-        get_action('package_show')(context, {'id': utilization.package_id})
+        try:
+            get_action('package_show')(context, {'id': utilization.package_id})
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
 
         if (
             not has_organization_admin_role(utilization.owner_org)
