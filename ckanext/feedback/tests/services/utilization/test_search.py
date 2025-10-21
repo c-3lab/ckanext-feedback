@@ -45,8 +45,6 @@ class TestUtilizationDetailsService:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilizations(self, organization, dataset, resource):
-        # Note: Using factories for complex multi-organization scenario
-        # as fixtures don't support creating multiple organizations easily
         unapproved_org = factories.Organization(
             is_organization=True,
             name='unapproved_org_name',
@@ -138,7 +136,7 @@ class TestUtilizationDetailsService:
 
         # with package_id (sysadmin access)
         assert get_utilizations(
-            resource_or_package_id=unapproved_dataset['id'], user_orgs='all'
+            package_id=unapproved_dataset['id'], user_orgs='all'
         ) == (
             [unapproved_utilization],
             1,
@@ -146,7 +144,7 @@ class TestUtilizationDetailsService:
 
         # with resource_id (sysadmin access)
         assert get_utilizations(
-            resource_or_package_id=approved_resource['id'], user_orgs='all'
+            resource_id=approved_resource['id'], user_orgs='all'
         ) == (
             [approved_utilization],
             1,
