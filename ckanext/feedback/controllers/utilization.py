@@ -39,13 +39,22 @@ from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
 log = logging.getLogger(__name__)
 
+NOT_FOUND_ERROR_MESSAGE = _(
+    'The requested URL was not found on the server. '
+    'If you entered the URL manually '
+    'please check your spelling and try again.'
+)
+
 
 class UtilizationController:
     # Render HTML pages
     # utilization/search
     @staticmethod
     def search():
-        resource_or_package_id = request.args.get('id', '')
+        # Accept explicit resource_id or package_id parameters
+        resource_id = request.args.get('resource_id', '')
+        package_id = request.args.get('package_id', '')
+
         keyword = request.args.get('keyword', '')
         org_name = request.args.get('organization', '')
 
@@ -54,42 +63,35 @@ class UtilizationController:
 
         page, limit, offset, pager_url = get_pagination_value('utilization.search')
 
-        # If id parameter is specified, check package access authorization
-        if resource_or_package_id:
-            context = {'model': model, 'session': session, 'for_view': True}
-            # Try to get package_id from the id parameter
-            # It could be a resource_id or package_id
-            resource = comment_service.get_resource(resource_or_package_id)
-            if resource:
-                # id is a resource_id
+        resource_for_org = None
+
+        # Check package access authorization for resource_id
+        if resource_id:
+            resource_for_org = comment_service.get_resource(resource_id)
+            if resource_for_org:
+                context = {'model': model, 'session': session, 'for_view': True}
                 try:
                     get_action('package_show')(
-                        context, {'id': resource.Resource.package_id}
+                        context, {'id': resource_for_org.Resource.package_id}
                     )
                 except NotAuthorized:
                     toolkit.abort(
                         404,
-                        _(
-                            'The requested URL was not found on the server. If you'
-                            'entered the URL manually'
-                            'please check your spelling and try again.'
-                        ),
+                        NOT_FOUND_ERROR_MESSAGE,
                     )
-            else:
-                # id might be a package_id
-                package = model.Package.get(resource_or_package_id)
-                if package:
-                    try:
-                        get_action('package_show')(context, {'id': package.id})
-                    except NotAuthorized:
-                        toolkit.abort(
-                            404,
-                            _(
-                                'The requested URL was not found on the server. If you'
-                                'entered the URL manually'
-                                'please check your spelling and try again.'
-                            ),
-                        )
+
+        # Check package access authorization for package_id
+        if package_id:
+            package = model.Package.get(package_id)
+            if package:
+                context = {'model': model, 'session': session, 'for_view': True}
+                try:
+                    get_action('package_show')(context, {'id': package_id})
+                except NotAuthorized:
+                    toolkit.abort(
+                        404,
+                        NOT_FOUND_ERROR_MESSAGE,
+                    )
 
         # If the login user is not an admin, display only approved utilizations
         approval = True
@@ -117,26 +119,25 @@ class UtilizationController:
 
         disable_keyword = request.args.get('disable_keyword', '')
         utilizations, total_count = search_service.get_utilizations(
-            resource_or_package_id,
-            keyword,
-            approval,
-            admin_owner_orgs,
-            org_name,
-            limit,
-            offset,
-            user_orgs,
+            resource_id=resource_id,
+            package_id=package_id,
+            keyword=keyword,
+            approval=approval,
+            admin_owner_orgs=admin_owner_orgs,
+            org_name=org_name,
+            limit=limit,
+            offset=offset,
+            user_orgs=user_orgs,
         )
 
         # If the organization name can be identified,
         # set it as a global variable accessible from templates.
-        if resource_or_package_id and not org_name:
-            resource = comment_service.get_resource(resource_or_package_id)
-            if resource:
-                org_name = resource.organization_name
-            else:
-                org_name = search_service.get_organization_name_from_pkg(
-                    resource_or_package_id
-                )
+        if (resource_id or package_id) and not org_name:
+            if resource_id and resource_for_org:
+                # Already fetched, no need to query again
+                org_name = resource_for_org.organization_name
+            elif package_id:
+                org_name = search_service.get_organization_name_from_pkg(package_id)
         if org_name:
             g.pkg_dict = {
                 'organization': {
@@ -174,13 +175,7 @@ class UtilizationController:
                 context, {'id': resource.Resource.package.id}
             )
         except NotAuthorized:
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return toolkit.render(
@@ -294,13 +289,7 @@ class UtilizationController:
                 context, {'id': utilization.package_id}
             )
         except NotAuthorized:
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -362,10 +351,7 @@ class UtilizationController:
         except NotAuthorized:
             toolkit.abort(
                 404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
+                NOT_FOUND_ERROR_MESSAGE,
             )
 
         detail_service.approve_utilization(utilization_id, current_user.id)
@@ -561,10 +547,7 @@ class UtilizationController:
         except NotAuthorized:
             toolkit.abort(
                 404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
+                NOT_FOUND_ERROR_MESSAGE,
             )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
@@ -758,13 +741,7 @@ class UtilizationController:
         try:
             get_action('package_show')(context, {'id': utilization.package_id})
         except NotAuthorized:
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -793,38 +770,20 @@ class UtilizationController:
     def _check_organization_admin_role(utilization_id):
         utilization = detail_service.get_utilization(utilization_id)
         if not utilization:
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
         # Use CKAN's authorization system to check package access
         context = {'model': model, 'session': session, 'for_view': True}
         try:
             get_action('package_show')(context, {'id': utilization.package_id})
         except NotAuthorized:
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
         if (
             not has_organization_admin_role(utilization.owner_org)
             and not current_user.sysadmin
         ):
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
     @staticmethod
     def _upload_image(image: FileStorage) -> str:
