@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from ckan import model
@@ -67,7 +67,8 @@ class TestUtilizationController:
         ]
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': resource['id'],
+            'resource_id': resource['id'],
+            'package_id': '',
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
@@ -78,15 +79,25 @@ class TestUtilizationController:
 
         UtilizationController.search()
 
+        # Verify that get_resource was called with resource_id
+        mock_get_resource.assert_called_once_with(resource['id'])
+
+        # Verify that package_show was called with the package_id from resource
+        mock_package_show.assert_called_once_with(
+            ANY,  # context dict (implementation detail)
+            {'id': mock_resource.Resource.package_id},
+        )
+
         mock_get_utilizations.assert_called_once_with(
-            resource['id'],
-            keyword,
-            None,
-            None,
-            '',
-            limit,
-            offset,
-            'all',
+            resource_id=resource['id'],
+            package_id='',
+            keyword=keyword,
+            approval=None,
+            admin_owner_orgs=None,
+            org_name='',
+            limit=limit,
+            offset=offset,
+            user_orgs='all',
         )
 
         mock_page.assert_called_once_with(
@@ -172,7 +183,8 @@ class TestUtilizationController:
         ]
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': dataset['id'],
+            'resource_id': '',
+            'package_id': dataset['id'],
             'keyword': keyword,
             'disable_keyword': disable_keyword,
             'organization': organization_model.name,
@@ -185,14 +197,15 @@ class TestUtilizationController:
         UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            dataset['id'],
-            keyword,
-            None,
-            [organization['id']],
-            'test organization',
-            limit,
-            offset,
-            [organization['id']],
+            resource_id='',
+            package_id=dataset['id'],
+            keyword=keyword,
+            approval=None,
+            admin_owner_orgs=[organization['id']],
+            org_name='test organization',
+            limit=limit,
+            offset=offset,
+            user_orgs=[organization['id']],
         )
 
         mock_page.assert_called_once_with(
@@ -266,7 +279,8 @@ class TestUtilizationController:
         ]
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': dataset['id'],
+            'resource_id': '',
+            'package_id': dataset['id'],
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
@@ -278,14 +292,15 @@ class TestUtilizationController:
         UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            dataset['id'],
-            keyword,
-            True,
-            None,
-            '',
-            limit,
-            offset,
-            [],
+            resource_id='',
+            package_id=dataset['id'],
+            keyword=keyword,
+            approval=True,
+            admin_owner_orgs=None,
+            org_name='',
+            limit=limit,
+            offset=offset,
+            user_orgs=[],
         )
 
         mock_page.assert_called_once_with(
@@ -358,7 +373,8 @@ class TestUtilizationController:
         ]
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': resource['id'],
+            'resource_id': resource['id'],
+            'package_id': '',
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
@@ -369,15 +385,25 @@ class TestUtilizationController:
 
         UtilizationController.search()
 
+        # Verify that get_resource was called with resource_id
+        mock_get_resource.assert_called_once_with(resource['id'])
+
+        # Verify that package_show was called with the package_id from resource
+        mock_package_show.assert_called_once_with(
+            ANY,  # context dict (implementation detail)
+            {'id': mock_resource.Resource.package_id},
+        )
+
         mock_get_utilizations.assert_called_once_with(
-            resource['id'],
-            keyword,
-            True,
-            None,
-            '',
-            limit,
-            offset,
-            None,
+            resource_id=resource['id'],
+            package_id='',
+            keyword=keyword,
+            approval=True,
+            admin_owner_orgs=None,
+            org_name='',
+            limit=limit,
+            offset=offset,
+            user_orgs=None,
         )
 
         mock_page.assert_called_once_with(
@@ -455,7 +481,8 @@ class TestUtilizationController:
         ]
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': mock_dataset.id,
+            'resource_id': '',
+            'package_id': mock_dataset.id,
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
@@ -467,14 +494,15 @@ class TestUtilizationController:
         UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            mock_dataset.id,
-            keyword,
-            None,
-            None,
-            '',
-            limit,
-            offset,
-            'all',
+            resource_id='',
+            package_id=mock_dataset.id,
+            keyword=keyword,
+            approval=None,
+            admin_owner_orgs=None,
+            org_name='',
+            limit=limit,
+            offset=offset,
+            user_orgs='all',
         )
 
         mock_page.assert_called_once_with(
@@ -540,7 +568,8 @@ class TestUtilizationController:
         ]
 
         mock_args.get.side_effect = lambda x, default: {
-            'id': 'test_id',
+            'resource_id': '',
+            'package_id': '',
             'keyword': keyword,
             'disable_keyword': disable_keyword,
         }.get(x, default)
@@ -552,14 +581,15 @@ class TestUtilizationController:
         UtilizationController.search()
 
         mock_get_utilizations.assert_called_once_with(
-            'test_id',
-            keyword,
-            None,
-            None,
-            '',
-            limit,
-            offset,
-            'all',
+            resource_id='',
+            package_id='',
+            keyword=keyword,
+            approval=None,
+            admin_owner_orgs=None,
+            org_name='',
+            limit=limit,
+            offset=offset,
+            user_orgs='all',
         )
 
         mock_page.assert_called_once_with(
@@ -619,7 +649,8 @@ class TestUtilizationController:
         mock_abort.side_effect = NotFound('Not Found')
 
         mock_args.get.side_effect = lambda x, default=None: {
-            'id': resource['id'],
+            'resource_id': resource['id'],
+            'package_id': '',
             'keyword': '',
             'disable_keyword': '',
             'organization': '',
@@ -675,7 +706,8 @@ class TestUtilizationController:
         mock_abort.side_effect = NotFound('Not Found')
 
         mock_args.get.side_effect = lambda x, default=None: {
-            'id': 'test_package_id',
+            'resource_id': '',
+            'package_id': 'test_package_id',
             'keyword': '',
             'disable_keyword': '',
             'organization': '',
@@ -707,7 +739,6 @@ class TestUtilizationController:
         mock_page,
         mock_current_user_fixture,
     ):
-        """Test search with empty id parameter to cover line 75"""
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
         page = 1
@@ -717,7 +748,8 @@ class TestUtilizationController:
 
         mock_pagination.return_value = [page, limit, offset, pager_url]
         mock_args.get.side_effect = lambda x, default: {
-            'id': '',  # Empty id to skip the if id: block
+            'resource_id': '',
+            'package_id': '',
             'keyword': keyword,
             'disable_keyword': disable_keyword,
             'organization': '',
@@ -729,6 +761,149 @@ class TestUtilizationController:
 
         mock_render.assert_called_once()
 
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    def test_search_with_resource_id_not_found(
+        self,
+        mock_get_resource,
+        mock_get_action,
+        mock_args,
+        mock_pagination,
+        mock_get_utilizations,
+        mock_render,
+        mock_page,
+        admin_context,
+    ):
+        # Test case: resource_id is specified but get_resource returns None
+        mock_get_resource.return_value = None
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [page, limit, offset, pager_url]
+        mock_args.args.get.side_effect = lambda x, default: {
+            'resource_id': 'non_existent_resource_id',
+            'package_id': '',
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+            'organization': '',
+            'waiting': 'on',
+            'approval': 'on',
+        }.get(x, default)
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+        mock_page.return_value = 'mock_page'
+
+        UtilizationController.search()
+
+        # Should not call package_show since resource_for_org is None
+        mock_get_action.assert_not_called()
+        mock_render.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    @patch('ckanext.feedback.controllers.utilization.model.Package.get')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    def test_search_with_package_id_not_found(
+        self,
+        mock_get_resource,
+        mock_get_action,
+        mock_package_get,
+        mock_args,
+        mock_pagination,
+        mock_get_utilizations,
+        mock_render,
+        mock_page,
+        admin_context,
+    ):
+        # Test case: package_id is specified but Package.get returns None
+        mock_get_resource.return_value = None
+        mock_package_get.return_value = None
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [page, limit, offset, pager_url]
+        mock_args.args.get.side_effect = lambda x, default: {
+            'resource_id': '',
+            'package_id': 'non_existent_package_id',
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+            'organization': '',
+            'waiting': 'on',
+            'approval': 'on',
+        }.get(x, default)
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+        mock_page.return_value = 'mock_page'
+
+        UtilizationController.search()
+
+        # Should not call package_show since package is None
+        mock_get_action.assert_not_called()
+        mock_render.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    def test_search_with_resource_id_not_found_org_name_branch(
+        self,
+        mock_get_resource,
+        mock_get_action,
+        mock_args,
+        mock_pagination,
+        mock_get_utilizations,
+        mock_render,
+        mock_page,
+        admin_context,
+    ):
+        # Test case: resource_id is specified but get_resource returns None
+        mock_get_resource.return_value = None
+
+        keyword = 'keyword'
+        disable_keyword = 'disable keyword'
+        page = 1
+        limit = 20
+        offset = 0
+        pager_url = 'utilization.search'
+
+        mock_pagination.return_value = [page, limit, offset, pager_url]
+        mock_args.args.get.side_effect = lambda x, default: {
+            'resource_id': 'non_existent_resource_id',
+            'package_id': '',
+            'keyword': keyword,
+            'disable_keyword': disable_keyword,
+            'organization': '',  # Empty org_name to trigger the org_name logic
+            'waiting': 'on',
+            'approval': 'on',
+        }.get(x, default)
+        mock_get_utilizations.return_value = ['mock_utilizations', 'mock_total_count']
+        mock_page.return_value = 'mock_page'
+
+        UtilizationController.search()
+
+        # Should render successfully even when resource_for_org is None
+        mock_render.assert_called_once()
+
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_details_with_utilization_not_found(
@@ -736,7 +911,6 @@ class TestUtilizationController:
         mock_detail_service,
         mock_abort,
     ):
-        """Test details method when utilization is not found to cover line 257"""
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'non_existent_id'
@@ -767,7 +941,6 @@ class TestUtilizationController:
         sysadmin,
         admin_context,
     ):
-        """Test approve method when utilization is not found to cover line 314"""
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'non_existent_id'
