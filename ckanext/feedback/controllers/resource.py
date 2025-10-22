@@ -143,12 +143,22 @@ class ResourceController:
         if not rating:
             rating = None
 
-        comment_service.create_resource_comment(
-            resource_id, category, content, rating, attached_image_filename
-        )
-        summary_service.create_resource_summary(resource_id)
-
-        session.commit()
+        try:
+            comment_service.create_resource_comment(
+                resource_id, category, content, rating, attached_image_filename
+            )
+            summary_service.create_resource_summary(resource_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning(f'Transaction rolled back for resource {resource_id}')
+            log.exception(f'Failed to create comment for resource {resource_id}: {e}')
+            helpers.flash_error(
+                _('Failed to create comment. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
 
         category_map = {
             ResourceCommentCategory.REQUEST.name: _('Request'),
@@ -329,7 +339,21 @@ class ResourceController:
                     output_comment=content,
                 )
 
-            session.commit()
+            try:
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                log.warning(f'Transaction rolled back for resource {resource_id}')
+                log.exception(
+                    f'Failed to create moral check log for resource {resource_id}: {e}'
+                )
+                helpers.flash_error(
+                    _('Failed to create moral check log. Please try again.'),
+                    allow_html=True,
+                )
+                return toolkit.redirect_to(
+                    'resource_comment.comment', resource_id=resource_id
+                )
 
         return toolkit.render(
             'resource/comment_check.html',
@@ -361,9 +385,22 @@ class ResourceController:
         if not resource_comment_id:
             toolkit.abort(400)
 
-        comment_service.approve_resource_comment(resource_comment_id, current_user.id)
-        summary_service.refresh_resource_summary(resource_id)
-        session.commit()
+        try:
+            comment_service.approve_resource_comment(
+                resource_comment_id, current_user.id
+            )
+            summary_service.refresh_resource_summary(resource_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning(f'Transaction rolled back for resource {resource_id}')
+            log.exception(f'Failed to approve comment for resource {resource_id}: {e}')
+            helpers.flash_error(
+                _('Failed to approve comment. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -377,8 +414,19 @@ class ResourceController:
         if not (resource_comment_id and content):
             toolkit.abort(400)
 
-        comment_service.create_reply(resource_comment_id, content, current_user.id)
-        session.commit()
+        try:
+            comment_service.create_reply(resource_comment_id, content, current_user.id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning(f'Transaction rolled back for resource {resource_id}')
+            log.exception(f'Failed to create reply for resource {resource_id}: {e}')
+            helpers.flash_error(
+                _('Failed to create reply. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -439,14 +487,19 @@ class ResourceController:
         data = request.get_json()
         like_status = data.get('likeStatus')
 
-        if like_status:
-            likes_service.increment_resource_like_count(resource_id)
-            likes_service.increment_resource_like_count_monthly(resource_id)
-        else:
-            likes_service.decrement_resource_like_count(resource_id)
-            likes_service.decrement_resource_like_count_monthly(resource_id)
-
-        session.commit()
+        try:
+            if like_status:
+                likes_service.increment_resource_like_count(resource_id)
+                likes_service.increment_resource_like_count_monthly(resource_id)
+            else:
+                likes_service.decrement_resource_like_count(resource_id)
+                likes_service.decrement_resource_like_count_monthly(resource_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning(f'Transaction rolled back for resource {resource_id}')
+            log.exception(f'Failed to toggle like for resource {resource_id}: {e}')
+            return Response("Error", status=500, mimetype='text/plain')
 
         resp = Response("OK", status=200, mimetype='text/plain')
         resp_with_like = set_like_status_cookie(resp, resource_id, like_status)
@@ -473,22 +526,32 @@ class ResourceController:
             comment_id
         )
 
-        if resource_comment_reactions:
-            comment_service.update_resource_comment_reactions(
-                resource_comment_reactions,
-                response_status_map[response_status],
-                admin_liked,
-                current_user.id,
+        try:
+            if resource_comment_reactions:
+                comment_service.update_resource_comment_reactions(
+                    resource_comment_reactions,
+                    response_status_map[response_status],
+                    admin_liked,
+                    current_user.id,
+                )
+            else:
+                comment_service.create_resource_comment_reactions(
+                    comment_id,
+                    response_status_map[response_status],
+                    admin_liked,
+                    current_user.id,
+                )
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning(f'Transaction rolled back for resource {resource_id}')
+            log.exception(f'Failed to update reactions for resource {resource_id}: {e}')
+            helpers.flash_error(
+                _('Failed to update reactions. Please try again.'), allow_html=True
             )
-        else:
-            comment_service.create_resource_comment_reactions(
-                comment_id,
-                response_status_map[response_status],
-                admin_liked,
-                current_user.id,
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
             )
-
-        session.commit()
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -533,6 +596,14 @@ class ResourceController:
                 suggested_comment=suggested_comment,
                 output_comment=None,
             )
-            session.commit()
+            try:
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                log.warning(f'Transaction rolled back for resource {resource_id}')
+                log.exception(
+                    f'Failed to create previous log for resource {resource_id}: {e}'
+                )
+                # Return 204 even on error to avoid disrupting UI
 
         return '', 204
