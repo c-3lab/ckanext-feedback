@@ -2142,3 +2142,301 @@ class TestResourceCreatePreviousLog:
 
         mock_create_resource_comment_moral_check_log.assert_not_called()
         assert return_value == ('', 204)
+
+    # Error handling tests
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.resource.summary_service.create_resource_summary'
+    )
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.create_resource_comment'
+    )
+    @patch('ckanext.feedback.controllers.resource.validate_service.validate_comment')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    def test_create_comment_with_error(
+        self,
+        mock_form,
+        mock_recaptcha,
+        mock_validate,
+        mock_create,
+        mock_summary,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        resource,
+    ):
+        """Test create_comment() error handling"""
+        mock_form.get.side_effect = lambda k, d='': {
+            'category': 'REQUEST',
+            'comment-content': 'Test',
+            'rating': '5',
+            'attached_image_filename': None,
+        }.get(k, d)
+        mock_recaptcha.return_value = True
+        mock_validate.return_value = None
+        mock_commit.side_effect = Exception('Database error')
+
+        with patch(
+            'ckanext.feedback.controllers.resource.request.files.get', return_value=None
+        ):
+            ResourceController.create_comment(resource['id'])
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.check_ai_comment')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service'
+        '.create_resource_comment_moral_check_log'
+    )
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service'
+        '.get_resource_comment_categories'
+    )
+    @patch('ckanext.feedback.controllers.resource.validate_service.validate_comment')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.request.method', 'POST')
+    def test_check_comment_with_error(
+        self,
+        mock_form,
+        mock_recaptcha,
+        mock_validate,
+        mock_categories,
+        mock_get_resource,
+        mock_get_action,
+        mock_config,
+        mock_create_log,
+        mock_check_ai,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        resource,
+    ):
+        """Test check_comment() error handling"""
+        mock_form.get.side_effect = lambda k, d='': {
+            'category': 'REQUEST',
+            'comment-content': 'Test',
+            'attached_image_filename': None,
+            'comment-suggested': 'False',
+        }.get(k, d)
+        mock_recaptcha.return_value = True
+        mock_validate.return_value = None
+        mock_categories.return_value = []
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'test-package'
+        mock_resource.Resource.package.owner_org = 'test-org'
+        mock_get_resource.return_value = mock_resource
+        mock_get_action.return_value = MagicMock(return_value={'id': 'test-package'})
+
+        mock_feedback_config = MagicMock()
+        mock_feedback_config.moral_keeper_ai.is_enable.return_value = True
+        mock_config.return_value = mock_feedback_config
+        mock_check_ai.return_value = True
+        mock_commit.side_effect = Exception('Database error')
+
+        with patch(
+            'ckanext.feedback.controllers.resource.request.files.get', return_value=None
+        ):
+            ResourceController.check_comment(resource['id'])
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.resource.summary_service.refresh_resource_summary'
+    )
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service.approve_resource_comment'
+    )
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    def test_approve_comment_with_error(
+        self,
+        mock_form,
+        mock_approve,
+        mock_refresh,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        current_user,
+        resource,
+    ):
+        """Test approve_comment() error handling"""
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_form.get.return_value = 'comment-id'
+        mock_commit.side_effect = Exception('Database error')
+
+        ResourceController.approve_comment(resource['id'])
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    def test_reply_with_error(
+        self,
+        mock_form,
+        mock_create_reply,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        current_user,
+        resource,
+    ):
+        """Test reply() error handling"""
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_form.get.side_effect = lambda k, d='': {
+            'resource_comment_id': 'comment-id',
+            'reply_content': 'Reply',
+        }.get(k, d)
+        mock_commit.side_effect = Exception('Database error')
+
+        ResourceController.reply(resource['id'])
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.resource.likes_service'
+        '.increment_resource_like_count_monthly'
+    )
+    @patch(
+        'ckanext.feedback.controllers.resource.likes_service'
+        '.increment_resource_like_count'
+    )
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    def test_like_toggle_with_error(
+        self,
+        mock_get_json,
+        mock_increment,
+        mock_increment_monthly,
+        mock_commit,
+        mock_rollback,
+        resource,
+    ):
+        """Test like_toggle() error handling"""
+        mock_get_json.return_value = {'likeStatus': True}
+        mock_commit.side_effect = Exception('Database error')
+
+        response = ResourceController.like_toggle('test-package', resource['id'])
+
+        mock_rollback.assert_called_once()
+        assert response.status_code == 500
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service'
+        '.create_resource_comment_reactions'
+    )
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service'
+        '.get_resource_comment_reactions'
+    )
+    @patch('ckanext.feedback.controllers.resource.request.form')
+    def test_reactions_with_error(
+        self,
+        mock_form,
+        mock_get_reactions,
+        mock_create_reactions,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        current_user,
+        resource,
+    ):
+        """Test reactions() error handling"""
+        user_dict = factories.Sysadmin()
+        mock_current_user(current_user, user_dict)
+        g.userobj = current_user
+
+        mock_form.get.side_effect = lambda k, d='': {
+            'resource_comment_id': 'comment-id',
+            'response_status': 'not-started',
+            'admin_liked': 'off',
+        }.get(k, d)
+        mock_get_reactions.return_value = None
+        mock_commit.side_effect = Exception('Database error')
+
+        ResourceController.reactions(resource['id'])
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service'
+        '.create_resource_comment_moral_check_log'
+    )
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    def test_create_previous_log_with_error(
+        self,
+        mock_get_json,
+        mock_get_resource,
+        mock_config,
+        mock_create_log,
+        mock_commit,
+        mock_rollback,
+        resource,
+    ):
+        """Test create_previous_log() error handling"""
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'test-org'
+        mock_get_resource.return_value = mock_resource
+
+        mock_feedback_config = MagicMock()
+        mock_feedback_config.moral_keeper_ai.is_enable.return_value = True
+        mock_config.return_value = mock_feedback_config
+
+        mock_get_json.return_value = {
+            'previous_type': 'suggestion',
+            'input_comment': 'Test input',
+            'suggested_comment': 'Test suggestion',
+        }
+        mock_commit.side_effect = Exception('Database error')
+
+        result = ResourceController.create_previous_log(resource['id'])
+
+        mock_rollback.assert_called_once()
+        assert result == ('', 204)
