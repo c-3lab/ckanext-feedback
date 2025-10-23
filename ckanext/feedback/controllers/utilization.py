@@ -232,13 +232,22 @@ class UtilizationController:
                 description=description,
             )
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
-        utilization = registration_service.create_utilization(
-            resource_id, title, url, description
-        )
-        summary_service.create_utilization_summary(resource_id)
-        utilization_id = utilization.id
-        session.commit()
-
+        try:
+            utilization = registration_service.create_utilization(
+                resource_id, title, url, description
+            )
+            summary_service.create_utilization_summary(resource_id)
+            utilization_id = utilization.id
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to create utilization for resource {resource_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to create utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to('utilization.new', resource_id=resource_id)
         try:
             resource = comment_service.get_resource(resource_id)
             send_email(
@@ -354,10 +363,19 @@ class UtilizationController:
                 NOT_FOUND_ERROR_MESSAGE,
             )
 
-        detail_service.approve_utilization(utilization_id, current_user.id)
-        summary_service.refresh_utilization_summary(utilization.resource_id)
-        session.commit()
-
+        try:
+            detail_service.approve_utilization(utilization_id, current_user.id)
+            summary_service.refresh_utilization_summary(utilization.resource_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(f'Failed to approve utilization {utilization_id}: {e}')
+            helpers.flash_error(
+                _('Failed to approve utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/comment/new
@@ -400,11 +418,22 @@ class UtilizationController:
                 attached_image_filename=attached_image_filename,
             )
 
-        detail_service.create_utilization_comment(
-            utilization_id, category, content, attached_image_filename
-        )
-
-        session.commit()
+        try:
+            detail_service.create_utilization_comment(
+                utilization_id, category, content, attached_image_filename
+            )
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to create comment for utilization {utilization_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to create comment. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
 
         category_map = {
             UtilizationCommentCategory.REQUEST.name: _('Request'),
@@ -586,7 +615,21 @@ class UtilizationController:
                     suggested_comment=None,
                     output_comment=content,
                 )
-            session.commit()
+                try:
+                    session.commit()
+                except Exception as e:
+                    session.rollback()
+                    log.exception(
+                        f'Failed to create moral check log for utilization '
+                        f'{utilization_id}: {e}'
+                    )
+                    helpers.flash_error(
+                        _('Failed to create moral check log. Please try again.'),
+                        allow_html=True,
+                    )
+                    return toolkit.redirect_to(
+                        'utilization.details', utilization_id=utilization_id
+                    )
 
         return toolkit.render(
             'utilization/comment_check.html',
@@ -614,9 +657,22 @@ class UtilizationController:
     @check_administrator
     def approve_comment(utilization_id, comment_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        detail_service.approve_utilization_comment(comment_id, current_user.id)
-        detail_service.refresh_utilization_comments(utilization_id)
-        session.commit()
+        try:
+            detail_service.approve_utilization_comment(comment_id, current_user.id)
+            detail_service.refresh_utilization_comments(utilization_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to approve comment {comment_id} for utilization '
+                f'{utilization_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to approve comment. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -682,8 +738,18 @@ class UtilizationController:
                 utilization_id=utilization_id,
             )
 
-        edit_service.update_utilization(utilization_id, title, url, description)
-        session.commit()
+        try:
+            edit_service.update_utilization(utilization_id, title, url, description)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(f'Failed to update utilization {utilization_id}: {e}')
+            helpers.flash_error(
+                _('Failed to update utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.edit', utilization_id=utilization_id
+            )
 
         helpers.flash_success(
             _('The utilization has been successfully updated.'),
@@ -698,10 +764,19 @@ class UtilizationController:
     def delete(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
         resource_id = detail_service.get_utilization(utilization_id).resource_id
-        edit_service.delete_utilization(utilization_id)
-        session.commit()
+        try:
+            edit_service.delete_utilization(utilization_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(f'Failed to delete utilization {utilization_id}: {e}')
+            helpers.flash_error(
+                _('Failed to delete utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
         summary_service.refresh_utilization_summary(resource_id)
-        session.commit()
 
         helpers.flash_success(
             _('The utilization has been successfully deleted.'),
@@ -719,12 +794,25 @@ class UtilizationController:
         if not description:
             toolkit.abort(400)
 
-        detail_service.create_issue_resolution(
-            utilization_id, description, current_user.id
-        )
-        summary_service.increment_issue_resolution_summary(utilization_id)
-        session.commit()
-
+        try:
+            detail_service.create_issue_resolution(
+                utilization_id, description, current_user.id
+            )
+            summary_service.increment_issue_resolution_summary(utilization_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to create issue resolution for utilization '
+                f'{utilization_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to create issue resolution. Please try again.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/comment/<comment_id>/attached_image/<attached_image_filename>
@@ -819,13 +907,20 @@ class UtilizationController:
             if action is None:
                 return '', 204
 
-            detail_service.create_utilization_comment_moral_check_log(
-                utilization_id=utilization_id,
-                action=action,
-                input_comment=input_comment,
-                suggested_comment=suggested_comment,
-                output_comment=None,
-            )
-            session.commit()
+            try:
+                detail_service.create_utilization_comment_moral_check_log(
+                    utilization_id=utilization_id,
+                    action=action,
+                    input_comment=input_comment,
+                    suggested_comment=suggested_comment,
+                    output_comment=None,
+                )
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                log.exception(
+                    f'Failed to create previous log for utilization '
+                    f'{utilization_id}: {e}'
+                )
 
         return '', 204
