@@ -5,7 +5,6 @@ import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.lib.uploader import get_uploader
-from ckan.logic import get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 from flask import Response, make_response, send_file
@@ -34,11 +33,14 @@ from ckanext.feedback.services.common.ai_functions import (
 )
 from ckanext.feedback.services.common.check import (
     check_administrator,
+    check_and_get_package,
+    check_package_access,
     has_organization_admin_role,
 )
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
+from ckanext.feedback.utils.auth import create_auth_context
 
 log = logging.getLogger(__name__)
 
@@ -50,8 +52,13 @@ class ResourceController:
     def comment(
         resource_id, category='', content='', attached_image_filename: str | None = None
     ):
-        approval = True
         resource = comment_service.get_resource(resource_id)
+
+        # Check access and get package data in a single efficient call
+        context = create_auth_context()
+        package = check_and_get_package(resource.Resource.package_id, context)
+
+        approval = True
         if not isinstance(current_user, model.User):
             # if the user is not logged in, display only approved comments
             approval = True
@@ -70,10 +77,6 @@ class ResourceController:
 
         categories = comment_service.get_resource_comment_categories()
         cookie = get_repeat_post_limit_cookie(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
         if not category:
             selected_category = ResourceCommentCategory.REQUEST.name
@@ -199,14 +202,14 @@ class ResourceController:
         rating='',
         attached_image_filename: str | None = None,
     ):
+        resource = comment_service.get_resource(resource_id)
+
+        # Check access and get package data in a single efficient call
+        context = create_auth_context()
+        package = check_and_get_package(resource.Resource.package_id, context)
+
         softened = suggest_ai_comment(comment=content)
 
-        context = {'model': model, 'session': session, 'for_view': True}
-
-        resource = comment_service.get_resource(resource_id)
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if softened is None:
@@ -286,10 +289,11 @@ class ResourceController:
 
         categories = comment_service.get_resource_comment_categories()
         resource = comment_service.get_resource(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
+
+        # Check access and get package data in a single efficient call
+        context = create_auth_context()
+        package = check_and_get_package(resource.Resource.package_id, context)
+
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if FeedbackConfig().moral_keeper_ai.is_enable(
@@ -415,18 +419,19 @@ class ResourceController:
 
     @staticmethod
     def _check_organization_admin_role(resource_id):
+        from ckanext.feedback.services.common.check import NOT_FOUND_ERROR_MESSAGE
+
         resource = comment_service.get_resource(resource_id)
+
+        # Check package access authorization
+        context = create_auth_context()
+        check_package_access(resource.Resource.package_id, context)
+
         if (
             not has_organization_admin_role(resource.Resource.package.owner_org)
             and not current_user.sysadmin
         ):
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
     def like_status(resource_id):
         status = get_like_status_cookie(resource_id)
