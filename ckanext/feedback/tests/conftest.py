@@ -343,8 +343,8 @@ def mock_utilization_object():
 def mock_current_user_fixture():
     def _mock_current_user(current_user, user):
         user_obj = model.User.get(user['name'])
-        # mock current_user
         current_user.return_value = user_obj
+        g.userobj = current_user
 
     return _mock_current_user
 
