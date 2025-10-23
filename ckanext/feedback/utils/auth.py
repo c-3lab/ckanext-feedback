@@ -14,9 +14,7 @@ def create_auth_context():
     """
     import ckan.model as model
 
-    from ckanext.feedback.models.session import session
-
-    return {'model': model, 'session': session, 'for_view': True}
+    return {'model': model, 'session': model.Session, 'for_view': True}
 
 
 class AuthTokenHandler:
