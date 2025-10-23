@@ -17,19 +17,15 @@ from ckanext.feedback.services.common.check import (
 from ckanext.feedback.utils.auth import create_auth_context
 
 
-def mock_current_user(current_user, user_dict):
-    user_obj = model.User.get(user_dict['name'])
-    current_user.return_value = user_obj
-    g.userobj = current_user
-
-
 @pytest.mark.db_test
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestCheck:
 
     @patch('flask_login.utils._get_user')
-    def test_check_administrator(self, current_user, sysadmin):
-        mock_current_user(current_user, sysadmin)
+    def test_check_administrator(
+        self, current_user, sysadmin, mock_current_user_fixture
+    ):
+        mock_current_user_fixture(current_user, sysadmin)
 
         @check_administrator
         def dummy_function():
@@ -40,10 +36,10 @@ class TestCheck:
 
     @patch('flask_login.utils._get_user')
     def test_check_administrator_with_org_admin_user(
-        self, current_user, user, organization
+        self, current_user, user, organization, mock_current_user_fixture
     ):
         user_obj = User.get(user['id'])
-        mock_current_user(current_user, user)
+        mock_current_user_fixture(current_user, user)
 
         organization_obj = model.Group.get(organization['id'])
         member = model.Member(
@@ -82,13 +78,14 @@ class TestCheck:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.services.common.check.toolkit')
-    def test_check_administrator_with_user(self, mock_toolkit, current_user, user):
+    def test_check_administrator_with_user(
+        self, mock_toolkit, current_user, user, mock_current_user_fixture
+    ):
         @check_administrator
         def dummy_function():
             return 'function is called'
 
-        mock_current_user(current_user, user)
-        g.userobj = current_user
+        mock_current_user_fixture(current_user, user)
         dummy_function()
 
         mock_toolkit.abort.assert_called_with(
@@ -100,9 +97,11 @@ class TestCheck:
         )
 
     @patch('flask_login.utils._get_user')
-    def test_is_organization_admin_with_user(self, current_user, user, organization):
+    def test_is_organization_admin_with_user(
+        self, current_user, user, organization, mock_current_user_fixture
+    ):
         user_obj = User.get(user['id'])
-        mock_current_user(current_user, user)
+        mock_current_user_fixture(current_user, user)
 
         organization_obj = model.Group.get(organization['id'])
         member = model.Member(
@@ -126,10 +125,10 @@ class TestCheck:
 
     @patch('flask_login.utils._get_user')
     def test_has_organization_admin_role_with_user(
-        self, current_user, user, organization
+        self, current_user, user, organization, mock_current_user_fixture
     ):
         user_obj = User.get(user['id'])
-        mock_current_user(current_user, user)
+        mock_current_user_fixture(current_user, user)
 
         organization1 = model.Group.get(organization['id'])
 
