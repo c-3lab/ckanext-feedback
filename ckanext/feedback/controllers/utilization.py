@@ -5,7 +5,7 @@ import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.lib.uploader import get_uploader
-from ckan.logic import get_action
+from ckan.logic import NotAuthorized, get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 from flask import send_file
@@ -39,13 +39,22 @@ from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 
 log = logging.getLogger(__name__)
 
+NOT_FOUND_ERROR_MESSAGE = _(
+    'The requested URL was not found on the server. '
+    'If you entered the URL manually '
+    'please check your spelling and try again.'
+)
+
 
 class UtilizationController:
     # Render HTML pages
     # utilization/search
     @staticmethod
     def search():
-        id = request.args.get('id', '')
+        # Accept explicit resource_id or package_id parameters
+        resource_id = request.args.get('resource_id', '')
+        package_id = request.args.get('package_id', '')
+
         keyword = request.args.get('keyword', '')
         org_name = request.args.get('organization', '')
 
@@ -54,41 +63,81 @@ class UtilizationController:
 
         page, limit, offset, pager_url = get_pagination_value('utilization.search')
 
+        resource_for_org = None
+
+        # Check package access authorization for resource_id
+        if resource_id:
+            resource_for_org = comment_service.get_resource(resource_id)
+            if resource_for_org:
+                context = {'model': model, 'session': session, 'for_view': True}
+                try:
+                    get_action('package_show')(
+                        context, {'id': resource_for_org.Resource.package_id}
+                    )
+                except NotAuthorized:
+                    toolkit.abort(
+                        404,
+                        NOT_FOUND_ERROR_MESSAGE,
+                    )
+
+        # Check package access authorization for package_id
+        if package_id:
+            package = model.Package.get(package_id)
+            if package:
+                context = {'model': model, 'session': session, 'for_view': True}
+                try:
+                    get_action('package_show')(context, {'id': package_id})
+                except NotAuthorized:
+                    toolkit.abort(
+                        404,
+                        NOT_FOUND_ERROR_MESSAGE,
+                    )
+
         # If the login user is not an admin, display only approved utilizations
         approval = True
         admin_owner_orgs = None
+        user_orgs = None
         if not isinstance(current_user, model.User):
             # If the user is not login, display only approved utilizations
             approval = True
+            user_orgs = None
         elif current_user.sysadmin:
             # If the user is an admin, display all utilizations
             approval = None
+            user_orgs = 'all'
         elif is_organization_admin():
             # If the user is an organization admin, display all utilizations
             approval = None
             admin_owner_orgs = current_user.get_group_ids(
                 group_type='organization', capacity='admin'
             )
+            user_orgs = current_user.get_group_ids(group_type='organization')
+        else:
+            # Regular logged-in user
+            approval = True
+            user_orgs = current_user.get_group_ids(group_type='organization')
 
         disable_keyword = request.args.get('disable_keyword', '')
         utilizations, total_count = search_service.get_utilizations(
-            id,
-            keyword,
-            approval,
-            admin_owner_orgs,
-            org_name,
-            limit,
-            offset,
+            resource_id=resource_id,
+            package_id=package_id,
+            keyword=keyword,
+            approval=approval,
+            admin_owner_orgs=admin_owner_orgs,
+            org_name=org_name,
+            limit=limit,
+            offset=offset,
+            user_orgs=user_orgs,
         )
 
         # If the organization name can be identified,
         # set it as a global variable accessible from templates.
-        if id and not org_name:
-            resource = comment_service.get_resource(id)
-            if resource:
-                org_name = resource.organization_name
-            else:
-                org_name = search_service.get_organization_name_from_pkg(id)
+        if (resource_id or package_id) and not org_name:
+            if resource_id and resource_for_org:
+                # Already fetched, no need to query again
+                org_name = resource_for_org.organization_name
+            elif package_id:
+                org_name = search_service.get_organization_name_from_pkg(package_id)
         if org_name:
             g.pkg_dict = {
                 'organization': {
@@ -121,9 +170,12 @@ class UtilizationController:
         return_to_resource = request.args.get('return_to_resource', False)
         resource = comment_service.get_resource(resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package.id}
-        )
+        try:
+            package = get_action('package_show')(
+                context, {'id': resource.Resource.package.id}
+            )
+        except NotAuthorized:
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return toolkit.render(
@@ -180,13 +232,22 @@ class UtilizationController:
                 description=description,
             )
         return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
-        utilization = registration_service.create_utilization(
-            resource_id, title, url, description
-        )
-        summary_service.create_utilization_summary(resource_id)
-        utilization_id = utilization.id
-        session.commit()
-
+        try:
+            utilization = registration_service.create_utilization(
+                resource_id, title, url, description
+            )
+            summary_service.create_utilization_summary(resource_id)
+            utilization_id = utilization.id
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to create utilization for resource {resource_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to create utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to('utilization.new', resource_id=resource_id)
         try:
             resource = comment_service.get_resource(resource_id)
             send_email(
@@ -226,8 +287,20 @@ class UtilizationController:
         content='',
         attached_image_filename: str | None = None,
     ):
-        approval = True
         utilization = detail_service.get_utilization(utilization_id)
+        if not utilization:
+            toolkit.abort(404, _('Utilization not found'))
+
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        try:
+            package = get_action('package_show')(
+                context, {'id': utilization.package_id}
+            )
+        except NotAuthorized:
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
+
+        approval = True
         if not isinstance(current_user, model.User):
             approval = True
         elif (
@@ -236,7 +309,7 @@ class UtilizationController:
             # if the user is an organization admin or a sysadmin, display all comments
             approval = None
 
-        page, limit, offset, _ = get_pagination_value('utilization.details')
+        page, limit, offset, pager_url = get_pagination_value('utilization.details')
 
         comments, total_count = detail_service.get_utilization_comments(
             utilization_id, approval, limit=limit, offset=offset
@@ -244,15 +317,8 @@ class UtilizationController:
 
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
-        g.pkg_dict = {
-            'organization': {
-                'name': (
-                    comment_service.get_resource(
-                        utilization.resource_id
-                    ).organization_name
-                )
-            }
-        }
+        resource = comment_service.get_resource(utilization.resource_id)
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
         if not category:
             selected_category = UtilizationCommentCategory.REQUEST.name
         else:
@@ -263,6 +329,7 @@ class UtilizationController:
             {
                 'utilization_id': utilization_id,
                 'utilization': utilization,
+                'pkg_dict': package,
                 'categories': categories,
                 'issue_resolutions': issue_resolutions,
                 'selected_category': selected_category,
@@ -282,11 +349,33 @@ class UtilizationController:
     @check_administrator
     def approve(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        resource_id = detail_service.get_utilization(utilization_id).resource_id
-        detail_service.approve_utilization(utilization_id, current_user.id)
-        summary_service.refresh_utilization_summary(resource_id)
-        session.commit()
+        utilization = detail_service.get_utilization(utilization_id)
+        if not utilization:
+            toolkit.abort(404, _('Utilization not found'))
 
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        try:
+            get_action('package_show')(context, {'id': utilization.package_id})
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                NOT_FOUND_ERROR_MESSAGE,
+            )
+
+        try:
+            detail_service.approve_utilization(utilization_id, current_user.id)
+            summary_service.refresh_utilization_summary(utilization.resource_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(f'Failed to approve utilization {utilization_id}: {e}')
+            helpers.flash_error(
+                _('Failed to approve utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/comment/new
@@ -329,11 +418,22 @@ class UtilizationController:
                 attached_image_filename=attached_image_filename,
             )
 
-        detail_service.create_utilization_comment(
-            utilization_id, category, content, attached_image_filename
-        )
-
-        session.commit()
+        try:
+            detail_service.create_utilization_comment(
+                utilization_id, category, content, attached_image_filename
+            )
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to create comment for utilization {utilization_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to create comment. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
 
         category_map = {
             UtilizationCommentCategory.REQUEST.name: _('Request'),
@@ -469,9 +569,15 @@ class UtilizationController:
         utilization = detail_service.get_utilization(utilization_id)
         resource = comment_service.get_resource(utilization.resource_id)
         context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
+        try:
+            package = get_action('package_show')(
+                context, {'id': resource.Resource.package_id}
+            )
+        except NotAuthorized:
+            toolkit.abort(
+                404,
+                NOT_FOUND_ERROR_MESSAGE,
+            )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if FeedbackConfig().moral_keeper_ai.is_enable(
@@ -509,7 +615,21 @@ class UtilizationController:
                     suggested_comment=None,
                     output_comment=content,
                 )
-            session.commit()
+                try:
+                    session.commit()
+                except Exception as e:
+                    session.rollback()
+                    log.exception(
+                        f'Failed to create moral check log for utilization '
+                        f'{utilization_id}: {e}'
+                    )
+                    helpers.flash_error(
+                        _('Failed to create moral check log. Please try again.'),
+                        allow_html=True,
+                    )
+                    return toolkit.redirect_to(
+                        'utilization.details', utilization_id=utilization_id
+                    )
 
         return toolkit.render(
             'utilization/comment_check.html',
@@ -537,9 +657,22 @@ class UtilizationController:
     @check_administrator
     def approve_comment(utilization_id, comment_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        detail_service.approve_utilization_comment(comment_id, current_user.id)
-        detail_service.refresh_utilization_comments(utilization_id)
-        session.commit()
+        try:
+            detail_service.approve_utilization_comment(comment_id, current_user.id)
+            detail_service.refresh_utilization_comments(utilization_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to approve comment {comment_id} for utilization '
+                f'{utilization_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to approve comment. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -605,8 +738,18 @@ class UtilizationController:
                 utilization_id=utilization_id,
             )
 
-        edit_service.update_utilization(utilization_id, title, url, description)
-        session.commit()
+        try:
+            edit_service.update_utilization(utilization_id, title, url, description)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(f'Failed to update utilization {utilization_id}: {e}')
+            helpers.flash_error(
+                _('Failed to update utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.edit', utilization_id=utilization_id
+            )
 
         helpers.flash_success(
             _('The utilization has been successfully updated.'),
@@ -621,10 +764,19 @@ class UtilizationController:
     def delete(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
         resource_id = detail_service.get_utilization(utilization_id).resource_id
-        edit_service.delete_utilization(utilization_id)
-        session.commit()
+        try:
+            edit_service.delete_utilization(utilization_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(f'Failed to delete utilization {utilization_id}: {e}')
+            helpers.flash_error(
+                _('Failed to delete utilization. Please try again.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
         summary_service.refresh_utilization_summary(resource_id)
-        session.commit()
 
         helpers.flash_success(
             _('The utilization has been successfully deleted.'),
@@ -642,12 +794,25 @@ class UtilizationController:
         if not description:
             toolkit.abort(400)
 
-        detail_service.create_issue_resolution(
-            utilization_id, description, current_user.id
-        )
-        summary_service.increment_issue_resolution_summary(utilization_id)
-        session.commit()
-
+        try:
+            detail_service.create_issue_resolution(
+                utilization_id, description, current_user.id
+            )
+            summary_service.increment_issue_resolution_summary(utilization_id)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.exception(
+                f'Failed to create issue resolution for utilization '
+                f'{utilization_id}: {e}'
+            )
+            helpers.flash_error(
+                _('Failed to create issue resolution. Please try again.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/comment/<comment_id>/attached_image/<attached_image_filename>
@@ -658,6 +823,13 @@ class UtilizationController:
         utilization = detail_service.get_utilization(utilization_id)
         if utilization is None:
             toolkit.abort(404)
+
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        try:
+            get_action('package_show')(context, {'id': utilization.package_id})
+        except NotAuthorized:
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -685,17 +857,21 @@ class UtilizationController:
     @staticmethod
     def _check_organization_admin_role(utilization_id):
         utilization = detail_service.get_utilization(utilization_id)
+        if not utilization:
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
+
+        # Use CKAN's authorization system to check package access
+        context = {'model': model, 'session': session, 'for_view': True}
+        try:
+            get_action('package_show')(context, {'id': utilization.package_id})
+        except NotAuthorized:
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
+
         if (
             not has_organization_admin_role(utilization.owner_org)
             and not current_user.sysadmin
         ):
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
     @staticmethod
     def _upload_image(image: FileStorage) -> str:
@@ -731,13 +907,20 @@ class UtilizationController:
             if action is None:
                 return '', 204
 
-            detail_service.create_utilization_comment_moral_check_log(
-                utilization_id=utilization_id,
-                action=action,
-                input_comment=input_comment,
-                suggested_comment=suggested_comment,
-                output_comment=None,
-            )
-            session.commit()
+            try:
+                detail_service.create_utilization_comment_moral_check_log(
+                    utilization_id=utilization_id,
+                    action=action,
+                    input_comment=input_comment,
+                    suggested_comment=suggested_comment,
+                    output_comment=None,
+                )
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                log.exception(
+                    f'Failed to create previous log for utilization '
+                    f'{utilization_id}: {e}'
+                )
 
         return '', 204
