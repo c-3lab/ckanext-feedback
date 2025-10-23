@@ -29,11 +29,11 @@ from ckanext.feedback.services.common.ai_functions import (
 )
 from ckanext.feedback.services.common.check import (
     check_administrator,
-    check_and_get_package,
-    check_package_access,
-    check_resource_package_access,
+    get_authorized_package,
     has_organization_admin_role,
     is_organization_admin,
+    require_package_access,
+    require_resource_package_access,
 )
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
@@ -67,12 +67,12 @@ class UtilizationController:
 
         # Check package access authorization for resource_id
         if resource_id:
-            check_resource_package_access(resource_id, context)
+            require_resource_package_access(resource_id, context)
             resource_for_org = comment_service.get_resource(resource_id)
 
         # Check package access authorization for package_id
         if package_id:
-            check_package_access(package_id, context)
+            require_package_access(package_id, context)
 
         # If the login user is not an admin, display only approved utilizations
         approval = True
@@ -153,7 +153,7 @@ class UtilizationController:
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
-        package = check_and_get_package(resource.Resource.package.id, context)
+        package = get_authorized_package(resource.Resource.package.id, context)
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return toolkit.render(
@@ -262,7 +262,7 @@ class UtilizationController:
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
-        package = check_and_get_package(utilization.package_id, context)
+        package = get_authorized_package(utilization.package_id, context)
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -319,7 +319,7 @@ class UtilizationController:
 
         # Use CKAN's authorization system to check package access
         context = create_auth_context()
-        check_package_access(utilization.package_id, context)
+        require_package_access(utilization.package_id, context)
 
         detail_service.approve_utilization(utilization_id, current_user.id)
         summary_service.refresh_utilization_summary(utilization.resource_id)
@@ -509,7 +509,7 @@ class UtilizationController:
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
-        package = check_and_get_package(resource.Resource.package_id, context)
+        package = get_authorized_package(resource.Resource.package_id, context)
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if FeedbackConfig().moral_keeper_ai.is_enable(
@@ -699,7 +699,7 @@ class UtilizationController:
 
         # Use CKAN's authorization system to check package access
         context = create_auth_context()
-        check_package_access(utilization.package_id, context)
+        require_package_access(utilization.package_id, context)
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -734,7 +734,7 @@ class UtilizationController:
 
         # Use CKAN's authorization system to check package access
         context = create_auth_context()
-        check_package_access(utilization.package_id, context)
+        require_package_access(utilization.package_id, context)
 
         if (
             not has_organization_admin_role(utilization.owner_org)

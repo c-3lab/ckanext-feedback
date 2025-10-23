@@ -33,9 +33,9 @@ from ckanext.feedback.services.common.ai_functions import (
 )
 from ckanext.feedback.services.common.check import (
     check_administrator,
-    check_and_get_package,
-    check_package_access,
+    get_authorized_package,
     has_organization_admin_role,
+    require_package_access,
 )
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
@@ -56,7 +56,7 @@ class ResourceController:
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
-        package = check_and_get_package(resource.Resource.package_id, context)
+        package = get_authorized_package(resource.Resource.package_id, context)
 
         approval = True
         if not isinstance(current_user, model.User):
@@ -206,7 +206,7 @@ class ResourceController:
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
-        package = check_and_get_package(resource.Resource.package_id, context)
+        package = get_authorized_package(resource.Resource.package_id, context)
 
         softened = suggest_ai_comment(comment=content)
 
@@ -292,7 +292,7 @@ class ResourceController:
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
-        package = check_and_get_package(resource.Resource.package_id, context)
+        package = get_authorized_package(resource.Resource.package_id, context)
 
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
@@ -425,7 +425,7 @@ class ResourceController:
 
         # Check package access authorization
         context = create_auth_context()
-        check_package_access(resource.Resource.package_id, context)
+        require_package_access(resource.Resource.package_id, context)
 
         if (
             not has_organization_admin_role(resource.Resource.package.owner_org)

@@ -8,11 +8,11 @@ from flask import g
 
 from ckanext.feedback.services.common.check import (
     check_administrator,
-    check_and_get_package,
-    check_package_access,
-    check_resource_package_access,
+    get_authorized_package,
     has_organization_admin_role,
     is_organization_admin,
+    require_package_access,
+    require_resource_package_access,
 )
 from ckanext.feedback.utils.auth import create_auth_context
 
@@ -191,18 +191,20 @@ class TestCheck:
         assert context['session'] == expected_model.Session
 
     @patch('ckanext.feedback.services.common.check.get_action')
-    def test_check_and_get_package_public_package(self, mock_get_action):
+    def test_get_authorized_package_public_package(self, mock_get_action):
         package_id = 'test_package_id'
         context = create_auth_context()
         expected_package = {'id': package_id, 'name': 'test-package'}
 
         mock_get_action.return_value = lambda ctx, data_dict: expected_package
 
-        result = check_and_get_package(package_id, context)
+        result = get_authorized_package(package_id, context)
         assert result == expected_package
 
     @patch('ckanext.feedback.services.common.check.get_action')
-    def test_check_and_get_package_returns_complete_package_data(self, mock_get_action):
+    def test_get_authorized_package_returns_complete_package_data(
+        self, mock_get_action
+    ):
         package_id = 'complete_package_id'
         context = create_auth_context()
 
@@ -221,7 +223,7 @@ class TestCheck:
 
         mock_get_action.return_value = lambda ctx, data_dict: expected_package
 
-        result = check_and_get_package(package_id, context)
+        result = get_authorized_package(package_id, context)
 
         assert result['id'] == package_id
         assert result['name'] == 'test-package'
@@ -234,7 +236,7 @@ class TestCheck:
         assert result == expected_package
 
     @patch('ckanext.feedback.services.common.check.get_action')
-    def test_check_and_get_package_context_is_passed_correctly(self, mock_get_action):
+    def test_get_authorized_package_context_is_passed_correctly(self, mock_get_action):
         package_id = 'test_package_id'
         context = create_auth_context()
 
@@ -249,26 +251,26 @@ class TestCheck:
 
         mock_get_action.return_value = mock_package_show
 
-        check_and_get_package(package_id, context)
+        get_authorized_package(package_id, context)
 
         assert received_context == context
         assert received_data_dict == {'id': package_id}
 
     @patch('ckanext.feedback.services.common.check.get_action')
-    def test_check_package_access_public_package(self, mock_get_action):
+    def test_require_package_access_public_package(self, mock_get_action):
         package_id = 'test_package_id'
         context = create_auth_context()
 
         mock_get_action.return_value = lambda ctx, data_dict: {'id': package_id}
 
         try:
-            check_package_access(package_id, context)
+            require_package_access(package_id, context)
         except Exception as e:
-            pytest.fail(f"check_package_access raised {e} unexpectedly")
+            pytest.fail(f"require_package_access raised {e} unexpectedly")
 
     @patch('ckanext.feedback.services.common.check.toolkit')
     @patch('ckanext.feedback.services.common.check.get_action')
-    def test_check_and_get_package_private_package_unauthorized(
+    def test_get_authorized_package_private_package_unauthorized(
         self, mock_get_action, mock_toolkit
     ):
         from ckan.logic import NotAuthorized
@@ -280,14 +282,14 @@ class TestCheck:
             NotAuthorized('User not authorized')
         )
 
-        check_and_get_package(package_id, context)
+        get_authorized_package(package_id, context)
 
         mock_toolkit.abort.assert_called_once()
         assert mock_toolkit.abort.call_args[0][0] == 404
 
     @patch('ckanext.feedback.services.resource.comment.get_resource')
     @patch('ckanext.feedback.services.common.check.get_action')
-    def test_check_resource_package_access_public_package(
+    def test_require_resource_package_access_public_package(
         self, mock_get_action, mock_get_resource
     ):
         from unittest.mock import MagicMock
@@ -303,14 +305,14 @@ class TestCheck:
         mock_get_action.return_value = lambda ctx, data_dict: {'id': package_id}
 
         try:
-            check_resource_package_access(resource_id, context)
+            require_resource_package_access(resource_id, context)
         except Exception as e:
-            pytest.fail(f"check_resource_package_access raised {e} unexpectedly")
+            pytest.fail(f"require_resource_package_access raised {e} unexpectedly")
 
     @patch('ckanext.feedback.services.common.check.toolkit')
     @patch('ckanext.feedback.services.resource.comment.get_resource')
     @patch('ckanext.feedback.services.common.check.get_action')
-    def test_check_resource_package_access_private_package_unauthorized(
+    def test_require_resource_package_access_private_package_unauthorized(
         self, mock_get_action, mock_get_resource, mock_toolkit
     ):
         from unittest.mock import MagicMock
@@ -329,19 +331,21 @@ class TestCheck:
             NotAuthorized('User not authorized')
         )
 
-        check_resource_package_access(resource_id, context)
+        require_resource_package_access(resource_id, context)
 
         mock_toolkit.abort.assert_called_once()
         assert mock_toolkit.abort.call_args[0][0] == 404
 
     @patch('ckanext.feedback.services.resource.comment.get_resource')
-    def test_check_resource_package_access_resource_not_found(self, mock_get_resource):
+    def test_require_resource_package_access_resource_not_found(
+        self, mock_get_resource
+    ):
         resource_id = 'nonexistent_resource_id'
         context = create_auth_context()
 
         mock_get_resource.return_value = None
 
         try:
-            check_resource_package_access(resource_id, context)
+            require_resource_package_access(resource_id, context)
         except Exception as e:
-            pytest.fail(f"check_resource_package_access raised {e} unexpectedly")
+            pytest.fail(f"require_resource_package_access raised {e} unexpectedly")

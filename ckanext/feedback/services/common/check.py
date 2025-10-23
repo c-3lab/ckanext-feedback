@@ -35,9 +35,9 @@ def has_organization_admin_role(owner_org):
     return owner_org in ids
 
 
-def check_and_get_package(package_id, context):
+def get_authorized_package(package_id, context):
     """
-    Check access permissions and return package data (efficient - single DB call).
+    Get package data if user is authorized (efficient - single DB call).
 
     This function checks access permissions and returns the package data
     in a single operation, avoiding duplicate DB queries.
@@ -59,11 +59,11 @@ def check_and_get_package(package_id, context):
         toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
 
-def check_package_access(package_id, context):
+def require_package_access(package_id, context):
     """
-    Check access permissions only (package data is retrieved but discarded).
+    Require package access permissions (package data is retrieved but discarded).
 
-    Note: If you need the package data, use check_and_get_package() instead
+    Note: If you need the package data, use get_authorized_package() instead
     to avoid duplicate DB queries.
 
     Args:
@@ -73,13 +73,13 @@ def check_package_access(package_id, context):
     Raises:
         toolkit.abort(404): If access permissions are lacking
     """
-    check_and_get_package(package_id, context)
+    get_authorized_package(package_id, context)
     # Package data is retrieved but not returned
 
 
-def check_resource_package_access(resource_id, context):
+def require_resource_package_access(resource_id, context):
     """
-    Check access permissions for the resource's owning package
+    Require access permissions for the resource's owning package
 
     Args:
         resource_id: Resource ID
@@ -92,4 +92,4 @@ def check_resource_package_access(resource_id, context):
 
     resource = comment_service.get_resource(resource_id)
     if resource:
-        check_package_access(resource.Resource.package_id, context)
+        require_package_access(resource.Resource.package_id, context)
