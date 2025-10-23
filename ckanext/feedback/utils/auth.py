@@ -2,6 +2,23 @@ from ckan.lib import api_token as api_token_lib
 from ckan.plugins import toolkit
 
 
+def create_auth_context():
+    """
+    Create standard context for CKAN authorization checks.
+
+    This context is used for checking access permissions to packages,
+    resources, and other CKAN objects.
+
+    Returns:
+        dict: CKAN context with model, session, and for_view flag
+    """
+    import ckan.model as model
+
+    from ckanext.feedback.models.session import session
+
+    return {'model': model, 'session': session, 'for_view': True}
+
+
 class AuthTokenHandler:
     @staticmethod
     def validate_api_token(api_token):
