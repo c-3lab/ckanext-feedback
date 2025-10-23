@@ -3281,7 +3281,7 @@ class TestUtilizationController:
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
             resource_id
         )
-        assert mock_session_commit.call_count == 2
+        assert mock_session_commit.call_count == 1
         mock_flash_success.assert_called_once()
         mock_redirect_to.assert_called_once_with('utilization.search')
 
@@ -4425,3 +4425,399 @@ class TestUtilizationCreatePreviousLog:
         mock_abort.assert_called()
         # The method calls abort twice (first for package check if NotAuthorized)
         assert any(call[0][0] == 404 for call in mock_abort.call_args_list)
+
+    # Error handling tests - these tests verify session.rollback() is called on errors
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.summary_service'
+        '.create_utilization_summary'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.registration_service'
+        '.create_utilization'
+    )
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.asbool')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    def test_create_with_error(
+        self,
+        mock_form,
+        mock_asbool,
+        mock_recaptcha,
+        mock_registration,
+        mock_summary,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+    ):
+        mock_form.get.side_effect = lambda k, d='': {
+            'package_name': 'test-package',
+            'resource_id': 'test-resource-id',
+            'title': 'Test Title',
+            'url': 'https://example.com',
+            'description': 'Test Description',
+        }.get(k, d)
+        mock_asbool.return_value = False
+        mock_recaptcha.return_value = True
+        mock_commit.side_effect = Exception('Database error')
+        UtilizationController.create()
+        mock_rollback.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.summary_service'
+        '.refresh_utilization_summary'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service' '.approve_utilization'
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    def test_approve_with_error(
+        self,
+        mock_get_action,
+        mock_get_util,
+        mock_approve,
+        mock_refresh,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        admin_context,
+    ):
+        mock_get_util.return_value = MagicMock(
+            package_id='test-package', resource_id='test-resource'
+        )
+        mock_get_action.return_value = MagicMock()
+        mock_commit.side_effect = Exception('Database error')
+        UtilizationController.approve('test-utilization-id')
+        mock_rollback.assert_called_once()
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController'
+        '._check_organization_admin_role'
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.refresh_utilization_comments'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.approve_utilization_comment'
+    )
+    def test_approve_comment_with_error(
+        self,
+        mock_approve,
+        mock_refresh,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        mock_check_role,
+        admin_context,
+    ):
+        mock_check_role.return_value = None  # Pass authentication
+        mock_commit.side_effect = Exception('Database error')
+        UtilizationController.approve_comment('test-utilization-id', 'test-comment-id')
+        mock_rollback.assert_called_once()
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController'
+        '._check_organization_admin_role'
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.edit_service' '.update_utilization'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.validate_service'
+        '.validate_description'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.validate_service' '.validate_title'
+    )
+    @patch('ckanext.feedback.controllers.utilization.validate_service' '.validate_url')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    def test_update_with_error(
+        self,
+        mock_form,
+        mock_validate_url,
+        mock_validate_title,
+        mock_validate_description,
+        mock_update,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        mock_check_role,
+        admin_context,
+    ):
+        mock_check_role.return_value = None  # Pass authentication
+        mock_form.get.side_effect = lambda k, d='': {
+            'title': 'Test Title',
+            'url': 'https://example.com',
+            'description': 'Test Description',
+        }.get(k, d)
+        mock_validate_url.return_value = mock_validate_title.return_value = (
+            mock_validate_description.return_value
+        ) = None
+        mock_commit.side_effect = Exception('Database error')
+        UtilizationController.update('test-utilization-id')
+        mock_rollback.assert_called_once()
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController'
+        '._check_organization_admin_role'
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.summary_service'
+        '.refresh_utilization_summary'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.edit_service' '.delete_utilization'
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    def test_delete_with_error(
+        self,
+        mock_get_util,
+        mock_delete,
+        mock_refresh,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        mock_check_role,
+        admin_context,
+    ):
+        mock_check_role.return_value = None  # Pass authentication
+        mock_get_util.return_value = MagicMock(resource_id='test-resource')
+        mock_commit.side_effect = Exception('Database error')
+        UtilizationController.delete('test-utilization-id')
+        mock_rollback.assert_called_once()
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController'
+        '._check_organization_admin_role'
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.summary_service'
+        '.increment_issue_resolution_summary'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_issue_resolution'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    def test_create_issue_resolution_with_error(
+        self,
+        mock_form,
+        mock_create,
+        mock_increment,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        mock_check_role,
+        admin_context,
+    ):
+        mock_check_role.return_value = None  # Pass authentication
+        mock_form.get.return_value = 'Test description'
+        mock_commit.side_effect = Exception('Database error')
+        UtilizationController.create_issue_resolution('test-utilization-id')
+        mock_rollback.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    def test_create_previous_log_with_error(
+        self,
+        mock_get_json,
+        mock_get_resource,
+        mock_config,
+        mock_create_log,
+        mock_commit,
+        mock_rollback,
+    ):
+        """Test create_previous_log() error handling"""
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'test-org'
+        mock_get_resource.return_value = resource
+        mock_feedback_config = MagicMock()
+        mock_feedback_config.moral_keeper_ai.is_enable.return_value = True
+        mock_config.return_value = mock_feedback_config
+        mock_get_json.return_value = {
+            'previous_type': 'suggestion',
+            'input_comment': 'Test input',
+            'suggested_comment': 'Test suggestion',
+        }
+        mock_commit.side_effect = Exception('Database error')
+
+        result = UtilizationController.create_previous_log('test-utilization-id')
+
+        mock_rollback.assert_called_once()
+        assert result == ('', 204)
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.validate_service' '.validate_comment'
+    )
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    def test_create_comment_with_error(
+        self,
+        mock_form,
+        mock_recaptcha,
+        mock_validate,
+        mock_create,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+    ):
+        """Test create_comment() error handling - covers lines 418-422"""
+        mock_form.get.side_effect = lambda k, d='': {
+            'category': 'REQUEST',
+            'comment-content': 'Test comment',
+            'attached_image_filename': None,
+        }.get(k, d)
+        mock_recaptcha.return_value = True
+        mock_validate.return_value = None
+        mock_commit.side_effect = Exception('Database error')
+
+        with patch(
+            'ckanext.feedback.controllers.utilization.request.files.get',
+            return_value=None,
+        ):
+            UtilizationController.create_comment('test-utilization-id')
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+        mock_redirect.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.comment_service' '.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.detail_service' '.get_utilization')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.get_utilization_comment_categories'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.validate_service' '.validate_comment'
+    )
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.method', 'POST')
+    def test_check_comment_with_error(
+        self,
+        mock_form,
+        mock_get_action,
+        mock_recaptcha,
+        mock_validate,
+        mock_categories,
+        mock_get_utilization,
+        mock_get_resource,
+        mock_get_resource_by_id,
+        mock_config,
+        mock_create_log,
+        mock_check_ai,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+    ):
+        """Test check_comment() error handling - covers lines 606-610"""
+        mock_form.get.side_effect = lambda k, d='': {
+            'category': 'REQUEST',
+            'comment-content': 'Test comment',
+            'attached_image_filename': None,
+            'comment-suggested': (
+                'False'
+            ),  # Changed to False to trigger check_ai_comment path
+        }.get(k, d)
+        mock_recaptcha.return_value = True
+        mock_validate.return_value = None
+        mock_categories.return_value = []
+
+        utilization = MagicMock()
+        utilization.resource_id = 'test-resource'
+        mock_get_utilization.return_value = utilization
+
+        resource = MagicMock()
+        resource.Resource.package_id = 'test-package'
+        resource.Resource.package.owner_org = 'test-org'
+        resource.organization_name = 'test-org'
+        mock_get_resource.return_value = resource
+        mock_get_resource_by_id.return_value = resource
+
+        mock_get_action.return_value = MagicMock(return_value={'id': 'test-package'})
+
+        mock_feedback_config = MagicMock()
+        mock_feedback_config.moral_keeper_ai.is_enable.return_value = True
+        mock_config.return_value = mock_feedback_config
+
+        # check_ai_comment returns True (comment is OK),
+        # so it proceeds to create log and commit
+        mock_check_ai.return_value = True
+        mock_commit.side_effect = Exception('Database error')
+
+        with patch(
+            'ckanext.feedback.controllers.utilization.request.files.get',
+            return_value=None,
+        ):
+            UtilizationController.check_comment('test-utilization-id')
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+        mock_redirect.assert_called_once()
