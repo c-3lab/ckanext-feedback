@@ -7,6 +7,7 @@ import requests
 from ckan.plugins import toolkit
 from flask import Response, request
 
+from ckanext.feedback.models.session import session
 from ckanext.feedback.services.common import config as feedback_config
 from ckanext.feedback.services.download.monthly import (
     increment_resource_downloads_monthly,
@@ -26,8 +27,17 @@ class DownloadController:
 
         user_download = toolkit.asbool(request.args.get('user-download'))
         if request.headers.get('Sec-Fetch-Dest') == 'document' or user_download:
-            increment_resource_downloads(resource_id)
-            increment_resource_downloads_monthly(resource_id)
+            try:
+                increment_resource_downloads(resource_id)
+                increment_resource_downloads_monthly(resource_id)
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                log.warning(f'Transaction rolled back for resource {resource_id}')
+                log.exception(
+                    f'Failed to increment download count for resource '
+                    f'{resource_id}: {e}'
+                )
 
         handler = feedback_config.download_handler()
         if not handler:
