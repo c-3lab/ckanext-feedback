@@ -287,6 +287,23 @@ class TestCheck:
         mock_toolkit.abort.assert_called_once()
         assert mock_toolkit.abort.call_args[0][0] == 404
 
+    @patch('ckanext.feedback.services.common.check.toolkit')
+    @patch('ckanext.feedback.services.common.check.get_action')
+    def test_get_authorized_package_not_found(self, mock_get_action, mock_toolkit):
+        from ckan.logic import NotFound
+
+        package_id = 'nonexistent_package_id'
+        context = create_auth_context()
+
+        mock_get_action.return_value = lambda ctx, data_dict: (_ for _ in ()).throw(
+            NotFound('Package not found')
+        )
+
+        get_authorized_package(package_id, context)
+
+        mock_toolkit.abort.assert_called_once()
+        assert mock_toolkit.abort.call_args[0][0] == 404
+
     @patch('ckanext.feedback.services.resource.comment.get_resource')
     @patch('ckanext.feedback.services.common.check.get_action')
     def test_require_resource_package_access_public_package(
