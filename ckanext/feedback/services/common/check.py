@@ -1,5 +1,5 @@
 from ckan.common import _, current_user
-from ckan.logic import NotAuthorized, get_action
+from ckan.logic import NotAuthorized, NotFound, get_action
 from ckan.model import User
 from ckan.plugins import toolkit
 
@@ -50,12 +50,12 @@ def get_authorized_package(package_id, context):
         dict: Package data from package_show
 
     Raises:
-        toolkit.abort(404): If access permissions are lacking
+        toolkit.abort(404): If access permissions are lacking or package not found
     """
     try:
         package = get_action('package_show')(context, {'id': package_id})
         return package
-    except NotAuthorized:
+    except (NotAuthorized, NotFound):
         toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
 
