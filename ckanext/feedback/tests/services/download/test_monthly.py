@@ -32,11 +32,15 @@ class TestDownloadMonthlyServices:
         create_utilization_tables(engine)
         create_resource_tables(engine)
         create_download_tables(engine)
-        session.commit()
 
     def test_increment_resource_downloads_monthly(self):
         resource = factories.Resource()
+        session.commit()
+
         increment_resource_downloads_monthly(resource['id'])
+        session.commit()
         assert get_downloads(resource['id']) == 1
+
         increment_resource_downloads_monthly(resource['id'])
+        session.commit()
         assert get_downloads(resource['id']) == 2
