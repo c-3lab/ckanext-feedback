@@ -35,12 +35,13 @@ class TestDatastoreDownload:
         self.app = Flask(__name__)
 
     @pytest.mark.db_test
+    @patch('ckanext.feedback.views.datastore_download.session.commit')
     @patch(
         'ckanext.feedback.views.datastore_download.increment_resource_downloads_monthly'
     )
     @patch('ckanext.feedback.views.datastore_download.increment_resource_downloads')
     def test_intercept_datastore_download_with_valid_path(
-        self, mock_increment_downloads, mock_increment_monthly, resource
+        self, mock_increment_downloads, mock_increment_monthly, mock_commit, resource
     ):
         """Test that valid DataStore download requests increment counters.
 
@@ -54,14 +55,16 @@ class TestDatastoreDownload:
 
             mock_increment_downloads.assert_called_once_with(resource['id'])
             mock_increment_monthly.assert_called_once_with(resource['id'])
+            mock_commit.assert_called_once()
             assert result is None
 
+    @patch('ckanext.feedback.views.datastore_download.session.commit')
     @patch(
         'ckanext.feedback.views.datastore_download.increment_resource_downloads_monthly'
     )
     @patch('ckanext.feedback.views.datastore_download.increment_resource_downloads')
     def test_intercept_datastore_download_extracts_resource_id(
-        self, mock_increment_downloads, mock_increment_monthly
+        self, mock_increment_downloads, mock_increment_monthly, mock_commit
     ):
         """Test that resource ID is correctly extracted from URL path."""
         # Use valid UUID format
@@ -74,14 +77,16 @@ class TestDatastoreDownload:
 
             mock_increment_downloads.assert_called_once_with(resource_id)
             mock_increment_monthly.assert_called_once_with(resource_id)
+            mock_commit.assert_called_once()
             assert result is None
 
+    @patch('ckanext.feedback.views.datastore_download.session.commit')
     @patch(
         'ckanext.feedback.views.datastore_download.increment_resource_downloads_monthly'
     )
     @patch('ckanext.feedback.views.datastore_download.increment_resource_downloads')
     def test_intercept_datastore_download_with_query_params(
-        self, mock_increment_downloads, mock_increment_monthly
+        self, mock_increment_downloads, mock_increment_monthly, mock_commit
     ):
         """Test that query parameters don't interfere with resource ID extraction."""
         # Use valid UUID format
@@ -94,6 +99,7 @@ class TestDatastoreDownload:
 
             mock_increment_downloads.assert_called_once_with(resource_id)
             mock_increment_monthly.assert_called_once_with(resource_id)
+            mock_commit.assert_called_once()
             assert result is None
 
     @patch(
@@ -179,13 +185,20 @@ class TestDatastoreDownload:
             mock_increment_monthly.assert_not_called()
             assert result is None
 
+    @patch('ckanext.feedback.views.datastore_download.session.rollback')
+    @patch('ckanext.feedback.views.datastore_download.session.commit')
     @patch('ckanext.feedback.views.datastore_download.log')
     @patch(
         'ckanext.feedback.views.datastore_download.increment_resource_downloads_monthly'
     )
     @patch('ckanext.feedback.views.datastore_download.increment_resource_downloads')
     def test_intercept_datastore_download_handles_exception(
-        self, mock_increment_downloads, mock_increment_monthly, mock_log
+        self,
+        mock_increment_downloads,
+        mock_increment_monthly,
+        mock_log,
+        mock_commit,
+        mock_rollback,
     ):
         """Test that exceptions during counting are handled gracefully."""
         # Use valid UUID format
@@ -198,7 +211,8 @@ class TestDatastoreDownload:
             result = intercept_datastore_download()
 
             mock_increment_downloads.assert_called_once_with(resource_id)
-            mock_log.warning.assert_called_once()
+            mock_rollback.assert_called_once()
+            assert mock_log.warning.call_count == 2
             assert result is None
 
     @patch(
