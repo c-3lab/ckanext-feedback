@@ -577,6 +577,46 @@ class TestAdminControllerWithContext:
         # fmt: on
         mock_session_commit.assert_called_once()
 
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.log')
+    def test_approve_utilization_comments_with_exception(
+        self,
+        mock_log,
+        mock_flash_error,
+        mock_session,
+        mock_utilization_service,
+        mock_utilization_comments_service,
+    ):
+        target = ['utilization_comment_id']
+
+        mock_utilization_comments_service.get_utilization_comment_ids.return_value = (
+            target
+        )
+
+        utilization = MagicMock()
+        utilization.resource.package.owner_org = 'owner_org'
+        utilizations = [utilization]
+
+        mock_utilization_service.get_utilizations_by_comment_ids.return_value = (
+            utilizations
+        )
+
+        # Simulate exception on commit
+        mock_session.commit.side_effect = Exception('Database error')
+
+        result = AdminController.approve_utilization_comments(target)
+
+        assert result == 0
+        mock_session.rollback.assert_called_once()
+        mock_log.warning.assert_called_once_with(
+            'Transaction rolled back for utilization comments approval'
+        )
+        mock_log.exception.assert_called_once()
+        mock_flash_error.assert_called_once()
+
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -610,6 +650,42 @@ class TestAdminControllerWithContext:
             assert_called_once_with(target, g.userobj.return_value.id)
         # fmt: on
         mock_session_commit.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.log')
+    def test_approve_utilization_with_exception(
+        self,
+        mock_log,
+        mock_flash_error,
+        mock_session,
+        mock_utilization_service,
+    ):
+        target = ['utilization_id']
+
+        mock_utilization_service.get_utilization_ids.return_value = target
+
+        utilization = MagicMock()
+        utilization.resource.package.owner_org = 'owner_org'
+        utilizations = [utilization]
+
+        mock_utilization_service.get_utilization_details_by_ids.return_value = (
+            utilizations
+        )
+
+        # Simulate exception on commit
+        mock_session.commit.side_effect = Exception('Database error')
+
+        result = AdminController.approve_utilization(target)
+
+        assert result == 0
+        mock_session.rollback.assert_called_once()
+        mock_log.warning.assert_called_once_with(
+            'Transaction rolled back for utilization approval'
+        )
+        mock_log.exception.assert_called_once()
+        mock_flash_error.assert_called_once()
 
     @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
@@ -647,6 +723,42 @@ class TestAdminControllerWithContext:
         # fmt: on
         mock_session_commit.assert_called_once()
 
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.log')
+    def test_approve_resource_comments_with_exception(
+        self,
+        mock_log,
+        mock_flash_error,
+        mock_session,
+        mock_resource_comments_service,
+    ):
+        target = ['resource_comment_id']
+
+        mock_resource_comments_service.get_resource_comment_ids.return_value = target
+
+        resource_comment_summary = MagicMock()
+        resource_comment_summary.resource.package.owner_org = 'owner_org'
+        resource_comment_summaries = [resource_comment_summary]
+
+        mock_resource_comments_service.get_resource_comment_summaries.return_value = (
+            resource_comment_summaries
+        )
+
+        # Simulate exception on commit
+        mock_session.commit.side_effect = Exception('Database error')
+
+        result = AdminController.approve_resource_comments(target)
+
+        assert result == 0
+        mock_session.rollback.assert_called_once()
+        mock_log.warning.assert_called_once_with(
+            'Transaction rolled back for resource comments approval'
+        )
+        mock_log.exception.assert_called_once()
+        mock_flash_error.assert_called_once()
+
     @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
@@ -681,6 +793,42 @@ class TestAdminControllerWithContext:
         # fmt: on
         mock_session_commit.assert_called_once()
 
+    @patch('ckanext.feedback.controllers.admin.utilization_comments_service')
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.log')
+    def test_delete_utilization_comments_with_exception(
+        self,
+        mock_log,
+        mock_flash_error,
+        mock_session,
+        mock_utilization_service,
+        mock_utilization_comments_service,
+    ):
+        target = ['utilization_comment_id']
+
+        utilization = MagicMock()
+        utilization.resource.package.owner_org = 'owner_org'
+        utilizations = [utilization]
+
+        mock_utilization_service.get_utilizations_by_comment_ids.return_value = (
+            utilizations
+        )
+
+        # Simulate exception on commit
+        mock_session.commit.side_effect = Exception('Database error')
+
+        result = AdminController.delete_utilization_comments(target)
+
+        assert result == 0
+        mock_session.rollback.assert_called_once()
+        mock_log.warning.assert_called_once_with(
+            'Transaction rolled back for utilization comments deletion'
+        )
+        mock_log.exception.assert_called_once()
+        mock_flash_error.assert_called_once()
+
     @patch('ckanext.feedback.controllers.admin.utilization_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
     @patch('ckanext.feedback.controllers.admin.helpers.flash_success')
@@ -710,6 +858,40 @@ class TestAdminControllerWithContext:
             assert_called_once_with(target)
         # fmt: on
         mock_session_commit.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.admin.utilization_service')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.log')
+    def test_delete_utilization_with_exception(
+        self,
+        mock_log,
+        mock_flash_error,
+        mock_session,
+        mock_utilization_service,
+    ):
+        target = ['resource_comment_id']
+
+        utilization = MagicMock()
+        utilization.resource.package.owner_org = 'owner_org'
+        utilizations = [utilization]
+
+        mock_utilization_service.get_utilization_details_by_ids.return_value = (
+            utilizations
+        )
+
+        # Simulate exception on commit
+        mock_session.commit.side_effect = Exception('Database error')
+
+        result = AdminController.delete_utilization(target)
+
+        assert result == 0
+        mock_session.rollback.assert_called_once()
+        mock_log.warning.assert_called_once_with(
+            'Transaction rolled back for utilization deletion'
+        )
+        mock_log.exception.assert_called_once()
+        mock_flash_error.assert_called_once()
 
     @patch('ckanext.feedback.controllers.admin.resource_comments_service')
     @patch('ckanext.feedback.controllers.admin.session.commit')
@@ -741,6 +923,39 @@ class TestAdminControllerWithContext:
             assert_called_once_with(resource_comment_summaries)
         # fmt: on
         mock_session_commit.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.admin.resource_comments_service')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.log')
+    def test_delete_resource_comments_with_exception(
+        self,
+        mock_log,
+        mock_flash_error,
+        mock_session,
+        mock_resource_comments_service,
+    ):
+        target = ['utilization_id']
+        resource_comment_summary = MagicMock()
+        resource_comment_summary.resource.package.owner_org = 'owner_org'
+        resource_comment_summaries = [resource_comment_summary]
+
+        mock_resource_comments_service.get_resource_comment_summaries.return_value = (
+            resource_comment_summaries
+        )
+
+        # Simulate exception on commit
+        mock_session.commit.side_effect = Exception('Database error')
+
+        result = AdminController.delete_resource_comments(target)
+
+        assert result == 0
+        mock_session.rollback.assert_called_once()
+        mock_log.warning.assert_called_once_with(
+            'Transaction rolled back for resource comments deletion'
+        )
+        mock_log.exception.assert_called_once()
+        mock_flash_error.assert_called_once()
 
     @patch('ckanext.feedback.controllers.admin.toolkit.abort')
     def test_check_organization_admin_role_with_using_sysadmin(
