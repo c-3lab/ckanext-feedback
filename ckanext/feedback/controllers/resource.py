@@ -1,5 +1,7 @@
 import logging
 import os
+from dataclasses import dataclass
+from http import HTTPStatus
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
@@ -9,6 +11,7 @@ from ckan.logic import get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 from flask import Response, make_response, send_file
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.datastructures import FileStorage
 
 import ckanext.feedback.services.resource.comment as comment_service
@@ -43,7 +46,178 @@ from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 log = logging.getLogger(__name__)
 
 
+class FormFields:
+    """Form field name constants"""
+
+    IMAGE_UPLOAD = 'image-upload'
+    ATTACHED_IMAGE = 'attached_image'
+    COMMENT_SUGGESTED = 'comment-suggested'
+    INPUT_COMMENT = 'input-comment'
+    SUGGESTED_COMMENT = 'suggested-comment'
+    ACTION = 'action'
+
+
+class DefaultValues:
+    """Default values and constants"""
+
+    TRUE_STRING = 'True'
+    AUTO_SUGGEST_FAILED = 'AUTO_SUGGEST_FAILED'
+
+
+@dataclass
+class OperationResult:
+    """Generic result for operations that can succeed or fail"""
+
+    success: bool
+    error_message: str | None = None
+
+
+@dataclass
+class ProcessedInput:
+    """Result of processing comment input"""
+
+    form_data: dict
+    attached_filename: str | None
+    error_response: Response | None
+
+
 class ResourceController:
+    @staticmethod
+    def _parse_rating(rating_str: str) -> int | None:
+        """Parse rating string to integer or None"""
+        if not rating_str or rating_str == 'None':
+            return None
+        try:
+            return int(rating_str)
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def _extract_comment_form_data() -> dict:
+        content = request.form.get('comment-content', '')
+        category = request.form.get('category', '')
+        rating = ResourceController._parse_rating(request.form.get('rating', ''))
+        attached_image_filename = request.form.get('attached_image_filename', None)
+
+        return {
+            'category': category,
+            'content': content,
+            'rating': rating,
+            'attached_image_filename': attached_image_filename,
+        }
+
+    @staticmethod
+    def _handle_image_upload(file_key: str) -> str | None:
+        attached_image: FileStorage = request.files.get(file_key)
+        if not attached_image:
+            return None
+        return ResourceController._upload_image(attached_image)
+
+    @staticmethod
+    def _format_validation_error_message(error: toolkit.ValidationError) -> str:
+        """Extract and format error messages from ValidationError"""
+        if not isinstance(error.error_summary, dict):
+            return str(error.error_summary)
+
+        error_messages = []
+        for field, messages in error.error_summary.items():
+            if isinstance(messages, list):
+                error_messages.extend(messages)
+            else:
+                error_messages.append(str(messages))
+
+        return '<br>'.join(error_messages)
+
+    @staticmethod
+    def _handle_image_upload_with_error_handling(
+        file_key: str, resource_id: str, category: str, content: str
+    ) -> tuple[str | None, Response | None]:
+        """Returns (filename, None) on success, (None, error_response) on error"""
+        try:
+            uploaded_filename = ResourceController._handle_image_upload(file_key)
+            return uploaded_filename, None
+        except toolkit.ValidationError as e:
+            error_text = ResourceController._format_validation_error_message(e)
+            helpers.flash_error(error_text, allow_html=True)
+            error_response = ResourceController.comment(resource_id, category, content)
+            return None, error_response
+        except (IOError, OSError) as e:
+            log.exception(f'Image upload failed for resource {resource_id}: {e}')
+            toolkit.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            log.exception(
+                f'Unexpected error during image upload for resource {resource_id}: {e}'
+            )
+            toolkit.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    @staticmethod
+    def _validate_comment_data(
+        category: str | None, content: str
+    ) -> tuple[bool, str | None]:
+        """Returns (is_valid, error_message)"""
+        if not (category and content):
+            return False, None
+
+        if not is_recaptcha_verified(request):
+            return False, _('Bad Captcha. Please try again.')
+
+        if message := validate_service.validate_comment(content):
+            return False, _(message)
+
+        return True, None
+
+    @staticmethod
+    def _get_resource_context(resource_id: str) -> dict:
+        resource = comment_service.get_resource(resource_id)
+        context = {'model': model, 'session': session, 'for_view': True}
+        package = get_action('package_show')(
+            context, {'id': resource.Resource.package_id}
+        )
+        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+
+        return {'resource': resource, 'package': package, 'context': context}
+
+    @staticmethod
+    def _handle_validation_error(
+        resource_id: str,
+        error_message: str | None,
+        category: str,
+        content: str,
+        attached_image_filename: str | None = None,
+    ):
+        if error_message:
+            helpers.flash_error(error_message, allow_html=True)
+        return ResourceController.comment(
+            resource_id, category, content, attached_image_filename
+        )
+
+    @staticmethod
+    def _send_comment_notification_email(resource_id: str, category: str, content: str):
+        """Send notification email. Exceptions are logged but not raised."""
+        category_map = {
+            ResourceCommentCategory.REQUEST.name: _('Request'),
+            ResourceCommentCategory.QUESTION.name: _('Question'),
+            ResourceCommentCategory.THANK.name: _('Thank'),
+        }
+
+        try:
+            resource = comment_service.get_resource(resource_id)
+            send_email(
+                template_name=(
+                    FeedbackConfig().notice_email.template_resource_comment.get()
+                ),
+                organization_id=resource.Resource.package.owner_org,
+                subject=FeedbackConfig().notice_email.subject_resource_comment.get(),
+                target_name=resource.Resource.name,
+                category=category_map[category],
+                content=content,
+                url=toolkit.url_for(
+                    'resource_comment.comment', resource_id=resource_id, _external=True
+                ),
+            )
+        except Exception:
+            log.exception('Send email failed, for feedback notification.')
+
     # Render HTML pages
     # resource_comment/<resource_id>
     @staticmethod
@@ -99,91 +273,44 @@ class ResourceController:
             },
         )
 
-    # resource_comment/<resource_id>/comment/new
     @staticmethod
-    def create_comment(resource_id):
-        package_name = request.form.get('package_name', '')
-        category = None
-        if content := request.form.get('comment-content', ''):
-            category = request.form.get('category', '')
-        if rating := request.form.get('rating', ''):
-            rating = int(rating)
-        attached_image_filename = request.form.get('attached_image_filename', None)
-        if not (category and content):
-            toolkit.abort(400)
-
-        attached_image: FileStorage = request.files.get("image-upload")
-        if attached_image:
-            try:
-                attached_image_filename = ResourceController._upload_image(
-                    attached_image
-                )
-            except toolkit.ValidationError as e:
-                helpers.flash_error(e.error_summary, allow_html=True)
-                return ResourceController.comment(resource_id, category, content)
-            except Exception as e:
-                log.exception(f'Exception: {e}')
-                toolkit.abort(500)
-
-        if not is_recaptcha_verified(request):
-            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return ResourceController.comment(
-                resource_id, category, content, attached_image_filename
-            )
-
-        if message := validate_service.validate_comment(content):
-            helpers.flash_error(
-                _(message),
-                allow_html=True,
-            )
-            return ResourceController.comment(
-                resource_id, category, content, attached_image_filename
-            )
-
-        if not rating:
-            rating = None
-
+    def _persist_comment(
+        resource_id: str,
+        category: str,
+        content: str,
+        rating: int | None,
+        attached_image_filename: str | None,
+    ) -> OperationResult:
+        """Persist comment to database"""
         try:
             comment_service.create_resource_comment(
                 resource_id, category, content, rating, attached_image_filename
             )
             summary_service.create_resource_summary(resource_id)
             session.commit()
-        except Exception as e:
+            return OperationResult(success=True)
+        except SQLAlchemyError:
             session.rollback()
-            log.warning(f'Transaction rolled back for resource {resource_id}')
-            log.exception(f'Failed to create comment for resource {resource_id}: {e}')
-            helpers.flash_error(
-                _('Failed to create comment. Please try again.'), allow_html=True
+            log.exception(
+                f'Database error while creating comment for resource {resource_id}'
             )
-            return toolkit.redirect_to(
-                'resource_comment.comment', resource_id=resource_id
-            )
-
-        category_map = {
-            ResourceCommentCategory.REQUEST.name: _('Request'),
-            ResourceCommentCategory.QUESTION.name: _('Question'),
-            ResourceCommentCategory.THANK.name: _('Thank'),
-        }
-
-        try:
-            resource = comment_service.get_resource(resource_id)
-            send_email(
-                template_name=(
-                    FeedbackConfig().notice_email.template_resource_comment.get()
-                ),
-                organization_id=resource.Resource.package.owner_org,
-                subject=FeedbackConfig().notice_email.subject_resource_comment.get(),
-                target_name=resource.Resource.name,
-                category=category_map[category],
-                content=content,
-                url=toolkit.url_for(
-                    'resource_comment.comment', resource_id=resource_id, _external=True
-                ),
+            return OperationResult(
+                success=False,
+                error_message=_('Failed to create comment. Please try again.'),
             )
         except Exception:
-            log.exception('Send email failed, for feedback notification.')
+            session.rollback()
+            log.exception(
+                f'Unexpected error while creating comment for resource {resource_id}'
+            )
+            return OperationResult(
+                success=False,
+                error_message=_('Failed to create comment. Please try again.'),
+            )
 
+    @staticmethod
+    def _create_success_response(package_name: str, resource_id: str) -> Response:
+        """Create success response with flash message and cookie"""
         helpers.flash_success(
             _(
                 'Your comment has been sent.<br>The comment will not be displayed until'
@@ -196,9 +323,156 @@ class ResourceController:
                 'resource.read', id=package_name, resource_id=resource_id
             )
         )
-        resp_with_cookie = set_repeat_post_limit_cookie(resp, resource_id)
+        return set_repeat_post_limit_cookie(resp, resource_id)
 
-        return resp_with_cookie
+    @staticmethod
+    def _process_comment_input(
+        file_key: str, resource_id: str, form_data: dict | None = None
+    ) -> ProcessedInput:
+        """
+        Process and validate comment input.
+        Returns ProcessedInput with form_data, attached_filename, and error_response.
+        """
+        if form_data is None:
+            form_data = ResourceController._extract_comment_form_data()
+
+        category = form_data['category']
+        content = form_data['content']
+        attached_image_filename = form_data['attached_image_filename']
+
+        uploaded_filename, error_response = (
+            ResourceController._handle_image_upload_with_error_handling(
+                file_key, resource_id, category, content
+            )
+        )
+        if error_response:
+            return ProcessedInput(form_data, None, error_response)
+
+        if uploaded_filename:
+            attached_image_filename = uploaded_filename
+
+        is_valid, error_message = ResourceController._validate_comment_data(
+            category, content
+        )
+        if not is_valid:
+            error_response = ResourceController._handle_validation_error(
+                resource_id, error_message, category, content, attached_image_filename
+            )
+            return ProcessedInput(form_data, attached_image_filename, error_response)
+
+        return ProcessedInput(form_data, attached_image_filename, None)
+
+    @staticmethod
+    def _handle_moral_keeper_ai(
+        resource_id: str,
+        category: str,
+        content: str,
+        rating: int | None,
+        attached_image_filename: str | None,
+    ) -> Response | None:
+        """
+        Handle moral keeper AI check.
+        Returns suggestion page or None if check passes.
+        """
+        is_suggested = (
+            request.form.get(FormFields.COMMENT_SUGGESTED, False)
+            == DefaultValues.TRUE_STRING
+        )
+
+        if is_suggested:
+            action = request.form.get(FormFields.ACTION, None)
+            input_comment = request.form.get(FormFields.INPUT_COMMENT, None)
+            suggested_comment = request.form.get(
+                FormFields.SUGGESTED_COMMENT, DefaultValues.AUTO_SUGGEST_FAILED
+            )
+
+            comment_service.create_resource_comment_moral_check_log(
+                resource_id=resource_id,
+                action=action,
+                input_comment=input_comment,
+                suggested_comment=suggested_comment,
+                output_comment=content,
+            )
+        else:
+            if check_ai_comment(comment=content) is False:
+                return ResourceController.suggested_comment(
+                    resource_id=resource_id,
+                    rating=rating,
+                    category=category,
+                    content=content,
+                    attached_image_filename=attached_image_filename,
+                )
+
+            comment_service.create_resource_comment_moral_check_log(
+                resource_id=resource_id,
+                action=MoralCheckAction.CHECK_COMPLETED.name,
+                input_comment=content,
+                suggested_comment=None,
+                output_comment=content,
+            )
+
+        return None
+
+    @staticmethod
+    def _persist_moral_check_log(resource_id: str) -> OperationResult:
+        """Persist moral check log to database"""
+        try:
+            session.commit()
+            return OperationResult(success=True)
+        except SQLAlchemyError:
+            session.rollback()
+            log.exception(
+                f'Database error while creating moral check log '
+                f'for resource {resource_id}'
+            )
+            return OperationResult(
+                success=False,
+                error_message=_('Failed to create moral check log. Please try again.'),
+            )
+        except Exception:
+            session.rollback()
+            log.exception(
+                f'Unexpected error while creating moral check log '
+                f'for resource {resource_id}'
+            )
+            return OperationResult(
+                success=False,
+                error_message=_('Failed to create moral check log. Please try again.'),
+            )
+
+    # resource_comment/<resource_id>/comment/new
+    @staticmethod
+    def create_comment(resource_id):
+        package_name = request.form.get('package_name', '')
+
+        result = ResourceController._process_comment_input(
+            FormFields.IMAGE_UPLOAD, resource_id
+        )
+
+        if not (result.form_data['category'] and result.form_data['content']):
+            toolkit.abort(HTTPStatus.BAD_REQUEST)
+
+        if result.error_response:
+            return result.error_response
+
+        persist_result = ResourceController._persist_comment(
+            resource_id,
+            result.form_data['category'],
+            result.form_data['content'],
+            result.form_data['rating'],
+            result.attached_filename,
+        )
+        if not persist_result.success:
+            helpers.flash_error(persist_result.error_message, allow_html=True)
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        ResourceController._send_comment_notification_email(
+            resource_id, result.form_data['category'], result.form_data['content']
+        )
+
+        return ResourceController._create_success_response(package_name, resource_id)
 
     # resource_comment/<resource_id>/comment/suggested
     @staticmethod
@@ -255,102 +529,40 @@ class ResourceController:
                 'resource_comment.comment', resource_id=resource_id
             )
 
-        category = None
-        if content := request.form.get('comment-content', ''):
-            category = request.form.get('category', '')
-        if rating := request.form.get('rating', ''):
-            rating = int(rating)
-        attached_image_filename = request.form.get('attached_image_filename', None)
-        if not (category and content):
+        # Early check for category and content before processing
+        form_data = ResourceController._extract_comment_form_data()
+        if not (form_data['category'] and form_data['content']):
             return toolkit.redirect_to(
                 'resource_comment.comment', resource_id=resource_id
             )
 
-        attached_image: FileStorage = request.files.get("attached_image")
-        if attached_image:
-            try:
-                attached_image_filename = ResourceController._upload_image(
-                    attached_image
-                )
-            except toolkit.ValidationError as e:
-                helpers.flash_error(e.error_summary, allow_html=True)
-                return ResourceController.comment(resource_id, category, content)
-            except Exception as e:
-                log.exception(f'Exception: {e}')
-                toolkit.abort(500)
-
-        if not is_recaptcha_verified(request):
-            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return ResourceController.comment(
-                resource_id, category, content, attached_image_filename
-            )
-
-        if message := validate_service.validate_comment(content):
-            helpers.flash_error(
-                _(message),
-                allow_html=True,
-            )
-            return ResourceController.comment(
-                resource_id, category, content, attached_image_filename
-            )
-
-        categories = comment_service.get_resource_comment_categories()
-        resource = comment_service.get_resource(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
+        # Process with existing form_data to avoid duplication
+        result = ResourceController._process_comment_input(
+            FormFields.ATTACHED_IMAGE, resource_id, form_data
         )
-        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+
+        if result.error_response:
+            return result.error_response
+
+        resource_context = ResourceController._get_resource_context(resource_id)
+        categories = comment_service.get_resource_comment_categories()
 
         if FeedbackConfig().moral_keeper_ai.is_enable(
-            resource.Resource.package.owner_org
+            resource_context['resource'].Resource.package.owner_org
         ):
-            is_suggested = request.form.get('comment-suggested', False) == 'True'
+            ai_response = ResourceController._handle_moral_keeper_ai(
+                resource_id,
+                result.form_data['category'],
+                result.form_data['content'],
+                result.form_data['rating'],
+                result.attached_filename,
+            )
+            if ai_response:
+                return ai_response
 
-            if is_suggested:
-                action = request.form.get('action', None)
-                input_comment = request.form.get('input-comment', None)
-                suggested_comment = request.form.get(
-                    'suggested-comment', 'AUTO_SUGGEST_FAILED'
-                )
-
-                comment_service.create_resource_comment_moral_check_log(
-                    resource_id=resource_id,
-                    action=action,
-                    input_comment=input_comment,
-                    suggested_comment=suggested_comment,
-                    output_comment=content,
-                )
-            else:
-                if check_ai_comment(comment=content) is False:
-                    return ResourceController.suggested_comment(
-                        resource_id=resource_id,
-                        rating=rating,
-                        category=category,
-                        content=content,
-                        attached_image_filename=attached_image_filename,
-                    )
-
-                comment_service.create_resource_comment_moral_check_log(
-                    resource_id=resource_id,
-                    action=MoralCheckAction.CHECK_COMPLETED.name,
-                    input_comment=content,
-                    suggested_comment=None,
-                    output_comment=content,
-                )
-
-            try:
-                session.commit()
-            except Exception as e:
-                session.rollback()
-                log.warning(f'Transaction rolled back for resource {resource_id}')
-                log.exception(
-                    f'Failed to create moral check log for resource {resource_id}: {e}'
-                )
-                helpers.flash_error(
-                    _('Failed to create moral check log. Please try again.'),
-                    allow_html=True,
-                )
+            persist_result = ResourceController._persist_moral_check_log(resource_id)
+            if not persist_result.success:
+                helpers.flash_error(persist_result.error_message, allow_html=True)
                 return toolkit.redirect_to(
                     'resource_comment.comment', resource_id=resource_id
                 )
@@ -358,13 +570,13 @@ class ResourceController:
         return toolkit.render(
             'resource/comment_check.html',
             {
-                'resource': resource.Resource,
-                'pkg_dict': package,
+                'resource': resource_context['resource'].Resource,
+                'pkg_dict': resource_context['package'],
                 'categories': categories,
-                'selected_category': category,
-                'rating': rating,
-                'content': content,
-                'attached_image_filename': attached_image_filename,
+                'selected_category': result.form_data['category'],
+                'rating': result.form_data['rating'],
+                'content': result.form_data['content'],
+                'attached_image_filename': result.attached_filename,
             },
         )
 
@@ -557,6 +769,32 @@ class ResourceController:
 
     @staticmethod
     def _upload_image(image: FileStorage) -> str:
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        allowed_mimetypes = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
+
+        if image.filename:
+            ext = image.filename.rsplit('.', 1)[-1].lower()
+            if ext not in allowed_extensions:
+                raise toolkit.ValidationError(
+                    {
+                        _('Image Upload'): [
+                            _(
+                                'Invalid file extension. '
+                                'Allowed: png, jpg, jpeg, gif, webp'
+                            )
+                        ]
+                    }
+                )
+
+        if image.content_type and image.content_type not in allowed_mimetypes:
+            raise toolkit.ValidationError(
+                {
+                    _('Image Upload'): [
+                        _('Invalid file type. Only image files are allowed.')
+                    ]
+                }
+            )
+
         upload_to = comment_service.get_upload_destination()
         uploader: PUploader = get_uploader(upload_to)
         data_dict = {
