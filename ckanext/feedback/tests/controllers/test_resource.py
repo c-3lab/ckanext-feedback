@@ -3129,3 +3129,128 @@ class TestResourceControllerCommonMethods:
             ResourceController._handle_image_upload_with_error_handling(
                 'image-upload', 'res-123', 'REQUEST', 'test content'
             )
+
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    def test_persist_operation_success(self, mock_commit, mock_rollback):
+        """Test _persist_operation with successful operation"""
+        mock_operation = MagicMock()
+
+        result = ResourceController._persist_operation(
+            mock_operation, 'res-123', 'Test error message'
+        )
+
+        assert result.success is True
+        assert result.error_message is None
+        mock_operation.assert_called_once()
+        mock_commit.assert_called_once()
+        mock_rollback.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    def test_persist_operation_sqlalchemy_error(self, mock_commit, mock_rollback):
+        """Test _persist_operation handles SQLAlchemyError"""
+        from sqlalchemy.exc import SQLAlchemyError
+
+        mock_operation = MagicMock()
+        mock_commit.side_effect = SQLAlchemyError('Database error')
+
+        result = ResourceController._persist_operation(
+            mock_operation, 'res-123', 'Test error message'
+        )
+
+        assert result.success is False
+        assert result.error_message == _('Test error message')
+        mock_operation.assert_called_once()
+        mock_commit.assert_called_once()
+        mock_rollback.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.resource.session.rollback')
+    @patch('ckanext.feedback.controllers.resource.session.commit')
+    def test_persist_operation_general_exception(self, mock_commit, mock_rollback):
+        """Test _persist_operation handles general Exception"""
+        mock_operation = MagicMock()
+        mock_commit.side_effect = Exception('Unexpected error')
+
+        result = ResourceController._persist_operation(
+            mock_operation, 'res-123', 'Test error message'
+        )
+
+        assert result.success is False
+        assert result.error_message == _('Test error message')
+        mock_operation.assert_called_once()
+        mock_commit.assert_called_once()
+        mock_rollback.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.resource.isinstance')
+    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
+    def test_determine_approval_status_not_logged_in(
+        self, mock_has_org_admin, mock_isinstance
+    ):
+        """Test _determine_approval_status when user is not logged in"""
+        mock_isinstance.return_value = False
+
+        with patch('ckanext.feedback.controllers.resource.current_user', 'not_a_user'):
+            result = ResourceController._determine_approval_status('test-org')
+
+        assert result is True
+        mock_has_org_admin.assert_not_called()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.isinstance')
+    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
+    def test_determine_approval_status_org_admin(
+        self, mock_has_org_admin, mock_isinstance, current_user
+    ):
+        """Test _determine_approval_status for organization admin"""
+        user_dict = factories.User()
+        user_obj = model.User.get(user_dict['name'])
+        mock_current_user(current_user, user_dict)
+
+        mock_isinstance.return_value = True
+        mock_has_org_admin.return_value = True
+
+        with patch('ckanext.feedback.controllers.resource.current_user', user_obj):
+            result = ResourceController._determine_approval_status('test-org')
+
+        assert result is None
+        mock_has_org_admin.assert_called_once_with('test-org')
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.isinstance')
+    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
+    def test_determine_approval_status_sysadmin(
+        self, mock_has_org_admin, mock_isinstance, current_user
+    ):
+        """Test _determine_approval_status for sysadmin"""
+        user_dict = factories.Sysadmin()
+        user_obj = model.User.get(user_dict['name'])
+        mock_current_user(current_user, user_dict)
+
+        mock_isinstance.return_value = True
+        mock_has_org_admin.return_value = False
+
+        with patch('ckanext.feedback.controllers.resource.current_user', user_obj):
+            result = ResourceController._determine_approval_status('test-org')
+
+        assert result is None
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.isinstance')
+    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
+    def test_determine_approval_status_regular_user(
+        self, mock_has_org_admin, mock_isinstance, current_user
+    ):
+        """Test _determine_approval_status for regular user"""
+        user_dict = factories.User()
+        user_obj = model.User.get(user_dict['name'])
+        mock_current_user(current_user, user_dict)
+
+        mock_isinstance.return_value = True
+        mock_has_org_admin.return_value = False
+
+        with patch('ckanext.feedback.controllers.resource.current_user', user_obj):
+            result = ResourceController._determine_approval_status('test-org')
+
+        assert result is True
+        mock_has_org_admin.assert_called_once_with('test-org')
