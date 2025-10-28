@@ -4,9 +4,7 @@ import pytest
 from ckan import model
 from ckan.common import _, config
 from ckan.logic import get_action
-from ckan.model import User
 from ckan.plugins import toolkit
-from ckan.tests import factories
 from flask import Flask, g
 from werkzeug.exceptions import NotFound
 
@@ -25,20 +23,6 @@ from ckanext.feedback.models.types import (
 )
 
 engine = model.repo.session.get_bind()
-
-
-@pytest.fixture
-def sysadmin_env():
-    user = factories.SysadminWithToken()
-    env = {'Authorization': user['token']}
-    return env
-
-
-@pytest.fixture
-def user_env():
-    user = factories.UserWithToken()
-    env = {'Authorization': user['token']}
-    return env
 
 
 def mock_current_user(current_user, user):
@@ -74,17 +58,12 @@ class TestResourceController:
         current_user,
         app,
         sysadmin_env,
+        sysadmin,
+        resource,
     ):
         mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
 
-        organization_dict = factories.Organization(
-            name='org_name',
-        )
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-        resource['package'] = package
         resource_id = resource['id']
 
         page = 1
@@ -127,7 +106,7 @@ class TestResourceController:
             items_per_page=limit,
         )
         g.pkg_dict = package
-        assert g.pkg_dict["organization"]['name'] == 'org_name'
+        assert g.pkg_dict["organization"]['name'] == resource.organization_name
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
@@ -159,16 +138,11 @@ class TestResourceController:
         current_user,
         app,
         user_env,
+        user,
+        resource,
     ):
         mock_get_repeat_post_limit_cookie.return_value = 'mock_cookie'
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        organization_dict = factories.Organization(
-            name='org_name',
-        )
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-        resource['package'] = package
+        mock_current_user(current_user, user)
         resource_id = resource['id']
 
         page = 1
@@ -212,7 +186,7 @@ class TestResourceController:
         )
 
         g.pkg_dict = package
-        assert g.pkg_dict["organization"]['name'] == 'org_name'
+        assert g.pkg_dict["organization"]['name'] == resource.organization_name
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
@@ -244,12 +218,10 @@ class TestResourceController:
         current_user,
         app,
         user_env,
+        user,
+        resource,
     ):
-        user_dict = factories.User()
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
-        mock_current_user(current_user, user_dict)
-        resource = factories.Resource(package_id=dataset['id'])
+        mock_current_user(current_user, user)
         resource_id = resource['id']
 
         page = 1
@@ -319,12 +291,8 @@ class TestResourceController:
         mock_page,
         mock_pagination,
         app,
+        resource,
     ):
-        organization_dict = factories.Organization(
-            name='org_name',
-        )
-        dataset = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=dataset['id'])
         resource_id = resource['id']
 
         page = 1
@@ -367,7 +335,7 @@ class TestResourceController:
         )
 
         g.pkg_dict = package
-        assert g.pkg_dict["organization"]['name'] == 'org_name'
+        assert g.pkg_dict["organization"]['name'] == resource.organization_name
 
         mock_render.assert_called_once_with(
             'resource/comment.html',
@@ -1157,12 +1125,12 @@ class TestResourceController:
         mock_summary_service,
         mock_form,
         current_user,
+        sysadmin,
     ):
         resource_id = 'resource id'
         resource_comment_id = 'resource comment id'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_form.get.side_effect = [resource_comment_id]
@@ -1171,7 +1139,7 @@ class TestResourceController:
         ResourceController.approve_comment(resource_id)
 
         mock_comment_service.approve_resource_comment.assert_called_once_with(
-            resource_comment_id, user_dict['id']
+            resource_comment_id, sysadmin['id']
         )
         mock_summary_service.refresh_resource_summary.assert_called_once_with(
             resource_id
@@ -1183,11 +1151,10 @@ class TestResourceController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
-    def test_approve_comment_with_user(self, mock_toolkit_abort, current_user):
+    def test_approve_comment_with_user(self, mock_toolkit_abort, current_user, user):
         resource_id = 'resource id'
 
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, user)
         g.userobj = current_user
 
         ResourceController.approve_comment(resource_id)
@@ -1199,6 +1166,7 @@ class TestResourceController:
             ),
         )
 
+    @pytest.mark.db_test
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -1209,28 +1177,35 @@ class TestResourceController:
         mock_comment_service,
         mock_toolkit_abort,
         current_user,
+        user,
+        resource,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
+        import uuid
 
-        dummy_organization_dict = factories.Organization()
-        dummy_organization = model.Group.get(dummy_organization_dict['id'])
+        user_obj = model.User.get(user['name'])
 
-        user_dict = factories.User()
-        user = User.get(user_dict['id'])
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        dummy_organization = model.Group(
+            name=f'test-org-{uuid.uuid4().hex[:8]}',
+            title='Dummy Organization',
+            type='organization',
+        )
+        model.Session.add(dummy_organization)
+        model.Session.flush()
 
         member = model.Member(
             group=dummy_organization,
-            group_id=dummy_organization_dict['id'],
-            table_id=user.id,
+            group_id=dummy_organization.id,
+            table_id=user_obj.id,
             table_name='user',
             capacity='admin',
         )
         model.Session.add(member)
         model.Session.commit()
+
+        model.Session.expunge(user_obj)
+        user_obj = model.User.get(user['name'])
+        current_user.return_value = user_obj
+        g.userobj = current_user
 
         ResourceController.approve_comment(resource['id'])
         mock_toolkit_abort.assert_any_call(
@@ -1253,11 +1228,11 @@ class TestResourceController:
         mock_summary_service,
         mock_toolkit_abort,
         current_user,
+        sysadmin,
     ):
         resource_id = 'resource id'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_form.get.side_effect = [None]
@@ -1279,13 +1254,13 @@ class TestResourceController:
         mock_summary_service,
         mock_form,
         current_user,
+        sysadmin,
     ):
         resource_id = 'resource id'
         resource_comment_id = 'resource comment id'
         reply_content = 'reply content'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_form.get.side_effect = [
@@ -1297,7 +1272,7 @@ class TestResourceController:
         ResourceController.reply(resource_id)
 
         mock_comment_service.create_reply.assert_called_once_with(
-            resource_comment_id, reply_content, user_dict['id']
+            resource_comment_id, reply_content, sysadmin['id']
         )
         mock_session_commit.assert_called_once()
         mock_redirect_to.assert_called_once_with(
@@ -1306,11 +1281,10 @@ class TestResourceController:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
-    def test_reply_with_user(self, mock_toolkit_abort, current_user):
+    def test_reply_with_user(self, mock_toolkit_abort, current_user, user):
         resource_id = 'resource id'
 
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, user)
         g.userobj = current_user
 
         ResourceController.reply(resource_id)
@@ -1322,6 +1296,7 @@ class TestResourceController:
             ),
         )
 
+    @pytest.mark.db_test
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -1332,27 +1307,35 @@ class TestResourceController:
         mock_comment_service,
         mock_toolkit_abort,
         current_user,
+        user,
+        resource,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
+        import uuid
 
-        dummy_organization_dict = factories.Organization()
-        dummy_organization = model.Group.get(dummy_organization_dict['id'])
+        user_obj = model.User.get(user['name'])
 
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
-        g.userobj = current_user
+        dummy_organization = model.Group(
+            name=f'test-org-{uuid.uuid4().hex[:8]}',
+            title='Dummy Organization',
+            type='organization',
+        )
+        model.Session.add(dummy_organization)
+        model.Session.flush()
 
         member = model.Member(
             group=dummy_organization,
-            group_id=dummy_organization_dict['id'],
-            table_id=user_dict['id'],
+            group_id=dummy_organization.id,
+            table_id=user_obj.id,
             table_name='user',
             capacity='admin',
         )
         model.Session.add(member)
         model.Session.commit()
+
+        model.Session.expunge(user_obj)
+        user_obj = model.User.get(user['name'])
+        current_user.return_value = user_obj
+        g.userobj = current_user
 
         ResourceController.reply(resource['id'])
         mock_toolkit_abort.assert_any_call(
@@ -1375,11 +1358,11 @@ class TestResourceController:
         mock_summary_service,
         mock_toolkit_abort,
         current_user,
+        sysadmin,
     ):
         resource_id = 'resource id'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_form.get.side_effect = [
@@ -1406,13 +1389,13 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        sysadmin,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
 
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_resource = MagicMock()
@@ -1500,13 +1483,13 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        user,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
 
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, user)
         g.userobj = current_user
 
         mock_resource = MagicMock()
@@ -1560,13 +1543,13 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        user,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
 
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, user)
         g.userobj = current_user
 
         mock_resource = MagicMock()
@@ -1599,13 +1582,13 @@ class TestResourceController:
         mock_get_resource_comment,
         mock_get_resource,
         current_user,
+        user,
     ):
         resource_id = 'resource_id'
         comment_id = 'comment_id'
         attached_image_filename = 'attached_image_filename'
 
-        user_dict = factories.User()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, user)
         g.userobj = current_user
 
         mock_resource = MagicMock()
@@ -1659,11 +1642,9 @@ class TestResourceController:
         self,
         mock_response,
         mock_get_json,
+        dataset,
+        resource,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-
         mock_get_json.return_value = {'likeStatus': True}
 
         mock_resp = Mock()
@@ -1672,7 +1653,7 @@ class TestResourceController:
         mock_resp.mimetype = 'text/plain'
         mock_response.return_value = mock_resp
 
-        resp = ResourceController.like_toggle(package['name'], resource['id'])
+        resp = ResourceController.like_toggle(dataset['name'], resource['id'])
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
@@ -1685,11 +1666,9 @@ class TestResourceController:
         self,
         mock_response,
         mock_get_json,
+        dataset,
+        resource,
     ):
-        organization_dict = factories.Organization()
-        package = factories.Dataset(owner_org=organization_dict['id'])
-        resource = factories.Resource(package_id=package['id'])
-
         mock_get_json.return_value = {'likeStatus': False}
 
         mock_resp = Mock()
@@ -1698,7 +1677,7 @@ class TestResourceController:
         mock_resp.mimetype = 'text/plain'
         mock_response.return_value = mock_resp
 
-        resp = ResourceController.like_toggle(package['name'], resource['id'])
+        resp = ResourceController.like_toggle(dataset['name'], resource['id'])
 
         assert resp.data.decode() == "OK"
         assert resp.status_code == 200
@@ -2264,11 +2243,11 @@ class TestResourceCreatePreviousLog:
         mock_flash_error,
         mock_redirect,
         current_user,
+        sysadmin,
         resource,
     ):
         """Test approve_comment() error handling"""
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_form.get.return_value = 'comment-id'
@@ -2295,11 +2274,11 @@ class TestResourceCreatePreviousLog:
         mock_flash_error,
         mock_redirect,
         current_user,
+        sysadmin,
         resource,
     ):
         """Test reply() error handling"""
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_form.get.side_effect = lambda k, d='': {
@@ -2366,11 +2345,11 @@ class TestResourceCreatePreviousLog:
         mock_flash_error,
         mock_redirect,
         current_user,
+        sysadmin,
         resource,
     ):
         """Test reactions() error handling"""
-        user_dict = factories.Sysadmin()
-        mock_current_user(current_user, user_dict)
+        mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
         mock_form.get.side_effect = lambda k, d='': {
@@ -3182,75 +3161,45 @@ class TestResourceControllerCommonMethods:
         mock_commit.assert_called_once()
         mock_rollback.assert_called_once()
 
-    @patch('ckanext.feedback.controllers.resource.isinstance')
-    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
-    def test_determine_approval_status_not_logged_in(
-        self, mock_has_org_admin, mock_isinstance
-    ):
+    def test_determine_approval_status_not_logged_in(self):
         """Test _determine_approval_status when user is not logged in"""
-        mock_isinstance.return_value = False
-
-        with patch('ckanext.feedback.controllers.resource.current_user', 'not_a_user'):
+        with patch('ckanext.feedback.controllers.resource.current_user', None):
             result = ResourceController._determine_approval_status('test-org')
 
         assert result is True
-        mock_has_org_admin.assert_not_called()
 
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.resource.isinstance')
+    @pytest.mark.db_test
     @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
     def test_determine_approval_status_org_admin(
-        self, mock_has_org_admin, mock_isinstance, current_user
+        self, mock_has_org_admin_role, user, organization
     ):
         """Test _determine_approval_status for organization admin"""
-        user_dict = factories.User()
-        user_obj = model.User.get(user_dict['name'])
-        mock_current_user(current_user, user_dict)
+        user_obj = model.User.get(user['name'])
 
-        mock_isinstance.return_value = True
-        mock_has_org_admin.return_value = True
+        mock_has_org_admin_role.return_value = True
 
         with patch('ckanext.feedback.controllers.resource.current_user', user_obj):
-            result = ResourceController._determine_approval_status('test-org')
+            result = ResourceController._determine_approval_status(organization['id'])
 
         assert result is None
-        mock_has_org_admin.assert_called_once_with('test-org')
+        mock_has_org_admin_role.assert_called_once_with(organization['id'])
 
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.resource.isinstance')
-    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
-    def test_determine_approval_status_sysadmin(
-        self, mock_has_org_admin, mock_isinstance, current_user
-    ):
+    @pytest.mark.db_test
+    def test_determine_approval_status_sysadmin(self, sysadmin, organization):
         """Test _determine_approval_status for sysadmin"""
-        user_dict = factories.Sysadmin()
-        user_obj = model.User.get(user_dict['name'])
-        mock_current_user(current_user, user_dict)
+        sysadmin_obj = model.User.get(sysadmin['name'])
 
-        mock_isinstance.return_value = True
-        mock_has_org_admin.return_value = False
-
-        with patch('ckanext.feedback.controllers.resource.current_user', user_obj):
-            result = ResourceController._determine_approval_status('test-org')
+        with patch('ckanext.feedback.controllers.resource.current_user', sysadmin_obj):
+            result = ResourceController._determine_approval_status(organization['id'])
 
         assert result is None
 
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.resource.isinstance')
-    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
-    def test_determine_approval_status_regular_user(
-        self, mock_has_org_admin, mock_isinstance, current_user
-    ):
+    @pytest.mark.db_test
+    def test_determine_approval_status_regular_user(self, user, organization):
         """Test _determine_approval_status for regular user"""
-        user_dict = factories.User()
-        user_obj = model.User.get(user_dict['name'])
-        mock_current_user(current_user, user_dict)
-
-        mock_isinstance.return_value = True
-        mock_has_org_admin.return_value = False
+        user_obj = model.User.get(user['name'])
 
         with patch('ckanext.feedback.controllers.resource.current_user', user_obj):
-            result = ResourceController._determine_approval_status('test-org')
+            result = ResourceController._determine_approval_status(organization['id'])
 
         assert result is True
-        mock_has_org_admin.assert_called_once_with('test-org')
