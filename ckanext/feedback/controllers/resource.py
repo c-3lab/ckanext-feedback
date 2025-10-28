@@ -62,6 +62,28 @@ class DefaultValues:
 
     TRUE_STRING = 'True'
     AUTO_SUGGEST_FAILED = 'AUTO_SUGGEST_FAILED'
+    FALSE_STRING = 'False'
+
+
+class ResponseStatusMap:
+    """Response status mapping constants"""
+
+    STATUS_MAP = {
+        'status-none': ResourceCommentResponseStatus.STATUS_NONE.name,
+        'not-started': ResourceCommentResponseStatus.NOT_STARTED.name,
+        'in-progress': ResourceCommentResponseStatus.IN_PROGRESS.name,
+        'completed': ResourceCommentResponseStatus.COMPLETED.name,
+        'rejected': ResourceCommentResponseStatus.REJECTED.name,
+    }
+
+
+class MoralCheckActionMap:
+    """Moral check action mapping constants"""
+
+    ACTION_MAP = {
+        'suggestion': MoralCheckAction.PREVIOUS_SUGGESTION.name,
+        'confirm': MoralCheckAction.PREVIOUS_CONFIRM.name,
+    }
 
 
 @dataclass
@@ -82,6 +104,36 @@ class ProcessedInput:
 
 
 class ResourceController:
+    @staticmethod
+    def _determine_approval_status(owner_org: str) -> bool | None:
+        """
+        Determine approval status based on current user.
+        Returns: True (only approved), False (all), None (all for admin/sysadmin)
+        """
+        if not isinstance(current_user, model.User):
+            return True
+        elif has_organization_admin_role(owner_org) or current_user.sysadmin:
+            return None
+        return True
+
+    @staticmethod
+    def _persist_operation(
+        operation: callable, resource_id: str, error_message: str
+    ) -> OperationResult:
+        """Generic database operation with error handling"""
+        try:
+            operation()
+            session.commit()
+            return OperationResult(success=True)
+        except SQLAlchemyError:
+            session.rollback()
+            log.exception(f'Database error for resource {resource_id}')
+            return OperationResult(success=False, error_message=_(error_message))
+        except Exception:
+            session.rollback()
+            log.exception(f'Unexpected error for resource {resource_id}')
+            return OperationResult(success=False, error_message=_(error_message))
+
     @staticmethod
     def _parse_rating(rating_str: str) -> int | None:
         """Parse rating string to integer or None"""
@@ -224,20 +276,12 @@ class ResourceController:
     def comment(
         resource_id, category='', content='', attached_image_filename: str | None = None
     ):
-        approval = True
         resource = comment_service.get_resource(resource_id)
-        if not isinstance(current_user, model.User):
-            # if the user is not logged in, display only approved comments
-            approval = True
-        elif (
-            has_organization_admin_role(resource.Resource.package.owner_org)
-            or current_user.sysadmin
-        ):
-            # if the user is an organization admin or a sysadmin, display all comments
-            approval = None
+        approval = ResourceController._determine_approval_status(
+            resource.Resource.package.owner_org
+        )
 
         page, limit, offset, _ = get_pagination_value('resource_comment.comment')
-
         comments, total_count = comment_service.get_resource_comments(
             resource_id, approval, limit=limit, offset=offset
         )
@@ -249,10 +293,8 @@ class ResourceController:
             context, {'id': resource.Resource.package_id}
         )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
-        if not category:
-            selected_category = ResourceCommentCategory.REQUEST.name
-        else:
-            selected_category = category
+
+        selected_category = category or ResourceCommentCategory.REQUEST.name
 
         return toolkit.render(
             'resource/comment.html',
@@ -484,41 +526,23 @@ class ResourceController:
         attached_image_filename: str | None = None,
     ):
         softened = suggest_ai_comment(comment=content)
+        resource_context = ResourceController._get_resource_context(resource_id)
 
-        context = {'model': model, 'session': session, 'for_view': True}
-
-        resource = comment_service.get_resource(resource_id)
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
-        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+        common_context = {
+            'resource': resource_context['resource'].Resource,
+            'pkg_dict': resource_context['package'],
+            'selected_category': category,
+            'rating': rating,
+            'content': content,
+            'attached_image_filename': attached_image_filename,
+            'action': MoralCheckAction,
+        }
 
         if softened is None:
-            return toolkit.render(
-                'resource/expect_suggestion.html',
-                {
-                    'resource': resource.Resource,
-                    'pkg_dict': package,
-                    'selected_category': category,
-                    'rating': rating,
-                    'content': content,
-                    'attached_image_filename': attached_image_filename,
-                    'action': MoralCheckAction,
-                },
-            )
+            return toolkit.render('resource/expect_suggestion.html', common_context)
 
         return toolkit.render(
-            'resource/suggestion.html',
-            {
-                'resource': resource.Resource,
-                'pkg_dict': package,
-                'selected_category': category,
-                'rating': rating,
-                'content': content,
-                'attached_image_filename': attached_image_filename,
-                'softened': softened,
-                'action': MoralCheckAction,
-            },
+            'resource/suggestion.html', {**common_context, 'softened': softened}
         )
 
     # resource_comment/<resource_id>/comment/check
@@ -595,24 +619,20 @@ class ResourceController:
         ResourceController._check_organization_admin_role(resource_id)
         resource_comment_id = request.form.get('resource_comment_id')
         if not resource_comment_id:
-            toolkit.abort(400)
+            toolkit.abort(HTTPStatus.BAD_REQUEST)
 
-        try:
+        def operation():
             comment_service.approve_resource_comment(
                 resource_comment_id, current_user.id
             )
             summary_service.refresh_resource_summary(resource_id)
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            log.warning(f'Transaction rolled back for resource {resource_id}')
-            log.exception(f'Failed to approve comment for resource {resource_id}: {e}')
-            helpers.flash_error(
-                _('Failed to approve comment. Please try again.'), allow_html=True
-            )
-            return toolkit.redirect_to(
-                'resource_comment.comment', resource_id=resource_id
-            )
+
+        result = ResourceController._persist_operation(
+            operation, resource_id, 'Failed to approve comment. Please try again.'
+        )
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -624,21 +644,17 @@ class ResourceController:
         resource_comment_id = request.form.get('resource_comment_id', '')
         content = request.form.get('reply_content', '')
         if not (resource_comment_id and content):
-            toolkit.abort(400)
+            toolkit.abort(HTTPStatus.BAD_REQUEST)
 
-        try:
+        def operation():
             comment_service.create_reply(resource_comment_id, content, current_user.id)
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            log.warning(f'Transaction rolled back for resource {resource_id}')
-            log.exception(f'Failed to create reply for resource {resource_id}: {e}')
-            helpers.flash_error(
-                _('Failed to create reply. Please try again.'), allow_html=True
-            )
-            return toolkit.redirect_to(
-                'resource_comment.comment', resource_id=resource_id
-            )
+
+        result = ResourceController._persist_operation(
+            operation, resource_id, 'Failed to create reply. Please try again.'
+        )
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -647,29 +663,23 @@ class ResourceController:
     def attached_image(resource_id: str, comment_id: str, attached_image_filename: str):
         resource = comment_service.get_resource(resource_id)
         if resource is None:
-            toolkit.abort(404)
+            toolkit.abort(HTTPStatus.NOT_FOUND)
 
-        approval = True
-        if not isinstance(current_user, model.User):
-            # if the user is not logged in, display only approved comments
-            approval = True
-        elif (
-            has_organization_admin_role(resource.Resource.package.owner_org)
-            or current_user.sysadmin
-        ):
-            # if the user is an organization admin or a sysadmin, display all comments
-            approval = None
+        approval = ResourceController._determine_approval_status(
+            resource.Resource.package.owner_org
+        )
 
         comment = comment_service.get_resource_comment(
             comment_id, resource_id, approval, attached_image_filename
         )
         if comment is None:
-            toolkit.abort(404)
+            toolkit.abort(HTTPStatus.NOT_FOUND)
+
         attached_image_path = comment_service.get_attached_image_path(
             attached_image_filename
         )
         if not os.path.exists(attached_image_path):
-            toolkit.abort(404)
+            toolkit.abort(HTTPStatus.NOT_FOUND)
 
         return send_file(attached_image_path)
 
@@ -681,41 +691,42 @@ class ResourceController:
             and not current_user.sysadmin
         ):
             toolkit.abort(
-                404,
+                HTTPStatus.NOT_FOUND,
                 _(
                     'The requested URL was not found on the server. If you entered the'
                     ' URL manually please check your spelling and try again.'
                 ),
             )
 
+    @staticmethod
     def like_status(resource_id):
         status = get_like_status_cookie(resource_id)
-        if status:
-            return status
-        return 'False'
+        return status or DefaultValues.FALSE_STRING
 
     @staticmethod
     def like_toggle(package_name, resource_id):
         data = request.get_json()
         like_status = data.get('likeStatus')
 
-        try:
+        def operation():
             if like_status:
                 likes_service.increment_resource_like_count(resource_id)
                 likes_service.increment_resource_like_count_monthly(resource_id)
             else:
                 likes_service.decrement_resource_like_count(resource_id)
                 likes_service.decrement_resource_like_count_monthly(resource_id)
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            log.warning(f'Transaction rolled back for resource {resource_id}')
-            log.exception(f'Failed to toggle like for resource {resource_id}: {e}')
-            return Response("Error", status=500, mimetype='text/plain')
 
-        resp = Response("OK", status=200, mimetype='text/plain')
-        resp_with_like = set_like_status_cookie(resp, resource_id, like_status)
-        return resp_with_like
+        result = ResourceController._persist_operation(
+            operation, resource_id, 'Failed to toggle like.'
+        )
+
+        if not result.success:
+            return Response(
+                'Error', status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype='text/plain'
+            )
+
+        resp = Response('OK', status=HTTPStatus.OK, mimetype='text/plain')
+        return set_like_status_cookie(resp, resource_id, like_status)
 
     # resource_comment/<resource_id>/comment/reactions
     @staticmethod
@@ -725,45 +736,35 @@ class ResourceController:
 
         comment_id = request.form.get('resource_comment_id')
         response_status = request.form.get('response_status')
-        response_status_map = {
-            'status-none': ResourceCommentResponseStatus.STATUS_NONE.name,
-            'not-started': ResourceCommentResponseStatus.NOT_STARTED.name,
-            'in-progress': ResourceCommentResponseStatus.IN_PROGRESS.name,
-            'completed': ResourceCommentResponseStatus.COMPLETED.name,
-            'rejected': ResourceCommentResponseStatus.REJECTED.name,
-        }
         admin_liked = request.form.get('admin_liked') == 'on'
 
         resource_comment_reactions = comment_service.get_resource_comment_reactions(
             comment_id
         )
 
-        try:
+        def operation():
+            mapped_status = ResponseStatusMap.STATUS_MAP[response_status]
             if resource_comment_reactions:
                 comment_service.update_resource_comment_reactions(
                     resource_comment_reactions,
-                    response_status_map[response_status],
+                    mapped_status,
                     admin_liked,
                     current_user.id,
                 )
             else:
                 comment_service.create_resource_comment_reactions(
                     comment_id,
-                    response_status_map[response_status],
+                    mapped_status,
                     admin_liked,
                     current_user.id,
                 )
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            log.warning(f'Transaction rolled back for resource {resource_id}')
-            log.exception(f'Failed to update reactions for resource {resource_id}: {e}')
-            helpers.flash_error(
-                _('Failed to update reactions. Please try again.'), allow_html=True
-            )
-            return toolkit.redirect_to(
-                'resource_comment.comment', resource_id=resource_id
-            )
+
+        result = ResourceController._persist_operation(
+            operation, resource_id, 'Failed to update reactions. Please try again.'
+        )
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -811,22 +812,21 @@ class ResourceController:
     @staticmethod
     def create_previous_log(resource_id):
         resource = comment_service.get_resource(resource_id)
-        if FeedbackConfig().moral_keeper_ai.is_enable(
+        if not FeedbackConfig().moral_keeper_ai.is_enable(
             resource.Resource.package.owner_org
         ):
-            data = request.get_json()
-            previous_type = data.get('previous_type', None)
-            input_comment = data.get('input_comment', None)
-            suggested_comment = data.get('suggested_comment', None)
+            return '', HTTPStatus.NO_CONTENT
 
-            action_map = {
-                'suggestion': MoralCheckAction.PREVIOUS_SUGGESTION.name,
-                'confirm': MoralCheckAction.PREVIOUS_CONFIRM.name,
-            }
-            action = action_map.get(previous_type, None)
-            if action is None:
-                return '', 204
+        data = request.get_json()
+        previous_type = data.get('previous_type', None)
+        input_comment = data.get('input_comment', None)
+        suggested_comment = data.get('suggested_comment', None)
 
+        action = MoralCheckActionMap.ACTION_MAP.get(previous_type, None)
+        if action is None:
+            return '', HTTPStatus.NO_CONTENT
+
+        def operation():
             comment_service.create_resource_comment_moral_check_log(
                 resource_id=resource_id,
                 action=action,
@@ -834,14 +834,10 @@ class ResourceController:
                 suggested_comment=suggested_comment,
                 output_comment=None,
             )
-            try:
-                session.commit()
-            except Exception as e:
-                session.rollback()
-                log.warning(f'Transaction rolled back for resource {resource_id}')
-                log.exception(
-                    f'Failed to create previous log for resource {resource_id}: {e}'
-                )
-                # Return 204 even on error to avoid disrupting UI
 
-        return '', 204
+        # Return 204 even on error to avoid disrupting UI
+        ResourceController._persist_operation(
+            operation, resource_id, 'Failed to create previous log.'
+        )
+
+        return '', HTTPStatus.NO_CONTENT
