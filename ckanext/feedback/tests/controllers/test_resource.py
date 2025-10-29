@@ -537,14 +537,14 @@ class TestResourceController:
     # covered by TestResourceControllerCommonMethods.test_validate_comment_data_*
 
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.suggest_ai_comment')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     def test_suggested_comment(
         self,
         mock_get_resource,
         mock_suggest_ai_comment,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_render,
     ):
         resource_id = 'resource_id'
@@ -566,7 +566,7 @@ class TestResourceController:
         mock_package = 'mock_package'
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         ResourceController.suggested_comment(resource_id, category, content, rating)
         mock_render.assert_called_once_with(
@@ -584,14 +584,14 @@ class TestResourceController:
         )
 
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.suggest_ai_comment')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     def test_suggested_comment_is_None(
         self,
         mock_get_resource,
         mock_suggest_ai_comment,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_render,
     ):
         resource_id = 'resource_id'
@@ -613,7 +613,7 @@ class TestResourceController:
         mock_package = 'mock_package'
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         ResourceController.suggested_comment(resource_id, category, content, rating)
         mock_render.assert_called_once_with(
@@ -655,12 +655,12 @@ class TestResourceController:
         'comment_service.get_resource_comment_categories'
     )
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     def test_check_comment_POST_moral_keeper_ai_disable(
         self,
         mock_render,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_resource_comment_categories,
         mock_is_recaptcha_verified,
@@ -698,7 +698,7 @@ class TestResourceController:
         mock_package = 'mock_package'
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_upload_image.return_value = attached_image_filename
 
@@ -732,7 +732,7 @@ class TestResourceController:
         'comment_service.get_resource_comment_categories'
     )
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch(
         'ckanext.feedback.controllers.resource.'
         'comment_service.create_resource_comment_moral_check_log'
@@ -742,7 +742,7 @@ class TestResourceController:
         self,
         mock_render,
         mock_create_resource_comment_moral_check_log,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_resource_comment_categories,
         mock_suggested_comment,
@@ -781,7 +781,7 @@ class TestResourceController:
         mock_package = 'mock_package'
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_create_resource_comment_moral_check_log.return_value = None
 
@@ -815,12 +815,12 @@ class TestResourceController:
         'comment_service.get_resource_comment_categories'
     )
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.toolkit.render')
     def test_check_comment_POST_judgement_False(
         self,
         mock_render,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_resource_comment_categories,
         mock_suggested_comment,
@@ -860,7 +860,7 @@ class TestResourceController:
         mock_package = 'mock_package'
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_get_resource_comment_categories.return_value = 'mock_categories'
 
@@ -883,7 +883,7 @@ class TestResourceController:
         'comment_service.get_resource_comment_categories'
     )
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch(
         'ckanext.feedback.controllers.resource.'
         'comment_service.create_resource_comment_moral_check_log'
@@ -893,7 +893,7 @@ class TestResourceController:
         self,
         mock_render,
         mock_create_resource_comment_moral_check_log,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_resource_comment_categories,
         mock_is_recaptcha_verified,
@@ -931,7 +931,7 @@ class TestResourceController:
         mock_package = 'mock_package'
         mock_package_show = MagicMock()
         mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_create_resource_comment_moral_check_log.return_value = None
 
@@ -1112,6 +1112,7 @@ class TestResourceController:
         mock_send_file.assert_called_once_with('attached_image_path')
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.require_package_access')
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -1124,6 +1125,7 @@ class TestResourceController:
         mock_comment_service,
         mock_summary_service,
         mock_form,
+        mock_require_package_access,
         current_user,
         sysadmin,
     ):
@@ -1132,6 +1134,10 @@ class TestResourceController:
 
         mock_current_user(current_user, sysadmin)
         g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_comment_service.get_resource.return_value = mock_resource
 
         mock_form.get.side_effect = [resource_comment_id]
 
@@ -1168,6 +1174,7 @@ class TestResourceController:
 
     @pytest.mark.db_test
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.require_package_access')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
@@ -1176,6 +1183,7 @@ class TestResourceController:
         mock_redirect_to,
         mock_comment_service,
         mock_toolkit_abort,
+        mock_require_package_access,
         current_user,
         user,
         resource,
@@ -1191,6 +1199,11 @@ class TestResourceController:
         )
         model.Session.add(dummy_organization)
         model.Session.flush()
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = package['id']
+        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_comment_service.get_resource.return_value = mock_resource
 
         member = model.Member(
             group=dummy_organization,
@@ -1217,6 +1230,7 @@ class TestResourceController:
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.require_package_access')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -1227,6 +1241,7 @@ class TestResourceController:
         mock_comment_service,
         mock_summary_service,
         mock_toolkit_abort,
+        mock_require_package_access,
         current_user,
         sysadmin,
     ):
@@ -1235,12 +1250,17 @@ class TestResourceController:
         mock_current_user(current_user, sysadmin)
         g.userobj = current_user
 
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_comment_service.get_resource.return_value = mock_resource
+
         mock_form.get.side_effect = [None]
 
         ResourceController.approve_comment(resource_id)
         mock_toolkit_abort.assert_called_once_with(400)
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.require_package_access')
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -1253,6 +1273,7 @@ class TestResourceController:
         mock_comment_service,
         mock_summary_service,
         mock_form,
+        mock_require_package_access,
         current_user,
         sysadmin,
     ):
@@ -1262,6 +1283,10 @@ class TestResourceController:
 
         mock_current_user(current_user, sysadmin)
         g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_comment_service.get_resource.return_value = mock_resource
 
         mock_form.get.side_effect = [
             resource_comment_id,
@@ -1298,6 +1323,7 @@ class TestResourceController:
 
     @pytest.mark.db_test
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.require_package_access')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
@@ -1306,6 +1332,7 @@ class TestResourceController:
         mock_redirect_to,
         mock_comment_service,
         mock_toolkit_abort,
+        mock_require_package_access,
         current_user,
         user,
         resource,
@@ -1321,6 +1348,11 @@ class TestResourceController:
         )
         model.Session.add(dummy_organization)
         model.Session.flush()
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = package['id']
+        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_comment_service.get_resource.return_value = mock_resource
 
         member = model.Member(
             group=dummy_organization,
@@ -1347,6 +1379,7 @@ class TestResourceController:
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.require_package_access')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
@@ -1357,6 +1390,7 @@ class TestResourceController:
         mock_comment_service,
         mock_summary_service,
         mock_toolkit_abort,
+        mock_require_package_access,
         current_user,
         sysadmin,
     ):
@@ -1364,6 +1398,10 @@ class TestResourceController:
 
         mock_current_user(current_user, sysadmin)
         g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_comment_service.get_resource.return_value = mock_resource
 
         mock_form.get.side_effect = [
             None,
@@ -1746,6 +1784,7 @@ class TestResourceCommentReactions:
         )
 
     @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.resource.require_package_access')
     @patch('ckanext.feedback.controllers.resource.request.form')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
@@ -1756,6 +1795,7 @@ class TestResourceCommentReactions:
         mock_session_commit,
         mock_comment_service,
         mock_form,
+        mock_require_package_access,
         current_user,
         sysadmin,
         resource_comment,
@@ -1767,6 +1807,10 @@ class TestResourceCommentReactions:
 
         mock_current_user(current_user, sysadmin)
         g.userobj = current_user
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_comment_service.get_resource.return_value = mock_resource
 
         mock_form.get.side_effect = [
             comment_id,

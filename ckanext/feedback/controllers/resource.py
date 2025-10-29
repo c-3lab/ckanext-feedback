@@ -7,7 +7,6 @@ import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.lib.uploader import get_uploader
-from ckan.logic import get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 from flask import Response, make_response, send_file
@@ -37,11 +36,14 @@ from ckanext.feedback.services.common.ai_functions import (
 )
 from ckanext.feedback.services.common.check import (
     check_administrator,
+    get_authorized_package,
     has_organization_admin_role,
+    require_package_access,
 )
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
+from ckanext.feedback.utils.auth import create_auth_context
 
 log = logging.getLogger(__name__)
 
@@ -288,10 +290,6 @@ class ResourceController:
 
         categories = comment_service.get_resource_comment_categories()
         cookie = get_repeat_post_limit_cookie(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         selected_category = category or ResourceCommentCategory.REQUEST.name
@@ -685,7 +683,14 @@ class ResourceController:
 
     @staticmethod
     def _check_organization_admin_role(resource_id):
+        from ckanext.feedback.services.common.check import NOT_FOUND_ERROR_MESSAGE
+
         resource = comment_service.get_resource(resource_id)
+
+        # Check package access authorization
+        context = create_auth_context()
+        require_package_access(resource.Resource.package_id, context)
+
         if (
             not has_organization_admin_role(resource.Resource.package.owner_org)
             and not current_user.sysadmin
