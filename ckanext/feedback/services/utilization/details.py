@@ -27,13 +27,17 @@ def get_utilization(utilization_id):
             Utilization.approval,
             Resource.name.label('resource_name'),
             Resource.id.label('resource_id'),
+            Package.id.label('package_id'),
             Package.title.label('package_title'),
             Package.name.label('package_name'),
             Package.owner_org,
         )
         .join(Resource, Utilization.resource)
         .join(Package)
-        .filter(Utilization.id == utilization_id)
+        .filter(
+            Utilization.id == utilization_id,
+            Package.state == 'active',
+        )
         .first()
     )
 

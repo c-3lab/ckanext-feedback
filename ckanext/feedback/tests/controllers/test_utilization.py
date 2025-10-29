@@ -1,4 +1,4 @@
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from ckan import model
@@ -17,7 +17,7 @@ engine = model.repo.session.get_bind()
 @pytest.mark.usefixtures("admin_context")
 class TestUtilizationController:
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -32,7 +32,7 @@ class TestUtilizationController:
         mock_render,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_require_resource_package_access,
         resource,
         organization,
         admin_context,
@@ -45,8 +45,6 @@ class TestUtilizationController:
             org_id='mock_org_id', org_name='mock_organization_name'
         )
         mock_get_resource.return_value = mock_resource
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
 
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
@@ -79,14 +77,8 @@ class TestUtilizationController:
 
         UtilizationController.search()
 
-        # Verify that get_resource was called with resource_id
         mock_get_resource.assert_called_once_with(resource['id'])
-
-        # Verify that package_show was called with the package_id from resource
-        mock_package_show.assert_called_once_with(
-            ANY,  # context dict (implementation detail)
-            {'id': mock_resource.Resource.package_id},
-        )
+        mock_require_resource_package_access.assert_called_once()
 
         mock_get_utilizations.assert_called_once_with(
             resource_id=resource['id'],
@@ -119,7 +111,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -134,7 +126,7 @@ class TestUtilizationController:
         mock_render,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_require_resource_package_access,
         organization,
         dataset,
         user,
@@ -151,8 +143,7 @@ class TestUtilizationController:
             org_id='mock_org_id', org_name='mock_organization_name'
         )
         mock_get_resource.return_value = mock_resource
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_resource_package_access.return_value = {'id': 'mock_package'}
 
         member = model.Member(
             group=organization_model,
@@ -228,7 +219,7 @@ class TestUtilizationController:
         )
         mock_render.assert_called_once()
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -243,7 +234,7 @@ class TestUtilizationController:
         mock_render,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_require_resource_package_access,
         dataset,
         user,
         organization,
@@ -257,8 +248,7 @@ class TestUtilizationController:
             org_id='mock_org_id', org_name='mock_organization_name'
         )
         mock_get_resource.return_value = mock_resource
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_resource_package_access.return_value = {'id': 'mock_package'}
 
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
@@ -322,7 +312,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -339,7 +329,7 @@ class TestUtilizationController:
         mock_render,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_require_resource_package_access,
         app,
         resource,
         organization,
@@ -352,8 +342,7 @@ class TestUtilizationController:
             org_id='mock_org_id', org_name='test_organization'
         )
         mock_get_resource.return_value = mock_resource
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_resource_package_access.return_value = {'id': 'mock_package'}
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
 
@@ -385,14 +374,8 @@ class TestUtilizationController:
 
         UtilizationController.search()
 
-        # Verify that get_resource was called with resource_id
         mock_get_resource.assert_called_once_with(resource['id'])
-
-        # Verify that package_show was called with the package_id from resource
-        mock_package_show.assert_called_once_with(
-            ANY,  # context dict (implementation detail)
-            {'id': mock_resource.Resource.package_id},
-        )
+        mock_require_resource_package_access.assert_called_once()
 
         mock_get_utilizations.assert_called_once_with(
             resource_id=resource['id'],
@@ -426,7 +409,8 @@ class TestUtilizationController:
         )
         mock_render.assert_called_once()
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -445,7 +429,8 @@ class TestUtilizationController:
         mock_render,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_require_resource_package_access,
+        mock_require_package_access,
         app,
     ):
         mock_organization = MagicMock()
@@ -459,8 +444,7 @@ class TestUtilizationController:
         mock_get_resource.return_value = None
         mock_package_get.return_value = mock_dataset
         mock_group_get.return_value = mock_organization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
 
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
@@ -525,7 +509,8 @@ class TestUtilizationController:
         )
         mock_render.assert_called_once()
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
@@ -542,12 +527,12 @@ class TestUtilizationController:
         mock_render,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_require_resource_package_access,
+        mock_require_package_access,
     ):
         mock_get_resource.return_value = None
         mock_package_get.return_value = None
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
 
         keyword = 'keyword'
         disable_keyword = 'disable keyword'
@@ -616,14 +601,14 @@ class TestUtilizationController:
         new_callable=lambda: str,
     )
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.request.args')
     def test_search_with_private_package_unauthorized(
         self,
         mock_args,
         mock_get_resource,
-        mock_get_action,
+        mock_require_resource_package_access,
         mock_abort,
         mock_current_user_fixture,
         resource,
@@ -631,7 +616,6 @@ class TestUtilizationController:
         app,
     ):
         """Test that accessing a private package's utilization calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         mock_resource = mock_resource_object(
@@ -639,11 +623,19 @@ class TestUtilizationController:
         )
         mock_get_resource.return_value = mock_resource
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
+        # Mock require_resource_package_access to call abort(404)
+        def require_resource_package_access_side_effect(resource_id, context):
+            mock_abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
+
+        mock_require_resource_package_access.side_effect = (
+            require_resource_package_access_side_effect
         )
-        mock_get_action.return_value = mock_package_show
 
         # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
@@ -668,8 +660,15 @@ class TestUtilizationController:
         'ckanext.feedback.controllers.utilization.current_user',
         new_callable=lambda: str,
     )
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
+    # fmt: off
+    @patch(
+        'ckanext.feedback.controllers.utilization.search_service'
+        '.get_organization_name_from_pkg'
+    )
+    # fmt: on
     @patch('ckanext.feedback.controllers.utilization.model.Package.get')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.request.args')
@@ -678,14 +677,14 @@ class TestUtilizationController:
         mock_args,
         mock_get_resource,
         mock_package_get,
-        mock_get_action,
+        mock_get_org_name,
+        mock_require_resource_package_access,
         mock_abort,
-        mock_current_user_fixture,
+        mock_require_package_access,
         app,
     ):
         """Test accessing private package utilization calls abort(404)
         when using package_id"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         # Mock get_resource to return None (so it tries package_id path)
@@ -694,13 +693,23 @@ class TestUtilizationController:
         # Mock Package.get to return a mock package
         mock_package = MagicMock()
         mock_package.id = 'test_package_id'
+        mock_package.owner_org = 'test_org_id'
         mock_package_get.return_value = mock_package
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        # Mock get_organization_name_from_pkg
+        mock_get_org_name.return_value = 'test_organization'
+
+        # Mock require_package_access to call abort(404)
+        def require_package_access_side_effect(package_id, context):
+            mock_abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
+
+        mock_require_package_access.side_effect = require_package_access_side_effect
 
         # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
@@ -766,12 +775,12 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     def test_search_with_resource_id_not_found(
         self,
         mock_get_resource,
-        mock_get_action,
+        mock_require_resource_package_access,
         mock_args,
         mock_pagination,
         mock_get_utilizations,
@@ -804,28 +813,30 @@ class TestUtilizationController:
 
         UtilizationController.search()
 
-        # Should not call package_show since resource_for_org is None
-        mock_get_action.assert_not_called()
+        # require_resource_package_access is called even if resource is None
+        mock_require_resource_package_access.assert_called_once()
         mock_render.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
     @patch('ckanext.feedback.controllers.utilization.model.Package.get')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     def test_search_with_package_id_not_found(
         self,
         mock_get_resource,
-        mock_get_action,
+        mock_require_resource_package_access,
         mock_package_get,
         mock_args,
         mock_pagination,
         mock_get_utilizations,
         mock_render,
         mock_page,
+        mock_require_package_access,
         admin_context,
     ):
         # Test case: package_id is specified but Package.get returns None
@@ -854,8 +865,8 @@ class TestUtilizationController:
 
         UtilizationController.search()
 
-        # Should not call package_show since package is None
-        mock_get_action.assert_not_called()
+        # Should call require_package_access even if package is None
+        mock_require_package_access.assert_called_once()
         mock_render.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
@@ -863,12 +874,12 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.search_service.get_utilizations')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_resource_package_access')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     def test_search_with_resource_id_not_found_org_name_branch(
         self,
         mock_get_resource,
-        mock_get_action,
+        mock_require_resource_package_access,
         mock_args,
         mock_pagination,
         mock_get_utilizations,
@@ -988,10 +999,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.request.args')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     def test_new(
         self,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_args,
         mock_get_resource,
         mock_render,
@@ -1013,9 +1024,7 @@ class TestUtilizationController:
             'name': 'test_package',
             'organization': {'name': organization['name']},
         }
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_dataset = MagicMock()
         mock_dataset.id = dataset['id']
@@ -1027,8 +1036,7 @@ class TestUtilizationController:
 
         UtilizationController.new()
 
-        mock_get_action.assert_called_once_with('package_show')
-        mock_package_show.assert_called_once()
+        mock_get_authorized_package.assert_called_once()
 
         mock_render.assert_called_once_with(
             'utilization/new.html',
@@ -1043,10 +1051,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.request.args')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     def test_new_with_resource_id(
         self,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_args,
         mock_get_resource,
         mock_render,
@@ -1062,9 +1070,7 @@ class TestUtilizationController:
             'name': 'test_package',
             'organization': {'name': organization['name']},
         }
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
         mock_resource = mock_resource_object(
             org_id=organization['id'], org_name=organization['name']
         )
@@ -1077,8 +1083,7 @@ class TestUtilizationController:
         }.get(x, default)
 
         UtilizationController.new(resource_id=resource['id'])
-        mock_get_action.assert_called_once_with('package_show')
-        mock_package_show.assert_called_once()
+        mock_get_authorized_package.assert_called_once()
 
         mock_render.assert_called_once_with(
             'utilization/new.html',
@@ -1091,19 +1096,18 @@ class TestUtilizationController:
         mock_render.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     def test_new_with_private_package_unauthorized(
         self,
         mock_get_resource,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_abort,
         resource,
         mock_resource_object,
     ):
         """Test accessing new utilization form for private package
         calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         mock_resource = mock_resource_object(
@@ -1111,11 +1115,14 @@ class TestUtilizationController:
         )
         mock_get_resource.return_value = mock_resource
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        # Mock get_authorized_package to call abort(404)
+        def get_authorized_package_side_effect(package_id, context):
+            mock_abort(404, _(
+                'The requested URL was not found on the server. If you entered the'
+                ' URL manually please check your spelling and try again.'
+            ))
+
+        mock_get_authorized_package.side_effect = get_authorized_package_side_effect
 
         # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
@@ -1405,7 +1412,7 @@ class TestUtilizationController:
             resource_id=resource_id,
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -1418,7 +1425,7 @@ class TestUtilizationController:
         mock_get_resource,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_get_authorized_package,
         user,
         organization,
         mock_utilization_object,
@@ -1439,12 +1446,12 @@ class TestUtilizationController:
             _,
         ]
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.resource_id = 'mock_resource_id'
         mock_utilization.owner_org = 'mock_org_id'
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comments.return_value = [
             'comments',
             'total_count',
@@ -1499,7 +1506,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -1512,7 +1519,7 @@ class TestUtilizationController:
         mock_get_resource,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_get_authorized_package,
         user,
         organization,
         mock_utilization_object,
@@ -1544,12 +1551,12 @@ class TestUtilizationController:
             _,
         ]
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.resource_id = 'mock_resource_id'
         mock_utilization.owner_org = 'mock_org_id'
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comments.return_value = [
             'comments',
             'total_count',
@@ -1604,7 +1611,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -1617,7 +1624,7 @@ class TestUtilizationController:
         mock_get_resource,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_get_authorized_package,
         organization,
         mock_resource_object,
     ):
@@ -1636,12 +1643,12 @@ class TestUtilizationController:
         ]
 
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.resource_id = 'mock_resource_id'
         mock_utilization.owner_org = 'mock_org_id'
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comments.return_value = [
             'comments',
             'total_count',
@@ -1697,7 +1704,7 @@ class TestUtilizationController:
             },
         )
 
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
     @patch('ckanext.feedback.controllers.utilization.helpers.Page')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -1710,7 +1717,7 @@ class TestUtilizationController:
         mock_get_resource,
         mock_page,
         mock_pagination,
-        mock_get_action,
+        mock_get_authorized_package,
         user,
         organization,
         user_context,
@@ -1730,11 +1737,11 @@ class TestUtilizationController:
         ]
 
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.owner_org = 'organization id'
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comments.return_value = [
             'comments',
             'total_count',
@@ -1795,10 +1802,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     def test_details_thank_with_user(
         self,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_render,
         mock_detail_service,
         mock_get_resource,
@@ -1828,8 +1835,7 @@ class TestUtilizationController:
             resource_id='mock_resource_id', owner_org='mock_org_id'
         )
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comments.return_value = [
             'comments',
             'total_count',
@@ -1886,16 +1892,15 @@ class TestUtilizationController:
         mock_render.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_details_with_private_package_unauthorized(
         self,
         mock_detail_service,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_abort,
     ):
         """Test that accessing details for private package calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'utilization_id'
@@ -1903,11 +1908,14 @@ class TestUtilizationController:
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        # Mock get_authorized_package to call abort(404)
+        def get_authorized_package_side_effect(package_id, context):
+            mock_abort(404, _(
+                'The requested URL was not found on the server. If you entered the'
+                ' URL manually please check your spelling and try again.'
+            ))
+
+        mock_get_authorized_package.side_effect = get_authorized_package_side_effect
 
         # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
@@ -1925,7 +1933,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.request.files.get')
     @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.validate_service')
@@ -1934,18 +1942,18 @@ class TestUtilizationController:
         mock_validate_service,
         mock_detail_service,
         mock_get_resource,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_abort,
         mock_is_recaptcha_verified,
         mock_files_get,
         mock_form,
     ):
         """Test that check_comment for private package calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'utilization_id'
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.resource_id = 'resource_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
         mock_detail_service.get_utilization_comment_categories.return_value = []
@@ -1972,11 +1980,14 @@ class TestUtilizationController:
         mock_resource.Resource.package_id = 'package_id'
         mock_get_resource.return_value = mock_resource
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        # Mock get_authorized_package to call abort(404)
+        def get_authorized_package_side_effect(package_id, context):
+            mock_abort(404, _(
+                'The requested URL was not found on the server. If you entered the'
+                ' URL manually please check your spelling and try again.'
+            ))
+
+        mock_get_authorized_package.side_effect = get_authorized_package_side_effect
 
         # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
@@ -1990,16 +2001,16 @@ class TestUtilizationController:
         assert mock_abort.call_args[0][0] == 404
 
     @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
     def test_approve(
         self,
-        mock_get_action,
         mock_redirect_to,
         mock_session_commit,
         mock_summary_service,
+        mock_require_package_access,
         mock_detail_service,
         sysadmin,
         mock_current_user_fixture,
@@ -2009,11 +2020,9 @@ class TestUtilizationController:
         resource_id = 'resource id'
 
         mock_utilization = MagicMock()
-        mock_utilization.resource_id = resource_id
         mock_utilization.package_id = 'mock_package_id'
+        mock_utilization.resource_id = resource_id
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
 
         UtilizationController.approve(utilization_id)
 
@@ -2034,33 +2043,36 @@ class TestUtilizationController:
         'UtilizationController._check_organization_admin_role'
     )
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_approve_with_private_package_unauthorized(
         self,
         mock_detail_service,
-        mock_get_action,
+        mock_require_package_access,
         mock_abort,
         mock_check_org_admin,
         admin_context,
     ):
         """Test that approving utilization for private package calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'utilization_id'
         mock_utilization = MagicMock()
         mock_utilization.package_id = 'mock_package_id'
+        mock_utilization.resource_id = 'mock_resource_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
         # Mock _check_organization_admin_role to pass (so we reach line 362-363)
         mock_check_org_admin.return_value = None
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        # Mock require_package_access to call abort(404)
+        def require_package_access_side_effect(package_id, context):
+            mock_abort(404, _(
+                'The requested URL was not found on the server. If you entered the'
+                ' URL manually please check your spelling and try again.'
+            ))
+
+        mock_require_package_access.side_effect = require_package_access_side_effect
 
         # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
@@ -2397,12 +2409,12 @@ class TestUtilizationController:
     )
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     def test_check_comment_POST_moral_keeper_ai_disable(
         self,
         mock_render,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_utilization,
         mock_get_utilization_comment_categories,
@@ -2444,12 +2456,11 @@ class TestUtilizationController:
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='mock_organization_name'
         )
+        mock_resource.Resource.package_id = 'mock_package_id'
         mock_get_resource.return_value = mock_resource
 
         mock_package = 'mock_package'
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -2560,7 +2571,7 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch(
         'ckanext.feedback.controllers.utilization.'
         'detail_service.create_utilization_comment_moral_check_log'
@@ -2570,7 +2581,7 @@ class TestUtilizationController:
         self,
         mock_render,
         mock_create_utilization_comment_moral_check_log,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_check_ai_comment,
         mock_get_resource,
         mock_get_utilization,
@@ -2610,12 +2621,11 @@ class TestUtilizationController:
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='mock_organization_name'
         )
+        mock_resource.Resource.package_id = 'mock_package_id'
         mock_get_resource.return_value = mock_resource
 
         mock_package = 'mock_package'
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_create_utilization_comment_moral_check_log.return_value = None
 
@@ -2656,10 +2666,10 @@ class TestUtilizationController:
     )
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     def test_check_comment_POST_judgement_False(
         self,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_utilization,
         mock_get_utilization_comment_categories,
@@ -2706,9 +2716,7 @@ class TestUtilizationController:
         mock_get_resource.return_value = mock_resource
 
         mock_package = 'mock_package'
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -2732,7 +2740,7 @@ class TestUtilizationController:
     )
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch(
         'ckanext.feedback.controllers.utilization.'
         'detail_service.create_utilization_comment_moral_check_log'
@@ -2742,7 +2750,7 @@ class TestUtilizationController:
         self,
         mock_render,
         mock_create_utilization_comment_moral_check_log,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_utilization,
         mock_get_utilization_comment_categories,
@@ -2780,12 +2788,11 @@ class TestUtilizationController:
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='mock_organization_name'
         )
+        mock_resource.Resource.package_id = 'mock_package_id'
         mock_get_resource.return_value = mock_resource
 
         mock_package = 'mock_package'
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_create_utilization_comment_moral_check_log.return_value = None
 
@@ -2935,10 +2942,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_approve_comment(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_redirect_to,
         mock_session_commit,
         mock_detail_service,
@@ -2946,6 +2953,10 @@ class TestUtilizationController:
     ):
         utilization_id = 'utilization id'
         comment_id = 'comment id'
+
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
 
         UtilizationController.approve_comment(utilization_id, comment_id)
 
@@ -2964,10 +2975,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_edit(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_detail_service,
         mock_get_resource,
         mock_edit_service,
@@ -2987,8 +2998,7 @@ class TestUtilizationController:
             resource_id='mock_resource_id', owner_org='mock_org_id'
         )
         mock_detail_service.get_utilization.return_value = utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
 
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='test_organization'
@@ -3013,17 +3023,16 @@ class TestUtilizationController:
         mock_render.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_edit_with_private_package_unauthorized(
         self,
         mock_detail_service,
-        mock_get_action,
+        mock_require_package_access,
         mock_abort,
         admin_context,
     ):
         """Test that editing utilization for private package calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'utilization_id'
@@ -3031,11 +3040,14 @@ class TestUtilizationController:
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        # Mock require_package_access to call abort(404)
+        def require_package_access_side_effect(package_id, context):
+            mock_abort(404, _(
+                'The requested URL was not found on the server. If you entered the'
+                ' URL manually please check your spelling and try again.'
+            ))
+
+        mock_require_package_access.side_effect = require_package_access_side_effect
 
         # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
@@ -3054,10 +3066,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_update(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_detail_service,
         mock_redirect_to,
         mock_flash_success,
@@ -3078,8 +3090,7 @@ class TestUtilizationController:
         utilization.owner_org = organization['id']
         utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
         UtilizationController.update(utilization_id)
 
         mock_edit_service.update_utilization.assert_called_once_with(
@@ -3096,10 +3107,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_update_without_title_description(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_detail_service,
         mock_toolkit_abort,
         mock_flash_success,
@@ -3119,8 +3130,7 @@ class TestUtilizationController:
         utilization.owner_org = organization['id']
         utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
         UtilizationController.update(utilization_id)
 
         mock_toolkit_abort.assert_called_once_with(400)
@@ -3129,10 +3139,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_update_with_invalid_title_length(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_detail_service,
         mock_flash_error,
         mock_redirect_to,
@@ -3157,8 +3167,7 @@ class TestUtilizationController:
         utilization.owner_org = organization['id']
         utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
         UtilizationController.update(utilization_id)
 
         mock_flash_error.assert_called_once_with(
@@ -3174,10 +3183,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_update_without_url(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_detail_service,
         mock_flash_error,
         mock_redirect_to,
@@ -3196,8 +3205,7 @@ class TestUtilizationController:
         utilization.owner_org = organization['id']
         utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
         UtilizationController.update(utilization_id)
 
         mock_flash_error.assert_called_once()
@@ -3210,10 +3218,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_update_with_invalid_description_length(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_detail_service,
         mock_flash_error,
         mock_redirect_to,
@@ -3236,8 +3244,7 @@ class TestUtilizationController:
         utilization.owner_org = organization['id']
         utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
         UtilizationController.update(utilization_id)
 
         mock_flash_error.assert_called_once_with(
@@ -3255,10 +3262,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_delete(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_redirect_to,
         mock_flash_success,
         mock_session_commit,
@@ -3281,7 +3288,7 @@ class TestUtilizationController:
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
             resource_id
         )
-        assert mock_session_commit.call_count == 1
+        assert mock_session_commit.call_count == 2
         mock_flash_success.assert_called_once()
         mock_redirect_to.assert_called_once_with('utilization.search')
 
@@ -3290,10 +3297,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_create_issue_resolution(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_redirect_to,
         mock_session_commit,
         mock_summary_service,
@@ -3324,10 +3331,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_create_issue_resolution_without_description(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_redirect_to,
         mock_summary_service,
         mock_detail_service,
@@ -3339,11 +3346,11 @@ class TestUtilizationController:
         description = ''
 
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.owner_org = 'test_org_id'
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
 
         mock_form.get.return_value = description
         mock_redirect_to.return_value = ''
@@ -3356,10 +3363,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.os.path.exists')
     @patch('ckanext.feedback.controllers.utilization.send_file')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_with_sysadmin(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_send_file,
         mock_exists,
         mock_detail_service,
@@ -3391,10 +3398,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.os.path.exists')
     @patch('ckanext.feedback.controllers.utilization.send_file')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_with_user(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_send_file,
         mock_exists,
         mock_detail_service,
@@ -3426,10 +3433,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.os.path.exists')
     @patch('ckanext.feedback.controllers.utilization.send_file')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_with_not_found_attached_image(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_send_file,
         mock_exists,
         mock_detail_service,
@@ -3461,10 +3468,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.os.path.exists')
     @patch('ckanext.feedback.controllers.utilization.send_file')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_with_not_found_comment(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_send_file,
         mock_exists,
         mock_detail_service,
@@ -3516,19 +3523,18 @@ class TestUtilizationController:
         mock_send_file.assert_not_called()
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch(
         'ckanext.feedback.controllers.utilization.current_user.sysadmin',
         return_value=True,
     )
-    @patch('ckanext.feedback.controllers.utilization.get_action')
     def test_check_organization_adimn_role_with_sysadmin(
         self,
-        mock_get_action,
         mock_current_user_fixture_sysadmin,
         mocked_detail_service,
+        mock_require_package_access,
         mock_toolkit_abort,
-        sysadmin,
         admin_context,
     ):
 
@@ -3538,22 +3544,20 @@ class TestUtilizationController:
         mocked_utilization.owner_org = organization_id
         mocked_utilization.package_id = 'mock_package_id'
         mocked_detail_service.get_utilization.return_value = mocked_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
 
         with admin_context:
             UtilizationController._check_organization_admin_role('utilization_id')
 
-        mock_toolkit_abort.assert_not_called()
+        mock_require_package_access.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckan.model.Group.get')
     @patch('ckanext.feedback.controllers.utilization.has_organization_admin_role')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_check_organization_adimn_role_with_org_admin(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_has_organization_admin_role,
         mock_get_group,
         mocked_detail_service,
@@ -3570,8 +3574,7 @@ class TestUtilizationController:
         mocked_detail_service.get_utilization.return_value = mocked_utilization
         mocked_utilization.owner_org = organization_id
         mocked_utilization.package_id = 'mock_package_id'
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
 
         mock_has_organization_admin_role.return_value = True
 
@@ -3584,10 +3587,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckan.model.Group.get')
     @patch('ckanext.feedback.controllers.utilization.has_organization_admin_role')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_check_organization_adimn_role_with_user(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_has_organization_admin_role,
         mock_get_group,
         mocked_detail_service,
@@ -3604,8 +3607,7 @@ class TestUtilizationController:
         mocked_detail_service.get_utilization.return_value = mocked_utilization
         mocked_utilization.owner_org = organization_id
         mocked_utilization.package_id = 'mock_package_id'
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
 
         mock_has_organization_admin_role.return_value = False
 
@@ -3721,10 +3723,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.current_user')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     def test_details_without_user(
         self,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_current_user,
         mock_render,
         mock_detail_service,
@@ -3749,8 +3751,7 @@ class TestUtilizationController:
             resource_id='mock_resource_id', owner_org='mock_org_id'
         )
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comments.return_value = [
             'comments',
             'total_count',
@@ -3786,10 +3787,10 @@ class TestUtilizationController:
     )
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     def test_check_comment_POST_ai_disabled(
         self,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_utilization,
         mock_get_utilization_comment_categories,
@@ -3837,9 +3838,7 @@ class TestUtilizationController:
         mock_get_resource.return_value = mock_resource
 
         mock_package = 'mock_package'
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -3852,10 +3851,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.os.path.exists')
     @patch('ckanext.feedback.controllers.utilization.send_file')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_file_not_found(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_send_file,
         mock_exists,
         mock_detail_service,
@@ -3864,10 +3863,14 @@ class TestUtilizationController:
         comment_id = 'comment id'
         attached_image_filename = 'attached_image_filename'
 
-        mock_detail_service.get_utilization.return_value = MagicMock()
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
         mock_detail_service.get_utilization_comment.return_value = 'mock_comment'
         mock_detail_service.get_attached_image_path.return_value = 'attached_image_path'
         mock_exists.return_value = False
+
+        mock_require_package_access.return_value = None
 
         with pytest.raises(NotFound):
             UtilizationController.attached_image(
@@ -3888,10 +3891,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.os.path.exists')
     @patch('ckanext.feedback.controllers.utilization.send_file')
     @patch('ckanext.feedback.controllers.utilization.current_user')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_with_current_user_not_model_user(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_current_user_fixture,
         mock_send_file,
         mock_exists,
@@ -3927,10 +3930,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.send_file')
     @patch('ckanext.feedback.controllers.utilization.current_user')
     @patch('ckanext.feedback.controllers.utilization.has_organization_admin_role')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_with_org_admin(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_has_organization_admin_role,
         mock_current_user,
         mock_send_file,
@@ -3947,11 +3950,11 @@ class TestUtilizationController:
         mock_has_organization_admin_role.return_value = True
 
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.owner_org = 'test_org_id'
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comment.return_value = 'mock_comment'
         mock_detail_service.get_attached_image_path.return_value = 'attached_image_path'
         mock_exists.return_value = True
@@ -3974,10 +3977,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.send_file')
     @patch('ckanext.feedback.controllers.utilization.current_user')
     @patch('ckanext.feedback.controllers.utilization.has_organization_admin_role')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     def test_attached_image_with_normal_user(
         self,
-        mock_get_action,
+        mock_require_package_access,
         mock_has_organization_admin_role,
         mock_current_user,
         mock_send_file,
@@ -3995,11 +3998,11 @@ class TestUtilizationController:
         mock_has_organization_admin_role.return_value = False
 
         mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
         mock_utilization.owner_org = 'test_org_id'
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
-        mock_package_show = MagicMock(return_value={'id': 'mock_package'})
-        mock_get_action.return_value = mock_package_show
+        mock_require_package_access.return_value = {'id': 'mock_package'}
         mock_detail_service.get_utilization_comment.return_value = 'mock_comment'
         mock_detail_service.get_attached_image_path.return_value = 'attached_image_path'
         mock_exists.return_value = True
@@ -4036,10 +4039,10 @@ class TestUtilizationController:
     # fmt: on
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     def test_check_comment_POST_ai_check_false(
         self,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_utilization,
         mock_get_utilization_comment_categories,
@@ -4084,7 +4087,11 @@ class TestUtilizationController:
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='mock_organization_name'
         )
+        mock_resource.Resource.package_id = 'mock_package_id'
         mock_get_resource.return_value = mock_resource
+
+        # Mock get_authorized_package to return package data
+        mock_get_authorized_package.return_value = {'id': 'mock_package'}
 
         mock_suggested_comment.return_value = 'mock_suggested_comment_result'
         result = UtilizationController.check_comment(utilization_id)
@@ -4117,7 +4124,7 @@ class TestUtilizationController:
     # fmt: on
     @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch(
         'ckanext.feedback.controllers.utilization.'
         'detail_service.create_utilization_comment_moral_check_log'
@@ -4125,7 +4132,7 @@ class TestUtilizationController:
     def test_check_comment_post_ai_check_true(
         self,
         mock_create_utilization_comment_moral_check_log,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_get_resource,
         mock_get_utilization,
         mock_get_utilization_comment_categories,
@@ -4170,12 +4177,11 @@ class TestUtilizationController:
         mock_resource = mock_resource_object(
             org_id='mock_org_id', org_name='mock_organization_name'
         )
+        mock_resource.Resource.package_id = 'mock_package_id'
         mock_get_resource.return_value = mock_resource
 
         mock_package = 'mock_package'
-        mock_package_show = MagicMock()
-        mock_package_show.return_value = mock_package
-        mock_get_action.return_value = mock_package_show
+        mock_get_authorized_package.return_value = mock_package
 
         mock_get_utilization_comment_categories.return_value = 'mock_categories'
 
@@ -4349,16 +4355,14 @@ class TestUtilizationCreatePreviousLog:
         assert return_value == ('', 204)
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_attached_image_with_private_package_unauthorized(
         self,
         mock_detail_service,
-        mock_get_action,
+        mock_require_package_access,
         mock_abort,
     ):
-        """Test that accessing attached image for private package calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'utilization_id'
@@ -4369,38 +4373,37 @@ class TestUtilizationCreatePreviousLog:
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        def require_package_access_side_effect(package_id, context):
+            mock_abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
 
-        # Mock abort to raise NotFound exception to stop execution
+        mock_require_package_access.side_effect = require_package_access_side_effect
+
         mock_abort.side_effect = NotFound('Not Found')
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.attached_image(
                 utilization_id, comment_id, attached_image_filename
             )
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     def test_check_organization_admin_role_with_private_package_unauthorized(
         self,
         mock_detail_service,
-        mock_get_action,
+        mock_require_package_access,
         mock_abort,
         admin_context,
     ):
-        """Test _check_organization_admin_role for private package
-        calls abort(404)"""
-        from ckan.logic import NotAuthorized
         from werkzeug.exceptions import NotFound
 
         utilization_id = 'utilization_id'
@@ -4408,416 +4411,21 @@ class TestUtilizationCreatePreviousLog:
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        # Mock package_show to raise NotAuthorized for private package
-        mock_package_show = MagicMock(
-            side_effect=NotAuthorized('User not authorized to view package')
-        )
-        mock_get_action.return_value = mock_package_show
+        def require_package_access_side_effect(package_id, context):
+            mock_abort(
+                404,
+                _(
+                    'The requested URL was not found on the server. If you entered the'
+                    ' URL manually please check your spelling and try again.'
+                ),
+            )
 
-        # Mock abort to raise NotFound exception to stop execution
+        mock_require_package_access.side_effect = require_package_access_side_effect
+
         mock_abort.side_effect = NotFound('Not Found')
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController._check_organization_admin_role(utilization_id)
 
-        # Verify that abort(404) was called
-        mock_abort.assert_called()
-        # The method calls abort twice (first for package check if NotAuthorized)
-        assert any(call[0][0] == 404 for call in mock_abort.call_args_list)
-
-    # Error handling tests - these tests verify session.rollback() is called on errors
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.summary_service'
-        '.create_utilization_summary'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.registration_service'
-        '.create_utilization'
-    )
-    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
-    @patch('ckanext.feedback.controllers.utilization.toolkit.asbool')
-    @patch('ckanext.feedback.controllers.utilization.request.form')
-    def test_create_with_error(
-        self,
-        mock_form,
-        mock_asbool,
-        mock_recaptcha,
-        mock_registration,
-        mock_summary,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-    ):
-        mock_form.get.side_effect = lambda k, d='': {
-            'package_name': 'test-package',
-            'resource_id': 'test-resource-id',
-            'title': 'Test Title',
-            'url': 'https://example.com',
-            'description': 'Test Description',
-        }.get(k, d)
-        mock_asbool.return_value = False
-        mock_recaptcha.return_value = True
-        mock_commit.side_effect = Exception('Database error')
-        UtilizationController.create()
-        mock_rollback.assert_called_once()
-
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.summary_service'
-        '.refresh_utilization_summary'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service' '.approve_utilization'
-    )
-    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
-    def test_approve_with_error(
-        self,
-        mock_get_action,
-        mock_get_util,
-        mock_approve,
-        mock_refresh,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-        admin_context,
-    ):
-        mock_get_util.return_value = MagicMock(
-            package_id='test-package', resource_id='test-resource'
-        )
-        mock_get_action.return_value = MagicMock()
-        mock_commit.side_effect = Exception('Database error')
-        UtilizationController.approve('test-utilization-id')
-        mock_rollback.assert_called_once()
-
-    @patch(
-        'ckanext.feedback.controllers.utilization.UtilizationController'
-        '._check_organization_admin_role'
-    )
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.refresh_utilization_comments'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.approve_utilization_comment'
-    )
-    def test_approve_comment_with_error(
-        self,
-        mock_approve,
-        mock_refresh,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-        mock_check_role,
-        admin_context,
-    ):
-        mock_check_role.return_value = None  # Pass authentication
-        mock_commit.side_effect = Exception('Database error')
-        UtilizationController.approve_comment('test-utilization-id', 'test-comment-id')
-        mock_rollback.assert_called_once()
-
-    @patch(
-        'ckanext.feedback.controllers.utilization.UtilizationController'
-        '._check_organization_admin_role'
-    )
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.edit_service' '.update_utilization'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.validate_service'
-        '.validate_description'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.validate_service' '.validate_title'
-    )
-    @patch('ckanext.feedback.controllers.utilization.validate_service' '.validate_url')
-    @patch('ckanext.feedback.controllers.utilization.request.form')
-    def test_update_with_error(
-        self,
-        mock_form,
-        mock_validate_url,
-        mock_validate_title,
-        mock_validate_description,
-        mock_update,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-        mock_check_role,
-        admin_context,
-    ):
-        mock_check_role.return_value = None  # Pass authentication
-        mock_form.get.side_effect = lambda k, d='': {
-            'title': 'Test Title',
-            'url': 'https://example.com',
-            'description': 'Test Description',
-        }.get(k, d)
-        mock_validate_url.return_value = mock_validate_title.return_value = (
-            mock_validate_description.return_value
-        ) = None
-        mock_commit.side_effect = Exception('Database error')
-        UtilizationController.update('test-utilization-id')
-        mock_rollback.assert_called_once()
-
-    @patch(
-        'ckanext.feedback.controllers.utilization.UtilizationController'
-        '._check_organization_admin_role'
-    )
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.summary_service'
-        '.refresh_utilization_summary'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.edit_service' '.delete_utilization'
-    )
-    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
-    def test_delete_with_error(
-        self,
-        mock_get_util,
-        mock_delete,
-        mock_refresh,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-        mock_check_role,
-        admin_context,
-    ):
-        mock_check_role.return_value = None  # Pass authentication
-        mock_get_util.return_value = MagicMock(resource_id='test-resource')
-        mock_commit.side_effect = Exception('Database error')
-        UtilizationController.delete('test-utilization-id')
-        mock_rollback.assert_called_once()
-
-    @patch(
-        'ckanext.feedback.controllers.utilization.UtilizationController'
-        '._check_organization_admin_role'
-    )
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.summary_service'
-        '.increment_issue_resolution_summary'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.create_issue_resolution'
-    )
-    @patch('ckanext.feedback.controllers.utilization.request.form')
-    def test_create_issue_resolution_with_error(
-        self,
-        mock_form,
-        mock_create,
-        mock_increment,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-        mock_check_role,
-        admin_context,
-    ):
-        mock_check_role.return_value = None  # Pass authentication
-        mock_form.get.return_value = 'Test description'
-        mock_commit.side_effect = Exception('Database error')
-        UtilizationController.create_issue_resolution('test-utilization-id')
-        mock_rollback.assert_called_once()
-
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.create_utilization_comment_moral_check_log'
-    )
-    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.get_resource_by_utilization_id'
-    )
-    @patch('ckanext.feedback.controllers.utilization.request.get_json')
-    def test_create_previous_log_with_error(
-        self,
-        mock_get_json,
-        mock_get_resource,
-        mock_config,
-        mock_create_log,
-        mock_commit,
-        mock_rollback,
-    ):
-        """Test create_previous_log() error handling"""
-        resource = MagicMock()
-        resource.Resource.package.owner_org = 'test-org'
-        mock_get_resource.return_value = resource
-        mock_feedback_config = MagicMock()
-        mock_feedback_config.moral_keeper_ai.is_enable.return_value = True
-        mock_config.return_value = mock_feedback_config
-        mock_get_json.return_value = {
-            'previous_type': 'suggestion',
-            'input_comment': 'Test input',
-            'suggested_comment': 'Test suggestion',
-        }
-        mock_commit.side_effect = Exception('Database error')
-
-        result = UtilizationController.create_previous_log('test-utilization-id')
-
-        mock_rollback.assert_called_once()
-        assert result == ('', 204)
-
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.create_utilization_comment'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.validate_service' '.validate_comment'
-    )
-    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
-    @patch('ckanext.feedback.controllers.utilization.request.form')
-    def test_create_comment_with_error(
-        self,
-        mock_form,
-        mock_recaptcha,
-        mock_validate,
-        mock_create,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-    ):
-        """Test create_comment() error handling - covers lines 418-422"""
-        mock_form.get.side_effect = lambda k, d='': {
-            'category': 'REQUEST',
-            'comment-content': 'Test comment',
-            'attached_image_filename': None,
-        }.get(k, d)
-        mock_recaptcha.return_value = True
-        mock_validate.return_value = None
-        mock_commit.side_effect = Exception('Database error')
-
-        with patch(
-            'ckanext.feedback.controllers.utilization.request.files.get',
-            return_value=None,
-        ):
-            UtilizationController.create_comment('test-utilization-id')
-
-        mock_rollback.assert_called_once()
-        mock_flash_error.assert_called_once()
-        mock_redirect.assert_called_once()
-
-    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.create_utilization_comment_moral_check_log'
-    )
-    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.get_resource_by_utilization_id'
-    )
-    @patch('ckanext.feedback.controllers.utilization.comment_service' '.get_resource')
-    @patch('ckanext.feedback.controllers.utilization.detail_service' '.get_utilization')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.get_utilization_comment_categories'
-    )
-    @patch(
-        'ckanext.feedback.controllers.utilization.validate_service' '.validate_comment'
-    )
-    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
-    @patch('ckanext.feedback.controllers.utilization.get_action')
-    @patch('ckanext.feedback.controllers.utilization.request.form')
-    @patch('ckanext.feedback.controllers.utilization.request.method', 'POST')
-    def test_check_comment_with_error(
-        self,
-        mock_form,
-        mock_get_action,
-        mock_recaptcha,
-        mock_validate,
-        mock_categories,
-        mock_get_utilization,
-        mock_get_resource,
-        mock_get_resource_by_id,
-        mock_config,
-        mock_create_log,
-        mock_check_ai,
-        mock_commit,
-        mock_rollback,
-        mock_flash_error,
-        mock_redirect,
-    ):
-        """Test check_comment() error handling - covers lines 606-610"""
-        mock_form.get.side_effect = lambda k, d='': {
-            'category': 'REQUEST',
-            'comment-content': 'Test comment',
-            'attached_image_filename': None,
-            'comment-suggested': (
-                'False'
-            ),  # Changed to False to trigger check_ai_comment path
-        }.get(k, d)
-        mock_recaptcha.return_value = True
-        mock_validate.return_value = None
-        mock_categories.return_value = []
-
-        utilization = MagicMock()
-        utilization.resource_id = 'test-resource'
-        mock_get_utilization.return_value = utilization
-
-        resource = MagicMock()
-        resource.Resource.package_id = 'test-package'
-        resource.Resource.package.owner_org = 'test-org'
-        resource.organization_name = 'test-org'
-        mock_get_resource.return_value = resource
-        mock_get_resource_by_id.return_value = resource
-
-        mock_get_action.return_value = MagicMock(return_value={'id': 'test-package'})
-
-        mock_feedback_config = MagicMock()
-        mock_feedback_config.moral_keeper_ai.is_enable.return_value = True
-        mock_config.return_value = mock_feedback_config
-
-        # check_ai_comment returns True (comment is OK),
-        # so it proceeds to create log and commit
-        mock_check_ai.return_value = True
-        mock_commit.side_effect = Exception('Database error')
-
-        with patch(
-            'ckanext.feedback.controllers.utilization.request.files.get',
-            return_value=None,
-        ):
-            UtilizationController.check_comment('test-utilization-id')
-
-        mock_rollback.assert_called_once()
-        mock_flash_error.assert_called_once()
-        mock_redirect.assert_called_once()
+        mock_abort.assert_called_once()
+        assert mock_abort.call_args[0][0] == 404
