@@ -2211,7 +2211,7 @@ class TestResourceCreatePreviousLog:
         '.create_resource_comment_moral_check_log'
     )
     @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     @patch(
         'ckanext.feedback.controllers.resource.comment_service'
@@ -2228,7 +2228,7 @@ class TestResourceCreatePreviousLog:
         mock_validate,
         mock_categories,
         mock_get_resource,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_config,
         mock_create_log,
         mock_check_ai,
@@ -2253,7 +2253,7 @@ class TestResourceCreatePreviousLog:
         mock_resource.Resource.package_id = 'test-package'
         mock_resource.Resource.package.owner_org = 'test-org'
         mock_get_resource.return_value = mock_resource
-        mock_get_action.return_value = MagicMock(return_value={'id': 'test-package'})
+        mock_get_authorized_package.return_value = {'id': 'test-package'}
 
         mock_feedback_config = MagicMock()
         mock_feedback_config.moral_keeper_ai.is_enable.return_value = True
@@ -2640,10 +2640,10 @@ class TestResourceControllerCommonMethods:
         assert is_valid is False
         assert error == _('Please keep the comment length below 1000')
 
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     def test_get_resource_context_success(
-        self, mock_get_resource, mock_get_action, app
+        self, mock_get_resource, mock_get_authorized_package, app
     ):
         """Test _get_resource_context returns correct data"""
         mock_resource = MagicMock()
@@ -2652,7 +2652,7 @@ class TestResourceControllerCommonMethods:
         mock_get_resource.return_value = mock_resource
 
         mock_package = {'id': 'test-package-id', 'name': 'test-package'}
-        mock_get_action.return_value = MagicMock(return_value=mock_package)
+        mock_get_authorized_package.return_value = mock_package
 
         with app.get(url='/'):
             result = ResourceController._get_resource_context('test-resource-id')
