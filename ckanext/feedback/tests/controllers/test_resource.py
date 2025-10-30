@@ -1187,6 +1187,8 @@ class TestResourceController:
         current_user,
         user,
         resource,
+        dataset,
+        organization,
     ):
         import uuid
 
@@ -1201,8 +1203,8 @@ class TestResourceController:
         model.Session.flush()
 
         mock_resource = MagicMock()
-        mock_resource.Resource.package_id = package['id']
-        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_resource.Resource.package_id = dataset['id']
+        mock_resource.Resource.package.owner_org = organization['id']
         mock_comment_service.get_resource.return_value = mock_resource
 
         member = model.Member(
@@ -1336,6 +1338,8 @@ class TestResourceController:
         current_user,
         user,
         resource,
+        dataset,
+        organization,
     ):
         import uuid
 
@@ -1350,8 +1354,8 @@ class TestResourceController:
         model.Session.flush()
 
         mock_resource = MagicMock()
-        mock_resource.Resource.package_id = package['id']
-        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_resource.Resource.package_id = dataset['id']
+        mock_resource.Resource.package.owner_org = organization['id']
         mock_comment_service.get_resource.return_value = mock_resource
 
         member = model.Member(
@@ -1877,7 +1881,7 @@ class TestResourceCommentReactions:
     @patch(
         'ckanext.feedback.controllers.resource.comment_service.get_upload_destination'
     )
-    @patch('ckanext.feedback.controllers.resource.get_uploader')
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
     def test_upload_image(
         self,
         mock_get_uploader,
@@ -1907,7 +1911,7 @@ class TestResourceCommentReactions:
     @patch(
         'ckanext.feedback.controllers.resource.comment_service.get_upload_destination'
     )
-    @patch('ckanext.feedback.controllers.resource.get_uploader')
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
     def test_upload_image_invalid_extension(
         self, mock_get_uploader, mock_get_upload_destination
     ):
@@ -1926,7 +1930,7 @@ class TestResourceCommentReactions:
     @patch(
         'ckanext.feedback.controllers.resource.comment_service.get_upload_destination'
     )
-    @patch('ckanext.feedback.controllers.resource.get_uploader')
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
     def test_upload_image_invalid_mimetype(
         self, mock_get_uploader, mock_get_upload_destination
     ):
@@ -1945,7 +1949,7 @@ class TestResourceCommentReactions:
     @patch(
         'ckanext.feedback.controllers.resource.comment_service.get_upload_destination'
     )
-    @patch('ckanext.feedback.controllers.resource.get_uploader')
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
     def test_upload_image_valid_extensions(
         self, mock_get_uploader, mock_get_upload_destination
     ):
@@ -1978,7 +1982,7 @@ class TestResourceCommentReactions:
     @patch(
         'ckanext.feedback.controllers.resource.comment_service.get_upload_destination'
     )
-    @patch('ckanext.feedback.controllers.resource.get_uploader')
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
     def test_upload_image_no_filename(
         self, mock_get_uploader, mock_get_upload_destination
     ):
@@ -2002,7 +2006,7 @@ class TestResourceCommentReactions:
     @patch(
         'ckanext.feedback.controllers.resource.comment_service.get_upload_destination'
     )
-    @patch('ckanext.feedback.controllers.resource.get_uploader')
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
     def test_upload_image_no_content_type(
         self, mock_get_uploader, mock_get_upload_destination
     ):
@@ -2207,7 +2211,7 @@ class TestResourceCreatePreviousLog:
         '.create_resource_comment_moral_check_log'
     )
     @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     @patch(
         'ckanext.feedback.controllers.resource.comment_service'
@@ -2636,10 +2640,10 @@ class TestResourceControllerCommonMethods:
         assert is_valid is False
         assert error == _('Please keep the comment length below 1000')
 
-    @patch('ckanext.feedback.controllers.resource.get_action')
+    @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     def test_get_resource_context_success(
-        self, mock_get_resource, mock_get_action, app
+        self, mock_get_resource, mock_get_authorized_package, app
     ):
         """Test _get_resource_context returns correct data"""
         mock_resource = MagicMock()
@@ -2648,7 +2652,7 @@ class TestResourceControllerCommonMethods:
         mock_get_resource.return_value = mock_resource
 
         mock_package = {'id': 'test-package-id', 'name': 'test-package'}
-        mock_get_action.return_value = MagicMock(return_value=mock_package)
+        mock_get_authorized_package.return_value = mock_package
 
         with app.get(url='/'):
             result = ResourceController._get_resource_context('test-resource-id')
