@@ -2174,8 +2174,45 @@ class TestUtilizationController:
     @patch(
         'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
     )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    def test_create_comment_with_ioerror_exception(
+        self,
+        mock_abort,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+    ):
+        """Test create_comment with IOError during image upload"""
+        utilization_id = 'utilization id'
+        category = 'category'
+        content = 'content'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_form.get.side_effect = [category, content, attached_image_filename]
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = IOError('Disk full')
+        mock_abort.side_effect = Exception('Abort called')
+
+        with pytest.raises(Exception):
+            UtilizationController.create_comment(utilization_id)
+
+        mock_upload_image.assert_called_once_with(mock_file)
+        mock_abort.assert_called_once_with(500)
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     def test_create_comment_with_bad_image_exception(
         self,
+        mock_abort,
         mock_upload_image,
         mock_files,
         mock_form,
@@ -2194,11 +2231,13 @@ class TestUtilizationController:
         mock_files.return_value = mock_file
 
         mock_upload_image.side_effect = Exception('Unexpected error')
+        mock_abort.side_effect = Exception('Abort called')
 
         with pytest.raises(Exception):
             UtilizationController.create_comment(utilization_id)
 
         mock_upload_image.assert_called_once_with(mock_file)
+        mock_abort.assert_called_once_with(500)
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -2528,8 +2567,52 @@ class TestUtilizationController:
     @patch(
         'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
     )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
+    def test_check_comment_with_ioerror_exception(
+        self,
+        mock_abort,
+        mock_upload_image,
+        mock_files,
+        mock_form,
+        mock_method,
+    ):
+        """Test check_comment with IOError during image upload"""
+        utilization_id = 'utilization id'
+        category = 'category'
+        content = 'content'
+        attached_image_filename = 'attached_image_filename'
+
+        mock_method.return_value = 'POST'
+        mock_form.get.side_effect = lambda x, default: {
+            'category': category,
+            'comment-content': content,
+            'attached_image_filename': attached_image_filename,
+        }.get(x, default)
+
+        mock_file = MagicMock()
+        mock_file.filename = attached_image_filename
+        mock_file.content_type = 'image/png'
+        mock_files.return_value = mock_file
+
+        mock_upload_image.side_effect = OSError('Permission denied')
+        mock_abort.side_effect = Exception('Abort called')
+
+        with pytest.raises(Exception):
+            UtilizationController.check_comment(utilization_id)
+
+        mock_upload_image.assert_called_once_with(mock_file)
+        mock_abort.assert_called_once_with(500)
+
+    @patch('ckanext.feedback.controllers.utilization.request.method')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._upload_image'
+    )
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     def test_check_comment_with_bad_image_exception(
         self,
+        mock_abort,
         mock_upload_image,
         mock_files,
         mock_form,
@@ -2554,11 +2637,13 @@ class TestUtilizationController:
         mock_files.return_value = mock_file
 
         mock_upload_image.side_effect = Exception('Bad image')
+        mock_abort.side_effect = Exception('Abort called')
 
         with pytest.raises(Exception):
             UtilizationController.check_comment(utilization_id)
 
         mock_upload_image.assert_called_once_with(mock_file)
+        mock_abort.assert_called_once_with(500)
 
     @patch('ckanext.feedback.controllers.utilization.request.method')
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -3625,7 +3710,7 @@ class TestUtilizationController:
         'ckanext.feedback.controllers.utilization.'
         'detail_service.get_upload_destination'
     )
-    @patch('ckanext.feedback.controllers.utilization.get_uploader')
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
     def test_upload_image(
         self,
         mock_get_uploader,
@@ -3633,6 +3718,7 @@ class TestUtilizationController:
     ):
         mock_image = MagicMock()
         mock_image.filename = 'test.png'
+        mock_image.content_type = 'image/png'
 
         mock_get_upload_destination.return_value = '/test/upload/path'
 
@@ -3649,6 +3735,94 @@ class TestUtilizationController:
         mock_get_upload_destination.assert_called_once()
         mock_get_uploader.assert_called_once_with('/test/upload/path')
         mock_uploader.update_data_dict.assert_called_once()
+        mock_uploader.upload.assert_called_once()
+
+    def test_upload_image_with_invalid_extension(self):
+        """Test _upload_image with invalid file extension"""
+        mock_image = MagicMock()
+        mock_image.filename = 'test.txt'
+        mock_image.content_type = 'text/plain'
+
+        with pytest.raises(toolkit.ValidationError) as exc_info:
+            UtilizationController._upload_image(mock_image)
+
+        assert 'Image Upload' in str(exc_info.value)
+        assert 'Invalid file extension' in str(exc_info.value)
+
+    def test_upload_image_with_invalid_mimetype(self):
+        """Test _upload_image with invalid mimetype"""
+        mock_image = MagicMock()
+        mock_image.filename = 'test.png'
+        mock_image.content_type = 'application/pdf'
+
+        with pytest.raises(toolkit.ValidationError) as exc_info:
+            UtilizationController._upload_image(mock_image)
+
+        assert 'Image Upload' in str(exc_info.value)
+        assert 'Invalid file type' in str(exc_info.value)
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_upload_destination'
+    )
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
+    def test_upload_image_without_content_type(
+        self,
+        mock_get_uploader,
+        mock_get_upload_destination,
+    ):
+        """Test _upload_image without content_type (should pass validation)"""
+        mock_image = MagicMock()
+        mock_image.filename = 'test.jpg'
+        mock_image.content_type = None
+
+        mock_get_upload_destination.return_value = '/test/upload/path'
+
+        mock_uploader = MagicMock()
+        mock_get_uploader.return_value = mock_uploader
+
+        def mock_update_data_dict(data_dict, url_field, file_field, clear_field):
+            data_dict['image_url'] = 'test_image.jpg'
+
+        mock_uploader.update_data_dict.side_effect = mock_update_data_dict
+
+        result = UtilizationController._upload_image(mock_image)
+
+        assert result == 'test_image.jpg'
+        mock_get_upload_destination.assert_called_once()
+        mock_get_uploader.assert_called_once_with('/test/upload/path')
+        mock_uploader.upload.assert_called_once()
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_upload_destination'
+    )
+    @patch('ckanext.feedback.services.common.upload.get_uploader')
+    def test_upload_image_without_filename(
+        self,
+        mock_get_uploader,
+        mock_get_upload_destination,
+    ):
+        """Test _upload_image without filename (should skip extension validation)"""
+        mock_image = MagicMock()
+        mock_image.filename = None
+        mock_image.content_type = 'image/png'
+
+        mock_get_upload_destination.return_value = '/test/upload/path'
+
+        mock_uploader = MagicMock()
+        mock_get_uploader.return_value = mock_uploader
+
+        def mock_update_data_dict(data_dict, url_field, file_field, clear_field):
+            data_dict['image_url'] = 'generated_filename.png'
+
+        mock_uploader.update_data_dict.side_effect = mock_update_data_dict
+
+        result = UtilizationController._upload_image(mock_image)
+
+        assert result == 'generated_filename.png'
+        mock_get_upload_destination.assert_called_once()
+        mock_get_uploader.assert_called_once_with('/test/upload/path')
         mock_uploader.upload.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -4429,3 +4603,120 @@ class TestUtilizationCreatePreviousLog:
 
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
+
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    def test_persist_operation_success(self, mock_commit, mock_rollback):
+        """Test _persist_operation with successful operation"""
+        utilization_id = 'test_id'
+        error_message = 'Test error'
+
+        operation_called = False
+
+        def successful_operation():
+            nonlocal operation_called
+            operation_called = True
+
+        result = UtilizationController._persist_operation(
+            successful_operation, utilization_id, error_message
+        )
+
+        assert result.success is True
+        assert result.error_message is None
+        assert operation_called is True
+        mock_commit.assert_called_once()
+        mock_rollback.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.log.exception')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    def test_persist_operation_with_sqlalchemy_error(
+        self, mock_commit, mock_rollback, mock_log
+    ):
+        """Test _persist_operation with SQLAlchemyError"""
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'test_id'
+        error_message = 'Test error'
+
+        def failing_operation():
+            raise SQLAlchemyError('Database error')
+
+        result = UtilizationController._persist_operation(
+            failing_operation, utilization_id, error_message
+        )
+
+        assert result.success is False
+        assert result.error_message is not None
+        mock_rollback.assert_called_once()
+        mock_log.assert_called_once()
+        mock_commit.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.log.exception')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    def test_persist_operation_with_generic_exception(
+        self, mock_commit, mock_rollback, mock_log
+    ):
+        """Test _persist_operation with generic Exception"""
+        utilization_id = 'test_id'
+        error_message = 'Test error'
+
+        def failing_operation():
+            raise ValueError('Generic error')
+
+        result = UtilizationController._persist_operation(
+            failing_operation, utilization_id, error_message
+        )
+
+        assert result.success is False
+        assert result.error_message is not None
+        mock_rollback.assert_called_once()
+        mock_log.assert_called_once()
+        mock_commit.assert_not_called()
+
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    def test_handle_validation_error_without_message(
+        self, mock_redirect_to, mock_flash_error
+    ):
+        """Test _handle_validation_error when error_message is None"""
+        utilization_id = 'test_id'
+        category = 'test_category'
+        content = 'test_content'
+
+        UtilizationController._handle_validation_error(
+            utilization_id, None, category, content, None
+        )
+
+        mock_flash_error.assert_not_called()
+        mock_redirect_to.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.validate_service.validate_comment')
+    def test_process_comment_input_without_form_data(
+        self,
+        mock_validate_comment,
+        mock_is_recaptcha_verified,
+        mock_files,
+        mock_form,
+    ):
+        """Test _process_comment_input when form_data is None (extracted internally)"""
+        utilization_id = 'test_id'
+        category = 'REQUEST'
+        content = 'test content'
+
+        mock_form.get.side_effect = [category, content, None]
+        mock_files.return_value = None
+        mock_is_recaptcha_verified.return_value = True
+        mock_validate_comment.return_value = None
+
+        result = UtilizationController._process_comment_input(
+            'image-upload', utilization_id, None
+        )
+
+        assert result.form_data['category'] == category
+        assert result.form_data['content'] == content
+        assert result.error_response is None
