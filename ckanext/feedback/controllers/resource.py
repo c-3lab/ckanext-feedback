@@ -223,10 +223,8 @@ class ResourceController:
     @staticmethod
     def _get_resource_context(resource_id: str) -> dict:
         resource = comment_service.get_resource(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
+        context = create_auth_context()
+        package = get_authorized_package(resource.Resource.package_id, context)
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return {'resource': resource, 'package': package, 'context': context}
@@ -279,6 +277,8 @@ class ResourceController:
         resource_id, category='', content='', attached_image_filename: str | None = None
     ):
         resource = comment_service.get_resource(resource_id)
+        context = create_auth_context()
+        package = get_authorized_package(resource.Resource.package_id, context)
         approval = ResourceController._determine_approval_status(
             resource.Resource.package.owner_org
         )
@@ -683,8 +683,6 @@ class ResourceController:
 
     @staticmethod
     def _check_organization_admin_role(resource_id):
-        from ckanext.feedback.services.common.check import NOT_FOUND_ERROR_MESSAGE
-
         resource = comment_service.get_resource(resource_id)
 
         # Check package access authorization

@@ -1186,6 +1186,8 @@ class TestResourceController:
         mock_require_package_access,
         current_user,
         user,
+        dataset,
+        organization,
         resource,
     ):
         import uuid
@@ -1201,8 +1203,8 @@ class TestResourceController:
         model.Session.flush()
 
         mock_resource = MagicMock()
-        mock_resource.Resource.package_id = package['id']
-        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_resource.Resource.package_id = dataset['id']
+        mock_resource.Resource.package.owner_org = organization['id']
         mock_comment_service.get_resource.return_value = mock_resource
 
         member = model.Member(
@@ -1335,6 +1337,8 @@ class TestResourceController:
         mock_require_package_access,
         current_user,
         user,
+        dataset,
+        organization,
         resource,
     ):
         import uuid
@@ -1350,8 +1354,8 @@ class TestResourceController:
         model.Session.flush()
 
         mock_resource = MagicMock()
-        mock_resource.Resource.package_id = package['id']
-        mock_resource.Resource.package.owner_org = organization_dict['id']
+        mock_resource.Resource.package_id = dataset['id']
+        mock_resource.Resource.package.owner_org = organization['id']
         mock_comment_service.get_resource.return_value = mock_resource
 
         member = model.Member(
