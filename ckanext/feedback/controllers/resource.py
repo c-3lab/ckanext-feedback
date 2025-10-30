@@ -6,9 +6,7 @@ from http import HTTPStatus
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
-from ckan.lib.uploader import get_uploader
 from ckan.plugins import toolkit
-from ckan.types import PUploader
 from flask import Response, make_response, send_file
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.datastructures import FileStorage
@@ -42,6 +40,7 @@ from ckanext.feedback.services.common.check import (
 )
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
+from ckanext.feedback.services.common.upload import upload_image_with_validation
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.utils.auth import create_auth_context
 
@@ -223,10 +222,8 @@ class ResourceController:
     @staticmethod
     def _get_resource_context(resource_id: str) -> dict:
         resource = comment_service.get_resource(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
+        context = create_auth_context()
+        package = get_authorized_package(resource.Resource.package_id, context)
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         return {'resource': resource, 'package': package, 'context': context}
@@ -279,6 +276,11 @@ class ResourceController:
         resource_id, category='', content='', attached_image_filename: str | None = None
     ):
         resource = comment_service.get_resource(resource_id)
+
+        # Check access and get package data
+        context = create_auth_context()
+        package = get_authorized_package(resource.Resource.package_id, context)
+
         approval = ResourceController._determine_approval_status(
             resource.Resource.package.owner_org
         )
@@ -695,13 +697,7 @@ class ResourceController:
             not has_organization_admin_role(resource.Resource.package.owner_org)
             and not current_user.sysadmin
         ):
-            toolkit.abort(
-                HTTPStatus.NOT_FOUND,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(HTTPStatus.NOT_FOUND, NOT_FOUND_ERROR_MESSAGE)
 
     @staticmethod
     def like_status(resource_id):
@@ -775,43 +771,10 @@ class ResourceController:
 
     @staticmethod
     def _upload_image(image: FileStorage) -> str:
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-        allowed_mimetypes = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
+        """Upload an image file with validation."""
 
-        if image.filename:
-            ext = image.filename.rsplit('.', 1)[-1].lower()
-            if ext not in allowed_extensions:
-                raise toolkit.ValidationError(
-                    {
-                        _('Image Upload'): [
-                            _(
-                                'Invalid file extension. '
-                                'Allowed: png, jpg, jpeg, gif, webp'
-                            )
-                        ]
-                    }
-                )
-
-        if image.content_type and image.content_type not in allowed_mimetypes:
-            raise toolkit.ValidationError(
-                {
-                    _('Image Upload'): [
-                        _('Invalid file type. Only image files are allowed.')
-                    ]
-                }
-            )
-
-        upload_to = comment_service.get_upload_destination()
-        uploader: PUploader = get_uploader(upload_to)
-        data_dict = {
-            "image_upload": image,
-        }
-        uploader.update_data_dict(
-            data_dict, 'image_url', 'image_upload', 'clear_upload'
-        )
-        attached_image_filename = data_dict["image_url"]
-        uploader.upload()
-        return attached_image_filename
+        upload_destination = comment_service.get_upload_destination()
+        return upload_image_with_validation(image, upload_destination)
 
     # resource_comment/<resource_id>/comment/create_previous_log
     @staticmethod
