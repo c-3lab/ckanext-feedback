@@ -92,7 +92,7 @@ def register_utilization(id, resource_id, title, url, description, approval):
         approval=approval,
     )
     session.add(utilization)
-    session.flush()
+    session.commit()
 
 
 def register_utilization_comment(
@@ -109,7 +109,7 @@ def register_utilization_comment(
         approval_user_id=approval_user_id,
     )
     session.add(utilization_comment)
-    session.flush()
+    session.commit()
 
 
 def convert_utilization_comment_to_tuple(utilization_comment):
@@ -178,6 +178,7 @@ class TestUtilizationDetailsService:
         assert result == unapproved_utilization
 
         approve_utilization(id, user['id'])
+        session.commit()
 
         result = get_registered_utilization(resource['id'])
         approved_utilization = (id, True, test_datetime, user['id'])
@@ -528,6 +529,7 @@ class TestUtilizationDetailsService:
         category = UtilizationCommentCategory.REQUEST
         content = 'test content'
         create_utilization_comment(utilization.id, category, content)
+        session.commit()
 
         comments = get_registered_utilization_comment(utilization.id)
         comment = comments[0]
@@ -565,6 +567,7 @@ class TestUtilizationDetailsService:
         )
 
         approve_utilization_comment(comment_id, user['id'])
+        session.commit()
         approved_comment = get_registered_utilization_comment(utilization.id)[0]
 
         assert approved_comment.category == category
@@ -599,6 +602,7 @@ class TestUtilizationDetailsService:
                 creator_user_id=user['id'],
             )
         )
+        session.commit()
 
         issue_resolution = get_issue_resolutions(utilization.id)[0]
 
@@ -622,6 +626,7 @@ class TestUtilizationDetailsService:
         create_issue_resolution(
             utilization.id, issue_resolution_description, sysadmin['id']
         )
+        session.commit()
 
         issue_resolution = (
             utilization.id,
@@ -666,6 +671,7 @@ class TestUtilizationDetailsService:
         )
 
         refresh_utilization_comments(utilization_id)
+        session.commit()
 
         result = get_utilization(utilization_id)
 
