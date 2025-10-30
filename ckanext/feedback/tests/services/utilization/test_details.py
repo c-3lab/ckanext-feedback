@@ -92,6 +92,7 @@ def register_utilization(id, resource_id, title, url, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.flush()
 
 
 def register_utilization_comment(
@@ -108,6 +109,7 @@ def register_utilization_comment(
         approval_user_id=approval_user_id,
     )
     session.add(utilization_comment)
+    session.flush()
 
 
 def convert_utilization_comment_to_tuple(utilization_comment):
