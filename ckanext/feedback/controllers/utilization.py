@@ -1,13 +1,14 @@
 import logging
 import os
+from dataclasses import dataclass
+from http import HTTPStatus
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
-from ckan.lib.uploader import get_uploader
 from ckan.plugins import toolkit
-from ckan.types import PUploader
-from flask import send_file
+from flask import Response, send_file
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.datastructures import FileStorage
 
 import ckanext.feedback.services.resource.comment as comment_service
@@ -37,26 +38,433 @@ from ckanext.feedback.services.common.check import (
 )
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
+from ckanext.feedback.services.common.upload import upload_image_with_validation
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
 from ckanext.feedback.utils.auth import create_auth_context
 
 log = logging.getLogger(__name__)
 
 
+class FormFields:
+    """Form field name constants"""
+
+    IMAGE_UPLOAD = 'image-upload'
+    ATTACHED_IMAGE = 'attached_image'
+    CATEGORY = 'category'
+    COMMENT_CONTENT = 'comment-content'
+    ATTACHED_IMAGE_FILENAME = 'attached_image_filename'
+    RETURN_TO_RESOURCE = 'return_to_resource'
+    COMMENT_SUGGESTED = 'comment-suggested'
+    INPUT_COMMENT = 'input-comment'
+    SUGGESTED_COMMENT = 'suggested-comment'
+    ACTION = 'action'
+    TITLE = 'title'
+    URL = 'url'
+    DESCRIPTION = 'description'
+    PACKAGE_NAME = 'package_name'
+    RESOURCE_ID = 'resource_id'
+
+
+class QueryParams:
+    """URL query parameter constants"""
+
+    RESOURCE_ID = 'resource_id'
+    PACKAGE_ID = 'package_id'
+    KEYWORD = 'keyword'
+    ORGANIZATION = 'organization'
+    WAITING = 'waiting'
+    APPROVAL = 'approval'
+    DISABLE_KEYWORD = 'disable_keyword'
+
+
+class DefaultValues:
+    """Default values and constants"""
+
+    ON = 'on'
+    TRUE_STRING = 'True'
+    FALSE_STRING = 'False'
+    AUTO_SUGGEST_FAILED = 'AUTO_SUGGEST_FAILED'
+    EMPTY_STRING = ''
+
+
+class MoralCheckActionMap:
+    """Moral check action mapping constants"""
+
+    ACTION_MAP = {
+        'suggestion': MoralCheckAction.PREVIOUS_SUGGESTION.name,
+        'confirm': MoralCheckAction.PREVIOUS_CONFIRM.name,
+    }
+
+
+@dataclass
+class OperationResult:
+    """Generic result for operations that can succeed or fail"""
+
+    success: bool
+    error_message: str | None = None
+
+
+@dataclass
+class ApprovalContext:
+    """Approval status context for determining user permissions"""
+
+    approval: bool | None
+    admin_owner_orgs: list[str] | None
+    user_orgs: list[str] | str | None
+
+
+@dataclass
+class ProcessedInput:
+    """Result of processing comment input"""
+
+    form_data: dict
+    attached_filename: str | None
+    error_response: Response | None
+
+
 class UtilizationController:
-    # Render HTML pages
+    """Controller for utilization-related operations"""
+
+    @staticmethod
+    def _determine_approval_context() -> ApprovalContext:
+        """
+        Determine approval context based on current user.
+
+        Returns:
+            ApprovalContext with approval status and user organizations
+        """
+        if not isinstance(current_user, model.User):
+            return ApprovalContext(approval=True, admin_owner_orgs=None, user_orgs=None)
+        elif current_user.sysadmin:
+            return ApprovalContext(
+                approval=None, admin_owner_orgs=None, user_orgs='all'
+            )
+        elif is_organization_admin():
+            admin_orgs = current_user.get_group_ids(
+                group_type='organization', capacity='admin'
+            )
+            user_orgs = current_user.get_group_ids(group_type='organization')
+            return ApprovalContext(
+                approval=None, admin_owner_orgs=admin_orgs, user_orgs=user_orgs
+            )
+        else:
+            user_orgs = current_user.get_group_ids(group_type='organization')
+            return ApprovalContext(
+                approval=True, admin_owner_orgs=None, user_orgs=user_orgs
+            )
+
+    @staticmethod
+    def _determine_approval_status(owner_org: str) -> bool | None:
+        """
+        Determine approval status based on current user for details view.
+
+        Returns:
+            True (only approved), False (all), None (all for admin/sysadmin)
+        """
+        if not isinstance(current_user, model.User):
+            return True
+        elif has_organization_admin_role(owner_org) or current_user.sysadmin:
+            return None
+        return True
+
+    @staticmethod
+    def _persist_operation(
+        operation: callable, utilization_id: str, error_message: str
+    ) -> OperationResult:
+        """Generic database operation with error handling"""
+        try:
+            operation()
+            session.commit()
+            return OperationResult(success=True)
+        except SQLAlchemyError:
+            session.rollback()
+            log.exception(f'Database error for utilization {utilization_id}')
+            return OperationResult(success=False, error_message=_(error_message))
+        except Exception:
+            session.rollback()
+            log.exception(f'Unexpected error for utilization {utilization_id}')
+            return OperationResult(success=False, error_message=_(error_message))
+
+    @staticmethod
+    def _extract_comment_form_data() -> dict:
+        """Extract comment form data from request"""
+        category = request.form.get(FormFields.CATEGORY, DefaultValues.EMPTY_STRING)
+        content = request.form.get(
+            FormFields.COMMENT_CONTENT, DefaultValues.EMPTY_STRING
+        )
+        attached_image_filename = request.form.get(
+            FormFields.ATTACHED_IMAGE_FILENAME, None
+        )
+        return {
+            'category': category,
+            'content': content,
+            'attached_image_filename': attached_image_filename,
+        }
+
+    @staticmethod
+    def _handle_image_upload(file_key: str) -> str | None:
+        """Handle image upload from request"""
+        attached_image: FileStorage = request.files.get(file_key)
+        if not attached_image:
+            return None
+        return UtilizationController._upload_image(attached_image)
+
+    @staticmethod
+    def _handle_image_upload_with_error_handling(
+        file_key: str, utilization_id: str, category: str, content: str
+    ) -> tuple[str | None, Response | None]:
+        """Returns (filename, None) on success, (None, error_response) on error"""
+        try:
+            uploaded_filename = UtilizationController._handle_image_upload(file_key)
+            return uploaded_filename, None
+        except toolkit.ValidationError as e:
+            helpers.flash_error(e.error_summary, allow_html=True)
+            # Call details() directly to preserve form data
+            error_response = UtilizationController.details(
+                utilization_id, category, content
+            )
+            return None, error_response
+        except (IOError, OSError) as e:
+            log.exception(f'Image upload failed for utilization {utilization_id}: {e}')
+            toolkit.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            log.exception(
+                f'Unexpected error during image upload for utilization'
+                f' {utilization_id}: {e}'
+            )
+            toolkit.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    @staticmethod
+    def _validate_comment_data(
+        category: str | None, content: str
+    ) -> tuple[bool, str | None]:
+        """Returns (is_valid, error_message)"""
+        if not (category and content):
+            return True, None
+        if message := validate_service.validate_comment(content):
+            return False, _(message)
+
+        return True, None
+
+    @staticmethod
+    def _handle_validation_error(
+        utilization_id: str,
+        error_message: str | None,
+        category: str,
+        content: str,
+        attached_image_filename: str | None = None,
+    ):
+        """
+        Handle validation error by flashing message and redirecting to
+        details page
+        """
+        if error_message:
+            helpers.flash_error(error_message, allow_html=True)
+        return toolkit.redirect_to(
+            'utilization.details',
+            utilization_id=utilization_id,
+            category=category,
+            attached_image_filename=attached_image_filename,
+        )
+
+    @staticmethod
+    def _process_comment_input(
+        file_key: str, utilization_id: str, form_data: dict | None = None
+    ) -> ProcessedInput:
+        """
+        Returns ProcessedInput with form_data, attached_filename,
+        and error_response
+        """
+        if form_data is None:
+            form_data = UtilizationController._extract_comment_form_data()
+
+        category = form_data['category']
+        content = form_data['content']
+        attached_image_filename = form_data['attached_image_filename']
+
+        uploaded_filename, error_response = (
+            UtilizationController._handle_image_upload_with_error_handling(
+                file_key, utilization_id, category, content
+            )
+        )
+        if error_response:
+            return ProcessedInput(form_data, None, error_response)
+
+        if uploaded_filename:
+            attached_image_filename = uploaded_filename
+
+        # Check reCAPTCHA (errors call details() directly to preserve form data)
+        if not is_recaptcha_verified(request):
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
+            error_response = UtilizationController.details(
+                utilization_id, category, content, attached_image_filename
+            )
+            return ProcessedInput(form_data, attached_image_filename, error_response)
+
+        # Validate comment data (errors use redirect_to)
+        is_valid, error_message = UtilizationController._validate_comment_data(
+            category, content
+        )
+        if not is_valid:
+            error_response = UtilizationController._handle_validation_error(
+                utilization_id,
+                error_message,
+                category,
+                content,
+                attached_image_filename,
+            )
+            return ProcessedInput(form_data, attached_image_filename, error_response)
+
+        return ProcessedInput(form_data, attached_image_filename, None)
+
+    @staticmethod
+    def _handle_moral_keeper_ai(
+        utilization_id: str,
+        category: str,
+        content: str,
+        attached_image_filename: str | None,
+    ) -> Response | None:
+        """Returns suggestion page or None if check passes"""
+        is_suggested = (
+            request.form.get(FormFields.COMMENT_SUGGESTED, False)
+            == DefaultValues.TRUE_STRING
+        )
+
+        if is_suggested:
+            action = request.form.get(FormFields.ACTION, None)
+            input_comment = request.form.get(FormFields.INPUT_COMMENT, None)
+            suggested_comment = request.form.get(
+                FormFields.SUGGESTED_COMMENT, DefaultValues.AUTO_SUGGEST_FAILED
+            )
+
+            detail_service.create_utilization_comment_moral_check_log(
+                utilization_id=utilization_id,
+                action=action,
+                input_comment=input_comment,
+                suggested_comment=suggested_comment,
+                output_comment=content,
+            )
+        else:
+            if check_ai_comment(comment=content) is False:
+                return UtilizationController.suggested_comment(
+                    utilization_id=utilization_id,
+                    category=category,
+                    content=content,
+                    attached_image_filename=attached_image_filename,
+                )
+
+            detail_service.create_utilization_comment_moral_check_log(
+                utilization_id=utilization_id,
+                action=MoralCheckAction.CHECK_COMPLETED.name,
+                input_comment=content,
+                suggested_comment=None,
+                output_comment=content,
+            )
+
+        return None
+
+    @staticmethod
+    def _send_utilization_notification_email(
+        resource_id: str, title: str, description: str, utilization_id: str
+    ):
+        """Send notification email. Exceptions are logged but not raised."""
+        try:
+            resource = comment_service.get_resource(resource_id)
+            send_email(
+                template_name=FeedbackConfig().notice_email.template_utilization.get(),
+                organization_id=resource.Resource.package.owner_org,
+                subject=FeedbackConfig().notice_email.subject_utilization.get(),
+                target_name=resource.Resource.name,
+                content_title=title,
+                content=description,
+                url=toolkit.url_for(
+                    'utilization.details', utilization_id=utilization_id, _external=True
+                ),
+            )
+        except Exception:
+            log.exception('Send email failed, for feedback notification.')
+
+    @staticmethod
+    def _send_comment_notification_email(
+        utilization_id: str, category: str, content: str
+    ):
+        """Send notification email for comment. Exceptions are logged but not raised."""
+        category_map = {
+            UtilizationCommentCategory.REQUEST.name: _('Request'),
+            UtilizationCommentCategory.QUESTION.name: _('Question'),
+            UtilizationCommentCategory.THANK.name: _('Thank'),
+        }
+
+        try:
+            utilization = detail_service.get_utilization(utilization_id)
+            send_email(
+                template_name=(
+                    FeedbackConfig().notice_email.template_utilization_comment.get()
+                ),
+                organization_id=comment_service.get_resource(
+                    utilization.resource_id
+                ).Resource.package.owner_org,
+                subject=FeedbackConfig().notice_email.subject_utilization_comment.get(),
+                target_name=utilization.title,
+                category=category_map[category],
+                content=content,
+                url=toolkit.url_for(
+                    'utilization.details', utilization_id=utilization_id, _external=True
+                ),
+            )
+        except Exception:
+            log.exception('Send email failed, for feedback notification.')
+
+    @staticmethod
+    def _set_organization_context(org_name: str):
+        """Set organization context in global g object"""
+        if org_name:
+            g.pkg_dict = {'organization': {'name': org_name}}
+
+    @staticmethod
+    def _validate_utilization_form(
+        title: str, url: str, description: str
+    ) -> tuple[bool, list[str]]:
+        """Returns (is_valid, error_messages)"""
+        errors = []
+
+        if title_err_msg := validate_service.validate_title(title):
+            errors.append(_(title_err_msg))
+
+        if url and (url_err_msg := validate_service.validate_url(url)):
+            errors.append(_(url_err_msg))
+
+        if dsc_err_msg := validate_service.validate_description(description):
+            errors.append(_(dsc_err_msg))
+
+        return len(errors) == 0, errors
+
+    @staticmethod
+    def _flash_validation_errors(errors: list[str]):
+        """Flash multiple validation error messages"""
+        for error in errors:
+            helpers.flash_error(error, allow_html=True)
+
+    # === Render HTML Pages ===
+
     # utilization/search
     @staticmethod
     def search():
         # Accept explicit resource_id or package_id parameters
-        resource_id = request.args.get('resource_id', '')
-        package_id = request.args.get('package_id', '')
+        resource_id = request.args.get(
+            QueryParams.RESOURCE_ID, DefaultValues.EMPTY_STRING
+        )
+        package_id = request.args.get(
+            QueryParams.PACKAGE_ID, DefaultValues.EMPTY_STRING
+        )
 
-        keyword = request.args.get('keyword', '')
-        org_name = request.args.get('organization', '')
+        keyword = request.args.get(QueryParams.KEYWORD, DefaultValues.EMPTY_STRING)
+        org_name = request.args.get(
+            QueryParams.ORGANIZATION, DefaultValues.EMPTY_STRING
+        )
 
-        unapproved_status = request.args.get('waiting', 'on')
-        approval_status = request.args.get('approval', 'on')
+        unapproved_status = request.args.get(QueryParams.WAITING, DefaultValues.ON)
+        approval_status = request.args.get(QueryParams.APPROVAL, DefaultValues.ON)
 
         page, limit, offset, pager_url = get_pagination_value('utilization.search')
 
@@ -74,41 +482,22 @@ class UtilizationController:
         if package_id:
             require_package_access(package_id, context)
 
-        # If the login user is not an admin, display only approved utilizations
-        approval = True
-        admin_owner_orgs = None
-        user_orgs = None
-        if not isinstance(current_user, model.User):
-            # If the user is not login, display only approved utilizations
-            approval = True
-            user_orgs = None
-        elif current_user.sysadmin:
-            # If the user is an admin, display all utilizations
-            approval = None
-            user_orgs = 'all'
-        elif is_organization_admin():
-            # If the user is an organization admin, display all utilizations
-            approval = None
-            admin_owner_orgs = current_user.get_group_ids(
-                group_type='organization', capacity='admin'
-            )
-            user_orgs = current_user.get_group_ids(group_type='organization')
-        else:
-            # Regular logged-in user
-            approval = True
-            user_orgs = current_user.get_group_ids(group_type='organization')
+        # Determine approval context based on user role
+        approval_ctx = UtilizationController._determine_approval_context()
 
-        disable_keyword = request.args.get('disable_keyword', '')
+        disable_keyword = request.args.get(
+            QueryParams.DISABLE_KEYWORD, DefaultValues.EMPTY_STRING
+        )
         utilizations, total_count = search_service.get_utilizations(
             resource_id=resource_id,
             package_id=package_id,
             keyword=keyword,
-            approval=approval,
-            admin_owner_orgs=admin_owner_orgs,
+            approval=approval_ctx.approval,
+            admin_owner_orgs=approval_ctx.admin_owner_orgs,
             org_name=org_name,
             limit=limit,
             offset=offset,
-            user_orgs=user_orgs,
+            user_orgs=approval_ctx.user_orgs,
         )
 
         # If the organization name can be identified,
@@ -119,12 +508,8 @@ class UtilizationController:
                 org_name = resource_for_org.organization_name
             elif package_id:
                 org_name = search_service.get_organization_name_from_pkg(package_id)
-        if org_name:
-            g.pkg_dict = {
-                'organization': {
-                    'name': org_name,
-                },
-            }
+
+        UtilizationController._set_organization_context(org_name)
 
         return toolkit.render(
             'utilization/search.html',
@@ -145,16 +530,22 @@ class UtilizationController:
 
     # utilization/new
     @staticmethod
-    def new(resource_id=None, title='', description=''):
+    def new(
+        resource_id=None,
+        title=DefaultValues.EMPTY_STRING,
+        description=DefaultValues.EMPTY_STRING,
+    ):
         if not resource_id:
-            resource_id = request.args.get('resource_id', '')
-        return_to_resource = request.args.get('return_to_resource', False)
+            resource_id = request.args.get(
+                QueryParams.RESOURCE_ID, DefaultValues.EMPTY_STRING
+            )
+        return_to_resource = request.args.get(FormFields.RETURN_TO_RESOURCE, False)
         resource = comment_service.get_resource(resource_id)
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
         package = get_authorized_package(resource.Resource.package.id, context)
-        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+        UtilizationController._set_organization_context(resource.organization_name)
 
         return toolkit.render(
             'utilization/new.html',
@@ -168,38 +559,28 @@ class UtilizationController:
     # utilization/new
     @staticmethod
     def create():
-        package_name = request.form.get('package_name', '')
-        resource_id = request.form.get('resource_id', '')
-        title = request.form.get('title', '')
-        url = request.form.get('url', '')
-        description = request.form.get('description', '')
+        package_name = request.form.get(
+            FormFields.PACKAGE_NAME, DefaultValues.EMPTY_STRING
+        )
+        resource_id = request.form.get(
+            FormFields.RESOURCE_ID, DefaultValues.EMPTY_STRING
+        )
+        title = request.form.get(FormFields.TITLE, DefaultValues.EMPTY_STRING)
+        url = request.form.get(FormFields.URL, DefaultValues.EMPTY_STRING)
+        description = request.form.get(
+            FormFields.DESCRIPTION, DefaultValues.EMPTY_STRING
+        )
 
-        url_err_msg = validate_service.validate_url(url)
-        title_err_msg = validate_service.validate_title(title)
-        dsc_err_msg = validate_service.validate_description(description)
-        if (url and url_err_msg) or title_err_msg or dsc_err_msg:
-            if title_err_msg:
-                helpers.flash_error(
-                    _(title_err_msg),
-                    allow_html=True,
-                )
-            if url and url_err_msg:
-                helpers.flash_error(
-                    _(url_err_msg),
-                    allow_html=True,
-                )
-            if dsc_err_msg:
-                helpers.flash_error(
-                    _(dsc_err_msg),
-                    allow_html=True,
-                )
-            return toolkit.redirect_to(
-                'utilization.new',
-                resource_id=resource_id,
-            )
+        # Validate form data
+        is_valid, errors = UtilizationController._validate_utilization_form(
+            title, url, description
+        )
+        if not is_valid:
+            UtilizationController._flash_validation_errors(errors)
+            return toolkit.redirect_to('utilization.new', resource_id=resource_id)
 
         if not (resource_id and title and description):
-            toolkit.abort(400)
+            toolkit.abort(HTTPStatus.BAD_REQUEST)
 
         if not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
@@ -209,7 +590,10 @@ class UtilizationController:
                 title=title,
                 description=description,
             )
-        return_to_resource = toolkit.asbool(request.form.get('return_to_resource'))
+
+        return_to_resource = toolkit.asbool(
+            request.form.get(FormFields.RETURN_TO_RESOURCE)
+        )
         utilization = registration_service.create_utilization(
             resource_id, title, url, description
         )
@@ -217,21 +601,9 @@ class UtilizationController:
         utilization_id = utilization.id
         session.commit()
 
-        try:
-            resource = comment_service.get_resource(resource_id)
-            send_email(
-                template_name=FeedbackConfig().notice_email.template_utilization.get(),
-                organization_id=resource.Resource.package.owner_org,
-                subject=FeedbackConfig().notice_email.subject_utilization.get(),
-                target_name=resource.Resource.name,
-                content_title=title,
-                content=description,
-                url=toolkit.url_for(
-                    'utilization.details', utilization_id=utilization_id, _external=True
-                ),
-            )
-        except Exception:
-            log.exception('Send email failed, for feedback notification.')
+        UtilizationController._send_utilization_notification_email(
+            resource_id, title, description, utilization_id
+        )
 
         helpers.flash_success(
             _(
@@ -252,26 +624,21 @@ class UtilizationController:
     @staticmethod
     def details(
         utilization_id,
-        category='',
-        content='',
+        category=DefaultValues.EMPTY_STRING,
+        content=DefaultValues.EMPTY_STRING,
         attached_image_filename: str | None = None,
     ):
         utilization = detail_service.get_utilization(utilization_id)
         if not utilization:
-            toolkit.abort(404, _('Utilization not found'))
+            toolkit.abort(HTTPStatus.NOT_FOUND, _('Utilization not found'))
 
         # Check access and get package data in a single efficient call
         context = create_auth_context()
         package = get_authorized_package(utilization.package_id, context)
 
-        approval = True
-        if not isinstance(current_user, model.User):
-            approval = True
-        elif (
-            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
-        ):
-            # if the user is an organization admin or a sysadmin, display all comments
-            approval = None
+        approval = UtilizationController._determine_approval_status(
+            utilization.owner_org
+        )
 
         page, limit, offset, pager_url = get_pagination_value('utilization.details')
 
@@ -282,11 +649,11 @@ class UtilizationController:
         categories = detail_service.get_utilization_comment_categories()
         issue_resolutions = detail_service.get_issue_resolutions(utilization_id)
         resource = comment_service.get_resource(utilization.resource_id)
-        g.pkg_dict = {'organization': {'name': resource.organization_name}}
-        if not category:
-            selected_category = UtilizationCommentCategory.REQUEST.name
-        else:
-            selected_category = category
+        UtilizationController._set_organization_context(resource.organization_name)
+
+        selected_category = (
+            category if category else UtilizationCommentCategory.REQUEST.name
+        )
 
         return toolkit.render(
             'utilization/details.html',
@@ -315,7 +682,7 @@ class UtilizationController:
         UtilizationController._check_organization_admin_role(utilization_id)
         utilization = detail_service.get_utilization(utilization_id)
         if not utilization:
-            toolkit.abort(404, _('Utilization not found'))
+            toolkit.abort(HTTPStatus.NOT_FOUND, _('Utilization not found'))
 
         # Use CKAN's authorization system to check package access
         context = create_auth_context()
@@ -330,74 +697,33 @@ class UtilizationController:
     # utilization/<utilization_id>/comment/new
     @staticmethod
     def create_comment(utilization_id):
-        category = request.form.get('category', '')
-        content = request.form.get('comment-content', '')
-        attached_image_filename = request.form.get('attached_image_filename', None)
-        if not (category and content):
-            toolkit.abort(400)
+        # Early check for required fields
+        form_data = UtilizationController._extract_comment_form_data()
+        if not (form_data['category'] and form_data['content']):
+            toolkit.abort(HTTPStatus.BAD_REQUEST)
 
-        attached_image: FileStorage = request.files.get("image-upload")
-        if attached_image:
-            try:
-                attached_image_filename = UtilizationController._upload_image(
-                    attached_image
-                )
-            except toolkit.ValidationError as e:
-                helpers.flash_error(e.error_summary, allow_html=True)
-                return UtilizationController.details(utilization_id, category, content)
-            except Exception as e:
-                log.exception(f'Exception: {e}')
-                toolkit.abort(500)
+        # Process input with pre-extracted form data
+        result = UtilizationController._process_comment_input(
+            FormFields.IMAGE_UPLOAD, utilization_id, form_data
+        )
 
-        if not is_recaptcha_verified(request):
-            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return UtilizationController.details(
-                utilization_id, category, content, attached_image_filename
-            )
+        if result.error_response:
+            return result.error_response
 
-        if message := validate_service.validate_comment(content):
-            helpers.flash_error(
-                _(message),
-                allow_html=True,
-            )
-            return toolkit.redirect_to(
-                'utilization.details',
-                utilization_id=utilization_id,
-                category=category,
-                attached_image_filename=attached_image_filename,
-            )
-
+        # Create comment
         detail_service.create_utilization_comment(
-            utilization_id, category, content, attached_image_filename
+            utilization_id,
+            result.form_data['category'],
+            result.form_data['content'],
+            result.attached_filename,
         )
 
         session.commit()
 
-        category_map = {
-            UtilizationCommentCategory.REQUEST.name: _('Request'),
-            UtilizationCommentCategory.QUESTION.name: _('Question'),
-            UtilizationCommentCategory.THANK.name: _('Thank'),
-        }
-
-        try:
-            utilization = detail_service.get_utilization(utilization_id)
-            send_email(
-                template_name=(
-                    FeedbackConfig().notice_email.template_utilization_comment.get()
-                ),
-                organization_id=comment_service.get_resource(
-                    utilization.resource_id
-                ).Resource.package.owner_org,
-                subject=FeedbackConfig().notice_email.subject_utilization_comment.get(),
-                target_name=utilization.title,
-                category=category_map[category],
-                content=content,
-                url=toolkit.url_for(
-                    'utilization.details', utilization_id=utilization_id, _external=True
-                ),
-            )
-        except Exception:
-            log.exception('Send email failed, for feedback notification.')
+        # Send notification
+        UtilizationController._send_comment_notification_email(
+            utilization_id, result.form_data['category'], result.form_data['content']
+        )
 
         helpers.flash_success(
             _(
@@ -420,40 +746,25 @@ class UtilizationController:
         softened = suggest_ai_comment(comment=content)
 
         utilization = detail_service.get_utilization(utilization_id)
-        g.pkg_dict = {
-            'organization': {
-                'name': (
-                    comment_service.get_resource(
-                        utilization.resource_id
-                    ).organization_name
-                )
-            }
+        org_name = comment_service.get_resource(
+            utilization.resource_id
+        ).organization_name
+        UtilizationController._set_organization_context(org_name)
+
+        common_context = {
+            'utilization_id': utilization_id,
+            'utilization': utilization,
+            'selected_category': category,
+            'content': content,
+            'attached_image_filename': attached_image_filename,
+            'action': MoralCheckAction,
         }
 
         if softened is None:
-            return toolkit.render(
-                'utilization/expect_suggestion.html',
-                {
-                    'utilization_id': utilization_id,
-                    'utilization': utilization,
-                    'selected_category': category,
-                    'content': content,
-                    'attached_image_filename': attached_image_filename,
-                    'action': MoralCheckAction,
-                },
-            )
+            return toolkit.render('utilization/expect_suggestion.html', common_context)
 
         return toolkit.render(
-            'utilization/suggestion.html',
-            {
-                'utilization_id': utilization_id,
-                'utilization': utilization,
-                'selected_category': category,
-                'content': content,
-                'attached_image_filename': attached_image_filename,
-                'softened': softened,
-                'action': MoralCheckAction,
-            },
+            'utilization/suggestion.html', {**common_context, 'softened': softened}
         )
 
     # utilization/<utilization_id>/comment/check
@@ -464,44 +775,20 @@ class UtilizationController:
                 'utilization.details', utilization_id=utilization_id
             )
 
-        category = request.form.get('category', '')
-        content = request.form.get('comment-content', '')
-        attached_image_filename = request.form.get('attached_image_filename', None)
-        if not (category and content):
+        # Early check for category and content before processing
+        form_data = UtilizationController._extract_comment_form_data()
+        if not (form_data['category'] and form_data['content']):
             return toolkit.redirect_to(
                 'utilization.details', utilization_id=utilization_id
             )
 
-        attached_image: FileStorage = request.files.get("attached_image")
-        if attached_image:
-            try:
-                attached_image_filename = UtilizationController._upload_image(
-                    attached_image
-                )
-            except toolkit.ValidationError as e:
-                helpers.flash_error(e.error_summary, allow_html=True)
-                return UtilizationController.details(utilization_id, category, content)
-            except Exception as e:
-                log.exception(f'Exception: {e}')
-                toolkit.abort(500)
+        # Process with existing form_data to avoid duplication
+        result = UtilizationController._process_comment_input(
+            FormFields.ATTACHED_IMAGE, utilization_id, form_data
+        )
 
-        if not is_recaptcha_verified(request):
-            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
-            return UtilizationController.details(
-                utilization_id, category, content, attached_image_filename
-            )
-
-        if message := validate_service.validate_comment(content):
-            helpers.flash_error(
-                _(message),
-                allow_html=True,
-            )
-            return toolkit.redirect_to(
-                'utilization.details',
-                utilization_id=utilization_id,
-                category=category,
-                attached_image_filename=attached_image_filename,
-            )
+        if result.error_response:
+            return result.error_response
 
         categories = detail_service.get_utilization_comment_categories()
         utilization = detail_service.get_utilization(utilization_id)
@@ -510,43 +797,20 @@ class UtilizationController:
         # Check access and get package data in a single efficient call
         context = create_auth_context()
         package = get_authorized_package(resource.Resource.package_id, context)
-        g.pkg_dict = {'organization': {'name': resource.organization_name}}
+        UtilizationController._set_organization_context(resource.organization_name)
 
         if FeedbackConfig().moral_keeper_ai.is_enable(
             resource.Resource.package.owner_org
         ):
-            is_suggested = request.form.get('comment-suggested', False) == 'True'
+            ai_response = UtilizationController._handle_moral_keeper_ai(
+                utilization_id,
+                result.form_data['category'],
+                result.form_data['content'],
+                result.attached_filename,
+            )
+            if ai_response:
+                return ai_response
 
-            if is_suggested:
-                action = request.form.get('action', None)
-                input_comment = request.form.get('input-comment', None)
-                suggested_comment = request.form.get(
-                    'suggested-comment', 'AUTO_SUGGEST_FAILED'
-                )
-
-                detail_service.create_utilization_comment_moral_check_log(
-                    utilization_id=utilization_id,
-                    action=action,
-                    input_comment=input_comment,
-                    suggested_comment=suggested_comment,
-                    output_comment=content,
-                )
-            else:
-                if check_ai_comment(comment=content) is False:
-                    return UtilizationController.suggested_comment(
-                        utilization_id=utilization_id,
-                        category=category,
-                        content=content,
-                        attached_image_filename=attached_image_filename,
-                    )
-
-                detail_service.create_utilization_comment_moral_check_log(
-                    utilization_id=utilization_id,
-                    action=MoralCheckAction.CHECK_COMPLETED.name,
-                    input_comment=content,
-                    suggested_comment=None,
-                    output_comment=content,
-                )
             session.commit()
 
         return toolkit.render(
@@ -555,10 +819,10 @@ class UtilizationController:
                 'pkg_dict': package,
                 'utilization_id': utilization_id,
                 'utilization': utilization,
-                'content': content,
-                'selected_category': category,
+                'content': result.form_data['content'],
+                'selected_category': result.form_data['category'],
                 'categories': categories,
-                'attached_image_filename': attached_image_filename,
+                'attached_image_filename': result.attached_filename,
             },
         )
 
@@ -590,15 +854,10 @@ class UtilizationController:
         resource_details = edit_service.get_resource_details(
             utilization_details.resource_id
         )
-        g.pkg_dict = {
-            'organization': {
-                'name': (
-                    comment_service.get_resource(
-                        utilization_details.resource_id
-                    ).organization_name
-                )
-            }
-        }
+        org_name = comment_service.get_resource(
+            utilization_details.resource_id
+        ).organization_name
+        UtilizationController._set_organization_context(org_name)
 
         return toolkit.render(
             'utilization/edit.html',
@@ -613,34 +872,23 @@ class UtilizationController:
     @check_administrator
     def update(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        title = request.form.get('title', '')
-        url = request.form.get('url', '')
-        description = request.form.get('description', '')
-        if not (title and description):
-            toolkit.abort(400)
+        title = request.form.get(FormFields.TITLE, DefaultValues.EMPTY_STRING)
+        url = request.form.get(FormFields.URL, DefaultValues.EMPTY_STRING)
+        description = request.form.get(
+            FormFields.DESCRIPTION, DefaultValues.EMPTY_STRING
+        )
 
-        url_err_msg = validate_service.validate_url(url)
-        title_err_msg = validate_service.validate_title(title)
-        dsc_err_msg = validate_service.validate_description(description)
-        if (url and url_err_msg) or title_err_msg or dsc_err_msg:
-            if title_err_msg:
-                helpers.flash_error(
-                    _(title_err_msg),
-                    allow_html=True,
-                )
-            if url and url_err_msg:
-                helpers.flash_error(
-                    _(url_err_msg),
-                    allow_html=True,
-                )
-            if dsc_err_msg:
-                helpers.flash_error(
-                    _(dsc_err_msg),
-                    allow_html=True,
-                )
+        if not (title and description):
+            toolkit.abort(HTTPStatus.BAD_REQUEST)
+
+        # Validate form data
+        is_valid, errors = UtilizationController._validate_utilization_form(
+            title, url, description
+        )
+        if not is_valid:
+            UtilizationController._flash_validation_errors(errors)
             return toolkit.redirect_to(
-                'utilization.edit',
-                utilization_id=utilization_id,
+                'utilization.edit', utilization_id=utilization_id
             )
 
         edit_service.update_utilization(utilization_id, title, url, description)
@@ -676,9 +924,9 @@ class UtilizationController:
     @check_administrator
     def create_issue_resolution(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        description = request.form.get('description')
+        description = request.form.get(FormFields.DESCRIPTION)
         if not description:
-            toolkit.abort(400)
+            toolkit.abort(HTTPStatus.BAD_REQUEST)
 
         detail_service.create_issue_resolution(
             utilization_id, description, current_user.id
@@ -695,32 +943,27 @@ class UtilizationController:
     ):
         utilization = detail_service.get_utilization(utilization_id)
         if utilization is None:
-            toolkit.abort(404)
+            toolkit.abort(HTTPStatus.NOT_FOUND)
 
         # Use CKAN's authorization system to check package access
         context = create_auth_context()
         require_package_access(utilization.package_id, context)
 
-        approval = True
-        if not isinstance(current_user, model.User):
-            # if the user is not logged in, display only approved comments
-            approval = True
-        elif (
-            has_organization_admin_role(utilization.owner_org) or current_user.sysadmin
-        ):
-            # if the user is an organization admin or a sysadmin, display all comments
-            approval = None
+        approval = UtilizationController._determine_approval_status(
+            utilization.owner_org
+        )
 
         comment = detail_service.get_utilization_comment(
             comment_id, utilization_id, approval, attached_image_filename
         )
         if comment is None:
-            toolkit.abort(404)
+            toolkit.abort(HTTPStatus.NOT_FOUND)
+
         attached_image_path = detail_service.get_attached_image_path(
             attached_image_filename
         )
         if not os.path.exists(attached_image_path):
-            toolkit.abort(404)
+            toolkit.abort(HTTPStatus.NOT_FOUND)
 
         return send_file(attached_image_path)
 
@@ -730,7 +973,7 @@ class UtilizationController:
 
         utilization = detail_service.get_utilization(utilization_id)
         if not utilization:
-            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
+            toolkit.abort(HTTPStatus.NOT_FOUND, NOT_FOUND_ERROR_MESSAGE)
 
         # Use CKAN's authorization system to check package access
         context = create_auth_context()
@@ -740,49 +983,39 @@ class UtilizationController:
             not has_organization_admin_role(utilization.owner_org)
             and not current_user.sysadmin
         ):
-            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
+            toolkit.abort(HTTPStatus.NOT_FOUND, NOT_FOUND_ERROR_MESSAGE)
 
     @staticmethod
     def _upload_image(image: FileStorage) -> str:
-        upload_to = detail_service.get_upload_destination()
-        uploader: PUploader = get_uploader(upload_to)
-        data_dict = {
-            "image_upload": image,
-        }
-        uploader.update_data_dict(
-            data_dict, 'image_url', 'image_upload', 'clear_upload'
-        )
-        attached_image_filename = data_dict["image_url"]
-        uploader.upload()
-        return attached_image_filename
+        """Upload an image file with validation."""
+        upload_destination = detail_service.get_upload_destination()
+        return upload_image_with_validation(image, upload_destination)
 
     # utilization/<utilization_id>/comment/create_previous_log
     @staticmethod
     def create_previous_log(utilization_id):
         resource = detail_service.get_resource_by_utilization_id(utilization_id)
-        if FeedbackConfig().moral_keeper_ai.is_enable(
+        if not FeedbackConfig().moral_keeper_ai.is_enable(
             resource.Resource.package.owner_org
         ):
-            data = request.get_json()
-            previous_type = data.get('previous_type', None)
-            input_comment = data.get('input_comment', None)
-            suggested_comment = data.get('suggested_comment', None)
+            return '', HTTPStatus.NO_CONTENT
 
-            action_map = {
-                'suggestion': MoralCheckAction.PREVIOUS_SUGGESTION.name,
-                'confirm': MoralCheckAction.PREVIOUS_CONFIRM.name,
-            }
-            action = action_map.get(previous_type, None)
-            if action is None:
-                return '', 204
+        data = request.get_json()
+        previous_type = data.get('previous_type', None)
+        input_comment = data.get('input_comment', None)
+        suggested_comment = data.get('suggested_comment', None)
 
-            detail_service.create_utilization_comment_moral_check_log(
-                utilization_id=utilization_id,
-                action=action,
-                input_comment=input_comment,
-                suggested_comment=suggested_comment,
-                output_comment=None,
-            )
-            session.commit()
+        action = MoralCheckActionMap.ACTION_MAP.get(previous_type, None)
+        if action is None:
+            return '', HTTPStatus.NO_CONTENT
 
-        return '', 204
+        detail_service.create_utilization_comment_moral_check_log(
+            utilization_id=utilization_id,
+            action=action,
+            input_comment=input_comment,
+            suggested_comment=suggested_comment,
+            output_comment=None,
+        )
+        session.commit()
+
+        return '', HTTPStatus.NO_CONTENT
