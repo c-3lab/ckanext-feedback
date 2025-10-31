@@ -33,6 +33,7 @@ class TestDownloadServices:
     def test_increment_resource_downloads(self, resource):
         increment_resource_downloads(resource['id'])
         session.commit()
+        session.expire_all()
         download_summary = get_downloads(resource['id'])
 
         assert download_summary.download == 1
@@ -40,6 +41,7 @@ class TestDownloadServices:
 
         increment_resource_downloads(resource['id'])
         session.commit()
+        session.expire_all()
         download_summary = get_downloads(resource['id'])
 
         assert download_summary.download == 2
