@@ -1189,8 +1189,6 @@ class TestResourceController:
         dataset,
         organization,
         resource,
-        dataset,
-        organization,
     ):
         import uuid
 
@@ -1342,8 +1340,6 @@ class TestResourceController:
         dataset,
         organization,
         resource,
-        dataset,
-        organization,
     ):
         import uuid
 
