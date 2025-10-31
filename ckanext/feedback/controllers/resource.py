@@ -685,6 +685,8 @@ class ResourceController:
 
     @staticmethod
     def _check_organization_admin_role(resource_id):
+        from ckanext.feedback.services.common.check import NOT_FOUND_ERROR_MESSAGE
+
         resource = comment_service.get_resource(resource_id)
 
         # Check package access authorization
