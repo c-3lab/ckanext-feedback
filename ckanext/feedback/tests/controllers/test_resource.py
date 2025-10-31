@@ -1186,6 +1186,8 @@ class TestResourceController:
         mock_require_package_access,
         current_user,
         user,
+        dataset,
+        organization,
         resource,
         dataset,
         organization,
@@ -1337,6 +1339,8 @@ class TestResourceController:
         mock_require_package_access,
         current_user,
         user,
+        dataset,
+        organization,
         resource,
         dataset,
         organization,
@@ -2228,7 +2232,7 @@ class TestResourceCreatePreviousLog:
         mock_validate,
         mock_categories,
         mock_get_resource,
-        mock_get_action,
+        mock_get_authorized_package,
         mock_config,
         mock_create_log,
         mock_check_ai,
@@ -2253,7 +2257,7 @@ class TestResourceCreatePreviousLog:
         mock_resource.Resource.package_id = 'test-package'
         mock_resource.Resource.package.owner_org = 'test-org'
         mock_get_resource.return_value = mock_resource
-        mock_get_action.return_value = MagicMock(return_value={'id': 'test-package'})
+        mock_get_authorized_package.return_value = {'id': 'test-package'}
 
         mock_feedback_config = MagicMock()
         mock_feedback_config.moral_keeper_ai.is_enable.return_value = True

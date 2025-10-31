@@ -45,6 +45,7 @@ class TestLikes:
 
         increment_resource_like_count(resource['id'])
         session.commit()
+        session.expire_all()
         resource_like = get_resource_like(resource['id'])
 
         assert resource_like.like_count == 2

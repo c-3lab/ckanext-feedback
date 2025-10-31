@@ -3,14 +3,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, call, patch
 
 import pytest
-from ckan import model
-from ckan.tests import factories
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import (
     Utilization,
@@ -29,6 +22,7 @@ def register_utilization(id, resource_id, title, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 def register_utilization_comment(
@@ -45,53 +39,18 @@ def register_utilization_comment(
         approval_user_id=approval_user_id,
     )
     session.add(utilization_comment)
+    session.commit()
 
 
 def get_registered_utilization(resource_id):
     return (
-        session.query(
-            Utilization.id,
-            Utilization.approval,
-            Utilization.approved,
-            Utilization.approval_user_id,
-        )
-        .filter(Utilization.resource_id == resource_id)
-        .all()
+        session.query(Utilization).filter(Utilization.resource_id == resource_id).all()
     )
 
 
-def get_registered_utilization_comment(utilization_id):
-    return (
-        session.query(
-            UtilizationComment.id,
-            UtilizationComment.utilization_id,
-            UtilizationComment.category,
-            UtilizationComment.content,
-            UtilizationComment.created,
-            UtilizationComment.approval,
-            UtilizationComment.approved,
-            UtilizationComment.approval_user_id,
-        )
-        .filter(UtilizationComment.utilization_id == utilization_id)
-        .all()
-    )
-
-
-engine = model.repo.session.get_bind()
-
-
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestUtilizationComments:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
-    def test_get_utilization_comments_query(self):
-        organization = factories.Organization()
-
+    def test_get_utilization_comments_query(self, organization):
         org_list = [{'name': organization['name'], 'title': organization['title']}]
 
         query = utilization_comments.get_utilization_comments_query(org_list)
@@ -110,9 +69,7 @@ class TestUtilizationComments:
         assert "created" in sql_str
         assert "is_approved" in sql_str
 
-    def test_get_simple_utilization_comments_query(self):
-        organization = factories.Organization()
-
+    def test_get_simple_utilization_comments_query(self, organization):
         org_list = [{'name': organization['name'], 'title': organization['title']}]
 
         query = utilization_comments.get_simple_utilization_comments_query(org_list)
@@ -122,13 +79,10 @@ class TestUtilizationComments:
         assert "feedback_type" in sql_str
         assert "is_approved" in sql_str
 
-    @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments(self):
+    def test_get_utilization_comments(self, resource):
         id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
 
         comment_id = str(uuid.uuid4())
         category = UtilizationCommentCategory.QUESTION
@@ -146,15 +100,18 @@ class TestUtilizationComments:
 
         assert utilization_comments.get_utilization_comments(id) == 1
 
-    @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comment_ids(self):
-        resource = factories.Resource()
-
+    def test_get_utilization_comment_ids(self, resource):
         utilization_id = str(uuid.uuid4())
-        title = 'test title'
-        description = 'test description'
+        utilization_title = 'test title'
+        utilization_description = 'test description'
 
-        register_utilization(utilization_id, resource['id'], title, description, True)
+        register_utilization(
+            utilization_id,
+            resource['id'],
+            utilization_title,
+            utilization_description,
+            False,
+        )
 
         comment_id = str(uuid.uuid4())
         category = UtilizationCommentCategory.QUESTION
@@ -162,50 +119,41 @@ class TestUtilizationComments:
         created = datetime.now()
 
         register_utilization_comment(
-            comment_id,
-            utilization_id,
-            category,
-            content,
-            created,
-            False,
-            None,
-            None,
+            comment_id, utilization_id, category, content, created, False, None, None
         )
-
-        session.commit()
 
         comment_id_list = [comment_id]
 
-        utilization_comment_ids = utilization_comments.get_utilization_comment_ids(
-            comment_id_list
-        )
+        comment_ids = utilization_comments.get_utilization_comment_ids(comment_id_list)
 
-        assert utilization_comment_ids == [comment_id]
+        assert comment_ids == [comment_id]
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     @patch(
         'ckanext.feedback.services.admin.utilization_comments.'
         'session.bulk_update_mappings'
     )
-    def test_approve_utilization_comments(self, mock_mappings):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_approve_utilization_comments(self, mock_mappings, resource):
         utilization_id = str(uuid.uuid4())
-        title = 'test title'
-        description = 'test description'
+        utilization_title = 'test title'
+        utilization_description = 'test description'
+
+        register_utilization(
+            utilization_id,
+            resource['id'],
+            utilization_title,
+            utilization_description,
+            False,
+        )
 
         comment_id = str(uuid.uuid4())
         category = UtilizationCommentCategory.QUESTION
         content = 'test content'
         created = datetime.now()
 
-        register_utilization(utilization_id, resource['id'], title, description, True)
         register_utilization_comment(
             comment_id, utilization_id, category, content, created, False, None, None
         )
-
-        session.commit()
 
         comment_id_list = [comment_id]
 
@@ -287,11 +235,8 @@ class TestUtilizationComments:
         'session.bulk_update_mappings'
     )
     def test_refresh_utilizations_comments(
-        self, mock_mappings, mock_get_utilization_comments
+        self, mock_mappings, mock_get_utilization_comments, resource
     ):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
         utilization_id = str(uuid.uuid4())
         another_utilization_id = str(uuid.uuid4())
         title = 'test title'

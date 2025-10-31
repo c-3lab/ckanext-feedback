@@ -1,14 +1,7 @@
 import uuid
 
-import ckan.tests.factories as factories
 import pytest
-from ckan import model
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization
 from ckanext.feedback.services.utilization.edit import (
@@ -33,24 +26,12 @@ def register_utilization(id, resource_id, title, url, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
-engine = model.repo.session.get_bind()
-
-
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestUtilizationDetailsService:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
-    def test_get_utilization_details(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_utilization_details(self, resource):
         id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -61,10 +42,7 @@ class TestUtilizationDetailsService:
         utilization = get_registered_utilization(id)
         assert result == utilization
 
-    def test_get_resource_details(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_resource_details(self, dataset, resource):
         result = get_resource_details(resource['id'])
 
         assert result.resource_name == resource['name']
@@ -72,10 +50,7 @@ class TestUtilizationDetailsService:
         assert result.package_title == dataset['title']
         assert result.package_name == dataset['name']
 
-    def test_update_utilization(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_update_utilization(self, resource):
         id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -87,6 +62,7 @@ class TestUtilizationDetailsService:
         updated_description = 'test updated description'
 
         update_utilization(id, updated_title, updated_url, updated_description)
+        session.commit()
 
         utilization = get_registered_utilization(id)
 
@@ -94,10 +70,7 @@ class TestUtilizationDetailsService:
         assert utilization.url == updated_url
         assert utilization.description == updated_description
 
-    def test_delete_utilization(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_delete_utilization(self, resource):
         id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -107,5 +80,6 @@ class TestUtilizationDetailsService:
         assert get_registered_utilization(id).id == id
 
         delete_utilization(id)
+        session.commit()
 
         assert get_registered_utilization(id) is None

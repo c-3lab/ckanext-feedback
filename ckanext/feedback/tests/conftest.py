@@ -32,6 +32,7 @@ from ckanext.feedback.models.utilization import (
     UtilizationCommentCategory,
     UtilizationCommentMoralCheckLog,
 )
+from ckanext.feedback.services.resource.summary import refresh_resource_summary
 
 
 @pytest.fixture(autouse=True)
@@ -105,10 +106,13 @@ def resource_comment(resource):
         category=ResourceCommentCategory.REQUEST,
         content='test_content',
         rating=3,
+        approval=True,
         attached_image_filename='test_attached_image.jpg',
     )
     session.add(comment)
-    session.flush()
+    session.commit()
+    refresh_resource_summary(resource['id'])
+    session.commit()
     return comment
 
 

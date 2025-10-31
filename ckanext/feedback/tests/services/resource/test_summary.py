@@ -1,13 +1,6 @@
 import pytest
-from ckan import model
-from ckan.model.user import User
-from ckan.tests import factories
+from ckan.model import User
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentSummary,
@@ -28,88 +21,34 @@ from ckanext.feedback.services.resource.summary import (
 )
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-class TestResourceServices:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        engine = model.meta.engine
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
+@pytest.mark.db_test
+class TestSummary:
+    def test_get_package_comments(self, resource, resource_comment):
+        result = get_package_comments(resource['package_id'])
+        assert result == 1
 
-    def test_get_package_comments(self):
-        resource = factories.Resource()
-        assert get_package_comments(resource['package_id']) == 0
-        resource_comment_summary = ResourceCommentSummary(
-            id=str('test_id'),
-            resource_id=resource['id'],
-            comment=1,
-            rating=1,
-            created='2023-03-31 01:23:45.123456',
-            updated='2023-03-31 01:23:45.123456',
-        )
-        session.add(resource_comment_summary)
-        session.commit()
-        assert get_package_comments(resource['package_id']) == 1
+    def test_get_resource_comments(self, resource, resource_comment):
+        result = get_resource_comments(resource['id'])
+        assert result == 1
 
-    def test_get_resource_comments(self):
-        resource = factories.Resource()
-        assert get_resource_comments(resource['id']) == 0
-        resource_comment_summary = ResourceCommentSummary(
-            id=str('test_id'),
-            resource_id=resource['id'],
-            comment=1,
-            rating=1,
-            created='2023-03-31 01:23:45.123456',
-            updated='2023-03-31 01:23:45.123456',
-        )
-        session.add(resource_comment_summary)
-        session.commit()
-        assert get_resource_comments(resource['id']) == 1
+    def test_get_package_rating(self, resource, resource_comment):
+        result = get_package_rating(resource['package_id'])
+        assert result == resource_comment.rating
 
-    def test_get_package_rating(self):
-        resource = factories.Resource()
-        assert get_package_rating(resource['package_id']) == 0
-        resource_comment_summary = ResourceCommentSummary(
-            id=str('test_id'),
-            resource_id=resource['id'],
-            comment=1,
-            rating=1,
-            rating_comment=1,
-            created='2023-03-31 01:23:45.123456',
-            updated='2023-03-31 01:23:45.123456',
-        )
-        session.add(resource_comment_summary)
-        session.commit()
-        assert get_package_rating(resource['package_id']) == 1
+    def test_get_package_rating_with_no_comments(self, resource):
+        result = get_package_rating(resource['package_id'])
+        assert result == 0
 
-    def test_get_resource_rating(self):
-        resource = factories.Resource()
-        assert get_resource_rating(resource['id']) == 0
-        resource_comment_summary = ResourceCommentSummary(
-            id=str('test_id'),
-            resource_id=resource['id'],
-            comment=1,
-            rating=1,
-            created='2023-03-31 01:23:45.123456',
-            updated='2023-03-31 01:23:45.123456',
-        )
-        session.add(resource_comment_summary)
-        session.commit()
-        assert get_resource_rating(resource['id']) == 1
+    def test_get_resource_rating(self, resource, resource_comment):
+        result = get_resource_rating(resource['id'])
+        assert result == resource_comment.rating
 
-    def test_create_resource_summary(self):
-        query = session.query(ResourceCommentSummary).all()
-        assert len(query) == 0
-
-        resource = factories.Resource()
+    def test_create_resource_summary(self, resource):
         create_resource_summary(resource['id'])
         query = session.query(ResourceCommentSummary).all()
         assert len(query) == 1
 
-    def test_refresh_resource_summary(self):
-        resource = factories.Resource()
+    def test_refresh_resource_summary(self, resource):
         refresh_resource_summary(resource['id'])
         create_resource_summary(resource['id'])
         session.commit()
@@ -123,8 +62,10 @@ class TestResourceServices:
         comment_id = session.query(ResourceComment).first().id
         user_id = session.query(User).first().id
         approve_resource_comment(comment_id, user_id)
+        session.flush()
         refresh_resource_summary(resource['id'])
         session.commit()
+        session.expire_all()
 
         summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 1
@@ -135,8 +76,10 @@ class TestResourceServices:
         session.commit()
         comment_id = session.query(ResourceComment).all()[1].id
         approve_resource_comment(comment_id, user_id)
+        session.flush()
         refresh_resource_summary(resource['id'])
         session.commit()
+        session.expire_all()
 
         summary = session.query(ResourceCommentSummary).first()
         assert summary.comment == 2
