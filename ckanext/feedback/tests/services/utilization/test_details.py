@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, call, patch
 
-import ckan.tests.factories as factories
 import pytest
 from ckan import model
 from ckan.model.package import Package
@@ -148,6 +147,7 @@ class TestUtilizationDetailsService:
             False,
             resource['name'],
             resource['id'],
+            dataset['id'],
             dataset['title'],
             dataset['name'],
             organization['id'],
@@ -353,11 +353,7 @@ class TestUtilizationDetailsService:
         assert unapproved_comment == expect_unapproved_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_approval_is_True(self):
-        dataset = factories.Dataset()
-        user = factories.User()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_utilization_comments_approval_is_True(self, dataset, user, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -630,7 +626,11 @@ class TestUtilizationDetailsService:
             utilization.id, issue_resolution_description, user['id']
         )
 
-        issue_resolution = (utilization.id, issue_resolution_description, user['id'])
+        issue_resolution = (
+            utilization.id,
+            issue_resolution_description,
+            user['id'],
+        )
 
         result = get_registered_issue_resolution(utilization.id)
 
@@ -817,10 +817,7 @@ class TestUtilizationCommentMoralCheckLog:
         rows_appr = get_utilization_comment_replies(uc.id, approval=True)
         assert [r.content for r in rows_appr] == ['newer']
 
-    def test_create_utilization_comment_reply(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_create_utilization_comment_reply(self, organization, dataset, resource):
 
         utilization_id = str(uuid.uuid4())
         register_utilization(utilization_id, resource['id'], 't', 'u', 'd', False)

@@ -34,11 +34,61 @@ engine = model.repo.session.get_bind()
 class TestFeedbackCommand:
     @classmethod
     def setup_class(cls):
+        cls._cleanup_feedback_tables()
         model.repo.metadata.clear()
         model.repo.init_db()
 
+    @classmethod
     def teardown_class(cls):
+        cls._cleanup_feedback_tables()
         model.repo.metadata.reflect()
+
+    @classmethod
+    def _cleanup_feedback_tables(cls):
+        import logging
+
+        from sqlalchemy import text
+        from sqlalchemy.exc import OperationalError, ProgrammingError
+
+        log = logging.getLogger(__name__)
+
+        try:
+            with engine.connect() as connection:
+                with connection.begin():
+                    feedback_tables = [
+                        'utilization_comment_moral_check_log',
+                        'resource_comment_moral_check_log',
+                        'resource_comment_reactions',
+                        'resource_comment_reply',
+                        'issue_resolution',
+                        'issue_resolution_summary',
+                        'utilization_summary',
+                        'resource_comment_summary',
+                        'resource_like',
+                        'resource_like_monthly',
+                        'download_summary',
+                        'download_monthly',
+                        'utilization_comment',
+                        'utilization',
+                        'resource_comment',
+                    ]
+
+                    for table_name in feedback_tables:
+                        try:
+                            connection.execute(
+                                text(f"DROP TABLE IF EXISTS {table_name} CASCADE")
+                            )
+                            log.debug(f"Successfully dropped table: {table_name}")
+                        except (ProgrammingError, OperationalError) as e:
+                            log.debug(
+                                f"Expected error dropping table {table_name}: {e}"
+                            )
+                        except Exception as e:
+                            log.warning(
+                                f"Unexpected error dropping table {table_name}: {e}"
+                            )
+        except Exception as e:
+            log.warning(f"Failed to cleanup feedback tables: {e}")
 
     def setup_method(self, method):
         self.runner = CliRunner()
@@ -66,28 +116,7 @@ class TestFeedbackCommand:
         )
 
     def teardown_method(self, method):
-        model.repo.metadata.drop_all(
-            engine,
-            [
-                IssueResolutionSummary.__table__,
-                IssueResolution.__table__,
-                UtilizationCommentMoralCheckLog.__table__,
-                UtilizationSummary.__table__,
-                UtilizationCommentReply.__table__,
-                UtilizationComment.__table__,
-                Utilization.__table__,
-                ResourceCommentMoralCheckLog.__table__,
-                ResourceCommentReactions.__table__,
-                ResourceLikeMonthly.__table__,
-                ResourceLike.__table__,
-                ResourceCommentSummary.__table__,
-                ResourceCommentReply.__table__,
-                ResourceComment.__table__,
-                DownloadMonthly.__table__,
-                DownloadSummary.__table__,
-            ],
-            checkfirst=True,
-        )
+        self._cleanup_feedback_tables()
 
     def test_feedback_default(self):
         result = self.runner.invoke(feedback, ['init'])
