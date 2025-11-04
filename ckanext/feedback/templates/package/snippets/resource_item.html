@@ -33,7 +33,7 @@
     </a>
   {% endif %}
 	{% if h.is_enabled_utilizations(pkg.owner_org) %}
-    <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('utilization.search', resource_id=res.id, disable_keyword=true) }}">
+    <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('utilization.search', id=res.id, disable_keyword=true) }}">
       <div class="bubble">
         <i class="fa-solid fa-seedling" style="vertical-align: middle;"></i>
         {{ h.get_resource_utilizations(res.id) }}
@@ -60,7 +60,7 @@
     {% endif %}
   {% endif %}
 	{% if h.is_enabled_utilizations(pkg.owner_org) %}
-    <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('utilization.search', resource_id=res.id, disable_keyword=true) }}">
+    <a style="color: inherit; text-decoration: none;" href="{{ h.url_for('utilization.search', id=res.id, disable_keyword=true) }}">
       <div class="bubble">
         <i class="issue-resolution fa-solid fa-award" style="vertical-align: middle;"></i>
         {{ h.get_resource_issue_resolutions(res.id) }}

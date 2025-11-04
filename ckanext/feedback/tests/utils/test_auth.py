@@ -4,7 +4,7 @@ import pytest
 from ckan.lib import api_token as api_token_lib
 from ckan.plugins import toolkit
 
-from ckanext.feedback.utils.auth import AuthTokenHandler, create_auth_context
+from ckanext.feedback.utils.auth import AuthTokenHandler
 
 
 @pytest.mark.db_test
@@ -35,19 +35,3 @@ class TestAuthTokenHandler:
     def test_check_sysadmin_none(self):
         with pytest.raises(toolkit.NotAuthorized):
             AuthTokenHandler.check_sysadmin(None)
-
-
-@pytest.mark.db_test
-class TestCreateAuthContext:
-    def test_create_auth_context(self):
-        context = create_auth_context()
-
-        assert 'model' in context
-        assert 'session' in context
-        assert 'for_view' in context
-        assert context['for_view'] is True
-
-        import ckan.model as expected_model
-
-        assert context['model'] == expected_model
-        assert context['session'] == expected_model.Session
