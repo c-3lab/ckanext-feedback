@@ -338,3 +338,25 @@ class TestResourceComments:
         ]
 
         assert mock_mappings.call_args[0] == (ResourceCommentSummary, expected_mapping)
+
+    def test_get_resource_comment_replies_query_minimal(self):
+        from ckan.tests import factories
+
+        from ckanext.feedback.services.admin import resource_comments as rc
+
+        org = factories.Organization()
+        org_list = [{'name': org['name'], 'title': org['title']}]
+        q = rc.get_resource_comment_replies_query(org_list)
+        s = str(q.statement)
+        assert "resource_comment_reply" in s
+
+    def test_get_simple_resource_comment_replies_query_minimal(self):
+        from ckan.tests import factories
+
+        from ckanext.feedback.services.admin import resource_comments as rc
+
+        org = factories.Organization()
+        org_list = [{'name': org['name'], 'title': org['title']}]
+        q = rc.get_simple_resource_comment_replies_query(org_list)
+        s = str(q.statement)
+        assert "resource_comment_reply" in s

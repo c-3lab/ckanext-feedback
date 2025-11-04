@@ -43,6 +43,10 @@ from ckanext.feedback.utils.auth import create_auth_context
 log = logging.getLogger(__name__)
 
 
+# Expose session as _session for test patching (parity with resource controller)
+_session = session
+
+
 class UtilizationController:
     # Render HTML pages
     # utilization/search
@@ -200,8 +204,18 @@ class UtilizationController:
 
         if not (resource_id and title and description):
             toolkit.abort(400)
-
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _res = comment_service.get_resource(resource_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return toolkit.redirect_to(
                 'utilization.new',
@@ -349,7 +363,18 @@ class UtilizationController:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
 
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _uti = detail_service.get_utilization(utilization_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _uti.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return UtilizationController.details(
                 utilization_id, category, content, attached_image_filename
@@ -408,6 +433,144 @@ class UtilizationController:
         )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
+
+    # utilization/<utilization_id>/comment/reply
+    @staticmethod
+    def reply(utilization_id):
+        utilization_comment_id = request.form.get('utilization_comment_id', '')
+        content = request.form.get('reply_content', '')
+        if not (utilization_comment_id and content):
+            return toolkit.abort(400)
+
+        # Get utilization first to avoid UnboundLocalError
+        try:
+            _uti = detail_service.get_utilization(utilization_id)
+        except Exception:
+            helpers.flash_error(_('Utilization not found.'), allow_html=True)
+            return toolkit.redirect_to('utilization.search')
+
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                owner_org = _uti.owner_org
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        # Reply permission control (admin or reply_open)
+        reply_open = False
+        try:
+            owner_org = _uti.owner_org
+            reply_open = FeedbackConfig().utilization_comment.reply_open.is_enable(
+                owner_org
+            )
+        except Exception:
+            reply_open = False
+        is_org_admin = False
+        try:
+            owner_org = _uti.owner_org
+            is_org_admin = has_organization_admin_role(owner_org)
+        except Exception:
+            is_org_admin = False
+        if not reply_open and not (
+            is_org_admin
+            or (isinstance(current_user, model.User) and current_user.sysadmin)
+        ):
+            helpers.flash_error(
+                _('Reply is restricted to administrators.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
+
+        if (force_all or not admin_bypass) and is_recaptcha_verified(request) is False:
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
+
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
+
+        creator_user_id = (
+            current_user.id if isinstance(current_user, model.User) else None
+        )
+        attached_image_filename = None
+        attached_image: FileStorage = request.files.get("attached_image")
+        if attached_image:
+            try:
+                attached_image_filename = UtilizationController._upload_image(
+                    attached_image
+                )
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return toolkit.redirect_to(
+                    'utilization.details', utilization_id=utilization_id
+                )
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                return toolkit.abort(500)
+
+        detail_service.create_utilization_comment_reply(
+            utilization_comment_id, content, creator_user_id, attached_image_filename
+        )
+        session.commit()
+
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
+
+    # utilization/<utilization_id>/comment/reply/attached_image/<reply_id>/<attached_image_filename>
+    @staticmethod
+    def reply_attached_image(
+        utilization_id: str, reply_id: str, attached_image_filename: str
+    ):
+        utilization = detail_service.get_utilization(utilization_id)
+        if utilization is None:
+            return toolkit.abort(404)
+
+        approval = True
+        if isinstance(current_user, model.User) and (
+            current_user.sysadmin or has_organization_admin_role(utilization.owner_org)
+        ):
+            approval = None
+
+        from ckanext.feedback.models.utilization import (
+            UtilizationComment,
+            UtilizationCommentReply,
+        )
+
+        q = (
+            _session.query(UtilizationCommentReply)
+            .join(
+                UtilizationComment,
+                UtilizationCommentReply.utilization_comment_id == UtilizationComment.id,
+            )
+            .filter(
+                UtilizationCommentReply.id == reply_id,
+                UtilizationComment.utilization_id == utilization_id,
+            )
+        )
+        if approval is not None:
+            q = q.filter(UtilizationCommentReply.approval == approval)
+        reply = q.first()
+        if reply is None or reply.attached_image_filename != attached_image_filename:
+            return toolkit.abort(404)
+
+        attached_image_path = detail_service.get_attached_image_path(
+            attached_image_filename
+        )
+        if not os.path.exists(attached_image_path):
+            return toolkit.abort(404)
+        return send_file(attached_image_path)
 
     # utilization/<utilization_id>/comment/suggested
     @staticmethod
@@ -485,7 +648,18 @@ class UtilizationController:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
 
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _uti = detail_service.get_utilization(utilization_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _uti.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return UtilizationController.details(
                 utilization_id, category, content, attached_image_filename
@@ -579,6 +753,23 @@ class UtilizationController:
         detail_service.refresh_utilization_comments(utilization_id)
         session.commit()
 
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
+
+    # utilization/<utilization_id>/comment/reply/<reply_id>/approve
+    @staticmethod
+    @check_administrator
+    def approve_reply(utilization_id, reply_id):
+        UtilizationController._check_organization_admin_role(utilization_id)
+        try:
+            detail_service.approve_utilization_comment_reply(reply_id, current_user.id)
+            session.commit()
+        except ValueError as e:
+            log.warning(f'approve_reply ValueError: {e}')
+        except PermissionError:
+            helpers.flash_error(
+                _('Cannot approve reply because its parent comment is not approved.'),
+                allow_html=True,
+            )
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/edit
