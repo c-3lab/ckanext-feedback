@@ -28,10 +28,6 @@ def add_error_handler(func):
             session.rollback()
             raise e
 
-        @blueprint.teardown_app_request
-        def close_session(e=None):
-            session.close()
-
         return blueprint
 
     return wrapper

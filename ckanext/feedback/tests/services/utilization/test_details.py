@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, call, patch
 
-import ckan.tests.factories as factories
 import pytest
 from ckan import model
 from ckan.model.package import Package
@@ -127,9 +126,16 @@ def convert_utilization_comment_to_tuple(utilization_comment):
 engine = model.repo.session.get_bind()
 
 
-@pytest.mark.usefixtures('with_plugins', 'with_request_context')
 @pytest.mark.db_test
+@pytest.mark.usefixtures('with_request_context')
 class TestUtilizationDetailsService:
+    @classmethod
+    def setup_class(cls):
+        model.repo.init_db()
+        create_utilization_tables(engine)
+        create_resource_tables(engine)
+        create_download_tables(engine)
+
     def test_get_utilization(self, organization, dataset, resource):
         assert get_registered_utilization(resource['id']) is None
 
@@ -148,6 +154,7 @@ class TestUtilizationDetailsService:
             False,
             resource['name'],
             resource['id'],
+            dataset['id'],
             dataset['title'],
             dataset['name'],
             organization['id'],
@@ -155,7 +162,7 @@ class TestUtilizationDetailsService:
         assert result == expected_utilization
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_approve_utilization(self, organization, dataset, resource, user):
+    def test_approve_utilization(self, dataset, user, resource):
         test_datetime = datetime.now()
 
         id = str(uuid.uuid4())
@@ -221,9 +228,8 @@ class TestUtilizationDetailsService:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilization_comments_utilization_id_and_approval_are_None(
-        self, organization, dataset, resource, user
+        self, dataset, user, resource
     ):
-
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -296,10 +302,7 @@ class TestUtilizationDetailsService:
         assert approved_result == approved_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_approval_is_False(
-        self, organization, dataset, resource, user
-    ):
-
+    def test_get_utilization_comments_approval_is_False(self, dataset, user, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -353,11 +356,7 @@ class TestUtilizationDetailsService:
         assert unapproved_comment == expect_unapproved_comment
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_approval_is_True(self):
-        dataset = factories.Dataset()
-        user = factories.User()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_utilization_comments_approval_is_True(self, dataset, user, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -412,9 +411,8 @@ class TestUtilizationDetailsService:
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilization_comments_owner_org(
-        self, organization, dataset, resource, user
+        self, organization, dataset, user, resource
     ):
-
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -468,10 +466,7 @@ class TestUtilizationDetailsService:
         assert approved_comment == fake_utilization_comment_approved
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_utilization_comments_limit_offset(
-        self, organization, dataset, resource
-    ):
-
+    def test_get_utilization_comments_limit_offset(self, dataset, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -518,8 +513,7 @@ class TestUtilizationDetailsService:
         )
         assert comment == unapproved_comment
 
-    def test_create_utilization_comment(self, organization, dataset, resource):
-
+    def test_create_utilization_comment(self, dataset, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -543,8 +537,7 @@ class TestUtilizationDetailsService:
         assert comment.approval_user_id is None
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_approve_utilization_comment(self, organization, dataset, resource, user):
-
+    def test_approve_utilization_comment(self, dataset, user, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -581,8 +574,7 @@ class TestUtilizationDetailsService:
     def test_get_utilization_comment_categories(self):
         assert get_utilization_comment_categories() == UtilizationCommentCategory
 
-    def test_get_issue_resolutions(self, organization, dataset, resource, user):
-
+    def test_get_issue_resolutions(self, dataset, resource, user):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -613,8 +605,7 @@ class TestUtilizationDetailsService:
         assert issue_resolution.created == time
         assert issue_resolution.creator_user_id == user['id']
 
-    def test_create_issue_resolution(self, organization, dataset, resource, user):
-
+    def test_create_issue_resolution(self, dataset, resource, sysadmin):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -627,18 +618,21 @@ class TestUtilizationDetailsService:
         utilization = get_registered_utilization(resource['id'])
         issue_resolution_description = 'test_issue_resolution_description'
         create_issue_resolution(
-            utilization.id, issue_resolution_description, user['id']
+            utilization.id, issue_resolution_description, sysadmin['id']
         )
 
-        issue_resolution = (utilization.id, issue_resolution_description, user['id'])
+        issue_resolution = (
+            utilization.id,
+            issue_resolution_description,
+            sysadmin['id'],
+        )
 
         result = get_registered_issue_resolution(utilization.id)
 
         assert result == issue_resolution
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_refresh_utilization_comments(self, organization, dataset, resource, user):
-
+    def test_refresh_utilization_comments(self, dataset, resource, sysadmin):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         url = 'test url'
@@ -666,7 +660,7 @@ class TestUtilizationDetailsService:
             created,
             True,
             approved,
-            user['id'],
+            sysadmin['id'],
         )
 
         refresh_utilization_comments(utilization_id)

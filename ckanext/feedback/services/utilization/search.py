@@ -10,13 +10,15 @@ from ckanext.feedback.models.utilization import Utilization
 
 # Get records from the Utilization table
 def get_utilizations(
-    id=None,
+    resource_id=None,
+    package_id=None,
     keyword=None,
     approval=None,
     admin_owner_orgs=None,
     org_name=None,
     limit=None,
     offset=None,
+    user_orgs=None,
 ):
     query = (
         session.query(
@@ -40,11 +42,28 @@ def get_utilizations(
         .join(Package)
         .join(Group, Package.owner_org == Group.id)
         .outerjoin(IssueResolutionSummary)
-        .filter(Resource.state == 'active')
+        .filter(
+            Resource.state == 'active',
+            Package.state == 'active',
+        )
         .order_by(Utilization.created.desc())
     )
-    if id:
-        query = query.filter(or_(Resource.id == id, Package.id == id))
+
+    # Filter by package private status based on user permissions
+    if user_orgs is None:
+        # Anonymous user: show only public packages
+        query = query.filter(Package.private.is_(False))
+    elif user_orgs != 'all':
+        # Regular user: show public packages OR packages from user's organizations
+        query = query.filter(
+            or_(Package.private.is_(False), Package.owner_org.in_(user_orgs))
+        )
+    # user_orgs == 'all' (sysadmin): no filter, show all packages
+
+    if resource_id:
+        query = query.filter(Resource.id == resource_id)
+    if package_id:
+        query = query.filter(Package.id == package_id)
     if keyword:
         query = query.filter(
             or_(
