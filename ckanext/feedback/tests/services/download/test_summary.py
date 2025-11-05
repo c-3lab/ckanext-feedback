@@ -32,6 +32,7 @@ class TestDownloadServices:
     @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_increment_resource_downloads(self, resource):
         increment_resource_downloads(resource['id'])
+        session.commit()
         session.expire_all()
         download_summary = get_downloads(resource['id'])
 
@@ -39,6 +40,7 @@ class TestDownloadServices:
         assert download_summary.updated is None
 
         increment_resource_downloads(resource['id'])
+        session.commit()
         session.expire_all()
         download_summary = get_downloads(resource['id'])
 
