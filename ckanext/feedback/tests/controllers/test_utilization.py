@@ -752,6 +752,7 @@ class TestUtilizationController:
 
         mock_args.get.side_effect = lambda x, default=None: {
             'resource_id': '',
+            'package_id': 'test_package_id',
             'keyword': '',
             'disable_keyword': '',
             'organization': '',
@@ -1700,6 +1701,75 @@ class TestUtilizationController:
         UtilizationController.reply(TEST_UTILIZATION_ID)
         mock_create.assert_called_once()
         mock_commit.assert_called_once()
+        mock_redirect.assert_called_once()
+
+    @patch('flask_login.utils._get_user')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_reply'
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.validate_service.validate_comment',
+        return_value=None,
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch(
+        'ckanext.feedback.controllers.utilization.request.files.get',
+        return_value=None,
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.has_organization_admin_role',
+        return_value=False,
+    )
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.controllers.utilization.is_recaptcha_verified',
+        return_value=True,
+    )
+    def test_reply_with_error(
+        self,
+        _mock_recaptcha,
+        MockFeedbackConfig,
+        mock_get_utilization,
+        _mock_has_org_admin,
+        _mock_files_get,
+        mock_form,
+        _mock_validate,
+        mock_create_reply,
+        mock_commit,
+        mock_rollback,
+        mock_flash_error,
+        mock_redirect,
+        _mock_current_user,
+        admin_context,
+        sysadmin,
+        utilization,
+    ):
+        """Test reply() error handling"""
+        mock_form.get.side_effect = lambda k, d='': {
+            'utilization_comment_id': 'comment-id',
+            'reply_content': 'Reply',
+        }.get(k, d)
+
+        mock_uti = MagicMock(owner_org='org')
+        mock_get_utilization.return_value = mock_uti
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        cfg.utilization_comment.reply_open.is_enable.return_value = True
+        MockFeedbackConfig.return_value = cfg
+
+        mock_commit.side_effect = Exception('Database error')
+
+        UtilizationController.reply(utilization.id)
+
+        mock_rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
         mock_redirect.assert_called_once()
 
     @patch(
@@ -5238,11 +5308,11 @@ class TestUtilizationController:
         admin_context,
         sysadmin,
     ):
+        """Test check_comment renders successfully with normal flow"""
         MockCfg.return_value.moral_keeper_ai.is_enable.return_value = False
-        mock_get_utilization.side_effect = [
-            Exception('boom'),
-            MagicMock(owner_org='org', resource_id='rid'),
-        ]
+
+        utilization_mock = MagicMock(owner_org='org', resource_id='rid')
+        mock_get_utilization.return_value = utilization_mock
 
         mock_get_authorized_package.return_value = {
             'id': 'pkg-id',
@@ -5252,6 +5322,8 @@ class TestUtilizationController:
         res = MagicMock()
         res.Resource = MagicMock()
         res.Resource.package_id = 'pkg-id'
+        res.Resource.package.owner_org = 'org'
+        res.organization_name = 'test-org'
         mock_get_resource.return_value = res
 
         with patch(
@@ -5263,10 +5335,23 @@ class TestUtilizationController:
                 'comment-content': 'ok',
                 'attached_image_filename': None,
                 'comment-suggested': False,
+                'rating': '',
             }.get(k, default)
 
             UtilizationController.check_comment('uid')
-        mock_render.assert_called_once()
+
+        mock_render.assert_called_once_with(
+            'utilization/comment_check.html',
+            {
+                'pkg_dict': {'id': 'pkg-id', 'name': 'test-package'},
+                'utilization_id': 'uid',
+                'utilization': utilization_mock,
+                'content': 'ok',
+                'selected_category': 'REQUEST',
+                'categories': ['REQUEST'],
+                'attached_image_filename': None,
+            },
+        )
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch(

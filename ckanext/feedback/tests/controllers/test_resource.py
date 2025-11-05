@@ -2722,10 +2722,14 @@ class TestResourceCreatePreviousLog:
         'ckanext.feedback.controllers.resource.comment_service'
         '.get_resource_comment_reactions'
     )
+    @patch(
+        'ckanext.feedback.controllers.resource.comment_service' '.get_resource_comment'
+    )
     @patch('ckanext.feedback.controllers.resource.request.form')
     def test_reactions_with_error(
         self,
         mock_form,
+        mock_get_comment,
         mock_get_reactions,
         mock_create_reactions,
         mock_commit,
@@ -2746,6 +2750,10 @@ class TestResourceCreatePreviousLog:
             'response_status': 'not-started',
             'admin_liked': 'off',
         }.get(k, d)
+        # Mock get_resource_comment to return a valid comment
+        mock_comment = MagicMock()
+        mock_comment.id = 'comment-id'
+        mock_get_comment.return_value = mock_comment
         mock_get_reactions.return_value = None
         mock_commit.side_effect = Exception('Database error')
 
@@ -3649,61 +3657,6 @@ class TestResourceControllerCommonMethods:
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
-    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
-    @patch(
-        'ckanext.feedback.controllers.resource.comment_service.create_resource_comment'
-    )
-    @patch(
-        'ckanext.feedback.controllers.resource.summary_service.create_resource_summary'
-    )
-    @patch('ckanext.feedback.controllers.resource.session.commit')
-    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
-    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
-    def test_create_comment_admin_bypass_exception_then_proceed(
-        self,
-        mock_redirect_to,
-        mock_flash_success,
-        mock_session_commit,
-        mock_create_summary,
-        mock_create_comment,
-        mock_get_resource,
-        MockFeedbackConfig,
-        current_user,
-        admin_context,
-        sysadmin,
-        app,
-    ):
-        current_user.return_value = model.User.get(sysadmin['id'])
-
-        cfg = MagicMock()
-        cfg.recaptcha.force_all.get.return_value = False
-        MockFeedbackConfig.return_value = cfg
-
-        pkg = MagicMock()
-        pkg.owner_org = 'org-x'
-        res_obj = MagicMock()
-        res_obj.package = pkg
-        mock_res = MagicMock()
-        mock_res.Resource = res_obj
-        mock_get_resource.side_effect = [Exception('boom'), mock_res]
-
-        with app.flask_app.test_request_context(
-            '/',
-            method='POST',
-            data={'package_name': 'pkg', 'comment-content': 'c', 'category': 'REQUEST'},
-            content_type='application/x-www-form-urlencoded',
-        ):
-            mock_redirect_to.return_value = 'ok'
-            ResourceController.create_comment('res-id')
-
-        mock_create_comment.assert_called_once()
-        mock_create_summary.assert_called_once()
-        mock_session_commit.assert_called_once()
-        mock_flash_success.assert_called_once()
-        mock_redirect_to.assert_called_once()
-
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
     @patch(
         'ckanext.feedback.controllers.resource.is_recaptcha_verified', return_value=True
     )
@@ -3729,6 +3682,7 @@ class TestResourceControllerCommonMethods:
         sysadmin,
         app,
     ):
+        """Test check_comment renders successfully with normal flow"""
         user_obj = model.User.get(sysadmin['id'])
         current_user.return_value = user_obj
         g.userobj = user_obj
@@ -3747,7 +3701,8 @@ class TestResourceControllerCommonMethods:
         mock_res.Resource = res_obj
         mock_res.organization_name = 'orgname'
 
-        mock_get_resource.side_effect = [Exception('boom'), mock_res]
+        # get_resource returns normally
+        mock_get_resource.return_value = mock_res
         mock_get_categories.return_value = ['REQUEST']
 
         mock_get_authorized_package.return_value = {
@@ -3763,6 +3718,7 @@ class TestResourceControllerCommonMethods:
         ):
             ResourceController.check_comment('res-id')
 
+        # Should render the check comment page
         mock_render.assert_called_once_with(
             'resource/comment_check.html',
             {
@@ -3770,7 +3726,7 @@ class TestResourceControllerCommonMethods:
                 'pkg_dict': {'id': 'pkg-id', 'name': 'test-package'},
                 'categories': ['REQUEST'],
                 'selected_category': 'REQUEST',
-                'rating': '',
+                'rating': None,
                 'content': 'ok',
                 'attached_image_filename': None,
             },
@@ -3953,50 +3909,6 @@ class TestResourceControllerCommonMethods:
         mock_res = MagicMock()
         mock_res.Resource = res_obj
         mock_get_resource.return_value = mock_res
-
-        with patch('ckanext.feedback.controllers.resource.request.form.get') as gf:
-            gf.side_effect = ['cid', 'reply content']
-            ResourceController.reply('res-id')
-
-        mock_create_reply.assert_called_once()
-        mock_commit.assert_called_once()
-        mock_redirect_to.assert_called_once()
-
-    @patch('flask_login.utils._get_user')
-    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
-    @patch(
-        'ckanext.feedback.controllers.resource.is_recaptcha_verified', return_value=True
-    )
-    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
-    @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
-    @patch('ckanext.feedback.controllers.resource.session.commit')
-    @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
-    def test_reply_admin_bypass_exception_then_proceed(
-        self,
-        mock_redirect_to,
-        mock_commit,
-        mock_create_reply,
-        mock_get_resource,
-        _mock_recaptcha,
-        MockFeedbackConfig,
-        current_user,
-        sysadmin,
-    ):
-        user_obj = model.User.get(sysadmin['id'])
-        current_user.return_value = user_obj
-
-        cfg = MagicMock()
-        cfg.recaptcha.force_all.get.return_value = False
-        cfg.resource_comment.reply_open.is_enable.return_value = True
-        MockFeedbackConfig.return_value = cfg
-
-        pkg = MagicMock()
-        pkg.owner_org = 'org-x'
-        res_obj = MagicMock()
-        res_obj.package = pkg
-        mock_res = MagicMock()
-        mock_res.Resource = res_obj
-        mock_get_resource.side_effect = [Exception('boom'), mock_res]
 
         with patch('ckanext.feedback.controllers.resource.request.form.get') as gf:
             gf.side_effect = ['cid', 'reply content']

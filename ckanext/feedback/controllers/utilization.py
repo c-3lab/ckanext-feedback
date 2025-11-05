@@ -780,7 +780,7 @@ class UtilizationController:
         utilization_comment_id = request.form.get('utilization_comment_id', '')
         content = request.form.get('reply_content', '')
         if not (utilization_comment_id and content):
-            toolkit.abort(HTTPStatus.BAD_REQUEST)
+            return toolkit.abort(HTTPStatus.BAD_REQUEST)
 
         # Get utilization first to avoid UnboundLocalError
         try:
@@ -860,6 +860,7 @@ class UtilizationController:
             except Exception as e:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+                return
 
         def operation():
             detail_service.create_utilization_comment_reply(
@@ -977,8 +978,9 @@ class UtilizationController:
         if result.error_response:
             return result.error_response
 
-        categories = detail_service.get_utilization_comment_categories()
         utilization = detail_service.get_utilization(utilization_id)
+
+        categories = detail_service.get_utilization_comment_categories()
         resource = comment_service.get_resource(utilization.resource_id)
 
         # Check access and get package data in a single efficient call
