@@ -623,7 +623,6 @@ class TestUtilizationController:
         )
         mock_get_resource.return_value = mock_resource
 
-        # Mock require_resource_package_access to call abort(404)
         def require_resource_package_access_side_effect(resource_id, context):
             mock_abort(
                 404,
@@ -637,7 +636,6 @@ class TestUtilizationController:
             require_resource_package_access_side_effect
         )
 
-        # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
 
         mock_args.get.side_effect = lambda x, default=None: {
@@ -648,11 +646,9 @@ class TestUtilizationController:
             'organization': '',
         }.get(x, default)
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.search()
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
@@ -687,19 +683,15 @@ class TestUtilizationController:
         when using package_id"""
         from werkzeug.exceptions import NotFound
 
-        # Mock get_resource to return None (so it tries package_id path)
         mock_get_resource.return_value = None
 
-        # Mock Package.get to return a mock package
         mock_package = MagicMock()
         mock_package.id = 'test_package_id'
         mock_package.owner_org = 'test_org_id'
         mock_package_get.return_value = mock_package
 
-        # Mock get_organization_name_from_pkg
         mock_get_org_name.return_value = 'test_organization'
 
-        # Mock require_package_access to call abort(404)
         def require_package_access_side_effect(package_id, context):
             mock_abort(
                 404,
@@ -711,7 +703,6 @@ class TestUtilizationController:
 
         mock_require_package_access.side_effect = require_package_access_side_effect
 
-        # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
 
         mock_args.get.side_effect = lambda x, default=None: {
@@ -722,11 +713,9 @@ class TestUtilizationController:
             'organization': '',
         }.get(x, default)
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.search()
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
@@ -788,7 +777,6 @@ class TestUtilizationController:
         mock_page,
         admin_context,
     ):
-        # Test case: resource_id is specified but get_resource returns None
         mock_get_resource.return_value = None
 
         keyword = 'keyword'
@@ -813,7 +801,6 @@ class TestUtilizationController:
 
         UtilizationController.search()
 
-        # require_resource_package_access is called even if resource is None
         mock_require_resource_package_access.assert_called_once()
         mock_render.assert_called_once()
 
@@ -903,7 +890,7 @@ class TestUtilizationController:
             'package_id': '',
             'keyword': keyword,
             'disable_keyword': disable_keyword,
-            'organization': '',  # Empty org_name to trigger the org_name logic
+            'organization': '',
             'waiting': 'on',
             'approval': 'on',
         }.get(x, default)
@@ -926,7 +913,6 @@ class TestUtilizationController:
 
         utilization_id = 'non_existent_id'
         mock_detail_service.get_utilization.return_value = None
-        # Make abort raise an exception to stop execution
         mock_abort.side_effect = NotFound()
 
         with pytest.raises(NotFound):
@@ -956,13 +942,10 @@ class TestUtilizationController:
 
         utilization_id = 'non_existent_id'
 
-        # Mock _check_organization_admin_role to pass
         mock_check_role.return_value = None
 
-        # Mock get_utilization to return None
         mock_detail_service.get_utilization.return_value = None
         mock_current_user.return_value = model.User.get(sysadmin['name'])
-        # Make abort raise an exception to stop execution
         mock_abort.side_effect = NotFound()
 
         with admin_context:
@@ -982,7 +965,6 @@ class TestUtilizationController:
 
         utilization_id = 'non_existent_id'
         mock_detail_service.get_utilization.return_value = None
-        # Make abort raise an exception to stop execution
         mock_abort.side_effect = NotFound()
 
         with pytest.raises(NotFound):
@@ -1115,7 +1097,6 @@ class TestUtilizationController:
         )
         mock_get_resource.return_value = mock_resource
 
-        # Mock get_authorized_package to call abort(404)
         def get_authorized_package_side_effect(package_id, context):
             mock_abort(404, _(
                 'The requested URL was not found on the server. If you entered the'
@@ -1124,14 +1105,11 @@ class TestUtilizationController:
 
         mock_get_authorized_package.side_effect = get_authorized_package_side_effect
 
-        # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.new(resource_id=resource['id'])
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
@@ -1218,6 +1196,56 @@ class TestUtilizationController:
         mock_session_commit.assert_called_once()
         mock_flash_success.assert_called_once()
         mock_redirect_to.assert_called_once_with('dataset.read', id=package_name)
+
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.registration_service')
+    @patch('ckanext.feedback.controllers.utilization.summary_service')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    def test_create_with_database_error(
+        self,
+        mock_redirect_to,
+        mock_flash_error,
+        mock_session_commit,
+        mock_summary_service,
+        mock_registration_service,
+        mock_form,
+        mock_session_rollback,
+        mock_is_recaptcha_verified,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        package_name = 'test_package'
+        resource_id = 'test_resource_id'
+        title = 'Test Title'
+        url = 'https://example.com'
+        description = 'Test Description'
+
+        mock_form.get.side_effect = lambda key, default='': {
+            'package_name': package_name,
+            'resource_id': resource_id,
+            'title': title,
+            'url': url,
+            'description': description,
+            'return_to_resource': False,
+        }.get(key, default)
+
+        mock_is_recaptcha_verified.return_value = True
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.create()
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.new',
+            resource_id=resource_id,
+            title=title,
+            description=description,
+        )
+        mock_session_rollback.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -1908,7 +1936,6 @@ class TestUtilizationController:
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        # Mock get_authorized_package to call abort(404)
         def get_authorized_package_side_effect(package_id, context):
             mock_abort(404, _(
                 'The requested URL was not found on the server. If you entered the'
@@ -1917,14 +1944,11 @@ class TestUtilizationController:
 
         mock_get_authorized_package.side_effect = get_authorized_package_side_effect
 
-        # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.details(utilization_id)
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
@@ -1958,29 +1982,23 @@ class TestUtilizationController:
         mock_detail_service.get_utilization.return_value = mock_utilization
         mock_detail_service.get_utilization_comment_categories.return_value = []
 
-        # Mock form data
         mock_form.get.side_effect = lambda x, default=None: {
             'category': 'COMMENT',
             'comment-content': 'test content',
             'attached_image_filename': None,
         }.get(x, default)
 
-        # Mock no attached image
         mock_files_get.return_value = None
 
-        # Mock recaptcha verified
         mock_is_recaptcha_verified.return_value = True
 
-        # Mock validate_comment to return None (no error)
         mock_validate_service.validate_comment.return_value = None
 
-        # Mock resource
         mock_resource = MagicMock()
         mock_resource.Resource = MagicMock()
         mock_resource.Resource.package_id = 'package_id'
         mock_get_resource.return_value = mock_resource
 
-        # Mock get_authorized_package to call abort(404)
         def get_authorized_package_side_effect(package_id, context):
             mock_abort(404, _(
                 'The requested URL was not found on the server. If you entered the'
@@ -1989,14 +2007,11 @@ class TestUtilizationController:
 
         mock_get_authorized_package.side_effect = get_authorized_package_side_effect
 
-        # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.check_comment(utilization_id)
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
@@ -2038,6 +2053,45 @@ class TestUtilizationController:
             'utilization.details', utilization_id=utilization_id
         )
 
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.summary_service')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    def test_approve_with_database_error(
+        self,
+        mock_flash_error,
+        mock_redirect_to,
+        mock_session_commit,
+        mock_summary_service,
+        mock_require_package_access,
+        mock_detail_service,
+        mock_session_rollback,
+        sysadmin,
+        mock_current_user_fixture,
+        admin_context,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'utilization id'
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'mock_package_id'
+        mock_utilization.resource_id = 'resource_id'
+        mock_utilization.owner_org = 'org_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        # Simulate database error
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.approve(utilization_id)
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+        mock_session_rollback.assert_called_once()
+
     @patch(
         'ckanext.feedback.controllers.utilization.'
         'UtilizationController._check_organization_admin_role'
@@ -2062,10 +2116,8 @@ class TestUtilizationController:
         mock_utilization.resource_id = 'mock_resource_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        # Mock _check_organization_admin_role to pass (so we reach line 362-363)
         mock_check_org_admin.return_value = None
 
-        # Mock require_package_access to call abort(404)
         def require_package_access_side_effect(package_id, context):
             mock_abort(404, _(
                 'The requested URL was not found on the server. If you entered the'
@@ -2074,14 +2126,11 @@ class TestUtilizationController:
 
         mock_require_package_access.side_effect = require_package_access_side_effect
 
-        # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.approve(utilization_id)
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
@@ -2130,6 +2179,47 @@ class TestUtilizationController:
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    def test_create_comment_with_database_error(
+        self,
+        mock_detail_service,
+        mock_session_commit,
+        mock_flash_error,
+        mock_redirect_to,
+        mock_files_get,
+        mock_form,
+        mock_recaptcha,
+        mock_session_rollback,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'utilization id'
+
+        mock_form.get.side_effect = lambda key, default='': {
+            'category': 'REQUEST',
+            'comment-content': 'Test comment',
+            'attached_image_filename': None,
+        }.get(key, default)
+        mock_files_get.return_value = None
+        mock_recaptcha.return_value = True
+
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.create_comment(utilization_id)
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+        mock_session_rollback.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.request.files.get')
@@ -3056,6 +3146,42 @@ class TestUtilizationController:
             'utilization.details', utilization_id=utilization_id
         )
 
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    def test_approve_comment_with_database_error(
+        self,
+        mock_require_package_access,
+        mock_flash_error,
+        mock_detail_service,
+        mock_session_commit,
+        mock_redirect_to,
+        mock_session_rollback,
+        admin_context,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'utilization id'
+        comment_id = 'comment id'
+
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'package_id'
+        mock_utilization.owner_org = 'org_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.approve_comment(utilization_id, comment_id)
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+        mock_session_rollback.assert_called_once()
+
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
     @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
@@ -3125,7 +3251,6 @@ class TestUtilizationController:
         mock_utilization.package_id = 'mock_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        # Mock require_package_access to call abort(404)
         def require_package_access_side_effect(package_id, context):
             mock_abort(404, _(
                 'The requested URL was not found on the server. If you entered the'
@@ -3134,14 +3259,11 @@ class TestUtilizationController:
 
         mock_require_package_access.side_effect = require_package_access_side_effect
 
-        # Mock abort to raise NotFound exception to stop execution
         mock_abort.side_effect = NotFound('Not Found')
 
-        # Should raise NotFound due to abort(404)
         with pytest.raises(NotFound):
             UtilizationController.edit(utilization_id)
 
-        # Verify that abort(404) was called
         mock_abort.assert_called_once()
         assert mock_abort.call_args[0][0] == 404
 
@@ -3186,6 +3308,51 @@ class TestUtilizationController:
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.edit_service')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    def test_update_with_database_error(
+        self,
+        mock_require_package_access,
+        mock_detail_service,
+        mock_redirect_to,
+        mock_flash_error,
+        mock_session_commit,
+        mock_edit_service,
+        mock_form,
+        mock_session_rollback,
+        admin_context,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'utilization id'
+
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'package_id'
+        mock_utilization.owner_org = 'org_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        mock_form.get.side_effect = lambda key, default='': {
+            'title': 'Test Title',
+            'url': 'https://example.com',
+            'description': 'Test Description',
+        }.get(key, default)
+
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.update(utilization_id)
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.edit', utilization_id=utilization_id
+        )
+        mock_session_rollback.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.edit_service')
@@ -3373,9 +3540,47 @@ class TestUtilizationController:
         mock_summary_service.refresh_utilization_summary.assert_called_once_with(
             resource_id
         )
-        assert mock_session_commit.call_count == 2
+        assert mock_session_commit.call_count == 1
         mock_flash_success.assert_called_once()
         mock_redirect_to.assert_called_once_with('utilization.search')
+
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.edit_service')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    def test_delete_with_database_error(
+        self,
+        mock_require_package_access,
+        mock_redirect_to,
+        mock_flash_error,
+        mock_session_commit,
+        mock_edit_service,
+        mock_detail_service,
+        mock_session_rollback,
+        admin_context,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'utilization id'
+
+        utilization = MagicMock()
+        utilization.resource_id = 'resource_id'
+        utilization.package_id = 'package_id'
+        utilization.owner_org = 'org_id'
+        mock_detail_service.get_utilization.return_value = utilization
+
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.delete(utilization_id)
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+        mock_session_rollback.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.request.form')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
@@ -3410,6 +3615,45 @@ class TestUtilizationController:
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    def test_create_issue_resolution_with_database_error(
+        self,
+        mock_require_package_access,
+        mock_redirect_to,
+        mock_flash_error,
+        mock_session_commit,
+        mock_detail_service,
+        mock_form,
+        mock_session_rollback,
+        admin_context,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'utilization id'
+
+        mock_utilization = MagicMock()
+        mock_utilization.package_id = 'package_id'
+        mock_utilization.owner_org = 'org_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        mock_form.get.return_value = 'Test description'
+
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.create_issue_resolution(utilization_id)
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+        mock_session_rollback.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -4264,7 +4508,6 @@ class TestUtilizationController:
         mock_resource.Resource.package_id = 'mock_package_id'
         mock_get_resource.return_value = mock_resource
 
-        # Mock get_authorized_package to return package data
         mock_get_authorized_package.return_value = {'id': 'mock_package'}
 
         mock_suggested_comment.return_value = 'mock_suggested_comment_result'
@@ -4388,6 +4631,92 @@ class TestUtilizationController:
         )
 
         assert result == 'mock_render_result'
+
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    @patch(
+        'ckanext.feedback.services.common.config.BaseConfig.is_enable',
+        return_value=True,
+    )
+    @patch('ckanext.feedback.controllers.utilization.session.rollback')
+    @patch('ckanext.feedback.controllers.utilization.request.method', 'POST')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.validate_service')
+    @patch('ckanext.feedback.controllers.utilization.check_ai_comment')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
+    @patch('ckanext.feedback.controllers.utilization.session.commit')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    def test_check_comment_with_moral_check_log_database_error(
+        self,
+        mock_redirect_to,
+        mock_flash_error,
+        mock_session_commit,
+        mock_get_authorized_package,
+        mock_get_resource,
+        mock_detail_service,
+        mock_check_ai_comment,
+        mock_validate_service,
+        mock_is_recaptcha_verified,
+        mock_files_get,
+        mock_form,
+        mock_session_rollback,
+        mock_is_enable,
+        mock_FeedbackConfig,
+        mock_utilization_object,
+        mock_resource_object,
+    ):
+        from sqlalchemy.exc import SQLAlchemyError
+
+        utilization_id = 'test_utilization_id'
+
+        mock_form.get.side_effect = lambda x, default=None: {
+            'category': 'REQUEST',
+            'comment-content': 'Test comment content',
+            'attached_image_filename': None,
+            'comment-suggested': 'True',
+            'action': 'confirm',
+            'input-comment': 'Original comment',
+            'suggested-comment': 'Suggested comment',
+        }.get(x, default)
+
+        mock_files_get.return_value = None
+
+        mock_is_recaptcha_verified.return_value = True
+
+        mock_validate_service.validate_comment.return_value = None
+
+        mock_utilization = mock_utilization_object(
+            resource_id='mock_resource_id', owner_org='mock_org_id'
+        )
+        mock_detail_service.get_utilization.return_value = mock_utilization
+        mock_detail_service.get_utilization_comment_categories.return_value = []
+
+        mock_resource = mock_resource_object(
+            org_id='mock_org_id', org_name='mock_organization_name'
+        )
+        mock_resource.Resource.package_id = 'mock_package_id'
+        mock_resource.Resource.package.owner_org = 'mock_org_id'
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_authorized_package.return_value = {'id': 'package_id'}
+
+        mock_moral_keeper_ai = MagicMock()
+        mock_moral_keeper_ai.is_enable.return_value = True
+        mock_FeedbackConfig.return_value.moral_keeper_ai = mock_moral_keeper_ai
+
+        mock_session_commit.side_effect = SQLAlchemyError('Database error')
+
+        UtilizationController.check_comment(utilization_id)
+
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+        mock_session_rollback.assert_called_once()
 
 
 @pytest.mark.usefixtures('with_request_context')
