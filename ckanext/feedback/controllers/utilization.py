@@ -2,6 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from http import HTTPStatus
+from typing import Any, Callable
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
@@ -102,6 +103,7 @@ class OperationResult:
 
     success: bool
     error_message: str | None = None
+    data: Any | None = None
 
 
 @dataclass
@@ -169,13 +171,13 @@ class UtilizationController:
 
     @staticmethod
     def _persist_operation(
-        operation: callable, utilization_id: str, error_message: str
+        operation: Callable[[], Any], utilization_id: str, error_message: str
     ) -> OperationResult:
         """Generic database operation with error handling"""
         try:
-            operation()
+            result = operation()
             session.commit()
-            return OperationResult(success=True)
+            return OperationResult(success=True, data=result)
         except SQLAlchemyError:
             session.rollback()
             log.exception(f'Database error for utilization {utilization_id}')
@@ -594,12 +596,29 @@ class UtilizationController:
         return_to_resource = toolkit.asbool(
             request.form.get(FormFields.RETURN_TO_RESOURCE)
         )
-        utilization = registration_service.create_utilization(
-            resource_id, title, url, description
+
+        def operation():
+            utilization = registration_service.create_utilization(
+                resource_id, title, url, description
+            )
+            summary_service.create_utilization_summary(resource_id)
+            return utilization
+
+        result = UtilizationController._persist_operation(
+            operation, resource_id, 'Failed to create utilization. Please try again.'
         )
-        summary_service.create_utilization_summary(resource_id)
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
+            return toolkit.redirect_to(
+                'utilization.new',
+                resource_id=resource_id,
+                title=title,
+                description=description,
+            )
+
+        utilization = result.data
         utilization_id = utilization.id
-        session.commit()
 
         UtilizationController._send_utilization_notification_email(
             resource_id, title, description, utilization_id
@@ -688,9 +707,18 @@ class UtilizationController:
         context = create_auth_context()
         require_package_access(utilization.package_id, context)
 
-        detail_service.approve_utilization(utilization_id, current_user.id)
-        summary_service.refresh_utilization_summary(utilization.resource_id)
-        session.commit()
+        def operation():
+            detail_service.approve_utilization(utilization_id, current_user.id)
+            summary_service.refresh_utilization_summary(utilization.resource_id)
+
+        result = UtilizationController._persist_operation(
+            operation,
+            utilization_id,
+            'Failed to approve utilization. Please try again.',
+        )
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -710,15 +738,23 @@ class UtilizationController:
         if result.error_response:
             return result.error_response
 
-        # Create comment
-        detail_service.create_utilization_comment(
-            utilization_id,
-            result.form_data['category'],
-            result.form_data['content'],
-            result.attached_filename,
+        def operation():
+            detail_service.create_utilization_comment(
+                utilization_id,
+                result.form_data['category'],
+                result.form_data['content'],
+                result.attached_filename,
+            )
+
+        persist_result = UtilizationController._persist_operation(
+            operation, utilization_id, 'Failed to create comment. Please try again.'
         )
 
-        session.commit()
+        if not persist_result.success:
+            helpers.flash_error(persist_result.error_message, allow_html=True)
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
 
         # Send notification
         UtilizationController._send_comment_notification_email(
@@ -811,7 +847,16 @@ class UtilizationController:
             if ai_response:
                 return ai_response
 
-            session.commit()
+            persist_result = UtilizationController._persist_operation(
+                lambda: None,
+                utilization_id,
+                'Failed to create moral check log. Please try again.',
+            )
+            if not persist_result.success:
+                helpers.flash_error(persist_result.error_message, allow_html=True)
+                return toolkit.redirect_to(
+                    'utilization.details', utilization_id=utilization_id
+                )
 
         return toolkit.render(
             'utilization/comment_check.html',
@@ -839,9 +884,17 @@ class UtilizationController:
     @check_administrator
     def approve_comment(utilization_id, comment_id):
         UtilizationController._check_organization_admin_role(utilization_id)
-        detail_service.approve_utilization_comment(comment_id, current_user.id)
-        detail_service.refresh_utilization_comments(utilization_id)
-        session.commit()
+
+        def operation():
+            detail_service.approve_utilization_comment(comment_id, current_user.id)
+            detail_service.refresh_utilization_comments(utilization_id)
+
+        result = UtilizationController._persist_operation(
+            operation, utilization_id, 'Failed to approve comment. Please try again.'
+        )
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -891,14 +944,23 @@ class UtilizationController:
                 'utilization.edit', utilization_id=utilization_id
             )
 
-        edit_service.update_utilization(utilization_id, title, url, description)
-        session.commit()
+        def operation():
+            edit_service.update_utilization(utilization_id, title, url, description)
+
+        result = UtilizationController._persist_operation(
+            operation, utilization_id, 'Failed to update utilization. Please try again.'
+        )
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
+            return toolkit.redirect_to(
+                'utilization.edit', utilization_id=utilization_id
+            )
 
         helpers.flash_success(
             _('The utilization has been successfully updated.'),
             allow_html=True,
         )
-
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/delete
@@ -907,10 +969,20 @@ class UtilizationController:
     def delete(utilization_id):
         UtilizationController._check_organization_admin_role(utilization_id)
         resource_id = detail_service.get_utilization(utilization_id).resource_id
-        edit_service.delete_utilization(utilization_id)
-        session.commit()
-        summary_service.refresh_utilization_summary(resource_id)
-        session.commit()
+
+        def operation():
+            edit_service.delete_utilization(utilization_id)
+            summary_service.refresh_utilization_summary(resource_id)
+
+        result = UtilizationController._persist_operation(
+            operation, utilization_id, 'Failed to delete utilization. Please try again.'
+        )
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
 
         helpers.flash_success(
             _('The utilization has been successfully deleted.'),
@@ -928,11 +1000,23 @@ class UtilizationController:
         if not description:
             toolkit.abort(HTTPStatus.BAD_REQUEST)
 
-        detail_service.create_issue_resolution(
-            utilization_id, description, current_user.id
+        def operation():
+            detail_service.create_issue_resolution(
+                utilization_id, description, current_user.id
+            )
+            summary_service.increment_issue_resolution_summary(utilization_id)
+
+        result = UtilizationController._persist_operation(
+            operation,
+            utilization_id,
+            'Failed to create issue resolution. Please try again.',
         )
-        summary_service.increment_issue_resolution_summary(utilization_id)
-        session.commit()
+
+        if not result.success:
+            helpers.flash_error(result.error_message, allow_html=True)
+            return toolkit.redirect_to(
+                'utilization.details', utilization_id=utilization_id
+            )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -1009,13 +1093,18 @@ class UtilizationController:
         if action is None:
             return '', HTTPStatus.NO_CONTENT
 
-        detail_service.create_utilization_comment_moral_check_log(
-            utilization_id=utilization_id,
-            action=action,
-            input_comment=input_comment,
-            suggested_comment=suggested_comment,
-            output_comment=None,
+        def operation():
+            detail_service.create_utilization_comment_moral_check_log(
+                utilization_id=utilization_id,
+                action=action,
+                input_comment=input_comment,
+                suggested_comment=suggested_comment,
+                output_comment=None,
+            )
+
+        # Return 204 even on error to avoid disrupting UI
+        UtilizationController._persist_operation(
+            operation, utilization_id, 'Failed to create previous log.'
         )
-        session.commit()
 
         return '', HTTPStatus.NO_CONTENT
