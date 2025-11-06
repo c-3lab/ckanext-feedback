@@ -35,4 +35,3 @@ def increment_resource_downloads_monthly(resource_id):
     else:
         download_monthly.download_count = download_monthly.download_count + 1
         download_monthly.updated = datetime.now()
-    session.commit()

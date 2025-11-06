@@ -314,13 +314,27 @@ class AdminController:
     def approve_utilization_comments(target):
         target = utilization_comments_service.get_utilization_comment_ids(target)
         utilizations = utilization_service.get_utilizations_by_comment_ids(target)
+
         AdminController._check_organization_admin_role_with_utilization_comment(
             utilizations
         )
-        utilization_comments_service.approve_utilization_comments(
-            target, current_user.id
-        )
-        utilization_comments_service.refresh_utilizations_comments(utilizations)
+
+        try:
+            utilization_comments_service.approve_utilization_comments(
+                target, current_user.id
+            )
+            utilization_comments_service.refresh_utilizations_comments(utilizations)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for utilization comments approval')
+            log.exception(f'Failed to approve utilization comments: {e}')
+            helpers.flash_error(
+                _('Failed to approve utilization comments. Please try again.'),
+                allow_html=True,
+            )
+            return 0
+
         return len(target)
 
     @staticmethod
@@ -330,8 +344,21 @@ class AdminController:
         utilizations = utilization_service.get_utilization_details_by_ids(target)
         AdminController._check_organization_admin_role_with_utilization(utilizations)
         resource_ids = utilization_service.get_utilization_resource_ids(target)
-        utilization_service.approve_utilization(target, current_user.id)
-        utilization_service.refresh_utilization_summary(resource_ids)
+
+        try:
+            utilization_service.approve_utilization(target, current_user.id)
+            utilization_service.refresh_utilization_summary(resource_ids)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for utilization approval')
+            log.exception(f'Failed to approve utilization: {e}')
+            helpers.flash_error(
+                _('Failed to approve utilization. Please try again.'),
+                allow_html=True,
+            )
+            return 0
+
         return len(target)
 
     @staticmethod
@@ -341,22 +368,52 @@ class AdminController:
         resource_comment_summaries = (
             resource_comments_service.get_resource_comment_summaries(target)
         )
+
         AdminController._check_organization_admin_role_with_resource(
             resource_comment_summaries
         )
-        resource_comments_service.approve_resource_comments(target, current_user.id)
-        resource_comments_service.refresh_resources_comments(resource_comment_summaries)
+
+        try:
+            resource_comments_service.approve_resource_comments(target, current_user.id)
+            resource_comments_service.refresh_resources_comments(
+                resource_comment_summaries
+            )
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for resource comments approval')
+            log.exception(f'Failed to approve resource comments: {e}')
+            helpers.flash_error(
+                _('Failed to approve resource comments. Please try again.'),
+                allow_html=True,
+            )
+            return 0
+
         return len(target)
 
     @staticmethod
     @check_administrator
     def delete_utilization_comments(target):
         utilizations = utilization_service.get_utilizations_by_comment_ids(target)
+
         AdminController._check_organization_admin_role_with_utilization_comment(
             utilizations
         )
-        utilization_comments_service.delete_utilization_comments(target)
-        utilization_comments_service.refresh_utilizations_comments(utilizations)
+
+        try:
+            utilization_comments_service.delete_utilization_comments(target)
+            utilization_comments_service.refresh_utilizations_comments(utilizations)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for utilization comments deletion')
+            log.exception(f'Failed to delete utilization comments: {e}')
+            helpers.flash_error(
+                _('Failed to delete utilization comments. Please try again.'),
+                allow_html=True,
+            )
+            return 0
+
         return len(target)
 
     @staticmethod
@@ -365,8 +422,21 @@ class AdminController:
         utilizations = utilization_service.get_utilization_details_by_ids(target)
         AdminController._check_organization_admin_role_with_utilization(utilizations)
         resource_ids = utilization_service.get_utilization_resource_ids(target)
-        utilization_service.delete_utilization(target)
-        utilization_service.refresh_utilization_summary(resource_ids)
+
+        try:
+            utilization_service.delete_utilization(target)
+            utilization_service.refresh_utilization_summary(resource_ids)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for utilization deletion')
+            log.exception(f'Failed to delete utilization: {e}')
+            helpers.flash_error(
+                _('Failed to delete utilization. Please try again.'),
+                allow_html=True,
+            )
+            return 0
+
         return len(target)
 
     @staticmethod
@@ -375,11 +445,27 @@ class AdminController:
         resource_comment_summaries = (
             resource_comments_service.get_resource_comment_summaries(target)
         )
+
         AdminController._check_organization_admin_role_with_resource(
             resource_comment_summaries
         )
-        resource_comments_service.delete_resource_comments(target)
-        resource_comments_service.refresh_resources_comments(resource_comment_summaries)
+
+        try:
+            resource_comments_service.delete_resource_comments(target)
+            resource_comments_service.refresh_resources_comments(
+                resource_comment_summaries
+            )
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for resource comments deletion')
+            log.exception(f'Failed to delete resource comments: {e}')
+            helpers.flash_error(
+                _('Failed to delete resource comments. Please try again.'),
+                allow_html=True,
+            )
+            return 0
+
         return len(target)
 
     @staticmethod
