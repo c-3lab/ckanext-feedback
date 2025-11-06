@@ -13,6 +13,7 @@ from ckanext.feedback.services.common.check import (
     is_organization_admin,
     require_package_access,
     require_resource_package_access,
+    user_has_organization_admin_role,
 )
 from ckanext.feedback.utils.auth import create_auth_context
 
@@ -171,6 +172,50 @@ class TestCheck:
         result = has_organization_admin_role(organization_obj.id)
 
         assert result is False
+
+    def test_user_has_organization_admin_role_without_user_id(self, organization):
+        organization_obj = model.Group.get(organization['id'])
+        assert user_has_organization_admin_role(None, organization_obj.id) is False
+
+    def test_user_has_organization_admin_role_with_invalid_user(self, organization):
+        organization_obj = model.Group.get(organization['id'])
+        assert (
+            user_has_organization_admin_role('invalid-user-id', organization_obj.id)
+            is False
+        )
+
+    def test_user_has_organization_admin_role_with_sysadmin(
+        self, sysadmin, organization
+    ):
+        organization_obj = model.Group.get(organization['id'])
+        assert (
+            user_has_organization_admin_role(sysadmin['id'], organization_obj.id)
+            is True
+        )
+
+    def test_user_has_organization_admin_role_with_org_admin_and_non_admin(
+        self, user, organization, another_organization
+    ):
+        user_obj = User.get(user['id'])
+        organization_obj1 = model.Group.get(organization['id'])
+        organization_obj2 = model.Group.get(another_organization['id'])
+
+        member = model.Member(
+            group=organization_obj1,
+            group_id=organization_obj1.id,
+            table_id=user_obj.id,
+            capacity='admin',
+            table_name='user',
+        )
+        model.Session.add(member)
+        model.Session.commit()
+
+        assert (
+            user_has_organization_admin_role(user['id'], organization_obj1.id) is True
+        )
+        assert (
+            user_has_organization_admin_role(user['id'], organization_obj2.id) is False
+        )
 
     def test_create_auth_context(self):
         context = create_auth_context()

@@ -41,7 +41,6 @@ class DownloadController:
 
         handler = feedback_config.download_handler()
         if not handler:
-            log.debug('Use default CKAN callback for resource.download')
             handler = resource.download
         response = handler(
             package_type=package_type,
@@ -53,7 +52,6 @@ class DownloadController:
         if user_download:
             if response.status_code == 302:
                 url = response.headers.get('Location')
-                log.debug(f"Download to redirect URL.[{url}]")
                 filename = os.path.basename(urlparse(url).path)
                 try:
                     redirect_response = requests.get(url, allow_redirects=True)

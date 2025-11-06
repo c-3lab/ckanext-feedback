@@ -84,6 +84,11 @@ def organization():
 
 
 @pytest.fixture(scope="function")
+def another_organization():
+    return factories.Organization()
+
+
+@pytest.fixture(scope="function")
 def dataset(organization):
     return factories.Dataset(owner_org=organization['id'])
 
@@ -351,6 +356,11 @@ def mock_current_user_fixture():
         g.userobj = current_user
 
     return _mock_current_user
+    #     user_obj = model.User.get(user['name'])
+    #     # mock current_user
+    #     current_user.return_value = user_obj
+
+    # return _mock_current_user
 
 
 @pytest.fixture(scope='function')
