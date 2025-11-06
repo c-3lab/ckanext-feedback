@@ -2989,6 +2989,78 @@ class TestResourceControllerCommonMethods:
         assert is_valid is False
         assert error == _('Please keep the comment length below 1000')
 
+    @patch('ckanext.feedback.controllers.resource.validate_service.validate_comment')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.has_organization_admin_role')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch('flask_login.utils._get_user')
+    def test_validate_comment_data_admin_bypass_recaptcha(
+        self,
+        mock_current_user,
+        mock_config,
+        mock_get_resource,
+        mock_has_org_role,
+        mock_recaptcha,
+        mock_validate,
+        sysadmin,
+    ):
+        """Test _validate_comment_data with admin bypassing reCAPTCHA"""
+        mock_current_user.return_value = model.User.get(sysadmin['id'])
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        mock_config.return_value = cfg
+
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'org-id'
+        mock_get_resource.return_value = mock_resource
+        mock_has_org_role.return_value = True
+
+        mock_recaptcha.return_value = False
+        mock_validate.return_value = None
+
+        is_valid, error = ResourceController._validate_comment_data(
+            'REQUEST', 'test content', 'resource-id'
+        )
+
+        assert is_valid is True
+        assert error is None
+
+    @patch('ckanext.feedback.controllers.resource.validate_service.validate_comment')
+    @patch('ckanext.feedback.controllers.resource.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
+    @patch('flask_login.utils._get_user')
+    def test_validate_comment_data_admin_bypass_exception_fallback(
+        self,
+        mock_current_user,
+        mock_config,
+        mock_get_resource,
+        mock_recaptcha,
+        mock_validate,
+        sysadmin,
+    ):
+        """Test _validate_comment_data with exception in get_resource
+        fallback to sysadmin"""
+        mock_current_user.return_value = model.User.get(sysadmin['id'])
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        mock_config.return_value = cfg
+
+        mock_get_resource.side_effect = Exception('Resource not found')
+
+        mock_recaptcha.return_value = False
+        mock_validate.return_value = None
+
+        is_valid, error = ResourceController._validate_comment_data(
+            'REQUEST', 'test content', 'resource-id'
+        )
+
+        assert is_valid is True
+        assert error is None
+
     @patch('ckanext.feedback.controllers.resource.get_authorized_package')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     def test_get_resource_context_success(
@@ -3240,7 +3312,7 @@ class TestResourceControllerCommonMethods:
         assert result.form_data['category'] == 'REQUEST'
         assert result.attached_filename == 'uploaded.png'
         assert result.error_response is None
-        mock_validate.assert_called_once_with('REQUEST', 'test content')
+        mock_validate.assert_called_once_with('REQUEST', 'test content', 'res-123')
 
     @patch(
         'ckanext.feedback.controllers.resource.'

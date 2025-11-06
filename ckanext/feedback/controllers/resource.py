@@ -209,13 +209,28 @@ class ResourceController:
 
     @staticmethod
     def _validate_comment_data(
-        category: str | None, content: str
+        category: str | None,
+        content: str,
+        resource_id: str | None = None,
     ) -> tuple[bool, str | None]:
         """Returns (is_valid, error_message)"""
         if not (category and content):
             return False, None
 
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+
+        if isinstance(current_user, model.User) and resource_id:
+            try:
+                resource = comment_service.get_resource(resource_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    resource.Resource.package.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             return False, _('Bad Captcha. Please try again.')
 
         if message := validate_service.validate_comment(content):
@@ -398,7 +413,7 @@ class ResourceController:
             attached_image_filename = uploaded_filename
 
         is_valid, error_message = ResourceController._validate_comment_data(
-            category, content
+            category, content, resource_id
         )
         if not is_valid:
             error_response = ResourceController._handle_validation_error(
