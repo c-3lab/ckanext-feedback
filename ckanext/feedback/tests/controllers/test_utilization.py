@@ -5084,6 +5084,41 @@ class TestUtilizationController:
         assert result == 'mock_suggested_comment_result'
         mock_render.assert_not_called()
 
+    @patch('ckanext.feedback.controllers.utilization.validate_service.validate_comment')
+    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
+    @patch('ckanext.feedback.controllers.utilization.detail_service.get_utilization')
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    @patch('ckanext.feedback.controllers.utilization.request.form')
+    @patch('ckanext.feedback.controllers.utilization.request.files.get')
+    @patch('flask_login.utils._get_user')
+    def test_process_comment_input_admin_bypass_exception_fallback(
+        self, mock_current_user, mock_files, mock_form,
+        mock_config, mock_get_utilization,
+        mock_recaptcha, mock_validate, sysadmin
+    ):
+        """Test _process_comment_input with exception in get_utilization
+        fallback to sysadmin bypass"""
+        mock_current_user.return_value = model.User.get(sysadmin['id'])
+
+        cfg = MagicMock()
+        cfg.recaptcha.force_all.get.return_value = False
+        mock_config.return_value = cfg
+
+        mock_get_utilization.side_effect = Exception('Utilization not found')
+
+        mock_recaptcha.return_value = False
+        mock_validate.return_value = None
+
+        mock_files.return_value = None
+        mock_form.get.side_effect = ['REQUEST', 'test content', None]
+
+        result = UtilizationController._process_comment_input(
+            'image-upload', 'utilization-id'
+        )
+
+        assert result.error_response is None
+        assert result.form_data['category'] == 'REQUEST'
+
     @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
     @patch('ckanext.feedback.controllers.utilization.toolkit.render')
     @patch('ckanext.feedback.controllers.utilization.request.method')

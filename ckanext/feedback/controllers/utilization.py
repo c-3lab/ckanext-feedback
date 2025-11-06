@@ -299,7 +299,19 @@ class UtilizationController:
             attached_image_filename = uploaded_filename
 
         # Check reCAPTCHA (errors call details() directly to preserve form data)
-        if not is_recaptcha_verified(request):
+
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                utilization = detail_service.get_utilization(utilization_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    utilization.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             error_response = UtilizationController.details(
                 utilization_id, category, content, attached_image_filename
