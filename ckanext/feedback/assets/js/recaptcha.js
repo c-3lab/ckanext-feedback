@@ -29,7 +29,7 @@ function attachRecaptchaToForm(formElement, action) {
           // remove old hidden inputs if present
           const oldToken = formElement.querySelector('input[name="g-recaptcha-response"]');
           if (oldToken) oldToken.remove();
-          const oldAction = formElement.querySelector('input[name="action"]');
+          const oldAction = formElement.querySelector('input[name="g-recaptcha-action"]');
           if (oldAction) oldAction.remove();
           const tokenInput = document.createElement('input');
           tokenInput.type = 'hidden';
@@ -38,7 +38,7 @@ function attachRecaptchaToForm(formElement, action) {
           formElement.appendChild(tokenInput);
           const actionInput = document.createElement('input');
           actionInput.type = 'hidden';
-          actionInput.name = 'action';
+          actionInput.name = 'g-recaptcha-action';
           actionInput.value = action;
           formElement.appendChild(actionInput);
           formElement.dataset.recaptchaSubmitting = '1';
