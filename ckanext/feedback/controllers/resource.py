@@ -1,11 +1,11 @@
 import logging
 import os
+from typing import Optional
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.lib.uploader import get_uploader
-from ckan.logic import get_action
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 from flask import Response, make_response, send_file
@@ -34,13 +34,19 @@ from ckanext.feedback.services.common.ai_functions import (
 )
 from ckanext.feedback.services.common.check import (
     check_administrator,
+    get_authorized_package,
     has_organization_admin_role,
+    require_package_access,
 )
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.send_mail import send_email
 from ckanext.feedback.services.recaptcha.check import is_recaptcha_verified
+from ckanext.feedback.utils.auth import create_auth_context
 
 log = logging.getLogger(__name__)
+
+# Expose session as _session for test patching
+_session = session
 
 
 class ResourceController:
@@ -48,10 +54,18 @@ class ResourceController:
     # resource_comment/<resource_id>
     @staticmethod
     def comment(
-        resource_id, category='', content='', attached_image_filename: str | None = None
+        resource_id,
+        category='',
+        content='',
+        attached_image_filename: Optional[str] = None,
     ):
-        approval = True
         resource = comment_service.get_resource(resource_id)
+
+        # Check access and get package data in a single efficient call
+        context = create_auth_context()
+        package = get_authorized_package(resource.Resource.package_id, context)
+
+        approval = True
         if not isinstance(current_user, model.User):
             # if the user is not logged in, display only approved comments
             approval = True
@@ -70,10 +84,6 @@ class ResourceController:
 
         categories = comment_service.get_resource_comment_categories()
         cookie = get_repeat_post_limit_cookie(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
         if not category:
             selected_category = ResourceCommentCategory.REQUEST.name
@@ -112,7 +122,7 @@ class ResourceController:
         if not (category and content):
             toolkit.abort(400)
 
-        attached_image: FileStorage = request.files.get("image-upload")
+        attached_image: FileStorage = request.files.get("attached_image")
         if attached_image:
             try:
                 attached_image_filename = ResourceController._upload_image(
@@ -125,7 +135,19 @@ class ResourceController:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
 
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _res = comment_service.get_resource(resource_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return ResourceController.comment(
                 resource_id, category, content, attached_image_filename
@@ -197,16 +219,16 @@ class ResourceController:
         category='',
         content='',
         rating='',
-        attached_image_filename: str | None = None,
+        attached_image_filename: Optional[str] = None,
     ):
+        resource = comment_service.get_resource(resource_id)
+
+        # Check access and get package data in a single efficient call
+        context = create_auth_context()
+        package = get_authorized_package(resource.Resource.package_id, context)
+
         softened = suggest_ai_comment(comment=content)
 
-        context = {'model': model, 'session': session, 'for_view': True}
-
-        resource = comment_service.get_resource(resource_id)
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if softened is None:
@@ -269,7 +291,19 @@ class ResourceController:
                 log.exception(f'Exception: {e}')
                 toolkit.abort(500)
 
-        if not is_recaptcha_verified(request):
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+        admin_bypass = False
+        if isinstance(current_user, model.User):
+            try:
+                _res = comment_service.get_resource(resource_id)
+                admin_bypass = current_user.sysadmin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                admin_bypass = current_user.sysadmin
+
+        if (force_all or not admin_bypass) and not is_recaptcha_verified(request):
             helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
             return ResourceController.comment(
                 resource_id, category, content, attached_image_filename
@@ -286,10 +320,11 @@ class ResourceController:
 
         categories = comment_service.get_resource_comment_categories()
         resource = comment_service.get_resource(resource_id)
-        context = {'model': model, 'session': session, 'for_view': True}
-        package = get_action('package_show')(
-            context, {'id': resource.Resource.package_id}
-        )
+
+        # Check access and get package data in a single efficient call
+        context = create_auth_context()
+        package = get_authorized_package(resource.Resource.package_id, context)
+
         g.pkg_dict = {'organization': {'name': resource.organization_name}}
 
         if FeedbackConfig().moral_keeper_ai.is_enable(
@@ -367,20 +402,152 @@ class ResourceController:
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
-    # resource_comment/<resource_id>/comment/reply
     @staticmethod
     @check_administrator
-    def reply(resource_id):
+    def approve_reply(resource_id):
         ResourceController._check_organization_admin_role(resource_id)
+        reply_id = request.form.get('resource_comment_reply_id')
+        if not reply_id:
+            toolkit.abort(400)
+
+        try:
+            comment_service.approve_reply(reply_id, current_user.id)
+            session.commit()
+        except PermissionError:
+            helpers.flash_error(
+                _('Cannot approve reply before the parent comment is approved.'),
+                allow_html=True,
+            )
+        except ValueError:
+            toolkit.abort(404)
+        return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
+
+    # resource_comment/<resource_id>/comment/reply
+    @staticmethod
+    def reply(resource_id):
         resource_comment_id = request.form.get('resource_comment_id', '')
         content = request.form.get('reply_content', '')
         if not (resource_comment_id and content):
             toolkit.abort(400)
 
-        comment_service.create_reply(resource_comment_id, content, current_user.id)
+        attached_image_filename = None
+        attached_image: FileStorage = request.files.get("attached_image")
+        if attached_image:
+            try:
+                attached_image_filename = ResourceController._upload_image(
+                    attached_image
+                )
+            except toolkit.ValidationError as e:
+                helpers.flash_error(e.error_summary, allow_html=True)
+                return toolkit.redirect_to(
+                    'resource_comment.comment', resource_id=resource_id
+                )
+            except Exception as e:
+                log.exception(f'Exception: {e}')
+                toolkit.abort(500)
+
+        # Admins (org-admin or sysadmin) skip reCAPTCHA unless forced
+        force_all = toolkit.asbool(FeedbackConfig().recaptcha.force_all.get())
+
+        # Reply permission control (admin or reply_open)
+        reply_open = False
+        _res = None
+        is_admin = False
+
+        # Get resource and check reply_open setting
+        try:
+            _res = comment_service.get_resource(resource_id)
+            reply_open = FeedbackConfig().resource_comment.reply_open.is_enable(
+                _res.Resource.package.owner_org
+            )
+        except Exception:
+            reply_open = False
+
+        # Check if user is admin (only for logged-in users)
+        if isinstance(current_user, model.User):
+            try:
+                is_admin = current_user.sysadmin or has_organization_admin_role(
+                    _res.Resource.package.owner_org
+                )
+            except Exception:
+                is_admin = current_user.sysadmin
+
+        if not (reply_open or is_admin):
+            helpers.flash_error(
+                _('Reply is restricted to administrators.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        if (force_all or not is_admin) and is_recaptcha_verified(request) is False:
+            helpers.flash_error(_('Bad Captcha. Please try again.'), allow_html=True)
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        if message := validate_service.validate_comment(content):
+            helpers.flash_error(
+                _(message),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+
+        creator_user_id = (
+            current_user.id if isinstance(current_user, model.User) else None
+        )
+        comment_service.create_reply(
+            resource_comment_id, content, creator_user_id, attached_image_filename
+        )
         session.commit()
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
+
+    @staticmethod
+    def reply_attached_image(
+        resource_id: str, reply_id: str, attached_image_filename: str
+    ):
+        resource = comment_service.get_resource(resource_id)
+        if resource is None:
+            return toolkit.abort(404)
+
+        approval = True
+        if isinstance(current_user, model.User) and (
+            current_user.sysadmin
+            or has_organization_admin_role(resource.Resource.package.owner_org)
+        ):
+            approval = None
+
+        from ckanext.feedback.models.resource_comment import (
+            ResourceComment,
+            ResourceCommentReply,
+        )
+
+        reply_query = (
+            _session.query(ResourceCommentReply)
+            .join(
+                ResourceComment,
+                ResourceCommentReply.resource_comment_id == ResourceComment.id,
+            )
+            .filter(
+                ResourceCommentReply.id == reply_id,
+                ResourceComment.resource_id == resource_id,
+            )
+        )
+        if approval is not None:
+            reply_query = reply_query.filter(ResourceCommentReply.approval == approval)
+        reply = reply_query.first()
+        if reply is None or reply.attached_image_filename != attached_image_filename:
+            return toolkit.abort(404)
+
+        attached_image_path = comment_service.get_attached_image_path(
+            attached_image_filename
+        )
+        if not os.path.exists(attached_image_path):
+            return toolkit.abort(404)
+        return send_file(attached_image_path)
 
     # resource_comment/<resource_id>/comment/<comment_id>/attached_image/<attached_image_filename>
     @staticmethod
@@ -415,18 +582,19 @@ class ResourceController:
 
     @staticmethod
     def _check_organization_admin_role(resource_id):
+        from ckanext.feedback.services.common.check import NOT_FOUND_ERROR_MESSAGE
+
         resource = comment_service.get_resource(resource_id)
+
+        # Check package access authorization
+        context = create_auth_context()
+        require_package_access(resource.Resource.package_id, context)
+
         if (
             not has_organization_admin_role(resource.Resource.package.owner_org)
             and not current_user.sysadmin
         ):
-            toolkit.abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+            toolkit.abort(404, NOT_FOUND_ERROR_MESSAGE)
 
     def like_status(resource_id):
         status = get_like_status_cookie(resource_id)
@@ -437,9 +605,14 @@ class ResourceController:
     @staticmethod
     def like_toggle(package_name, resource_id):
         data = request.get_json()
-        like_status = data.get('likeStatus')
+        like_status_raw = data.get('likeStatus')
+        like_status_bool = (
+            like_status_raw
+            if isinstance(like_status_raw, bool)
+            else str(like_status_raw).lower() == 'true'
+        )
 
-        if like_status:
+        if like_status_bool:
             likes_service.increment_resource_like_count(resource_id)
             likes_service.increment_resource_like_count_monthly(resource_id)
         else:
@@ -449,7 +622,7 @@ class ResourceController:
         session.commit()
 
         resp = Response("OK", status=200, mimetype='text/plain')
-        resp_with_like = set_like_status_cookie(resp, resource_id, like_status)
+        resp_with_like = set_like_status_cookie(resp, resource_id, like_status_bool)
         return resp_with_like
 
     # resource_comment/<resource_id>/comment/reactions
@@ -459,6 +632,37 @@ class ResourceController:
         ResourceController._check_organization_admin_role(resource_id)
 
         comment_id = request.form.get('resource_comment_id')
+        # Normalize and validate comment id
+        if comment_id is not None:
+            comment_id = comment_id.strip()
+        if not comment_id:
+            log.error(
+                'reactions: missing resource_comment_id (resource_id=%s)', resource_id
+            )
+            helpers.flash_error(
+                _('Failed to change status due to invalid target.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+        target_comment = comment_service.get_resource_comment(
+            comment_id=comment_id, resource_id=resource_id
+        )
+        if target_comment is None:
+            log.error(
+                'reactions: comment not found or not belong to resource '
+                '(resource_id=%s, comment_id=%s)',
+                resource_id,
+                comment_id,
+            )
+            helpers.flash_error(
+                _('Failed to change status due to invalid target.'), allow_html=True
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+        # Use canonical id from DB to avoid empty/invalid ids propagating further
+        comment_id = str(getattr(target_comment, 'id'))
         response_status = request.form.get('response_status')
         response_status_map = {
             'status-none': ResourceCommentResponseStatus.STATUS_NONE.name,
@@ -467,6 +671,22 @@ class ResourceController:
             'completed': ResourceCommentResponseStatus.COMPLETED.name,
             'rejected': ResourceCommentResponseStatus.REJECTED.name,
         }
+        if response_status not in response_status_map:
+            log.error(
+                'reactions: invalid response_status=%s '
+                '(resource_id=%s, comment_id=%s)',
+                response_status,
+                resource_id,
+                comment_id,
+            )
+            helpers.flash_error(
+                _('Failed to change status due to invalid status value.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to(
+                'resource_comment.comment', resource_id=resource_id
+            )
+        mapped_status = response_status_map[response_status]
         admin_liked = request.form.get('admin_liked') == 'on'
 
         resource_comment_reactions = comment_service.get_resource_comment_reactions(
@@ -476,14 +696,14 @@ class ResourceController:
         if resource_comment_reactions:
             comment_service.update_resource_comment_reactions(
                 resource_comment_reactions,
-                response_status_map[response_status],
+                mapped_status,
                 admin_liked,
                 current_user.id,
             )
         else:
             comment_service.create_resource_comment_reactions(
                 comment_id,
-                response_status_map[response_status],
+                mapped_status,
                 admin_liked,
                 current_user.id,
             )
