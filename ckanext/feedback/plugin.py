@@ -155,9 +155,61 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IPackageController
 
+    def before_dataset_index(self, pkg_dict):
+        """
+        Hook called before Solr indexing.
+        Adds download and like counts as integer fields.
+        """
+        try:
+            package_id = pkg_dict.get('id')
+
+            if not package_id:
+                return pkg_dict
+
+            cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+            # Add download count as an integer field
+            if cfg.download.is_enable():
+                try:
+                    downloads = (
+                        download_summary_service.get_package_downloads(package_id) or 0
+                    )
+                    pkg_dict['downloads_total_i'] = int(downloads)
+                    log.debug(
+                        f"[SOLR INDEX] downloads_total_i={downloads} "
+                        f"for {package_id}"
+                    )
+                except Exception as e:
+                    log.warning(f"Failed to index downloads for {package_id}: {e}")
+                    pkg_dict['downloads_total_i'] = 0
+
+            # Add number of likes as an integer field
+            if cfg.like.is_enable():
+                try:
+                    likes = (
+                        resource_likes_service.get_package_like_count(package_id) or 0
+                    )
+                    pkg_dict['likes_total_i'] = int(likes)
+                    log.debug(f"[SOLR INDEX] likes_total_i={likes} for {package_id}")
+                except Exception as e:
+                    log.warning(f"Failed to index likes for {package_id}: {e}")
+                    pkg_dict['likes_total_i'] = 0
+
+        except Exception as e:
+            log.error(f"Error in before_dataset_index: {e}")
+
+        return pkg_dict
+
     def before_dataset_view(self, pkg_dict: Dict[str, Any]) -> Dict[str, Any]:
         package_id = pkg_dict['id']
-        owner_org = model.Package.get(package_id).owner_org
+        package = model.Package.get(package_id)
+
+        # Skip if package does not exist or has been removed
+        if package is None:
+            log.warning(f"Package {package_id} not found in before_dataset_view")
+            return pkg_dict
+
+        owner_org = package.owner_org
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
         if not pkg_dict['extras']:
@@ -264,8 +316,46 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return resource_dict
 
     def get_actions(self):
+        def custom_package_search(context, data_dict):
+            """
+            Custom package_search: Supports Solr-based sorting.
+            Maps download and like count sorting to Solr fields.
+            """
+            import ckan.logic.action.get as get_core
+
+            sort_param = data_dict.get('sort', '')
+
+            log.info(
+                f"[FEEDBACK SORT] custom_package_search called "
+                f"with sort={sort_param}"
+            )
+
+            # Map custom sort parameters to Solr fields
+            if sort_param == 'downloads desc':
+                data_dict['sort'] = 'downloads_total_i desc, metadata_modified desc'
+                log.info(
+                    "[FEEDBACK SORT] Mapped 'downloads desc' to "
+                    "'downloads_total_i desc'"
+                )
+            elif sort_param == 'likes desc':
+                data_dict['sort'] = 'likes_total_i desc, metadata_modified desc'
+                log.info(
+                    "[FEEDBACK SORT] Mapped 'likes desc' to " "'likes_total_i desc'"
+                )
+
+            # Call the original package_search (Solr sorts directly)
+            result = get_core.package_search(context, data_dict)
+
+            log.info(
+                f"[FEEDBACK SORT] Returned {len(result.get('results', []))} "
+                f"results from Solr"
+            )
+
+            return result
+
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
+            'package_search': custom_package_search,
         }
 
     # IUploader
