@@ -1,6 +1,5 @@
 {% ckan_extends %}
 
-{# JavaScriptに設定を渡すための隠しデータ要素 #}
 {% block content %}
   <div id="feedback-config"
        data-likes-enabled="{{ 'true' if h.is_enabled_likes() else 'false' }}"
@@ -12,7 +11,6 @@
   {{ super() }}
 {% endblock %}
 
-{# JavaScriptファイルを読み込み #}
 {% block scripts %}
   {{ super() }}
   {% asset 'feedback/feedback-package-search-js' %}
