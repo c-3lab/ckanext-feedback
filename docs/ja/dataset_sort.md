@@ -51,8 +51,8 @@ ckan -c /path/to/ckan.ini search-index rebuild <dataset-name>
 ckan -c /path/to/ckan.ini search-index check
 ```
 
-
-**上記のパス`/path/to/ckan.ini`は、ご利用の環境に合わせて適宜置き換えてください。**
+> [!IMPORTANT]
+> `ckan`コマンドは、`ckan.ini`がある場所で実行するか、`-c`で`ckan.ini`の指定が必要です。
 
 [コマンド参照ページ](https://docs.ckan.org/en/latest/maintaining/cli.html#search-index-rebuild-search-index)
 

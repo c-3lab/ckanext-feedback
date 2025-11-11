@@ -59,12 +59,15 @@ Below are the steps to apply this extension to an existing CKAN environment.
     ```
     * If you encounter an error such as `ckan.ini` not found, run `ckan -c <path to ckan.ini> db upgrade -p feedback` instead.
 
+> [!IMPORTANT]
+> The `ckan` command must be run either from the directory where `ckan.ini` is located, or you must specify the path to `ckan.ini` using the `-c` option.
+
 5. Run the Solr reindexing command
 
     * Execute the following command from the directory where your `ckan.ini` file is located:
 
     ```bash
-    ckan search-index rebuild
+    ckan -c /path/to/ckan.ini search-index rebuild
     ```
 
 ### When updating the extension
@@ -72,7 +75,7 @@ Below are the steps to apply this extension to an existing CKAN environment.
 From the steps above, perform the following:
 * 1.Install ckanext-feedback in your CKAN environme
 * 2.Create the necessary tables for the feedback functionality
-
+* 5.Run the Solr reindexing command
 ## Structure
 
 ### Three modules that make up this extension
