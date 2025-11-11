@@ -59,6 +59,22 @@ CKANの環境に本Extensionを適用する手順を示します。
     ```
     * `ckan.ini` が見つからないなどのエラーが出る場合、 `ckan -c <ckan.iniのパス> db upgrade -p feedback` としてください。
 
+5. solrの再インデックスコマンドを実行
+
+    * `ckan.ini`のパス直下で実行してください。
+
+    ```bash
+    ckan search-index rebuild
+    ```
+
+### アップデートを行う場合
+
+上記手順の
+* 1.CKAN環境にckanext-feedbackをインストールする
+* 4.フィードバック機能に必要なテーブルを作成する 
+
+    を実行。
+
 ## 構成
 
 ### 本Extensionを構成する3つのモジュール
