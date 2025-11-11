@@ -4,18 +4,9 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from ckan import model
 from ckan.tests import factories
 from sqlalchemy import select, union_all
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-    drop_download_tables,
-    drop_resource_tables,
-    drop_utilization_tables,
-)
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
@@ -61,6 +52,7 @@ def register_resource_comment(
         approval_user_id=approval_user_id,
     )
     session.add(resource_comment)
+    session.commit()
 
 
 def register_utilization(id, resource_id, title, description, approval):
@@ -72,6 +64,7 @@ def register_utilization(id, resource_id, title, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 def register_utilization_comment(
@@ -88,29 +81,13 @@ def register_utilization_comment(
         approval_user_id=approval_user_id,
     )
     session.add(utilization_comment)
+    session.commit()
 
 
-engine = model.repo.session.get_bind()
-
-
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestFeedbacks:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        drop_utilization_tables(engine)
-        drop_resource_tables(engine)
-        drop_download_tables(engine)
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_apply_filters_to_query(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_apply_filters_to_query(self, organization, dataset, resource):
         comment_id = str(uuid.uuid4())
         category = ResourceCommentCategory.QUESTION
         content = 'test content'
@@ -248,10 +225,7 @@ class TestFeedbacks:
         assert dummy.used_filter is True
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_feedbacks(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_feedbacks(self, organization, dataset, resource):
 
         comment_id = str(uuid.uuid4())
         category = ResourceCommentCategory.QUESTION
@@ -338,10 +312,7 @@ class TestFeedbacks:
         assert feedback_list == expected_feedback_list
         assert total_count == 21
 
-    def test_get_approval_counts(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_get_approval_counts(self, organization, dataset, resource):
 
         category = ResourceCommentCategory.QUESTION
         content = 'test content'

@@ -3,13 +3,7 @@ from datetime import datetime
 
 import ckan.tests.factories as factories
 import pytest
-from ckan import model
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.session import session
 from ckanext.feedback.models.utilization import Utilization
 from ckanext.feedback.services.utilization.search import (
@@ -28,20 +22,12 @@ def register_utilization(id, resource_id, title, description, approval, created)
         created=created,
     )
     session.add(utilization)
-
-
-engine = model.repo.session.get_bind()
+    session.commit()
 
 
 @pytest.mark.db_test
 @pytest.mark.usefixtures('with_request_context')
 class TestUtilizationDetailsService:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
     def test_get_utilizations(self, organization, dataset, resource):

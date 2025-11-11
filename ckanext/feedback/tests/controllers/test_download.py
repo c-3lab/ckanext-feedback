@@ -2,15 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
-from ckan import model
-from ckan.tests import factories
 from flask import Flask
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.controllers.download import DownloadController
 from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.session import session
@@ -25,25 +18,16 @@ def get_downloads(resource_id):
     return count
 
 
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestDownloadController:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        engine = model.meta.engine
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
     def setup_method(self, method):
         self.app = Flask(__name__)
 
     @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
     @patch('ckanext.feedback.controllers.download.resource.download')
-    def test_extended_download(self, mock_download, mock_download_handler):
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
-        resource = factories.Resource(package_id=dataset['id'])
+    def test_extended_download(
+        self, mock_download, mock_download_handler, organization, dataset, resource
+    ):
         mock_download_handler.return_value = None
 
         with self.app.test_request_context(
@@ -52,6 +36,7 @@ class TestDownloadController:
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
+            session.commit()
             assert get_downloads(resource['id']) == 1
             mock_download.assert_called_once_with(
                 package_type='package_type',
@@ -61,8 +46,7 @@ class TestDownloadController:
             )
 
     @patch('ckanext.feedback.controllers.download.resource.download')
-    def test_extended_download_with_preview(self, mock_download):
-        resource = factories.Resource()
+    def test_extended_download_with_preview(self, mock_download, resource):
         with self.app.test_request_context(headers={'Sec-Fetch-Dest': 'image'}):
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], resource['url']
@@ -73,9 +57,8 @@ class TestDownloadController:
     @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
     @patch('ckanext.feedback.controllers.download.resource.download')
     def test_extended_download_with_set_download_handler(
-        self, handler, mock_download_handler
+        self, handler, mock_download_handler, resource
     ):
-        resource = factories.Resource()
         mock_download_handler.return_value = handler
         with self.app.test_request_context(
             '/?user-download=true', headers={'Sec-Fetch-Dest': 'image'}
@@ -95,11 +78,15 @@ class TestDownloadController:
     @patch('ckanext.feedback.controllers.download.requests.get')
     @patch('ckanext.feedback.controllers.download.Response')
     def test_extended_download_get_redirect_resource(
-        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+        self,
+        mock_Response,
+        mock_requests_get,
+        mock_download,
+        mock_download_handler,
+        organization,
+        dataset,
+        resource,
     ):
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
-        resource = factories.Resource(package_id=dataset['id'])
         mock_download_handler.return_value = None
 
         mock_responce = MagicMock()
@@ -120,6 +107,7 @@ class TestDownloadController:
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
+            session.commit()
             assert get_downloads(resource['id']) == 1
             mock_download.assert_called_once_with(
                 package_type='package_type',
@@ -133,11 +121,15 @@ class TestDownloadController:
     @patch('ckanext.feedback.controllers.download.requests.get')
     @patch('ckanext.feedback.controllers.download.Response')
     def test_extended_download_get_redirect_resource_non_filename(
-        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+        self,
+        mock_Response,
+        mock_requests_get,
+        mock_download,
+        mock_download_handler,
+        organization,
+        dataset,
+        resource,
     ):
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
-        resource = factories.Resource(package_id=dataset['id'])
         mock_download_handler.return_value = None
 
         mock_responce = MagicMock()
@@ -158,6 +150,7 @@ class TestDownloadController:
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
+            session.commit()
             assert get_downloads(resource['id']) == 1
             mock_download.assert_called_once_with(
                 package_type='package_type',
@@ -171,11 +164,15 @@ class TestDownloadController:
     @patch('ckanext.feedback.controllers.download.requests.get')
     @patch('ckanext.feedback.controllers.download.Response')
     def test_extended_download_redirect_resource_ConnectionError(
-        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+        self,
+        mock_Response,
+        mock_requests_get,
+        mock_download,
+        mock_download_handler,
+        organization,
+        dataset,
+        resource,
     ):
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
-        resource = factories.Resource(package_id=dataset['id'])
         mock_download_handler.return_value = None
 
         mock_responce = MagicMock()
@@ -196,6 +193,7 @@ class TestDownloadController:
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
+            session.commit()
             assert get_downloads(resource['id']) == 1
             mock_download.assert_called_once_with(
                 package_type='package_type',
@@ -209,11 +207,15 @@ class TestDownloadController:
     @patch('ckanext.feedback.controllers.download.requests.get')
     @patch('ckanext.feedback.controllers.download.Response')
     def test_extended_download_without_redirect_resource(
-        self, mock_Response, mock_requests_get, mock_download, mock_download_handler
+        self,
+        mock_Response,
+        mock_requests_get,
+        mock_download,
+        mock_download_handler,
+        organization,
+        dataset,
+        resource,
     ):
-        owner_org = factories.Organization()
-        dataset = factories.Dataset(owner_org=owner_org['id'])
-        resource = factories.Resource(package_id=dataset['id'])
         mock_download_handler.return_value = None
 
         mock_responce = MagicMock()
@@ -234,7 +236,47 @@ class TestDownloadController:
             DownloadController.extended_download(
                 'package_type', resource['package_id'], resource['id'], None
             )
+            session.commit()
             assert get_downloads(resource['id']) == 1
+            mock_download.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=resource['url'],
+            )
+
+    @patch('ckanext.feedback.controllers.download.session.rollback')
+    @patch('ckanext.feedback.controllers.download.session.commit')
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    def test_extended_download_with_error(
+        self,
+        mock_download,
+        mock_download_handler,
+        mock_commit,
+        mock_rollback,
+        organization,
+        dataset,
+        resource,
+    ):
+        """Test error handling when session.commit() fails"""
+        mock_download_handler.return_value = None
+
+        # Mock commit to raise an exception
+        mock_commit.side_effect = Exception('Database error')
+
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'document'}
+        ):
+            # Should not raise exception (download continues despite count failure)
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+
+            # Verify rollback was called
+            mock_rollback.assert_called_once()
+
+            # Verify download handler was still called (download continues)
             mock_download.assert_called_once_with(
                 package_type='package_type',
                 id=resource['package_id'],

@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime
 
-import ckan.tests.factories as factories
 import pytest
 
 from ckanext.feedback.models.issue import IssueResolutionSummary
@@ -18,7 +17,7 @@ from ckanext.feedback.services.utilization.summary import (
 )
 
 
-def get_utilization_summary(resource_id):
+def get_registered_utilization_summary(resource_id):
     return (
         session.query(UtilizationSummary)
         .filter(UtilizationSummary.resource_id == resource_id)
@@ -43,6 +42,7 @@ def register_utilization(id, resource_id, title, description, approval):
         approval=approval,
     )
     session.add(utilization)
+    session.commit()
 
 
 def resister_issue_resolution_summary(id, utilization_id, created, updated):
@@ -54,14 +54,12 @@ def resister_issue_resolution_summary(id, utilization_id, created, updated):
         updated=updated,
     )
     session.add(issue_resolution_summary)
+    session.commit()
 
 
 @pytest.mark.db_test
 class TestUtilizationDetailsService:
-    def test_get_package_utilizations(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_package_utilizations(self, dataset, resource):
         id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
@@ -69,10 +67,7 @@ class TestUtilizationDetailsService:
 
         get_package_utilizations(dataset['id']) == 1
 
-    def test_get_resource_utilizations(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_resource_utilizations(self, resource):
         id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
@@ -84,7 +79,7 @@ class TestUtilizationDetailsService:
     def test_create_utilization_summary(self, resource):
         create_utilization_summary(resource['id'])
         session.commit()
-        utilization_summary = get_utilization_summary(resource['id'])
+        utilization_summary = get_registered_utilization_summary(resource['id'])
 
         assert utilization_summary.resource_id == resource['id']
         assert utilization_summary.utilization == 0
@@ -95,17 +90,14 @@ class TestUtilizationDetailsService:
     def test_refresh_utilization_summary(self, resource, utilization):
         refresh_utilization_summary(resource['id'])
         session.commit()
-        utilization_summary = get_utilization_summary(resource['id'])
+        utilization_summary = get_registered_utilization_summary(resource['id'])
 
         assert utilization_summary.resource_id == resource['id']
         assert utilization_summary.utilization == 1
         assert utilization_summary.created == datetime(2024, 1, 1, 15, 0, 0)
         assert utilization_summary.updated == datetime(2024, 1, 1, 15, 0, 0)
 
-    def test_get_package_issue_resolutions(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_package_issue_resolutions(self, dataset, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
@@ -119,10 +111,7 @@ class TestUtilizationDetailsService:
 
         assert get_package_issue_resolutions(dataset['id']) == 1
 
-    def test_get_resource_issue_resolutions(self):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_get_resource_issue_resolutions(self, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
         description = 'test description'
@@ -149,6 +138,7 @@ class TestUtilizationDetailsService:
 
         increment_issue_resolution_summary(utilization.id)
         session.commit()
+        session.expire_all()
         issue_resolution_summary = get_issue_resolution_summary(utilization.id)
 
         assert issue_resolution_summary.utilization_id == utilization.id

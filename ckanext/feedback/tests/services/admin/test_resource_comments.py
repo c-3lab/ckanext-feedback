@@ -3,14 +3,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, call, patch
 
 import pytest
-from ckan import model
-from ckan.tests import factories
 
-from ckanext.feedback.command.feedback import (
-    create_download_tables,
-    create_resource_tables,
-    create_utilization_tables,
-)
 from ckanext.feedback.models.resource_comment import (
     ResourceComment,
     ResourceCommentCategory,
@@ -44,6 +37,7 @@ def register_resource_comment(
         approval_user_id=approval_user_id,
     )
     session.add(resource_comment)
+    session.commit()
 
 
 def get_resource_comment_summary(resource_id):
@@ -55,21 +49,9 @@ def get_resource_comment_summary(resource_id):
     return resource_comment_summary
 
 
-engine = model.repo.session.get_bind()
-
-
-@pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
+@pytest.mark.db_test
 class TestResourceComments:
-    @classmethod
-    def setup_class(cls):
-        model.repo.init_db()
-        create_utilization_tables(engine)
-        create_resource_tables(engine)
-        create_download_tables(engine)
-
-    def test_get_resource_comments_query(self):
-        organization = factories.Organization()
-
+    def test_get_resource_comments_query(self, organization):
         org_list = [{'name': organization['name'], 'title': organization['title']}]
 
         query = resource_comments.get_resource_comments_query(org_list)
@@ -88,9 +70,7 @@ class TestResourceComments:
         assert "created" in sql_str
         assert "is_approved" in sql_str
 
-    def test_get_simple_resource_comments_query(self):
-        organization = factories.Organization()
-
+    def test_get_simple_resource_comments_query(self, organization):
         org_list = [{'name': organization['name'], 'title': organization['title']}]
 
         query = resource_comments.get_simple_resource_comments_query(org_list)
@@ -101,9 +81,7 @@ class TestResourceComments:
         assert "is_approved" in sql_str
 
     @pytest.mark.freeze_time(datetime(2000, 1, 2, 3, 4))
-    def test_get_resource_comment_ids(self):
-        resource = factories.Resource()
-
+    def test_get_resource_comment_ids(self, resource):
         comment_id = str(uuid.uuid4())
         category = ResourceCommentCategory.QUESTION
         content = 'test content'
@@ -129,8 +107,10 @@ class TestResourceComments:
 
         assert comment_ids == [comment_id]
 
-    def test_get_resource_comment_summaries(self):
-        dataset = factories.Dataset()
+    def test_get_resource_comment_summaries(self, dataset):
+        # Create 2 resources for this test
+        from ckan.tests import factories
+
         resource = factories.Resource(package_id=dataset['id'])
         another_resource = factories.Resource(package_id=dataset['id'])
 
@@ -140,8 +120,10 @@ class TestResourceComments:
         comment.create_resource_comment(
             another_resource['id'], category, 'test content 2', 5
         )
+        session.commit()
         summary.create_resource_summary(resource['id'])
         summary.create_resource_summary(another_resource['id'])
+        session.commit()
 
         resource_comment = comment.get_resource_comments(resource['id'], None)
         another_resource_comment = comment.get_resource_comments(
@@ -150,10 +132,10 @@ class TestResourceComments:
 
         comment.approve_resource_comment(resource_comment[0].id, None)
         comment.approve_resource_comment(another_resource_comment[0].id, None)
+        session.commit()
 
         summary.refresh_resource_summary(resource['id'])
         summary.refresh_resource_summary(another_resource['id'])
-
         session.commit()
 
         comment_id_list = [resource_comment[0].id, another_resource_comment[0].id]
@@ -171,10 +153,7 @@ class TestResourceComments:
         'ckanext.feedback.services.admin.resource_comments.'
         'session.bulk_update_mappings'
     )
-    def test_approve_resource_comments(self, mock_mappings):
-        dataset = factories.Dataset()
-        resource = factories.Resource(package_id=dataset['id'])
-
+    def test_approve_resource_comments(self, mock_mappings, resource):
         category = ResourceCommentCategory.QUESTION
 
         comment.create_resource_comment(resource['id'], category, 'test content 1', 1)
@@ -257,8 +236,10 @@ class TestResourceComments:
         'ckanext.feedback.services.admin.resource_comments.'
         'session.bulk_update_mappings'
     )
-    def test_refresh_resource_comments(self, mock_mappings):
-        dataset = factories.Dataset()
+    def test_refresh_resource_comments(self, mock_mappings, dataset):
+        # Create 2 resources for this test
+        from ckan.tests import factories
+
         resource = factories.Resource(package_id=dataset['id'])
         another_resource = factories.Resource(package_id=dataset['id'])
 
@@ -268,8 +249,10 @@ class TestResourceComments:
         comment.create_resource_comment(
             another_resource['id'], category, 'test content 2', 5
         )
+        session.commit()
         summary.create_resource_summary(resource['id'])
         summary.create_resource_summary(another_resource['id'])
+        session.commit()
 
         resource_comment = comment.get_resource_comments(resource['id'], None)
         another_resource_comment = comment.get_resource_comments(
@@ -278,10 +261,10 @@ class TestResourceComments:
 
         comment.approve_resource_comment(resource_comment[0].id, None)
         comment.approve_resource_comment(another_resource_comment[0].id, None)
+        session.commit()
 
         summary.refresh_resource_summary(resource['id'])
         summary.refresh_resource_summary(another_resource['id'])
-
         session.commit()
 
         resource_comment_summary = get_resource_comment_summary(resource['id'])
