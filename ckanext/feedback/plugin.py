@@ -160,6 +160,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         Hook called before Solr indexing.
         Adds download and like counts as integer fields.
         """
+        return pkg_dict
         try:
             package_id = pkg_dict.get('id')
 
