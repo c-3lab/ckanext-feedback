@@ -316,47 +316,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         return resource_dict
 
+    # IActions
+
     def get_actions(self):
-        def custom_package_search(context, data_dict):
-            """
-            Custom package_search: Supports Solr-based sorting.
-            Maps download and like count sorting to Solr fields.
-            """
-            import ckan.logic.action.get as get_core
-
-            sort_param = data_dict.get('sort', '')
-
-            log.info(
-                f"[FEEDBACK SORT] custom_package_search called "
-                f"with sort={sort_param}"
-            )
-
-            # Map custom sort parameters to Solr fields
-            if sort_param == 'downloads desc':
-                data_dict['sort'] = 'downloads_total_i desc, metadata_modified desc'
-                log.info(
-                    "[FEEDBACK SORT] Mapped 'downloads desc' to "
-                    "'downloads_total_i desc'"
-                )
-            elif sort_param == 'likes desc':
-                data_dict['sort'] = 'likes_total_i desc, metadata_modified desc'
-                log.info(
-                    "[FEEDBACK SORT] Mapped 'likes desc' to " "'likes_total_i desc'"
-                )
-
-            # Call the original package_search (Solr sorts directly)
-            result = get_core.package_search(context, data_dict)
-
-            log.info(
-                f"[FEEDBACK SORT] Returned {len(result.get('results', []))} "
-                f"results from Solr"
-            )
-
-            return result
-
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
-            'package_search': custom_package_search,
         }
 
     # IUploader
