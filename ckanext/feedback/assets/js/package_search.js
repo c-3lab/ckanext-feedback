@@ -22,11 +22,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (feedbackConfig.likesEnabled) {
             var hasLikesOption = Array.from(sortSelect.options).some(
-                opt => opt.value === 'likes desc'
+                opt => opt.value === 'likes_total_i desc, metadata_modified desc'
             );
             if (!hasLikesOption) {
                 var likesOption = document.createElement('option');
-                likesOption.value = 'likes desc';
+                likesOption.value = 'likes_total_i desc, metadata_modified desc';
                 likesOption.textContent = feedbackConfig.likesLabel;
                 sortSelect.appendChild(likesOption);
             }
@@ -34,11 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (feedbackConfig.downloadsEnabled) {
             var hasDownloadsOption = Array.from(sortSelect.options).some(
-                opt => opt.value === 'downloads desc'
+                opt => opt.value === 'downloads_total_i desc, metadata_modified desc'
             );
             if (!hasDownloadsOption) {
                 var downloadsOption = document.createElement('option');
-                downloadsOption.value = 'downloads desc';
+                downloadsOption.value = 'downloads_total_i desc, metadata_modified desc';
                 downloadsOption.textContent = feedbackConfig.downloadsLabel;
                 sortSelect.appendChild(downloadsOption);
             }
