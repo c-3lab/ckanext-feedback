@@ -61,6 +61,12 @@ feedback-recaptcha-js:
   contents:
     - js/recaptcha.js
 
+feedback-moral_check_log-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-moral_check_log.js
+  contents:
+    - js/moral_check_log.js
+
 feedback-resource_read-js:
   filter: rjsmin
   output: ckanext-feedback/%(version)s-resource_read.js
