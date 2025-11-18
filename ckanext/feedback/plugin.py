@@ -160,43 +160,25 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         Hook called before Solr indexing.
         Adds download and like counts as integer fields.
         """
-        try:
-            package_id = pkg_dict.get('id')
+        package_id = pkg_dict.get('id')
+        if not package_id:
+            return pkg_dict
 
-            if not package_id:
-                return pkg_dict
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
 
-            cfg = getattr(self, 'fb_config', FeedbackConfig())
+        # Add download count as an integer field
+        if cfg.download.is_enable():
+            downloads = download_summary_service.get_package_downloads(package_id) or 0
+            pkg_dict['downloads_total_i'] = int(downloads)
+            log.debug(
+                f"[SOLR INDEX] downloads_total_i={downloads} " f"for {package_id}"
+            )
 
-            # Add download count as an integer field
-            if cfg.download.is_enable():
-                try:
-                    downloads = (
-                        download_summary_service.get_package_downloads(package_id) or 0
-                    )
-                    pkg_dict['downloads_total_i'] = int(downloads)
-                    log.debug(
-                        f"[SOLR INDEX] downloads_total_i={downloads} "
-                        f"for {package_id}"
-                    )
-                except Exception as e:
-                    log.warning(f"Failed to index downloads for {package_id}: {e}")
-                    pkg_dict['downloads_total_i'] = 0
-
-            # Add number of likes as an integer field
-            if cfg.like.is_enable():
-                try:
-                    likes = (
-                        resource_likes_service.get_package_like_count(package_id) or 0
-                    )
-                    pkg_dict['likes_total_i'] = int(likes)
-                    log.debug(f"[SOLR INDEX] likes_total_i={likes} for {package_id}")
-                except Exception as e:
-                    log.warning(f"Failed to index likes for {package_id}: {e}")
-                    pkg_dict['likes_total_i'] = 0
-
-        except Exception as e:
-            log.error(f"Error in before_dataset_index: {e}")
+        # Add number of likes as an integer field
+        if cfg.like.is_enable():
+            likes = resource_likes_service.get_package_like_count(package_id) or 0
+            pkg_dict['likes_total_i'] = int(likes)
+            log.debug(f"[SOLR INDEX] likes_total_i={likes} for {package_id}")
 
         return pkg_dict
 
