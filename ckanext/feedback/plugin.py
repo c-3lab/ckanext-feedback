@@ -155,9 +155,43 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IPackageController
 
+    def before_dataset_index(self, pkg_dict):
+        """
+        Hook called before Solr indexing.
+        Adds download and like counts as integer fields.
+        """
+        package_id = pkg_dict.get('id')
+        if not package_id:
+            return pkg_dict
+
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+        # Add download count as an integer field
+        if cfg.download.is_enable():
+            downloads = download_summary_service.get_package_downloads(package_id) or 0
+            pkg_dict['downloads_total_i'] = int(downloads)
+            log.debug(
+                f"[SOLR INDEX] downloads_total_i={downloads} " f"for {package_id}"
+            )
+
+        # Add number of likes as an integer field
+        if cfg.like.is_enable():
+            likes = resource_likes_service.get_package_like_count(package_id) or 0
+            pkg_dict['likes_total_i'] = int(likes)
+            log.debug(f"[SOLR INDEX] likes_total_i={likes} for {package_id}")
+
+        return pkg_dict
+
     def before_dataset_view(self, pkg_dict: Dict[str, Any]) -> Dict[str, Any]:
         package_id = pkg_dict['id']
-        owner_org = model.Package.get(package_id).owner_org
+        package = model.Package.get(package_id)
+
+        # Skip if package does not exist or has been removed
+        if package is None:
+            log.warning(f"Package {package_id} not found in before_dataset_view")
+            return pkg_dict
+
+        owner_org = package.owner_org
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
         if not pkg_dict['extras']:
@@ -262,6 +296,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             )
 
         return resource_dict
+
+    # IActions
 
     def get_actions(self):
         return {

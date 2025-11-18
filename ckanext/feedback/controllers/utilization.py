@@ -45,6 +45,10 @@ from ckanext.feedback.utils.auth import create_auth_context
 
 log = logging.getLogger(__name__)
 
+
+# Expose session as _session for test patching (parity with resource controller)
+_session = session
+
 # Expose session as _session for test patching
 _session = session
 
