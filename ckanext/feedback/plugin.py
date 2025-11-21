@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, Optional
 
 import ckan.model as model
+import requests
 from ckan import plugins
 from ckan.common import _, config
 from ckan.lib.plugins import DefaultTranslation
@@ -52,6 +53,120 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # load the settings from feedback config json
         self.fb_config = FeedbackConfig()
         self.fb_config.load_feedback_config()
+
+        # Setup Solr schema using Schema API (PR #4536 pattern)
+        self._setup_solr_schema()
+
+    def _setup_solr_schema(self):
+        """
+        Setup Solr schema fields using Schema API.
+        Based on CKAN PR #4536 pattern.
+        Reference: https://github.com/ckan/ckan/pull/4536
+
+        This automatically adds required integer fields for sorting by
+        downloads and likes without manual schema.xml modification.
+        """
+        try:
+            # Get Solr URL from config
+            solr_url = config.get('solr_url', 'http://solr:8983/solr/ckan')
+            schema_api = f"{solr_url}/schema"
+
+            log.info(f"Setting up Solr schema via API: {schema_api}")
+
+            # Check if Schema API is available
+            try:
+                response = requests.get(f"{schema_api}/fields", timeout=5)
+                if response.status_code != 200:
+                    log.warning(
+                        f"Schema API returned status {response.status_code}. "
+                        "Manual schema configuration may be required."
+                    )
+                    return
+            except requests.exceptions.RequestException as e:
+                log.warning(
+                    f"Schema API not available: {e}\n"
+                    "Manual schema configuration required. Add "
+                    "the following to managed-schema:\n"
+                    "  <field name='downloads_total_i' type='pint' "
+                    "indexed='true' stored='false' docValues='true'/>\n"
+                    "  <field name='likes_total_i' type='pint' "
+                    "indexed='true' stored='false' docValues='true'/>"
+                )
+                return
+
+            # Get existing fields (for idempotency check)
+            existing_fields = [f['name'] for f in response.json().get('fields', [])]
+
+            cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+            # Add downloads_total_i field if downloads feature is enabled
+            if cfg.download.is_enable():
+                if 'downloads_total_i' not in existing_fields:
+                    log.info("Adding 'downloads_total_i' field to Solr schema")
+                    response = requests.post(
+                        schema_api,
+                        json={
+                            "add-field": {
+                                "name": "downloads_total_i",
+                                "type": "pint",
+                                "indexed": True,
+                                "stored": False,
+                                "docValues": True,
+                            }
+                        },
+                        timeout=10,
+                    )
+
+                    if response.status_code in [200, 201]:
+                        log.info("Successfully added 'downloads_total_i' field")
+                    else:
+                        log.error(
+                            f"Failed to add 'downloads_total_i' field: "
+                            f"{response.status_code} - {response.text}"
+                        )
+                else:
+                    log.debug("Field 'downloads_total_i' already exists")
+
+            # Add likes_total_i field if likes feature is enabled
+            if cfg.like.is_enable():
+                if 'likes_total_i' not in existing_fields:
+                    log.info("Adding 'likes_total_i' field to Solr schema")
+                    response = requests.post(
+                        schema_api,
+                        json={
+                            "add-field": {
+                                "name": "likes_total_i",
+                                "type": "pint",
+                                "indexed": True,
+                                "stored": False,
+                                "docValues": True,
+                            }
+                        },
+                        timeout=10,
+                    )
+
+                    if response.status_code in [200, 201]:
+                        log.info("Successfully added 'likes_total_i' field")
+                    else:
+                        log.error(
+                            f"Failed to add 'likes_total_i' field: "
+                            f"{response.status_code} - {response.text}"
+                        )
+                else:
+                    log.debug("Field 'likes_total_i' already exists")
+
+            log.info("Solr schema setup completed")
+
+        except Exception as e:
+            log.error(f"Unexpected error in Solr schema setup: {e}", exc_info=True)
+            log.warning(
+                "If you continue to see this error, "
+                "please manually add fields to managed-schema:\n"
+                "  <field name='downloads_total_i' type='pint' "
+                "indexed='true' stored='false' docValues='true'/>\n"
+                "  <field name='likes_total_i' type='pint' "
+                "indexed='true' stored='false' docValues='true'/>"
+            )
 
     # IClick
 
@@ -159,8 +274,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         """
         Hook called before Solr indexing.
         Adds download and like counts as integer fields.
+
+        This hook is executed every time a dataset is indexed or re-indexed.
+        The fields added here will be stored in Solr using the schema
+        definitions created by _setup_solr_schema().
         """
-        return pkg_dict
         try:
             package_id = pkg_dict.get('id')
 
