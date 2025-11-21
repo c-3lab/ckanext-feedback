@@ -13,11 +13,11 @@ feedback-search-js:
   contents:
     - js/search.js
 
-# feedback-package-search-js:
-#   filter: rjsmin
-#   output: ckanext-feedback/%(version)s-package_search.js
-#   contents:
-#     - js/package_search.js
+feedback-package-search-js:
+  filter: rjsmin
+  output: ckanext-feedback/%(version)s-package_search.js
+  contents:
+    - js/package_search.js
 
 feedback-registration-js:
   filter: rjsmin
