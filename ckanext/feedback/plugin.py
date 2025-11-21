@@ -57,6 +57,28 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # Setup Solr schema using Schema API (PR #4536 pattern)
         self._setup_solr_schema()
 
+    def _get_solr_url(self):
+        """
+        Get Solr URL from CKAN config.
+
+        Checks multiple possible config keys in order:
+        1. ckan.solr_url (CKAN standard)
+        2. solr_url (alternative)
+        3. Default fallback
+        """
+        # Try CKAN standard config key first
+        solr_url = config.get('ckan.solr_url')
+        if solr_url:
+            return solr_url
+
+        # Try alternative config key
+        solr_url = config.get('solr_url')
+        if solr_url:
+            return solr_url
+
+        # Fallback to default (for development environments)
+        return 'http://solr:8983/solr/ckan'
+
     def _setup_solr_schema(self):
         """
         Setup Solr schema fields using Schema API.
@@ -65,7 +87,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         """
         try:
             # Get Solr URL from config
-            solr_url = config.get('solr_url', 'http://solr:8983/solr/ckan')
+            solr_url = self._get_solr_url()
             schema_api = f"{solr_url}/schema"
 
             log.info(f"Setting up Solr schema via API: {schema_api}")
