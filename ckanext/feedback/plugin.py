@@ -79,6 +79,53 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # Fallback to default (for development environments)
         return 'http://solr:8983/solr/ckan'
 
+    def _add_solr_field(
+        self, schema_api: str, field_name: str, existing_fields: list
+    ) -> bool:
+        """
+        Add a Solr field to the schema.
+
+        Args:
+            schema_api: Solr schema API URL
+            field_name: Name of the field to add
+            existing_fields: List of existing field names
+
+        Returns:
+            bool: True if field was added successfully, False otherwise
+        """
+        if field_name in existing_fields:
+            log.debug(f"Field '{field_name}' already exists")
+            return True
+
+        log.info(f"Adding '{field_name}' field to Solr schema")
+        try:
+            response = requests.post(
+                schema_api,
+                json={
+                    "add-field": {
+                        "name": field_name,
+                        "type": "pint",
+                        "indexed": True,
+                        "stored": False,
+                        "docValues": True,
+                    }
+                },
+                timeout=10,
+            )
+
+            if response.status_code in [200, 201]:
+                log.info(f"Successfully added '{field_name}' field")
+                return True
+            else:
+                log.error(
+                    f"Failed to add '{field_name}' field: "
+                    f"{response.status_code} - {response.text}"
+                )
+                return False
+        except requests.exceptions.RequestException as e:
+            log.error(f"Error adding '{field_name}' field: {e}")
+            return False
+
     def _setup_solr_schema(self):
         """
         Setup Solr schema fields using Schema API.
@@ -86,6 +133,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         downloads and likes without manual schema.xml modification.
         """
         try:
+            cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+            # Check if Solr fields feature is enabled
+            if not cfg.solr_fields.is_enable():
+                log.debug("Solr fields feature is disabled in feedback_config.json")
+                return
+
             # Get Solr URL from config
             solr_url = self._get_solr_url()
             schema_api = f"{solr_url}/schema"
@@ -116,63 +170,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             # Get existing fields (for idempotency check)
             existing_fields = [f['name'] for f in response.json().get('fields', [])]
 
-            cfg = getattr(self, 'fb_config', FeedbackConfig())
-
             # Add downloads_total_i field if downloads feature is enabled
             if cfg.download.is_enable():
-                if 'downloads_total_i' not in existing_fields:
-                    log.info("Adding 'downloads_total_i' field to Solr schema")
-                    response = requests.post(
-                        schema_api,
-                        json={
-                            "add-field": {
-                                "name": "downloads_total_i",
-                                "type": "pint",
-                                "indexed": True,
-                                "stored": False,
-                                "docValues": True,
-                            }
-                        },
-                        timeout=10,
-                    )
-
-                    if response.status_code in [200, 201]:
-                        log.info("Successfully added 'downloads_total_i' field")
-                    else:
-                        log.error(
-                            f"Failed to add 'downloads_total_i' field: "
-                            f"{response.status_code} - {response.text}"
-                        )
-                else:
-                    log.debug("Field 'downloads_total_i' already exists")
+                self._add_solr_field(schema_api, 'downloads_total_i', existing_fields)
 
             # Add likes_total_i field if likes feature is enabled
             if cfg.like.is_enable():
-                if 'likes_total_i' not in existing_fields:
-                    log.info("Adding 'likes_total_i' field to Solr schema")
-                    response = requests.post(
-                        schema_api,
-                        json={
-                            "add-field": {
-                                "name": "likes_total_i",
-                                "type": "pint",
-                                "indexed": True,
-                                "stored": False,
-                                "docValues": True,
-                            }
-                        },
-                        timeout=10,
-                    )
-
-                    if response.status_code in [200, 201]:
-                        log.info("Successfully added 'likes_total_i' field")
-                    else:
-                        log.error(
-                            f"Failed to add 'likes_total_i' field: "
-                            f"{response.status_code} - {response.text}"
-                        )
-                else:
-                    log.debug("Field 'likes_total_i' already exists")
+                self._add_solr_field(schema_api, 'likes_total_i', existing_fields)
 
             log.info("Solr schema setup completed")
 
@@ -282,6 +286,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
             'is_resource_reply_open': cfg.resource_comment.reply_open.is_enable,
             'is_utilization_reply_open': cfg.utilization_comment.reply_open.is_enable,
+            'is_enabled_solr_fields': cfg.solr_fields.is_enable,
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
@@ -305,6 +310,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 return pkg_dict
 
             cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+            # Skip if Solr fields feature is disabled
+            if not cfg.solr_fields.is_enable():
+                return pkg_dict
 
             # Add download count as an integer field
             if cfg.download.is_enable():
