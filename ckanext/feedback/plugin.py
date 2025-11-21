@@ -60,9 +60,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def _setup_solr_schema(self):
         """
         Setup Solr schema fields using Schema API.
-        Based on CKAN PR #4536 pattern.
-        Reference: https://github.com/ckan/ckan/pull/4536
-
         This automatically adds required integer fields for sorting by
         downloads and likes without manual schema.xml modification.
         """
