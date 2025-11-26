@@ -146,9 +146,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         try:
             cfg = getattr(self, 'fb_config', FeedbackConfig())
 
-            # Check if Solr fields feature is enabled
-            if not cfg.solr_fields.is_enable():
-                log.debug("Solr fields feature is disabled in feedback_config.json")
+            # Check if custom sort feature is enabled
+            if not cfg.custom_sort.is_enable():
+                log.debug("Custom sort feature is disabled in feedback_config.json")
                 return
 
             # Get Solr URL from config
@@ -297,7 +297,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
             'is_resource_reply_open': cfg.resource_comment.reply_open.is_enable,
             'is_utilization_reply_open': cfg.utilization_comment.reply_open.is_enable,
-            'is_enabled_solr_fields': cfg.solr_fields.is_enable,
+            'is_enabled_custom_sort': cfg.custom_sort.is_enable,
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
@@ -323,8 +323,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
-        # Skip if Solr fields feature is disabled
-        if not cfg.solr_fields.is_enable():
+        # Skip if custom sort feature is disabled
+        if not cfg.custom_sort.is_enable():
             return pkg_dict
 
         # Get organization ID from pkg_dict
