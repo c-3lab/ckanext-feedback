@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-    var configElement = document.getElementById('feedback-config');
+    const configElement = document.getElementById('feedback-config');
     if (!configElement) {
         return;
     }
     
-    var feedbackConfig = {
+    const feedbackConfig = {
         likesEnabled: configElement.dataset.likesEnabled === 'true',
         downloadsEnabled: configElement.dataset.downloadsEnabled === 'true',
         likesLabel: configElement.dataset.likesLabel || 'Likes',
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     
     function addSortOptions() {
-        var sortSelect = document.querySelector('select[name="sort"]');
+        const sortSelect = document.querySelector('select[name="sort"]');
         
         if (!sortSelect) {
             return;
@@ -21,11 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         
         if (feedbackConfig.likesEnabled) {
-            var hasLikesOption = Array.from(sortSelect.options).some(
+            const hasLikesOption = Array.from(sortSelect.options).some(
                 opt => opt.value === 'likes_total_i desc, metadata_modified desc'
             );
             if (!hasLikesOption) {
-                var likesOption = document.createElement('option');
+                const likesOption = document.createElement('option');
                 likesOption.value = 'likes_total_i desc, metadata_modified desc';
                 likesOption.textContent = feedbackConfig.likesLabel;
                 sortSelect.appendChild(likesOption);
@@ -33,19 +33,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (feedbackConfig.downloadsEnabled) {
-            var hasDownloadsOption = Array.from(sortSelect.options).some(
+            const hasDownloadsOption = Array.from(sortSelect.options).some(
                 opt => opt.value === 'downloads_total_i desc, metadata_modified desc'
             );
             if (!hasDownloadsOption) {
-                var downloadsOption = document.createElement('option');
+                const downloadsOption = document.createElement('option');
                 downloadsOption.value = 'downloads_total_i desc, metadata_modified desc';
                 downloadsOption.textContent = feedbackConfig.downloadsLabel;
                 sortSelect.appendChild(downloadsOption);
             }
         }
         
-        var urlParams = new URLSearchParams(window.location.search);
-        var currentSort = urlParams.get('sort');
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSort = urlParams.get('sort');
         if (currentSort) {
             sortSelect.value = currentSort;
         }
