@@ -331,9 +331,9 @@ class LikesConfig(BaseConfig, FeedbackConfigInterface):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
 
-class SolrFieldsConfig(BaseConfig, FeedbackConfigInterface):
+class CustomSortConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('solr_fields')
+        super().__init__('custom_sort')
         self.default = True
 
     def load_config(self, feedback_config):
@@ -452,7 +452,7 @@ class FeedbackConfig(Singleton):
             self.recaptcha = ReCaptchaConfig()
             self.notice_email = NoticeEmailConfig()
             self.like = LikesConfig()
-            self.solr_fields = SolrFieldsConfig()
+            self.custom_sort = CustomSortConfig()
             self.moral_keeper_ai = MoralKeeperAiConfig()
 
     def load_feedback_config(self):
