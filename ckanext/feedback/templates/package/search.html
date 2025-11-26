@@ -2,8 +2,8 @@
 
 {% block content %}
   <div id="feedback-config"
-       data-likes-enabled="{{ 'true' if (h.is_enabled_likes() and h.is_enabled_solr_fields()) else 'false' }}"
-       data-downloads-enabled="{{ 'true' if (h.is_enabled_downloads() and h.is_enabled_solr_fields()) else 'false' }}"
+       data-likes-enabled="{{ 'true' if (h.is_enabled_likes() and h.is_enabled_custom_sort()) else 'false' }}"
+       data-downloads-enabled="{{ 'true' if (h.is_enabled_downloads() and h.is_enabled_custom_sort()) else 'false' }}"
        data-likes-label="{{ _('Likes') }}"
        data-downloads-label="{{ _('Downloads') }}"
        style="display:none">
