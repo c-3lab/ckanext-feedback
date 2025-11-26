@@ -39,7 +39,7 @@
         "likes": {
             "enable": true
         },
-        "solr_fields": {
+        "custom_sort": {
             "enable": true
         },
         "moral_keeper_ai": {
