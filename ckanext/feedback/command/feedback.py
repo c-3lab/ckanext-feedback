@@ -267,93 +267,6 @@ def moral_check_log(separation, output):
 
 
 @feedback.command(
-    name='check-solr-fields',
-    short_help='Check if feedback Solr fields exist.',
-)
-@click.option(
-    '-v',
-    '--verbose',
-    is_flag=True,
-    help='Show detailed field information.',
-)
-def check_solr_fields(verbose):
-    """
-    Check if downloads_total_i and likes_total_i fields exist in Solr schema.
-
-    Example:
-        ckan feedback check-solr-fields
-        ckan feedback check-solr-fields -v
-    """
-    try:
-        schema_api = get_solr_schema_api()
-
-        click.echo()
-        click.secho('Checking Solr fields...', fg='cyan')
-        click.echo()
-
-        all_exist = True
-
-        for field_name in FEEDBACK_SOLR_FIELDS:
-            try:
-                response = requests.get(f"{schema_api}/fields/{field_name}", timeout=5)
-
-                if response.status_code == 200:
-                    try:
-                        field_info = response.json().get('field', {})
-                    except ValueError as e:
-                        click.secho(
-                            f'  ✗ {field_name}: invalid JSON response ({e})', fg='red'
-                        )
-                        all_exist = False
-                        continue
-
-                    click.secho(f'  ✓ {field_name}: exists', fg='green')
-
-                    if verbose:
-                        click.echo(f'    - Type: {field_info.get("type", "unknown")}')
-                        click.echo(f'    - Indexed: {field_info.get("indexed", False)}')
-                        click.echo(f'    - Stored: {field_info.get("stored", False)}')
-                        click.echo(
-                            f'    - DocValues: {field_info.get("docValues", False)}'
-                        )
-
-                elif response.status_code == 404:
-                    click.secho(f'  ✗ {field_name}: not found', fg='red')
-                    all_exist = False
-                else:
-                    status_code = response.status_code
-                    click.secho(
-                        f'  ? {field_name}: unknown status (HTTP {status_code})',
-                        fg='yellow',
-                    )
-                    all_exist = False
-
-            except requests.exceptions.RequestException as e:
-                click.secho(f'  ✗ {field_name}: error checking ({e})', fg='red')
-                all_exist = False
-
-        # Summary
-        click.echo()
-        if all_exist:
-            click.secho(
-                '✓ All feedback fields exist in Solr schema', fg='green', bold=True
-            )
-        else:
-            click.secho('✗ Some feedback fields are missing', fg='red', bold=True)
-            click.echo()
-            click.secho('To create missing fields:', fg='cyan')
-            click.echo('  1. Restart CKAN (fields will be auto-created on startup)')
-            click.echo('  2. Rebuild the search index:')
-            click.secho('     ckan search-index rebuild', fg='white')
-
-        sys.exit(0 if all_exist else 1)
-
-    except Exception as e:
-        click.secho(f'Unexpected error: {e}', fg='red', err=True)
-        raise click.Abort()
-
-
-@feedback.command(
     name='reset-solr-fields',
     short_help='Delete feedback Solr fields (requires reindex after).',
 )
@@ -364,47 +277,24 @@ def check_solr_fields(verbose):
     help='Skip confirmation prompt.',
 )
 def reset_solr_fields(yes):
-    """
-    Delete downloads_total_i and likes_total_i fields from Solr schema.
-
-    WARNING: This will remove the fields and all indexed data.
-    You must run 'ckan search-index rebuild' after this command.
-
-    Example:
-        ckan feedback reset-solr-fields
-        ckan feedback reset-solr-fields -y
-        ckan search-index rebuild
-    """
     try:
         schema_api = get_solr_schema_api()
 
-        # Confirmation prompt
         if not yes:
             click.echo()
             click.secho(
-                'WARNING: This will delete the following Solr fields:',
-                fg='yellow',
-                bold=True,
+                'WARNING: This will delete Solr fields:', fg='yellow', bold=True
             )
             for field_name in FEEDBACK_SOLR_FIELDS:
                 click.echo(f'  - {field_name}')
             click.echo()
-            click.secho(
-                'You will need to rebuild the search index after this operation.',
-                fg='yellow',
-            )
-            click.echo()
-
             if not click.confirm('Do you want to continue?'):
                 click.secho('Operation cancelled.', fg='blue')
                 return
 
-        deleted_count = 0
-        not_found_count = 0
-        error_count = 0
-
         click.echo()
-        click.secho('Deleting fields from Solr schema...', fg='cyan')
+        deleted_count = 0
+        error_count = 0
 
         for field_name in FEEDBACK_SOLR_FIELDS:
             try:
@@ -413,48 +303,44 @@ def reset_solr_fields(yes):
                 )
 
                 if response.status_code in [200, 201]:
-                    click.secho(f'  ✓ Deleted field: {field_name}', fg='green')
+                    click.secho(f'  ✓ Deleted: {field_name}', fg='green')
                     deleted_count += 1
                 elif response.status_code == 404:
-                    click.secho(f'  - Field not found: {field_name}', fg='yellow')
-                    not_found_count += 1
+                    click.secho(f'  - Not found: {field_name}', fg='yellow')
                 else:
                     click.secho(
-                        f'  ✗ Failed to delete {field_name}: '
-                        f'HTTP {response.status_code} - {response.text}',
+                        f'  ✗ Failed: {field_name} (HTTP {response.status_code})',
                         fg='red',
                     )
                     error_count += 1
-
-            except requests.exceptions.RequestException as e:
-                click.secho(f'  ✗ Error deleting {field_name}: {e}', fg='red')
+            except Exception as e:
+                click.secho(f'  ✗ Error: {field_name} - {e}', fg='red')
                 error_count += 1
 
-        # Summary
         click.echo()
-        click.secho('Summary:', fg='cyan', bold=True)
-        click.echo(f'  Deleted: {deleted_count}')
-        click.echo(f'  Not found: {not_found_count}')
-        click.echo(f'  Errors: {error_count}')
-
         if deleted_count > 0:
-            click.echo()
             click.secho('✓ Fields deleted successfully!', fg='green', bold=True)
             click.echo()
-            click.secho('Next steps:', fg='cyan', bold=True)
-            click.echo('  1. Restart CKAN to recreate the fields')
-            click.echo('  2. Rebuild the search index:')
-            click.secho('     ckan search-index rebuild', fg='white')
-        elif not_found_count == len(FEEDBACK_SOLR_FIELDS):
-            click.echo()
-            click.secho('Fields were already deleted or never existed.', fg='yellow')
-        else:
-            click.echo()
+            click.secho('IMPORTANT:', fg='red', bold=True)
             click.secho(
-                'Some errors occurred. Please check the output above.', fg='red'
+                '  Set solr_fields.enable to false in feedback_config.json', fg='yellow'
             )
+            click.secho(
+                '  to prevent automatic recreation on next CKAN command.', fg='yellow'
+            )
+            click.echo()
+            solr_url = get_solr_url()
+            verify_cmd = (
+                f'curl {solr_url}/schema/fields | '
+                f'grep -E "(downloads_total_i|likes_total_i)"'
+            )
+            click.secho(f'Verify: {verify_cmd}', fg='cyan')
+        elif error_count > 0:
+            click.secho('Some errors occurred.', fg='red')
             sys.exit(1)
+        else:
+            click.secho('Fields were already deleted or never existed.', fg='yellow')
 
     except Exception as e:
-        click.secho(f'Unexpected error: {e}', fg='red', err=True)
+        click.secho(f'Error: {e}', fg='red', err=True)
         raise click.Abort()
