@@ -14,10 +14,16 @@
   - [オプション](#オプション)
   - [実行例](#実行例)
 - [clean-files](#clean-files)
-  - [実行](#実行-1)
-  - [オプション](#オプション-1)
-  - [実行例](#実行例-1)
+  - [実行](#実行)
+  - [オプション](#オプション)
+  - [実行例](#実行例)
   - [補足：削除対象の判定基準](#補足削除対象の判定基準)
+- [reset-solr-fields](#reset-solr-fields)
+  - [概要](#概要)
+  - [実行](#実行)
+  - [オプション](#オプション)
+  - [実行例](#実行例)
+  - [注意事項](#注意事項)
 
 ## init
 
@@ -173,3 +179,88 @@ ckan ckan.ini feedback clean-files --dry-run
 
 ※ 意図せず消してしまわないよう、`--dry-run` での事前確認を推奨します。  
 ※ 本コマンドは、cronなどで定期的に実行することを推奨します。
+
+## reset-solr-fields
+
+### 概要
+
+Solrスキーマから`downloads_total_i`と`likes_total_i`フィールドを削除します。  
+開発・テスト環境でのクリーンアップや、フィールドの再作成が必要な場合に使用します。
+
+> [!WARNING]
+> このコマンドは、フィールドとインデックス済みデータを削除します。  
+> 削除後は、必ず`ckan search-index rebuild`を実行してください。
+
+> [!NOTE]
+> このコマンドは、`custom_sort`設定に関係なく実行できます。  
+> 以前に作成されたフィールドをクリーンアップするために使用されます。
+
+
+### 実行
+
+```bash
+ckan feedback reset-solr-fields [options]
+```
+
+### オプション
+
+```bash
+-y, --yes
+```
+
+確認プロンプトをスキップして実行します。
+
+### 実行例
+
+```bash
+# 確認プロンプトを表示して削除
+ckan feedback reset-solr-fields
+
+# 確認をスキップして削除
+ckan feedback reset-solr-fields --yes
+
+# 削除後に再インデックスを実行
+ckan feedback reset-solr-fields --yes
+ckan search-index rebuild
+```
+
+### 注意事項
+
+1. **データの削除**: フィールドを削除すると、そのフィールドにインデックスされたすべてのデータが失われます。
+
+2. **自動再作成の防止**: フィールド削除後、`custom_sort.enable`を`false`に設定しないと、次回CKANコマンド実行時にフィールドが自動的に再作成されます。
+
+3. **削除の確認**: 削除後は、`curl`コマンドで確認してください：
+> [!NOTE]
+  >`SOLR_URL`は使用しているsolrのURLを指定してください。
+
+   ```bash
+   curl http://SOLR_URL/solr/ckan/schema/fields | grep -E "(downloads_total_i|likes_total_i)"
+   ```
+
+4. **本番環境での使用**: 本番環境で実行する場合は、事前にバックアップを取得することを推奨します。
+
+**実行例（完全な手順）：**
+```bash
+# 1. フィールドを削除
+ckan feedback reset-solr-fields --yes
+
+# 2. feedback_config.jsonでcustom_sortを無効にする（重要！）
+#    "modules": {
+#      "custom_sort": {
+#        "enable": false
+#      }
+#    }
+
+# 3. 削除を確認（curlコマンドを使用）
+curl http://SOLR_URL/solr/ckan/schema/fields | grep -E "(downloads_total_i|likes_total_i)"
+
+# 4. 検索インデックスを再構築
+ckan search-index rebuild
+
+# （オプション）フィールドを再作成する場合：
+# 5. feedback_config.jsonでcustom_sortを有効にする
+# 6. CKANを再起動（フィールドが自動再作成される）
+# 7. 検索インデックスを再構築
+ckan search-index rebuild
+```
