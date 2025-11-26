@@ -323,7 +323,7 @@ def reset_solr_fields(yes):
             click.echo()
             click.secho('IMPORTANT:', fg='red', bold=True)
             click.secho(
-                '  Set solr_fields.enable to false in feedback_config.json', fg='yellow'
+                '  Set custom_sort.enable to false in feedback_config.json', fg='yellow'
             )
             click.secho(
                 '  to prevent automatic recreation on next CKAN command.', fg='yellow'
