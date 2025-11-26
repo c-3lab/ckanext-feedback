@@ -283,3 +283,52 @@ class TestDownloadController:
                 resource_id=resource['id'],
                 filename=resource['url'],
             )
+
+    @patch('ckanext.feedback.controllers.download.feedback_config.download_handler')
+    @patch('ckanext.feedback.controllers.download.resource.download')
+    @patch('ckanext.feedback.controllers.download._update_package_search_index')
+    def test_extended_download_updates_search_index(
+        self,
+        mock_update_index,
+        mock_download,
+        mock_download_handler,
+        organization,
+        dataset,
+        resource,
+    ):
+        """Test that search index is updated when download count increments"""
+        mock_download_handler.return_value = None
+        mock_update_index.return_value = None
+
+        with self.app.test_request_context(
+            '/?user-download=true', headers={'Sec-Fetch-Dest': 'document'}
+        ):
+            DownloadController.extended_download(
+                'package_type', resource['package_id'], resource['id'], None
+            )
+            session.commit()
+            assert get_downloads(resource['id']) == 1
+            # Verify that _update_package_search_index was called with package_id
+            mock_update_index.assert_called_once_with(resource['package_id'])
+            mock_download.assert_called_once_with(
+                package_type='package_type',
+                id=resource['package_id'],
+                resource_id=resource['id'],
+                filename=resource['url'],
+            )
+
+    @patch('ckanext.feedback.controllers.download.log')
+    @patch('ckan.lib.search.rebuild')
+    def test_update_package_search_index_success(self, mock_rebuild, mock_log):
+        """Test that _update_package_search_index logs success when rebuild succeeds"""
+        from ckanext.feedback.controllers.download import _update_package_search_index
+
+        package_id = 'test-package-id'
+        mock_rebuild.return_value = None
+
+        _update_package_search_index(package_id)
+
+        mock_rebuild.assert_called_once_with(package_id)
+        mock_log.debug.assert_called_once_with(
+            f"Updated search index for package {package_id}"
+        )
