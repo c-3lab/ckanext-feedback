@@ -79,9 +79,26 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # Fallback to default (for development environments)
         return 'http://solr:8983/solr/ckan'
 
-    def _add_solr_field(
-        self, schema_api: str, field_name: str, existing_fields: list
-    ) -> bool:
+    def _field_exists_in_solr(self, field_name: str) -> bool:
+        """
+        Check if a field exists in Solr schema.
+
+        Args:
+            field_name: Name of the field to check
+
+        Returns:
+            bool: True if field exists, False otherwise
+        """
+        try:
+            solr_url = self._get_solr_url()
+            schema_api = f"{solr_url}/schema"
+            response = requests.get(f"{schema_api}/fields/{field_name}", timeout=5)
+            return response.status_code == 200
+        except Exception:
+            # If check fails, assume field doesn't exist to be safe
+            return False
+
+    def _add_solr_field(self, schema_api: str, field_name: str, existing_fields: list):
         """
         Add a Solr field to the schema.
 
@@ -89,13 +106,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             schema_api: Solr schema API URL
             field_name: Name of the field to add
             existing_fields: List of existing field names
-
-        Returns:
-            bool: True if field was added successfully, False otherwise
         """
         if field_name in existing_fields:
             log.debug(f"Field '{field_name}' already exists")
-            return True
+            return
 
         log.info(f"Adding '{field_name}' field to Solr schema")
         try:
@@ -115,16 +129,13 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
             if response.status_code in [200, 201]:
                 log.info(f"Successfully added '{field_name}' field")
-                return True
             else:
                 log.error(
                     f"Failed to add '{field_name}' field: "
                     f"{response.status_code} - {response.text}"
                 )
-                return False
         except requests.exceptions.RequestException as e:
             log.error(f"Error adding '{field_name}' field: {e}")
-            return False
 
     def _setup_solr_schema(self):
         """
@@ -302,48 +313,55 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         This hook is executed every time a dataset is indexed or re-indexed.
         The fields added here will be stored in Solr using the schema
         definitions created by _setup_solr_schema().
+
+        Organization-specific settings are considered when adding fields.
         """
-        try:
-            package_id = pkg_dict.get('id')
+        package_id = pkg_dict.get('id')
 
-            if not package_id:
-                return pkg_dict
+        if not package_id:
+            return pkg_dict
 
-            cfg = getattr(self, 'fb_config', FeedbackConfig())
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
 
-            # Skip if Solr fields feature is disabled
-            if not cfg.solr_fields.is_enable():
-                return pkg_dict
+        # Skip if Solr fields feature is disabled
+        if not cfg.solr_fields.is_enable():
+            return pkg_dict
 
-            # Add download count as an integer field
-            if cfg.download.is_enable():
-                try:
-                    downloads = (
-                        download_summary_service.get_package_downloads(package_id) or 0
-                    )
-                    pkg_dict['downloads_total_i'] = int(downloads)
-                    log.debug(
-                        f"[SOLR INDEX] downloads_total_i={downloads} "
-                        f"for {package_id}"
-                    )
-                except Exception as e:
-                    log.warning(f"Failed to index downloads for {package_id}: {e}")
-                    pkg_dict['downloads_total_i'] = 0
+        # Get organization ID from pkg_dict
+        # Note: owner_org may be None for datasets without an organization
+        owner_org = pkg_dict.get('owner_org')
 
-            # Add number of likes as an integer field
-            if cfg.like.is_enable():
-                try:
-                    likes = (
-                        resource_likes_service.get_package_like_count(package_id) or 0
-                    )
-                    pkg_dict['likes_total_i'] = int(likes)
-                    log.debug(f"[SOLR INDEX] likes_total_i={likes} for {package_id}")
-                except Exception as e:
-                    log.warning(f"Failed to index likes for {package_id}: {e}")
-                    pkg_dict['likes_total_i'] = 0
+        # Check field existence once (performance optimization)
+        # This avoids multiple HTTP requests per dataset
+        downloads_field_exists = self._field_exists_in_solr('downloads_total_i')
+        likes_field_exists = self._field_exists_in_solr('likes_total_i')
 
-        except Exception as e:
-            log.error(f"Error in before_dataset_index: {e}")
+        # Add download count as an integer field
+        # Only add if downloads feature is enabled for this organization
+        if cfg.download.is_enable(owner_org):
+            # Only add field if it exists in Solr schema
+            if downloads_field_exists:
+                downloads = (
+                    download_summary_service.get_package_downloads(package_id) or 0
+                )
+                pkg_dict['downloads_total_i'] = int(downloads)
+                org_info = f" (org: {owner_org})" if owner_org else " (no org)"
+                log.debug(
+                    f"[SOLR INDEX] downloads_total_i={downloads} "
+                    f"for {package_id}{org_info}"
+                )
+
+        # Add number of likes as an integer field
+        # Only add if likes feature is enabled for this organization
+        if cfg.like.is_enable(owner_org):
+            # Only add field if it exists in Solr schema
+            if likes_field_exists:
+                likes = resource_likes_service.get_package_like_count(package_id) or 0
+                pkg_dict['likes_total_i'] = int(likes)
+                org_info = f" (org: {owner_org})" if owner_org else " (no org)"
+                log.debug(
+                    f"[SOLR INDEX] likes_total_i={likes} " f"for {package_id}{org_info}"
+                )
 
         return pkg_dict
 
