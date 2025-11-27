@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-11-27 16:00+0900\n"
+"POT-Creation-Date: 2025-11-27 16:39+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -174,19 +174,19 @@ msgstr "利活用方法"
 msgid "Utilization Comment"
 msgstr "利活用コメント"
 
+# | msgid "Resource Comment"
 #: ckanext/feedback/controllers/admin.py:165
 #: ckanext/feedback/templates/admin/approval_and_delete.html:90
 #: ckanext/feedback/templates/admin/approval_and_delete.html:190
 #, fuzzy
-#| msgid "Resource Comment"
 msgid "Resource Comment Reply"
 msgstr "リソースコメント"
 
+# | msgid "Utilization Comment"
 #: ckanext/feedback/controllers/admin.py:166
 #: ckanext/feedback/templates/admin/approval_and_delete.html:118
 #: ckanext/feedback/templates/admin/approval_and_delete.html:217
 #, fuzzy
-#| msgid "Utilization Comment"
 msgid "Utilization Comment Reply"
 msgstr "利活用コメント"
 
@@ -219,7 +219,7 @@ msgstr "組織"
 msgid ""
 "Some replies were not approved because their parent comments are not "
 "approved."
-msgstr ""
+msgstr "一部の返信は、返信元コメントが承認されていないため承認されませんでした。"
 
 #: ckanext/feedback/controllers/admin.py:270
 msgid "item(s) were approved."
@@ -231,7 +231,7 @@ msgstr "項目を完全に削除しました。"
 
 #: ckanext/feedback/controllers/admin.py:333
 msgid "Failed to approve utilization comments. Please try again."
-msgstr ""
+msgstr "利活用コメントの承認に失敗しました。再度お試しください。"
 
 # | msgid "Bad Captcha. Please try again."
 #: ckanext/feedback/controllers/admin.py:357
@@ -241,19 +241,19 @@ msgstr "認証に失敗しました。 もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:387
 msgid "Failed to approve resource comments. Please try again."
-msgstr ""
+msgstr "リソースのコメント承認に失敗しました。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:412
 msgid "Failed to delete utilization comments. Please try again."
-msgstr ""
+msgstr "利用用方法のコメントを削除できませんでした。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:435
 msgid "Failed to delete utilization. Please try again."
-msgstr ""
+msgstr "利活用方法の削除に失敗しました。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:464
 msgid "Failed to delete resource comments. Please try again."
-msgstr ""
+msgstr "リソースのコメントを削除できませんでした。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:480
 #: ckanext/feedback/controllers/admin.py:495
@@ -391,28 +391,28 @@ msgid ""
 msgstr "コメント送信が完了しました。<br>管理者にコメントが承認されるまで表示されません。"
 
 # | msgid "Bad Captcha. Please try again."
+# | msgid "Failed to create comment. Please try again."
 #: ckanext/feedback/controllers/resource.py:505
 #: ckanext/feedback/controllers/resource.py:515
 #: ckanext/feedback/tests/controllers/test_resource.py:3520
 #: ckanext/feedback/tests/controllers/test_resource.py:3536
 #, fuzzy
-#| msgid "Failed to create comment. Please try again."
 msgid "Failed to create moral check log. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
 #: ckanext/feedback/controllers/resource.py:692
 msgid "Cannot approve reply before the parent comment is approved."
-msgstr ""
+msgstr "返信元のコメントが承認されるまで返信を承認できません。"
 
 #: ckanext/feedback/controllers/resource.py:751
 #: ckanext/feedback/controllers/utilization.py:840
 msgid "Reply is restricted to administrators."
-msgstr ""
+msgstr "返信は管理者だけに制限されています。"
 
 #: ckanext/feedback/controllers/resource.py:932
 #: ckanext/feedback/controllers/resource.py:948
 msgid "Failed to change status due to invalid target."
-msgstr ""
+msgstr "対象が無効なため、ステータスの変更に失敗しました。"
 
 #: ckanext/feedback/controllers/utilization.py:647
 msgid ""
@@ -420,24 +420,24 @@ msgid ""
 "until approved by an administrator."
 msgstr "登録申請が完了しました。<br>管理者に申請が承認されるまで表示されません。"
 
+# | msgid "utilization_count"
 #: ckanext/feedback/controllers/utilization.py:671
 #: ckanext/feedback/controllers/utilization.py:723
 #: ckanext/feedback/tests/controllers/test_utilization.py:971
 #: ckanext/feedback/tests/controllers/test_utilization.py:1008
 #, fuzzy
-#| msgid "utilization_count"
 msgid "Utilization not found"
 msgstr "利活用数"
 
+# | msgid "utilization_count"
 #: ckanext/feedback/controllers/utilization.py:805
 #, fuzzy
-#| msgid "utilization_count"
 msgid "Utilization not found."
 msgstr "利活用数"
 
 #: ckanext/feedback/controllers/utilization.py:1082
 msgid "Cannot approve reply because its parent comment is not approved."
-msgstr ""
+msgstr "返信元コメントが承認されていないため、返信を承認できません。"
 
 #: ckanext/feedback/controllers/utilization.py:1147
 msgid "The utilization has been successfully updated."
@@ -450,15 +450,15 @@ msgstr "利活用方法の削除に成功しました。"
 #: ckanext/feedback/services/common/upload.py:56
 #: ckanext/feedback/services/common/upload.py:67
 msgid "Image Upload"
-msgstr ""
+msgstr "画像アップロード"
 
 #: ckanext/feedback/services/common/upload.py:57
 msgid "Invalid file extension. Allowed: png, jpg, jpeg, gif, webp"
-msgstr ""
+msgstr "無効なファイル拡張子です。許可されている形式：png、jpg、jpeg、gif、webp"
 
 #: ckanext/feedback/services/common/upload.py:67
 msgid "Invalid file type. Only image files are allowed."
-msgstr ""
+msgstr "無効なファイル形式です。画像ファイルのみ許可されています。"
 
 #: ckanext/feedback/templates/header.html:11
 msgid "Sysadmin settings"
@@ -787,9 +787,9 @@ msgstr "閉じる"
 msgid "URL:"
 msgstr "URL:"
 
+# | msgid "liked"
 #: ckanext/feedback/templates/package/search.html:7
 #, fuzzy
-#| msgid "liked"
 msgid "Likes"
 msgstr "いいね"
 
@@ -978,19 +978,19 @@ msgstr "添付画像"
 #: ckanext/feedback/templates/utilization/details.html:220
 #: ckanext/feedback/templates/utilization/details.html:280
 msgid "Reply from the Administrator"
-msgstr ""
+msgstr "管理者からの返信"
 
 #: ckanext/feedback/templates/resource/comment.html:275
 #: ckanext/feedback/templates/resource/comment.html:278
 #: ckanext/feedback/templates/utilization/details.html:263
 #: ckanext/feedback/templates/utilization/details.html:266
 msgid "Show replies"
-msgstr ""
+msgstr "返信を表示"
 
 #: ckanext/feedback/templates/resource/comment.html:276
 #: ckanext/feedback/templates/utilization/details.html:264
 msgid "Hide replies"
-msgstr ""
+msgstr "返信を非表示にする"
 
 #: ckanext/feedback/templates/resource/comment.html:367
 msgid "Status None"
@@ -1025,7 +1025,7 @@ msgstr "返信を入力してください。"
 #: ckanext/feedback/templates/resource/comment.html:440
 #: ckanext/feedback/templates/utilization/details.html:364
 msgid "Image preview will appear here"
-msgstr ""
+msgstr "画像プレビューはここに表示されます"
 
 #: ckanext/feedback/templates/resource/comment_check.html:18
 #: ckanext/feedback/templates/utilization/comment_check.html:21
