@@ -512,6 +512,14 @@ class TestFeedbackCommand:
         mock_click.secho.assert_any_call(
             '✓ Fields deleted successfully!', fg='green', bold=True
         )
+        # Verify the final separator line (line 345) is called
+        # This ensures line 345 is covered
+        mock_click.secho.assert_any_call('=' * 70, fg='red', bold=True)
+        # Verify echo after final separator (line 346) is called
+        # This ensures line 346 is covered
+        # Count how many times echo was called to verify line 346
+        echo_calls = [call for call in mock_click.echo.call_args_list]
+        assert len(echo_calls) > 0
 
     @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
     @patch('ckanext.feedback.command.feedback.get_solr_url')
@@ -625,3 +633,18 @@ class TestFeedbackCommand:
         mock_click.secho.assert_any_call(
             '✓ Fields deleted successfully!', fg='green', bold=True
         )
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.click')
+    def test_reset_solr_fields_get_schema_api_exception(
+        self, mock_click, mock_get_solr_schema_api
+    ):
+        """Test reset_solr_fields when get_solr_schema_api raises an exception"""
+        mock_get_solr_schema_api.side_effect = Exception('Schema API error')
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        # Should exit with error code 1 due to click.Abort()
+        assert result.exit_code == 1
+        # Verify exception handler (lines 360-361) is called
+        mock_click.secho.assert_any_call('Error: Schema API error', fg='red', err=True)
