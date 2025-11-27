@@ -30,7 +30,7 @@ detaset一覧画面のソートオプションにいいね数とダウンロー�
 
 ## 設定方法
 
-### 注意点
+### 適応方法
 
 既存のデータセットに本機能を適応させる場合、以下のコマンドを実行する必要があります。 
 
@@ -50,6 +50,43 @@ ckan -c /path/to/ckan.ini search-index rebuild <dataset-name>
 # インデックスされていないデータセットの確認
 ckan -c /path/to/ckan.ini search-index check
 ```
+
+### 本機能をOFFにする場合
+
+上記の手順で適応した後、本機能をOFFにしたい場合、必ず以下の手順でOFFにしてください。
+
+1. 設定ファイル`feedback_config.json`で本機能をOFF
+
+    ```bash
+    "custom_sort": {
+        "enable": false
+    }
+    ```
+    または、`ckan.ini`で設定している場合
+    ```bash
+    ckan.feedback.custom_sort.enable = False
+    ```
+
+2. 本機能がOFFになっていることを確認したあとに、以下のコマンドを実行
+
+    ```bash
+    ckan feedback reset-solr-fields [options]
+    ```
+    コマンドの詳細は以下のドキュメントを参照してください。
+
+    [feedback_command](./feedback_command.md)
+
+3. 実行後、インデックスクリアコマンドを実行
+
+    ```bash
+    ckan search-index clear
+    ```
+
+4. 再インデックスコマンドを実行
+
+    ```bash
+    ckan search-index rebuild
+    ```
 
 > [!IMPORTANT]
 > `ckan`コマンドは、`ckan.ini`がある場所で実行するか、`-c`で`ckan.ini`の指定が必要です。
