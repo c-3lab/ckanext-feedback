@@ -2055,6 +2055,79 @@ class TestResourceController:
         assert resp.mimetype == 'text/plain'
         assert resp == mock_resp
 
+    @patch('ckanext.feedback.controllers.resource.log')
+    @patch('ckanext.feedback.controllers.resource.comment_service')
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch('ckanext.feedback.controllers.resource.Response')
+    @patch('ckanext.feedback.controllers.resource.set_like_status_cookie')
+    @patch(
+        'ckanext.feedback.controllers.resource.likes_service.'
+        'increment_resource_like_count_monthly'
+    )
+    @patch(
+        'ckanext.feedback.controllers.resource.likes_service.'
+        'increment_resource_like_count'
+    )
+    def test_like_toggle_update_index_exception(
+        self,
+        mock_increment,
+        mock_increment_monthly,
+        mock_set_like_status_cookie,
+        mock_response,
+        mock_get_json,
+        mock_comment_service,
+        mock_log,
+        dataset,
+        resource,
+    ):
+        """Test like_toggle() when exception occurs in search index update"""
+        mock_get_json.return_value = {'likeStatus': True}
+
+        mock_resp = Mock()
+        mock_resp.data = b"OK"
+        mock_resp.status_code = 200
+        mock_resp.mimetype = 'text/plain'
+        mock_response.return_value = mock_resp
+
+        mock_set_like_status_cookie.return_value = mock_resp
+
+        # Make comment_service.get_resource raise exception
+        # to trigger like_toggle's except block
+        mock_comment_service.get_resource.side_effect = Exception('Resource error')
+
+        resp = ResourceController.like_toggle(dataset['name'], resource['id'])
+
+        mock_increment.assert_called_once_with(resource['id'])
+        mock_increment_monthly.assert_called_once_with(resource['id'])
+        # This should trigger the except block in like_toggle (lines 911-912)
+        mock_log.warning.assert_called_once_with(
+            "Failed to update search index after like toggle: Resource error"
+        )
+        assert resp.data.decode() == "OK"
+        assert resp.status_code == 200
+        assert resp.mimetype == 'text/plain'
+
+
+@pytest.mark.usefixtures('with_request_context')
+@pytest.mark.db_test
+class TestUpdatePackageSearchIndex:
+    @patch('ckanext.feedback.controllers.resource.log')
+    @patch('ckan.lib.search.rebuild')
+    def test_update_package_search_index_exception(self, mock_rebuild, mock_log):
+        """Test _update_package_search_index exception handling"""
+        from ckanext.feedback.controllers.resource import _update_package_search_index
+
+        package_id = 'test-package-id'
+        mock_rebuild.side_effect = Exception('Solr connection error')
+
+        _update_package_search_index(package_id)
+
+        mock_rebuild.assert_called_once_with(package_id)
+        mock_log.warning.assert_called_once_with(
+            f"Failed to update search index for package {package_id}: "
+            f"Solr connection error"
+        )
+
 
 @pytest.mark.usefixtures('with_request_context')
 @pytest.mark.db_test
