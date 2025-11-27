@@ -11,52 +11,47 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadsLabel: configElement.dataset.downloadsLabel || 'Downloads'
     };
     
+    const sortSelect = document.querySelector('select[name="sort"]');
     
-    function addSortOptions() {
-        const sortSelect = document.querySelector('select[name="sort"]');
-        
-        if (!sortSelect) {
-            return;
-        }
-        
-        
-        if (feedbackConfig.likesEnabled) {
-            const hasLikesOption = Array.from(sortSelect.options).some(
-                opt => opt.value === 'likes_total_i desc, metadata_modified desc'
-            );
-            if (!hasLikesOption) {
-                const likesOption = document.createElement('option');
-                likesOption.value = 'likes_total_i desc, metadata_modified desc';
-                likesOption.textContent = feedbackConfig.likesLabel;
-                sortSelect.appendChild(likesOption);
-            }
-        }
-        
-        if (feedbackConfig.downloadsEnabled) {
-            const hasDownloadsOption = Array.from(sortSelect.options).some(
-                opt => opt.value === 'downloads_total_i desc, metadata_modified desc'
-            );
-            if (!hasDownloadsOption) {
-                const downloadsOption = document.createElement('option');
-                downloadsOption.value = 'downloads_total_i desc, metadata_modified desc';
-                downloadsOption.textContent = feedbackConfig.downloadsLabel;
-                sortSelect.appendChild(downloadsOption);
-            }
-        }
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentSort = urlParams.get('sort');
-        if (currentSort) {
-            sortSelect.value = currentSort;
-        }
-
-        if (!sortSelect.dataset.feedbackListenerAdded) {
-            sortSelect.addEventListener('change', function() {
-                this.form.submit();
-            });
-            sortSelect.dataset.feedbackListenerAdded = 'true';
+    if (!sortSelect) {
+        return;
+    }
+    
+    
+    if (feedbackConfig.likesEnabled) {
+        const hasLikesOption = Array.from(sortSelect.options).some(
+            opt => opt.value === 'likes_total_i desc, metadata_modified desc'
+        );
+        if (!hasLikesOption) {
+            const likesOption = document.createElement('option');
+            likesOption.value = 'likes_total_i desc, metadata_modified desc';
+            likesOption.textContent = feedbackConfig.likesLabel;
+            sortSelect.appendChild(likesOption);
         }
     }
     
-    addSortOptions(); 
+    if (feedbackConfig.downloadsEnabled) {
+        const hasDownloadsOption = Array.from(sortSelect.options).some(
+            opt => opt.value === 'downloads_total_i desc, metadata_modified desc'
+        );
+        if (!hasDownloadsOption) {
+            const downloadsOption = document.createElement('option');
+            downloadsOption.value = 'downloads_total_i desc, metadata_modified desc';
+            downloadsOption.textContent = feedbackConfig.downloadsLabel;
+            sortSelect.appendChild(downloadsOption);
+        }
+    }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSort = urlParams.get('sort');
+    if (currentSort) {
+        sortSelect.value = currentSort;
+    }
+
+    if (!sortSelect.dataset.feedbackListenerAdded) {
+        sortSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+        sortSelect.dataset.feedbackListenerAdded = 'true';
+    }
 });
