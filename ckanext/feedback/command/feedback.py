@@ -321,13 +321,28 @@ def reset_solr_fields(yes):
         if deleted_count > 0:
             click.secho('✓ Fields deleted successfully!', fg='green', bold=True)
             click.echo()
-            click.secho('IMPORTANT:', fg='red', bold=True)
+            click.secho('=' * 70, fg='red', bold=True)
+            click.secho('⚠️  IMPORTANT ⚠️', fg='red', bold=True)
+            click.secho('=' * 70, fg='red', bold=True)
+            click.echo()
             click.secho(
-                '  Set custom_sort.enable to false in feedback_config.json', fg='yellow'
+                '  If you do NOT want downloads_total_i and likes_total_i '
+                'to be automatically recreated,',
+                fg='yellow',
+                bold=True,
             )
             click.secho(
-                '  to prevent automatic recreation on next CKAN command.', fg='yellow'
+                '  set custom_sort.enable to false in feedback_config.json',
+                fg='yellow',
+                bold=True,
             )
+            click.secho(
+                '  before running any CKAN commands that trigger reindexing.',
+                fg='yellow',
+                bold=True,
+            )
+            click.echo()
+            click.secho('=' * 70, fg='red', bold=True)
             click.echo()
             solr_url = get_solr_url()
             verify_cmd = (
