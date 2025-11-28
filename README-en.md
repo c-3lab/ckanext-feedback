@@ -87,9 +87,11 @@ Below are the steps to apply this extension to an existing CKAN environment.
 ### When updating the extension
 
 From the steps above, perform the following:
-* 1. Install ckanext-feedback in your CKAN environment
-* 4. Create the necessary tables for the feedback functionality
-* 5. Run the Solr reindexing command
+
+1. Install ckanext-feedback in your CKAN environment
+4. Create the necessary tables for the feedback functionality
+5. Run the Solr reindexing command
+
 ## Structure
 
 ### Three modules that make up this extension
