@@ -1,6 +1,6 @@
 # dataset一覧画面のソートオプションの追加 
 
-detaset一覧画面のソートオプションにいいね数とダウンロード数を追加します。
+dataset一覧画面のソートオプションにいいね数とダウンロード数を追加します。
 
 ![dataset ソート機能 いいね数 イメージ図](../assets/dataset_sort_30.jpg)
 
@@ -56,7 +56,33 @@ ckan -c /path/to/ckan.ini search-index check
 
 ### 本機能をOFFにする場合
 
-上記の手順で適応した後、本機能をOFFにしたい場合、必ず以下の手順でOFFにしてください。
+設定ファイル`feedback_config.json`で本機能をOFFにしてください。
+
+```bash
+"custom_sort": {
+    "enable": false
+}
+```
+
+または、`ckan.ini`で設定している場合
+
+```bash
+ckan.feedback.custom_sort.enable = False
+```
+
+OFFにした場合、dataset一覧画面のソートオプションからいいね数とダウンロード数が削除されます。
+
+>[!IMPORTANT]
+>上記の手順でOFFにした場合、画面のソートオプションからは削除されますが、
+>URLに直接`?sort=likes_total_i desc`や`?sort=downloads_total_i desc`というパラメータを入力すると、
+>ソート機能が動作してしまいます。
+>
+>これを防ぎ、ソート機能を完全に無効化したい場合は、以下の「ソート機能の完全な切り戻し手順」を実施してください。
+>ただし、データセット数によっては時間がかかる可能性があるので注意してください。
+
+### ソート機能の完全な切り戻し手順
+
+本機能を有効化した後に完全に切り戻したい場合（URLパラメータからのアクセスも含めて無効化したい場合）、以下の手順を実施してください。この手順では、Solrから該当フィールド(`downloads_total_i`、`likes_total_i`)を削除し、完全にソート機能を無効化します。
 
 1. 設定ファイル`feedback_config.json`で本機能をOFF
 
@@ -65,7 +91,9 @@ ckan -c /path/to/ckan.ini search-index check
         "enable": false
     }
     ```
+
     または、`ckan.ini`で設定している場合
+
     ```bash
     ckan.feedback.custom_sort.enable = False
     ```
