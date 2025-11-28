@@ -78,6 +78,12 @@ CKANの環境に本Extensionを適用する手順を示します。
 >
 > ソート機能の詳細は[dataset一覧画面のソートオプションの追加](./docs/ja/dataset_sort.md)を参照してください。
 
+>[!TIP]
+> 大量のデータセットがある場合は、`search-index rebuild-fast` コマンドで高速に処理できます。
+> 
+> 実行する場合は、下記のCKAN公式サイトを**必ず**参照してから実行してください。
+> - [Command Line Interface (CLI)](https://docs.ckan.org/en/latest/maintaining/cli.html)
+
 ### アップデートを行う場合
 
 上記手順の

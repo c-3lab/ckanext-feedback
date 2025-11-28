@@ -78,6 +78,12 @@ Below are the steps to apply this extension to an existing CKAN environment.
 >
 > For details on the sort feature, see [Adding Sort Options to the Dataset List Screen](./docs/ja/dataset_sort.md).
 
+>[!TIP]
+> For large numbers of datasets, you can use the `search-index rebuild-fast` command for faster processing.
+> 
+> Before using this command, **please** refer to the official CKAN documentation:
+> - [Command Line Interface (CLI)](https://docs.ckan.org/en/latest/maintaining/cli.html)
+
 ### When updating the extension
 
 From the steps above, perform the following:
@@ -102,6 +108,9 @@ From the steps above, perform the following:
 
 * The actions that can be performed vary depending on whether the user is logged in and on the user's privileges (e.g., admin).
   * For details on permissions, see the [Detailed Documentation on Administrator Privileges](./docs/ja/authority.md).
+
+* For detailed information on rebuilding the search index.
+  * For the differences between `rebuild` and `rebuild-fast`, see [Search Index Rebuild Guide](./docs/ja/search_index_rebuild.md).
 
 ## For Developers
 
