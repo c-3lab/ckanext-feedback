@@ -64,18 +64,26 @@ Below are the steps to apply this extension to an existing CKAN environment.
 
 5. Run the Solr reindexing command
 
-    * Execute the following command from the directory where your `ckan.ini` file is located:
-
     ```bash
     ckan -c /path/to/ckan.ini search-index rebuild
     ```
 
+    **Please note that this may take time depending on the number of datasets.**
+
+>[!NOTE]
+> The above command needs to be executed in the following cases:
+> - During initial installation
+> - When enabling the sort feature
+> - After updates
+>
+> For details on the sort feature, see [Adding Sort Options to the Dataset List Screen](./docs/ja/dataset_sort.md).
+
 ### When updating the extension
 
 From the steps above, perform the following:
-* 1.Install ckanext-feedback in your CKAN environme
-* 2.Create the necessary tables for the feedback functionality
-* 5.Run the Solr reindexing command
+* 1. Install ckanext-feedback in your CKAN environment
+* 4. Create the necessary tables for the feedback functionality
+* 5. Run the Solr reindexing command
 ## Structure
 
 ### Three modules that make up this extension
