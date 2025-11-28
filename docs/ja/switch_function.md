@@ -24,6 +24,11 @@
 - **[like](./likes.md)** - リソースにいいねを行うモジュール  
   **デフォルト**: 🟢**ON**
 
+- **[custom_sort](./dataset_sort.md)** - カスタムソートモジュール  
+  **デフォルト**: 🟢**ON**
+> [!IMPORTANT]
+> カスタムソートモジュールは、組織ごとのON/OFFを切り替えることはできません。
+
 - **[moral-keeper-ai](./moral_keeper_ai.md)** - AI機能モジュール  
   **デフォルト**: 🔴**OFF**
 #### Utilization モジュールのサブ機能
@@ -211,15 +216,10 @@ ckan.feedback.resources.comment.image_attachment.enable = True
 ckan.feedback.downloads.enable = True
 ckan.feedback.downloads.modal.enable = True
 ckan.feedback.likes.enable = True
+ckan.feedback.custom_sort.enable = True
 ckan.feedback.moral_keeper_ai.enable = True
 ・・・
 ```
-
-| No. | 組織名 | utilization | utilization_comment_image_attachment | utilization_comment_reply_open | resource | repeated_post_limit | rating | resource_comment_image_attachment | resource_comment_reply_open | download | modal | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
 
 
 ### `feedback_config.json`でON/OFFの設定を行う
@@ -268,6 +268,9 @@ ckan.feedback.moral_keeper_ai.enable = True
         "likes": {
             "enable": true
         },
+        "custom_sort": {
+                "enable": true
+        },
         "moral_keeper_ai": {
             "enable": true
         }
@@ -276,11 +279,39 @@ ckan.feedback.moral_keeper_ai.enable = True
 ```
 
 
-| No. | 組織名 | utilization | utilization_comment_image_attachment | utilization_comment_reply_open | resource | repeated_post_limit | rating | resource_comment_image_attachment | resource_comment_reply_open | download | modal | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
-| 3 | org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |🟢ON | 🟢ON |
+#### 主要モジュール
+
+| 組織名 | utilization | resource | download | like | custom_sort | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+
+#### Utilization モジュールのサブ機能
+
+| 組織名 | image_attachment | reply_open |
+| :-: | :-: | :-: |
+| org_name1 | 🟢ON | 🟢ON |
+| org_name2 | 🟢ON | 🟢ON |
+| org_name3 | 🟢ON | 🟢ON |
+
+#### Resource モジュールのサブ機能
+
+| 組織名 | repeated_post_limit | rating | image_attachment | reply_open |
+| :-: | :-: | :-: | :-: | :-: |
+| org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| org_name2 | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| org_name3 | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+
+#### Download モジュールのサブ機能
+
+| 組織名 | modal |
+| :-: | :-: |
+| org_name1 | 🟢ON |
+| org_name2 | 🟢ON |
+| org_name3 | 🟢ON |
+
+
 
 
 #### 例2: 組織毎にモジュールや機能のON/OFFを設定する場合
@@ -329,6 +360,9 @@ ckan.feedback.moral_keeper_ai.enable = True
                 "enable": true,
                 "disable_orgs": ["org_name2", "org_name3"]
             },
+            "custom_sort": {
+                "enable": true
+            },
             "moral_keeper_ai": {
                 "enable": true,
                 "enable_orgs": ["org_name1"]
@@ -338,12 +372,38 @@ ckan.feedback.moral_keeper_ai.enable = True
 }
 ```
 
+#### 主要モジュール
 
-| No. | 組織名 | utilization | utilization_comment_image_attachment | utilization_comment_reply_open | resource | repeated_post_limit | rating | resource_comment_image_attachment | resource_comment_reply_open | download | modal | like | moral-keeper-ai |
-| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| 1 | org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
-| 2 | org_name2 | 🟢ON | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
-| 3 | org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+| 組織名 | utilization | resource | download | like | custom_sort | moral-keeper-ai |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| org_name2 | 🟢ON | 🔴OFF | 🔴OFF | 🔴OFF | 🟢ON | 🔴OFF |
+| org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF | 🟢ON | 🔴OFF |
+
+#### Utilization モジュールのサブ機能
+
+| 組織名 | image_attachment | reply_open |
+| :-: | :-: | :-: |
+| org_name1 | 🟢ON | 🟢ON |
+| org_name2 | 🟢ON | 🔴OFF |
+| org_name3 | 🔴OFF | 🔴OFF |
+
+#### Resource モジュールのサブ機能
+
+| 組織名 | repeated_post_limit | rating | image_attachment | reply_open |
+| :-: | :-: | :-: | :-: | :-: |
+| org_name1 | 🟢ON | 🟢ON | 🟢ON | 🟢ON |
+| org_name2 | 🔴OFF | 🟢ON | 🔴OFF | 🔴OFF |
+| org_name3 | 🔴OFF | 🔴OFF | 🔴OFF | 🔴OFF |
+
+#### Download モジュールのサブ機能
+
+| 組織名 | modal |
+| :-: | :-: |
+| org_name1 | 🟢ON |
+| org_name2 | 🔴OFF |
+| org_name3 | 🔴OFF |
+
 
 
 ## 外部プラグインとの連携

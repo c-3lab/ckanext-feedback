@@ -57,7 +57,41 @@ CKANの環境に本Extensionを適用する手順を示します。
     ```bash
     ckan db upgrade -p feedback
     ```
-    * `ckan.ini` が見つからないなどのエラーが出る場合、 `ckan -c <ckan.iniのパス> db upgrade -p feedback` としてください。
+    * `ckan.ini` が見つからないなどのエラーが出る場合、 `ckan -c /path/to/ckan.ini db upgrade -p feedback` としてください。
+
+> [!IMPORTANT]
+> `ckan`コマンドは、`ckan.ini`がある場所で実行するか、`-c`で`ckan.ini`の指定が必要です。
+
+5. solrの再インデックスコマンドを実行
+
+    ```bash
+    ckan -c /path/to/ckan.ini search-index rebuild
+    ```
+
+    **データセット数によっては時間がかかる可能性があるので注意してください。**
+
+>[!NOTE]
+> 上記のコマンドは以下の場合に実行が必要です：
+> - 初回インストール時
+> - ソート機能を有効にした時
+> - アップデート後
+>
+> ソート機能の詳細は[dataset一覧画面のソートオプションの追加](./docs/ja/dataset_sort.md)を参照してください。
+
+>[!TIP]
+> 大量のデータセットがある場合は、`search-index rebuild-fast` コマンドで高速に処理できます。
+> 
+> 実行する場合は、下記のCKAN公式サイトを**必ず**参照してから実行してください。
+> - [Command Line Interface (CLI)](https://docs.ckan.org/en/latest/maintaining/cli.html)
+
+### アップデートを行う場合
+
+上記手順の以下を実行：
+
+1. CKAN環境にckanext-feedbackをインストールする
+4. フィードバック機能に必要なテーブルを作成する 
+5. solrの再インデックスコマンドを実行
+
 
 ## 構成
 

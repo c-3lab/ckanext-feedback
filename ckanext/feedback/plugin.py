@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, Optional
 
 import ckan.model as model
+import requests
 from ckan import plugins
 from ckan.common import _, config
 from ckan.lib.plugins import DefaultTranslation
@@ -52,6 +53,154 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         # load the settings from feedback config json
         self.fb_config = FeedbackConfig()
         self.fb_config.load_feedback_config()
+
+        # Setup Solr schema using Schema API (PR #4536 pattern)
+        self._setup_solr_schema()
+
+    def _get_solr_url(self):
+        """
+        Get Solr URL from CKAN config.
+
+        Checks multiple possible config keys in order:
+        1. ckan.solr_url (CKAN standard)
+        2. solr_url (alternative)
+        3. Default fallback
+        """
+        # Try CKAN standard config key first
+        solr_url = config.get('ckan.solr_url')
+        if solr_url:
+            return solr_url
+
+        # Try alternative config key
+        solr_url = config.get('solr_url')
+        if solr_url:
+            return solr_url
+
+        # Fallback to default (for development environments)
+        return 'http://solr:8983/solr/ckan'
+
+    def _field_exists_in_solr(self, field_name: str) -> bool:
+        """
+        Check if a field exists in Solr schema.
+
+        Args:
+            field_name: Name of the field to check
+
+        Returns:
+            bool: True if field exists, False otherwise
+        """
+        try:
+            solr_url = self._get_solr_url()
+            schema_api = f"{solr_url}/schema"
+            response = requests.get(f"{schema_api}/fields/{field_name}", timeout=5)
+            return response.status_code == 200
+        except Exception:
+            # If check fails, assume field doesn't exist to be safe
+            return False
+
+    def _add_solr_field(self, schema_api: str, field_name: str, existing_fields: list):
+        """
+        Add a Solr field to the schema.
+
+        Args:
+            schema_api: Solr schema API URL
+            field_name: Name of the field to add
+            existing_fields: List of existing field names
+        """
+        if field_name in existing_fields:
+            log.debug(f"Field '{field_name}' already exists")
+            return
+
+        log.info(f"Adding '{field_name}' field to Solr schema")
+        try:
+            response = requests.post(
+                schema_api,
+                json={
+                    "add-field": {
+                        "name": field_name,
+                        "type": "pint",
+                        "indexed": True,
+                        "stored": False,
+                        "docValues": True,
+                    }
+                },
+                timeout=10,
+            )
+
+            if response.status_code in [200, 201]:
+                log.info(f"Successfully added '{field_name}' field")
+            else:
+                log.error(
+                    f"Failed to add '{field_name}' field: "
+                    f"{response.status_code} - {response.text}"
+                )
+        except requests.exceptions.RequestException as e:
+            log.error(f"Error adding '{field_name}' field: {e}")
+
+    def _setup_solr_schema(self):
+        """
+        Setup Solr schema fields using Schema API.
+        This automatically adds required integer fields for sorting by
+        downloads and likes without manual schema.xml modification.
+        """
+        try:
+            cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+            # Check if custom sort feature is enabled
+            if not cfg.custom_sort.is_enable():
+                log.debug("Custom sort feature is disabled in feedback_config.json")
+                return
+
+            # Get Solr URL from config
+            solr_url = self._get_solr_url()
+            schema_api = f"{solr_url}/schema"
+
+            log.info(f"Setting up Solr schema via API: {schema_api}")
+
+            # Check if Schema API is available
+            try:
+                response = requests.get(f"{schema_api}/fields", timeout=5)
+                if response.status_code != 200:
+                    log.warning(
+                        f"Schema API returned status {response.status_code}. "
+                        "Manual schema configuration may be required."
+                    )
+                    return
+            except requests.exceptions.RequestException as e:
+                log.warning(
+                    f"Schema API not available: {e}\n"
+                    "Manual schema configuration required. Add "
+                    "the following to managed-schema:\n"
+                    "  <field name='downloads_total_i' type='pint' "
+                    "indexed='true' stored='false' docValues='true'/>\n"
+                    "  <field name='likes_total_i' type='pint' "
+                    "indexed='true' stored='false' docValues='true'/>"
+                )
+                return
+
+            # Get existing fields (for idempotency check)
+            existing_fields = [f['name'] for f in response.json().get('fields', [])]
+
+            # Add downloads_total_i field if downloads feature is enabled
+            if cfg.download.is_enable():
+                self._add_solr_field(schema_api, 'downloads_total_i', existing_fields)
+
+            # Add likes_total_i field if likes feature is enabled
+            if cfg.like.is_enable():
+                self._add_solr_field(schema_api, 'likes_total_i', existing_fields)
+
+            log.info("Solr schema setup completed")
+
+        except Exception as e:
+            log.error(f"Unexpected error in Solr schema setup: {e}", exc_info=True)
+            log.warning(
+                "If you continue to see this error, "
+                "please manually add fields to managed-schema:\n"
+                "  <field name='downloads_total_i' type='pint' "
+                "indexed='true' stored='false' docValues='true'/>\n"
+                "  <field name='likes_total_i' type='pint' "
+                "indexed='true' stored='false' docValues='true'/>"
+            )
 
     # IClick
 
@@ -148,6 +297,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
             'is_resource_reply_open': cfg.resource_comment.reply_open.is_enable,
             'is_utilization_reply_open': cfg.utilization_comment.reply_open.is_enable,
+            'is_enabled_custom_sort': cfg.custom_sort.is_enable,
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
@@ -155,9 +305,76 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IPackageController
 
+    def before_dataset_index(self, pkg_dict):
+        """
+        Hook called before Solr indexing.
+        Adds download and like counts as integer fields.
+
+        This hook is executed every time a dataset is indexed or re-indexed.
+        The fields added here will be stored in Solr using the schema
+        definitions created by _setup_solr_schema().
+
+        Organization-specific settings are considered when adding fields.
+        """
+        package_id = pkg_dict.get('id')
+
+        if not package_id:
+            return pkg_dict
+
+        cfg = getattr(self, 'fb_config', FeedbackConfig())
+
+        # Skip if custom sort feature is disabled
+        if not cfg.custom_sort.is_enable():
+            return pkg_dict
+
+        # Get organization ID from pkg_dict
+        # Note: owner_org may be None for datasets without an organization
+        owner_org = pkg_dict.get('owner_org')
+
+        # Check field existence once (performance optimization)
+        # This avoids multiple HTTP requests per dataset
+        downloads_field_exists = self._field_exists_in_solr('downloads_total_i')
+        likes_field_exists = self._field_exists_in_solr('likes_total_i')
+
+        # Add download count as an integer field
+        # Only add if downloads feature is enabled for this organization
+        if cfg.download.is_enable(owner_org):
+            # Only add field if it exists in Solr schema
+            if downloads_field_exists:
+                downloads = (
+                    download_summary_service.get_package_downloads(package_id) or 0
+                )
+                pkg_dict['downloads_total_i'] = int(downloads)
+                org_info = f" (org: {owner_org})" if owner_org else " (no org)"
+                log.debug(
+                    f"[SOLR INDEX] downloads_total_i={downloads} "
+                    f"for {package_id}{org_info}"
+                )
+
+        # Add number of likes as an integer field
+        # Only add if likes feature is enabled for this organization
+        if cfg.like.is_enable(owner_org):
+            # Only add field if it exists in Solr schema
+            if likes_field_exists:
+                likes = resource_likes_service.get_package_like_count(package_id) or 0
+                pkg_dict['likes_total_i'] = int(likes)
+                org_info = f" (org: {owner_org})" if owner_org else " (no org)"
+                log.debug(
+                    f"[SOLR INDEX] likes_total_i={likes} " f"for {package_id}{org_info}"
+                )
+
+        return pkg_dict
+
     def before_dataset_view(self, pkg_dict: Dict[str, Any]) -> Dict[str, Any]:
         package_id = pkg_dict['id']
-        owner_org = model.Package.get(package_id).owner_org
+        package = model.Package.get(package_id)
+
+        # Skip if package does not exist or has been removed
+        if package is None:
+            log.warning(f"Package {package_id} not found in before_dataset_view")
+            return pkg_dict
+
+        owner_org = package.owner_org
         cfg = getattr(self, 'fb_config', FeedbackConfig())
 
         if not pkg_dict['extras']:
@@ -262,6 +479,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             )
 
         return resource_dict
+
+    # IActions
 
     def get_actions(self):
         return {

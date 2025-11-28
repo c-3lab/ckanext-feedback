@@ -2,6 +2,8 @@ import os
 import sys
 
 import click
+import requests
+from ckan.common import config
 from ckan.model import meta
 from ckan.plugins import toolkit
 
@@ -28,6 +30,38 @@ from ckanext.feedback.models.utilization import (
     UtilizationCommentReply,
     UtilizationSummary,
 )
+
+# Solr configuration constants
+FEEDBACK_SOLR_FIELDS = ['downloads_total_i', 'likes_total_i']
+
+
+def get_solr_url():
+    """
+    Get Solr URL from CKAN config.
+
+    Checks multiple possible config keys in order:
+    1. ckan.solr_url (CKAN standard)
+    2. solr_url (alternative)
+    3. Default fallback
+    """
+    # Try CKAN standard config key first
+    solr_url = config.get('ckan.solr_url')
+    if solr_url:
+        return solr_url
+
+    # Try alternative config key
+    solr_url = config.get('solr_url')
+    if solr_url:
+        return solr_url
+
+    # Fallback to default (for development environments)
+    return 'http://solr:8983/solr/ckan'
+
+
+def get_solr_schema_api():
+    """Get Solr schema API URL from config."""
+    solr_url = get_solr_url()
+    return f"{solr_url}/schema"
 
 
 @click.group()
@@ -229,4 +263,99 @@ def moral_check_log(separation, output):
         click.secho(f'Exported moral check log to {output}', fg='green')
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
+@feedback.command(
+    name='reset-solr-fields',
+    short_help='Delete feedback Solr fields (requires reindex after).',
+)
+@click.option(
+    '-y',
+    '--yes',
+    is_flag=True,
+    help='Skip confirmation prompt.',
+)
+def reset_solr_fields(yes):
+    try:
+        schema_api = get_solr_schema_api()
+
+        if not yes:
+            click.echo()
+            click.secho(
+                'WARNING: This will delete Solr fields:', fg='yellow', bold=True
+            )
+            for field_name in FEEDBACK_SOLR_FIELDS:
+                click.echo(f'  - {field_name}')
+            click.echo()
+            if not click.confirm('Do you want to continue?'):
+                click.secho('Operation cancelled.', fg='blue')
+                return
+
+        click.echo()
+        deleted_count = 0
+        error_count = 0
+
+        for field_name in FEEDBACK_SOLR_FIELDS:
+            try:
+                response = requests.post(
+                    schema_api, json={"delete-field": {"name": field_name}}, timeout=10
+                )
+
+                if response.status_code in [200, 201]:
+                    click.secho(f'  ✓ Deleted: {field_name}', fg='green')
+                    deleted_count += 1
+                elif response.status_code == 404:
+                    click.secho(f'  - Not found: {field_name}', fg='yellow')
+                else:
+                    click.secho(
+                        f'  ✗ Failed: {field_name} (HTTP {response.status_code})',
+                        fg='red',
+                    )
+                    error_count += 1
+            except Exception as e:
+                click.secho(f'  ✗ Error: {field_name} - {e}', fg='red')
+                error_count += 1
+
+        click.echo()
+        if deleted_count > 0:
+            click.secho('✓ Fields deleted successfully!', fg='green', bold=True)
+            click.echo()
+            click.secho('=' * 70, fg='red', bold=True)
+            click.secho('⚠️  IMPORTANT ⚠️', fg='red', bold=True)
+            click.secho('=' * 70, fg='red', bold=True)
+            click.echo()
+            click.secho(
+                '  If you do NOT want downloads_total_i and likes_total_i '
+                'to be automatically recreated,',
+                fg='yellow',
+                bold=True,
+            )
+            click.secho(
+                '  set custom_sort.enable to false in feedback_config.json',
+                fg='yellow',
+                bold=True,
+            )
+            click.secho(
+                '  before running any CKAN commands that trigger reindexing.',
+                fg='yellow',
+                bold=True,
+            )
+            click.echo()
+            click.secho('=' * 70, fg='red', bold=True)
+            click.echo()
+            solr_url = get_solr_url()
+            verify_cmd = (
+                f'curl {solr_url}/schema/fields | '
+                f'grep -E "(downloads_total_i|likes_total_i)"'
+            )
+            click.secho(f'Verify: {verify_cmd}', fg='cyan')
+        elif error_count > 0:
+            click.secho('Some errors occurred.', fg='red')
+            sys.exit(1)
+        else:
+            click.secho('Fields were already deleted or never existed.', fg='yellow')
+
+    except Exception as e:
+        click.secho(f'Error: {e}', fg='red', err=True)
         raise click.Abort()

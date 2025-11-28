@@ -39,6 +39,9 @@
         "likes": {
             "enable": true
         },
+        "custom_sort": {
+            "enable": true
+        },
         "moral_keeper_ai": {
             "enable": true
         }

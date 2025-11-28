@@ -51,6 +51,20 @@ log = logging.getLogger(__name__)
 _session = session
 
 
+def _update_package_search_index(package_id):
+    """
+    Update Solr index for a specific package.
+    This is needed when download/like counts change without package metadata changing.
+    """
+    try:
+        from ckan.lib.search import rebuild
+
+        rebuild(package_id)
+        log.debug(f"Updated search index for package {package_id}")
+    except Exception as e:
+        log.warning(f"Failed to update search index for package {package_id}: {e}")
+
+
 class FormFields:
     """Form field name constants"""
 
@@ -889,6 +903,13 @@ class ResourceController:
             return Response(
                 'Error', status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype='text/plain'
             )
+
+        # Update Solr index to reflect new like count
+        try:
+            resource = comment_service.get_resource(resource_id)
+            _update_package_search_index(resource.Resource.package_id)
+        except Exception as e:
+            log.warning(f"Failed to update search index after like toggle: {e}")
 
         resp = Response('OK', status=HTTPStatus.OK, mimetype='text/plain')
         return set_like_status_cookie(resp, resource_id, like_status)

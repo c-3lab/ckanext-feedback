@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-11-10 16:36+0900\n"
+"POT-Creation-Date: 2025-11-27 16:39+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -19,8 +19,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: ckanext/feedback/plugin.py:171 ckanext/feedback/plugin.py:226
-#: ckanext/feedback/plugin.py:228
+#: ckanext/feedback/plugin.py:388 ckanext/feedback/plugin.py:443
+#: ckanext/feedback/plugin.py:445
+#: ckanext/feedback/templates/package/search.html:8
 #: ckanext/feedback/templates/package/snippets/resource_item.html:31
 #: ckanext/feedback/templates/snippets/package_item.html:30
 #: ckanext/feedback/tests/test_plugin.py:187
@@ -29,8 +30,8 @@ msgstr ""
 msgid "Downloads"
 msgstr "ダウンロード数"
 
-#: ckanext/feedback/plugin.py:177 ckanext/feedback/plugin.py:233
-#: ckanext/feedback/plugin.py:235
+#: ckanext/feedback/plugin.py:394 ckanext/feedback/plugin.py:450
+#: ckanext/feedback/plugin.py:452
 #: ckanext/feedback/templates/package/snippets/resource_item.html:40
 #: ckanext/feedback/templates/snippets/package_item.html:40
 #: ckanext/feedback/tests/test_plugin.py:188
@@ -39,8 +40,8 @@ msgstr "ダウンロード数"
 msgid "Utilizations"
 msgstr "利活用数"
 
-#: ckanext/feedback/plugin.py:183 ckanext/feedback/plugin.py:238
-#: ckanext/feedback/plugin.py:240
+#: ckanext/feedback/plugin.py:400 ckanext/feedback/plugin.py:455
+#: ckanext/feedback/plugin.py:457
 #: ckanext/feedback/templates/package/snippets/resource_item.html:67
 #: ckanext/feedback/templates/snippets/package_item.html:72
 #: ckanext/feedback/templates/utilization/details.html:58
@@ -50,8 +51,8 @@ msgstr "利活用数"
 msgid "Issue Resolutions"
 msgstr "課題解決数"
 
-#: ckanext/feedback/plugin.py:193 ckanext/feedback/plugin.py:245
-#: ckanext/feedback/plugin.py:247
+#: ckanext/feedback/plugin.py:410 ckanext/feedback/plugin.py:462
+#: ckanext/feedback/plugin.py:464
 #: ckanext/feedback/templates/package/snippets/resource_item.html:49
 #: ckanext/feedback/templates/resource/comment.html:35
 #: ckanext/feedback/templates/snippets/package_item.html:51
@@ -63,8 +64,8 @@ msgstr "課題解決数"
 msgid "Comments"
 msgstr "コメント数"
 
-#: ckanext/feedback/plugin.py:198 ckanext/feedback/plugin.py:251
-#: ckanext/feedback/plugin.py:253
+#: ckanext/feedback/plugin.py:415 ckanext/feedback/plugin.py:468
+#: ckanext/feedback/plugin.py:470
 #: ckanext/feedback/templates/package/snippets/resource_item.html:57
 #: ckanext/feedback/templates/resource/comment.html:46
 #: ckanext/feedback/templates/snippets/package_item.html:62
@@ -73,8 +74,8 @@ msgstr "コメント数"
 msgid "Rating"
 msgstr "評価"
 
-#: ckanext/feedback/plugin.py:206 ckanext/feedback/plugin.py:258
-#: ckanext/feedback/plugin.py:260
+#: ckanext/feedback/plugin.py:423 ckanext/feedback/plugin.py:475
+#: ckanext/feedback/plugin.py:477
 #: ckanext/feedback/templates/package/snippets/resource_item.html:22
 #: ckanext/feedback/templates/snippets/package_item.html:21
 #: ckanext/feedback/tests/test_plugin.py:191
@@ -173,17 +174,21 @@ msgstr "利活用方法"
 msgid "Utilization Comment"
 msgstr "利活用コメント"
 
+# | msgid "Resource Comment"
 #: ckanext/feedback/controllers/admin.py:165
 #: ckanext/feedback/templates/admin/approval_and_delete.html:90
 #: ckanext/feedback/templates/admin/approval_and_delete.html:190
+#, fuzzy
 msgid "Resource Comment Reply"
-msgstr "リソースコメントへの返信"
+msgstr "リソースコメント"
 
+# | msgid "Utilization Comment"
 #: ckanext/feedback/controllers/admin.py:166
 #: ckanext/feedback/templates/admin/approval_and_delete.html:118
 #: ckanext/feedback/templates/admin/approval_and_delete.html:217
+#, fuzzy
 msgid "Utilization Comment Reply"
-msgstr "利活用コメントへの返信"
+msgstr "利活用コメント"
 
 #: ckanext/feedback/controllers/admin.py:176
 #: ckanext/feedback/services/admin/feedbacks.py:272
@@ -214,7 +219,7 @@ msgstr "組織"
 msgid ""
 "Some replies were not approved because their parent comments are not "
 "approved."
-msgstr ""
+msgstr "一部の返信は、返信元コメントが承認されていないため承認されませんでした。"
 
 #: ckanext/feedback/controllers/admin.py:270
 msgid "item(s) were approved."
@@ -226,29 +231,29 @@ msgstr "項目を完全に削除しました。"
 
 #: ckanext/feedback/controllers/admin.py:333
 msgid "Failed to approve utilization comments. Please try again."
-msgstr ""
+msgstr "利活用コメントの承認に失敗しました。再度お試しください。"
 
+# | msgid "Bad Captcha. Please try again."
 #: ckanext/feedback/controllers/admin.py:357
 #, fuzzy
-#| msgid "Bad Captcha. Please try again."
 msgid "Failed to approve utilization. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:387
 msgid "Failed to approve resource comments. Please try again."
-msgstr ""
+msgstr "リソースのコメント承認に失敗しました。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:412
 msgid "Failed to delete utilization comments. Please try again."
-msgstr ""
+msgstr "利用用方法のコメントを削除できませんでした。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:435
 msgid "Failed to delete utilization. Please try again."
-msgstr ""
+msgstr "利活用方法の削除に失敗しました。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:464
 msgid "Failed to delete resource comments. Please try again."
-msgstr ""
+msgstr "リソースのコメントを削除できませんでした。もう一度お試しください。"
 
 #: ckanext/feedback/controllers/admin.py:480
 #: ckanext/feedback/controllers/admin.py:495
@@ -338,123 +343,122 @@ msgstr "フィードバック年次レポート"
 msgid "feedback_all_time_report"
 msgstr "フィードバック全期間レポート"
 
-#: ckanext/feedback/controllers/resource.py:234
-#: ckanext/feedback/controllers/resource.py:744
-#: ckanext/feedback/controllers/utilization.py:315
-#: ckanext/feedback/controllers/utilization.py:603
-#: ckanext/feedback/controllers/utilization.py:843
-#: ckanext/feedback/tests/controllers/test_resource.py:2974
+#: ckanext/feedback/controllers/resource.py:248
+#: ckanext/feedback/controllers/resource.py:758
+#: ckanext/feedback/controllers/utilization.py:319
+#: ckanext/feedback/controllers/utilization.py:607
+#: ckanext/feedback/controllers/utilization.py:847
+#: ckanext/feedback/tests/controllers/test_resource.py:3047
 msgid "Bad Captcha. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
-#: ckanext/feedback/controllers/resource.py:268
-#: ckanext/feedback/controllers/utilization.py:410
+#: ckanext/feedback/controllers/resource.py:282
+#: ckanext/feedback/controllers/utilization.py:414
 #: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:27
 #: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:33
-#: ckanext/feedback/tests/controllers/test_resource.py:3128
+#: ckanext/feedback/tests/controllers/test_resource.py:3201
 msgid "Request"
 msgstr "要望"
 
-#: ckanext/feedback/controllers/resource.py:269
-#: ckanext/feedback/controllers/utilization.py:411
+#: ckanext/feedback/controllers/resource.py:283
+#: ckanext/feedback/controllers/utilization.py:415
 #: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:28
 #: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:34
 msgid "Question"
 msgstr "質問"
 
-#: ckanext/feedback/controllers/resource.py:270
-#: ckanext/feedback/controllers/utilization.py:412
+#: ckanext/feedback/controllers/resource.py:284
+#: ckanext/feedback/controllers/utilization.py:416
 #: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:29
 #: ckanext/feedback/migration/feedback/versions/000_40bf9a900ef5_init.py:35
 msgid "Thank"
 msgstr "感謝"
 
-#: ckanext/feedback/controllers/resource.py:360
-#: ckanext/feedback/controllers/resource.py:369
-#: ckanext/feedback/tests/controllers/test_resource.py:3236
-#: ckanext/feedback/tests/controllers/test_resource.py:3255
+# | msgid "Bad Captcha. Please try again."
+#: ckanext/feedback/controllers/resource.py:374
+#: ckanext/feedback/controllers/resource.py:383
+#: ckanext/feedback/tests/controllers/test_resource.py:3309
+#: ckanext/feedback/tests/controllers/test_resource.py:3328
 #, fuzzy
-#| msgid "Bad Captcha. Please try again."
 msgid "Failed to create comment. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
-#: ckanext/feedback/controllers/resource.py:376
-#: ckanext/feedback/controllers/utilization.py:780
+#: ckanext/feedback/controllers/resource.py:390
+#: ckanext/feedback/controllers/utilization.py:784
 msgid ""
 "Your comment has been sent.<br>The comment will not be displayed until "
 "approved by an administrator."
 msgstr "コメント送信が完了しました。<br>管理者にコメントが承認されるまで表示されません。"
 
-#: ckanext/feedback/controllers/resource.py:491
-#: ckanext/feedback/controllers/resource.py:501
-#: ckanext/feedback/tests/controllers/test_resource.py:3447
-#: ckanext/feedback/tests/controllers/test_resource.py:3463
+# | msgid "Bad Captcha. Please try again."
+# | msgid "Failed to create comment. Please try again."
+#: ckanext/feedback/controllers/resource.py:505
+#: ckanext/feedback/controllers/resource.py:515
+#: ckanext/feedback/tests/controllers/test_resource.py:3520
+#: ckanext/feedback/tests/controllers/test_resource.py:3536
 #, fuzzy
-#| msgid "Bad Captcha. Please try again."
 msgid "Failed to create moral check log. Please try again."
 msgstr "認証に失敗しました。 もう一度お試しください。"
 
-#: ckanext/feedback/controllers/resource.py:678
+#: ckanext/feedback/controllers/resource.py:692
 msgid "Cannot approve reply before the parent comment is approved."
-msgstr ""
+msgstr "返信元のコメントが承認されるまで返信を承認できません。"
 
-#: ckanext/feedback/controllers/resource.py:737
-#: ckanext/feedback/controllers/utilization.py:836
-#, fuzzy
-#| msgid "Reply from the Administrator"
+#: ckanext/feedback/controllers/resource.py:751
+#: ckanext/feedback/controllers/utilization.py:840
 msgid "Reply is restricted to administrators."
-msgstr "管理者からの返信"
+msgstr "返信は管理者だけに制限されています。"
 
-#: ckanext/feedback/controllers/resource.py:911
-#: ckanext/feedback/controllers/resource.py:927
+#: ckanext/feedback/controllers/resource.py:932
+#: ckanext/feedback/controllers/resource.py:948
 msgid "Failed to change status due to invalid target."
-msgstr ""
+msgstr "対象が無効なため、ステータスの変更に失敗しました。"
 
-#: ckanext/feedback/controllers/utilization.py:643
+#: ckanext/feedback/controllers/utilization.py:647
 msgid ""
 "Your application is complete.<br>The utilization will not be displayed "
 "until approved by an administrator."
 msgstr "登録申請が完了しました。<br>管理者に申請が承認されるまで表示されません。"
 
-#: ckanext/feedback/controllers/utilization.py:667
-#: ckanext/feedback/controllers/utilization.py:719
+# | msgid "utilization_count"
+#: ckanext/feedback/controllers/utilization.py:671
+#: ckanext/feedback/controllers/utilization.py:723
 #: ckanext/feedback/tests/controllers/test_utilization.py:971
 #: ckanext/feedback/tests/controllers/test_utilization.py:1008
 #, fuzzy
-#| msgid "utilization_count"
 msgid "Utilization not found"
 msgstr "利活用数"
 
-#: ckanext/feedback/controllers/utilization.py:801
+# | msgid "utilization_count"
+#: ckanext/feedback/controllers/utilization.py:805
 #, fuzzy
-#| msgid "utilization_count"
 msgid "Utilization not found."
 msgstr "利活用数"
 
-#: ckanext/feedback/controllers/utilization.py:1078
+#: ckanext/feedback/controllers/utilization.py:1082
 msgid "Cannot approve reply because its parent comment is not approved."
-msgstr ""
+msgstr "返信元コメントが承認されていないため、返信を承認できません。"
 
-#: ckanext/feedback/controllers/utilization.py:1143
+#: ckanext/feedback/controllers/utilization.py:1147
 msgid "The utilization has been successfully updated."
 msgstr "利活用方法の更新に成功しました。"
 
-#: ckanext/feedback/controllers/utilization.py:1170
+#: ckanext/feedback/controllers/utilization.py:1174
 msgid "The utilization has been successfully deleted."
 msgstr "利活用方法の削除に成功しました。"
 
 #: ckanext/feedback/services/common/upload.py:56
 #: ckanext/feedback/services/common/upload.py:67
 msgid "Image Upload"
-msgstr ""
+msgstr "画像アップロード"
 
 #: ckanext/feedback/services/common/upload.py:57
 msgid "Invalid file extension. Allowed: png, jpg, jpeg, gif, webp"
-msgstr ""
+msgstr "無効なファイル拡張子です。許可されている形式：png、jpg、jpeg、gif、webp"
 
 #: ckanext/feedback/services/common/upload.py:67
 msgid "Invalid file type. Only image files are allowed."
-msgstr ""
+msgstr "無効なファイル形式です。画像ファイルのみ許可されています。"
 
 #: ckanext/feedback/templates/header.html:11
 msgid "Sysadmin settings"
@@ -783,6 +787,12 @@ msgstr "閉じる"
 msgid "URL:"
 msgstr "URL:"
 
+# | msgid "liked"
+#: ckanext/feedback/templates/package/search.html:7
+#, fuzzy
+msgid "Likes"
+msgstr "いいね"
+
 #: ckanext/feedback/templates/package/snippets/resource_item.html:79
 #: ckanext/feedback/templates/package/snippets/resource_item.html:85
 msgid "Explore"
@@ -836,7 +846,7 @@ msgstr "コメントを入力してください。"
 #: ckanext/feedback/templates/utilization/details.html:102
 #: ckanext/feedback/templates/utilization/details.html:359
 #: ckanext/feedback/templates/utilization/suggestion.html:26
-#: ckanext/feedback/tests/controllers/test_resource.py:2990
+#: ckanext/feedback/tests/controllers/test_resource.py:3063
 msgid "Please keep the comment length below 1000"
 msgstr "コメントは1000文字以下にしてください"
 
@@ -975,12 +985,12 @@ msgstr "管理者からの返信"
 #: ckanext/feedback/templates/utilization/details.html:263
 #: ckanext/feedback/templates/utilization/details.html:266
 msgid "Show replies"
-msgstr "その他の返信を表示する"
+msgstr "返信を表示"
 
 #: ckanext/feedback/templates/resource/comment.html:276
 #: ckanext/feedback/templates/utilization/details.html:264
 msgid "Hide replies"
-msgstr "折りたたむ"
+msgstr "返信を非表示にする"
 
 #: ckanext/feedback/templates/resource/comment.html:367
 msgid "Status None"
@@ -1015,7 +1025,7 @@ msgstr "返信を入力してください。"
 #: ckanext/feedback/templates/resource/comment.html:440
 #: ckanext/feedback/templates/utilization/details.html:364
 msgid "Image preview will appear here"
-msgstr ""
+msgstr "画像プレビューはここに表示されます"
 
 #: ckanext/feedback/templates/resource/comment_check.html:18
 #: ckanext/feedback/templates/utilization/comment_check.html:21
@@ -1251,14 +1261,8 @@ msgstr "データリソース"
 msgid "Registered"
 msgstr "登録日"
 
-#: ckanext/feedback/tests/controllers/test_resource.py:3611
-#: ckanext/feedback/tests/controllers/test_resource.py:3628
+#: ckanext/feedback/tests/controllers/test_resource.py:3684
+#: ckanext/feedback/tests/controllers/test_resource.py:3701
 msgid "Test error message"
 msgstr ""
-
-#~ msgid "aggregation"
-#~ msgstr "集計"
-
-#~ msgid "Failed to change status due to invalid status value."
-#~ msgstr ""
 

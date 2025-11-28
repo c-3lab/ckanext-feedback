@@ -7,6 +7,8 @@ from click.testing import CliRunner
 from ckanext.feedback.command.feedback import (
     delete_invalid_files,
     feedback,
+    get_solr_schema_api,
+    get_solr_url,
     handle_file_deletion,
 )
 from ckanext.feedback.models.download import DownloadMonthly, DownloadSummary
@@ -401,3 +403,248 @@ class TestFeedbackCommand:
         assert result.exit_code != 0
         mock_generate_moral_check_log_excel_bytes.assert_called_once_with(False)
         mock_echo.assert_called_once_with("Error: test exception", err=True)
+
+    @patch('ckanext.feedback.command.feedback.config')
+    def test_get_solr_url_with_ckan_solr_url(self, mock_config):
+        mock_config.get.side_effect = lambda key: (
+            'http://solr:8983/solr/ckan' if key == 'ckan.solr_url' else None
+        )
+        result = get_solr_url()
+        assert result == 'http://solr:8983/solr/ckan'
+
+    @patch('ckanext.feedback.command.feedback.config')
+    def test_get_solr_url_with_solr_url(self, mock_config):
+        mock_config.get.side_effect = lambda key: (
+            'http://custom-solr:8983/solr/ckan' if key == 'solr_url' else None
+        )
+        result = get_solr_url()
+        assert result == 'http://custom-solr:8983/solr/ckan'
+
+    @patch('ckanext.feedback.command.feedback.config')
+    def test_get_solr_url_default(self, mock_config):
+        mock_config.get.return_value = None
+        result = get_solr_url()
+        assert result == 'http://solr:8983/solr/ckan'
+
+    @patch('ckanext.feedback.command.feedback.get_solr_url')
+    def test_get_solr_schema_api(self, mock_get_solr_url):
+        mock_get_solr_url.return_value = 'http://solr:8983/solr/ckan'
+        result = get_solr_schema_api()
+        assert result == 'http://solr:8983/solr/ckan/schema'
+        mock_get_solr_url.assert_called_once_with()
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_with_yes_flag(
+        self, mock_requests, mock_click, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_requests.post.return_value = mock_response
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        assert result.exit_code == 0
+        assert mock_click.confirm.called is False
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call(
+            '✓ Fields deleted successfully!', fg='green', bold=True
+        )
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.get_solr_url')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_without_yes_flag_confirmed(
+        self, mock_requests, mock_click, mock_get_solr_url, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_get_solr_url.return_value = 'http://solr:8983/solr/ckan'
+        mock_click.confirm.return_value = True
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_requests.post.return_value = mock_response
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields'], input='y\n')
+
+        assert result.exit_code == 0
+        assert mock_click.confirm.called is True
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call(
+            'WARNING: This will delete Solr fields:', fg='yellow', bold=True
+        )
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.click')
+    def test_reset_solr_fields_without_yes_flag_cancelled(
+        self, mock_click, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_click.confirm.return_value = False
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields'], input='n\n')
+
+        assert result.exit_code == 0
+        assert mock_click.confirm.called is True
+        mock_click.secho.assert_any_call('Operation cancelled.', fg='blue')
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.get_solr_url')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_success_200(
+        self, mock_requests, mock_click, mock_get_solr_url, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_get_solr_url.return_value = 'http://solr:8983/solr/ckan'
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_requests.post.return_value = mock_response
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        assert result.exit_code == 0
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call('  ✓ Deleted: downloads_total_i', fg='green')
+        mock_click.secho.assert_any_call('  ✓ Deleted: likes_total_i', fg='green')
+        mock_click.secho.assert_any_call(
+            '✓ Fields deleted successfully!', fg='green', bold=True
+        )
+        # Verify the final separator line (line 345) is called
+        # This ensures line 345 is covered
+        mock_click.secho.assert_any_call('=' * 70, fg='red', bold=True)
+        # Verify echo after final separator (line 346) is called
+        # This ensures line 346 is covered
+        # Count how many times echo was called to verify line 346
+        echo_calls = [call for call in mock_click.echo.call_args_list]
+        assert len(echo_calls) > 0
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.get_solr_url')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_success_201(
+        self, mock_requests, mock_click, mock_get_solr_url, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_get_solr_url.return_value = 'http://solr:8983/solr/ckan'
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_requests.post.return_value = mock_response
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        assert result.exit_code == 0
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call(
+            '✓ Fields deleted successfully!', fg='green', bold=True
+        )
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_not_found_404(
+        self, mock_requests, mock_click, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_requests.post.return_value = mock_response
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        assert result.exit_code == 0
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call(
+            '  - Not found: downloads_total_i', fg='yellow'
+        )
+        mock_click.secho.assert_any_call('  - Not found: likes_total_i', fg='yellow')
+        mock_click.secho.assert_any_call(
+            'Fields were already deleted or never existed.', fg='yellow'
+        )
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_failed_500(
+        self, mock_requests, mock_click, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_requests.post.return_value = mock_response
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        assert result.exit_code == 1
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call(
+            '  ✗ Failed: downloads_total_i (HTTP 500)', fg='red'
+        )
+        mock_click.secho.assert_any_call(
+            '  ✗ Failed: likes_total_i (HTTP 500)', fg='red'
+        )
+        mock_click.secho.assert_any_call('Some errors occurred.', fg='red')
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_exception(
+        self, mock_requests, mock_click, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_requests.post.side_effect = Exception('Connection error')
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        assert result.exit_code == 1
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call(
+            '  ✗ Error: downloads_total_i - Connection error', fg='red'
+        )
+        mock_click.secho.assert_any_call(
+            '  ✗ Error: likes_total_i - Connection error', fg='red'
+        )
+        mock_click.secho.assert_any_call('Some errors occurred.', fg='red')
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.get_solr_url')
+    @patch('ckanext.feedback.command.feedback.click')
+    @patch('ckanext.feedback.command.feedback.requests')
+    def test_reset_solr_fields_mixed_results(
+        self, mock_requests, mock_click, mock_get_solr_url, mock_get_solr_schema_api
+    ):
+        mock_get_solr_schema_api.return_value = 'http://solr:8983/solr/ckan/schema'
+        mock_get_solr_url.return_value = 'http://solr:8983/solr/ckan'
+        mock_responses = [
+            MagicMock(status_code=200),
+            MagicMock(status_code=404),
+        ]
+        mock_requests.post.side_effect = mock_responses
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        assert result.exit_code == 0
+        assert mock_requests.post.call_count == 2
+        mock_click.secho.assert_any_call('  ✓ Deleted: downloads_total_i', fg='green')
+        mock_click.secho.assert_any_call('  - Not found: likes_total_i', fg='yellow')
+        mock_click.secho.assert_any_call(
+            '✓ Fields deleted successfully!', fg='green', bold=True
+        )
+
+    @patch('ckanext.feedback.command.feedback.get_solr_schema_api')
+    @patch('ckanext.feedback.command.feedback.click')
+    def test_reset_solr_fields_get_schema_api_exception(
+        self, mock_click, mock_get_solr_schema_api
+    ):
+        """Test reset_solr_fields when get_solr_schema_api raises an exception"""
+        mock_get_solr_schema_api.side_effect = Exception('Schema API error')
+
+        result = self.runner.invoke(feedback, ['reset-solr-fields', '--yes'])
+
+        # Should exit with error code 1 due to click.Abort()
+        assert result.exit_code == 1
+        # Verify exception handler (lines 360-361) is called
+        mock_click.secho.assert_any_call('Error: Schema API error', fg='red', err=True)
