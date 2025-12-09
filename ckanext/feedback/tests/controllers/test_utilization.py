@@ -5805,6 +5805,8 @@ class TestUtilizationController:
         mock_current_user,
         mock_has_org_admin_role,
         mock_abort,
+        mock_is_enable,
+        mock_FeedbackConfig,
         user,
     ):
         """Test that non-admin users cannot access unapproved utilization details"""
