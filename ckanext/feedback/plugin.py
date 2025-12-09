@@ -23,6 +23,7 @@ from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import details as utilization_details_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
+from ckanext.feedback.services.utilization.details import get_utilization_details_url
 from ckanext.feedback.views import admin, api, download, likes, resource, utilization
 
 log = logging.getLogger(__name__)
@@ -301,9 +302,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
-            'get_utilization_details_url': (
-                utilization_details_service.get_utilization_details_url
-            ),
+            'get_utilization_details_url': get_utilization_details_url,
         }
 
     # IPackageController
