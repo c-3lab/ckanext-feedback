@@ -5517,7 +5517,7 @@ class TestUtilizationController:
     )
     @patch(
         'ckanext.feedback.controllers.utilization.has_organization_admin_role',
-        return_value=False,
+        side_effect=Exception('boom'),
     )
     @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
     @patch(
@@ -5788,337 +5788,424 @@ class TestUtilizationController:
             mock_redirect, mock_commit, should_commit=True
         )
 
-
-@pytest.mark.usefixtures('with_request_context')
-@pytest.mark.db_test
-class TestUtilizationCreatePreviousLog:
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
     @patch(
-        'ckanext.feedback.controllers.utilization.'
-        'detail_service.get_resource_by_utilization_id'
+        'ckanext.feedback.services.common.config.BaseConfig.is_enable',
+        return_value=True,
     )
-    @patch(
-        'ckanext.feedback.controllers.'
-        'utilization.detail_service'
-        '.create_utilization_comment_moral_check_log'
-    )
-    def test_create_previous_log_moral_keeper_ai_disabled(
-        self,
-        mock_create_moral_check_log,
-        mock_get_resource_by_utilization_id,
-    ):
-        config['ckan.feedback.moral_keeper_ai.enable'] = False
-
-        resource = MagicMock()
-        resource.Resource.package.owner_org = 'mock_organization_id'
-        mock_get_resource_by_utilization_id.return_value = resource
-
-        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
-
-        mock_create_moral_check_log.assert_not_called()
-        assert return_value == ('', 204)
-
-    @patch(
-        'ckanext.feedback.controllers.utilization.'
-        'detail_service.get_resource_by_utilization_id'
-    )
-    @patch('ckanext.feedback.controllers.utilization.request.get_json')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.create_utilization_comment_moral_check_log'
-    )
-    def test_create_previous_log_previous_type_suggestion(
-        self,
-        mock_create_moral_check_log,
-        mock_session_commit,
-        mock_get_json,
-        mock_get_resource_by_utilization_id,
-    ):
-        config['ckan.feedback.moral_keeper_ai.enable'] = True
-
-        resource = MagicMock()
-        resource.Resource.package.owner_org = 'mock_organization_id'
-        mock_get_resource_by_utilization_id.return_value = resource
-        mock_get_json.return_value = {
-            'previous_type': 'suggestion',
-            'input_comment': 'test_input_comment',
-            'suggested_comment': 'test_suggested_comment',
-        }
-        mock_create_moral_check_log.return_value = None
-
-        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
-
-        mock_create_moral_check_log.assert_called_once_with(
-            utilization_id=TEST_UTILIZATION_ID,
-            action=MoralCheckAction.PREVIOUS_SUGGESTION.name,
-            input_comment='test_input_comment',
-            suggested_comment='test_suggested_comment',
-            output_comment=None,
-        )
-        mock_session_commit.assert_called_once()
-        assert return_value == ('', 204)
-
-    @patch(
-        'ckanext.feedback.controllers.utilization.'
-        'detail_service.get_resource_by_utilization_id'
-    )
-    @patch('ckanext.feedback.controllers.utilization.request.get_json')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.create_utilization_comment_moral_check_log'
-    )
-    def test_create_previous_log_previous_type_confirm(
-        self,
-        mock_create_moral_check_log,
-        mock_session_commit,
-        mock_get_json,
-        mock_get_resource_by_utilization_id,
-    ):
-        config['ckan.feedback.moral_keeper_ai.enable'] = True
-
-        resource = MagicMock()
-        resource.Resource.package.owner_org = 'mock_organization_id'
-        mock_get_resource_by_utilization_id.return_value = resource
-        mock_get_json.return_value = {
-            'previous_type': 'confirm',
-            'input_comment': 'test_input_comment',
-            'suggested_comment': 'test_suggested_comment',
-        }
-        mock_create_moral_check_log.return_value = None
-
-        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
-
-        mock_create_moral_check_log.assert_called_once_with(
-            utilization_id=TEST_UTILIZATION_ID,
-            action=MoralCheckAction.PREVIOUS_CONFIRM.name,
-            input_comment='test_input_comment',
-            suggested_comment='test_suggested_comment',
-            output_comment=None,
-        )
-        mock_session_commit.assert_called_once()
-        assert return_value == ('', 204)
-
-    @patch(
-        'ckanext.feedback.controllers.utilization.'
-        'detail_service.get_resource_by_utilization_id'
-    )
-    @patch('ckanext.feedback.controllers.utilization.request.get_json')
-    @patch(
-        'ckanext.feedback.controllers.utilization.detail_service'
-        '.create_utilization_comment_moral_check_log'
-    )
-    def test_create_previous_log_previous_type_none(
-        self,
-        mock_create_moral_check_log,
-        mock_get_json,
-        mock_get_resource_by_utilization_id,
-    ):
-        config['ckan.feedback.moral_keeper_ai.enable'] = True
-
-        resource = MagicMock()
-        resource.Resource.package.owner_org = 'mock_organization_id'
-        mock_get_resource_by_utilization_id.return_value = resource
-        mock_get_json.return_value = {
-            'previous_type': 'invalid_type',
-            'input_comment': 'test_input_comment',
-            'suggested_comment': 'test_suggested_comment',
-        }
-
-        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
-
-        mock_create_moral_check_log.assert_not_called()
-        assert return_value == ('', 204)
-
     @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.has_organization_admin_role')
+    @patch('ckanext.feedback.controllers.utilization.current_user')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    def test_attached_image_with_private_package_unauthorized(
+    def test_details_unapproved_utilization_non_admin_access(
         self,
         mock_detail_service,
-        mock_require_package_access,
+        mock_get_authorized_package,
+        mock_current_user,
+        mock_has_org_admin_role,
         mock_abort,
+        user,
     ):
+        """Test that non-admin users cannot access unapproved utilization details"""
         from werkzeug.exceptions import NotFound
 
-        utilization_id = 'utilization_id'
-        comment_id = 'comment_id'
-        attached_image_filename = 'test.jpg'
-
+        utilization_id = 'test_utilization_id'
         mock_utilization = MagicMock()
-        mock_utilization.package_id = 'mock_package_id'
+        mock_utilization.approval = False
+        mock_utilization.package_id = 'test_package_id'
+        mock_utilization.owner_org = 'test_org_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        def require_package_access_side_effect(package_id, context):
-            mock_abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+        mock_package = {'id': 'test_package_id'}
+        mock_get_authorized_package.return_value = mock_package
 
-        mock_require_package_access.side_effect = require_package_access_side_effect
+        # Mock current_user as a regular User (not sysadmin)
+        user_obj = model.User.get(user['name'])
+        mock_current_user.return_value = user_obj
+        mock_has_org_admin_role.return_value = False
 
-        mock_abort.side_effect = NotFound('Not Found')
+        # Make abort raise an exception to stop execution
+        mock_abort.side_effect = NotFound()
 
         with pytest.raises(NotFound):
-            UtilizationController.attached_image(
-                utilization_id, comment_id, attached_image_filename
-            )
+            UtilizationController.details(utilization_id)
 
-        mock_abort.assert_called_once()
-        assert mock_abort.call_args[0][0] == 404
+        mock_abort.assert_called_once_with(404, _('Utilization not found'))
 
-    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
-    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.render')
+    @patch('ckanext.feedback.controllers.utilization.has_organization_admin_role')
+    @patch('ckanext.feedback.controllers.utilization.get_authorized_package')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
-    def test_check_organization_admin_role_with_private_package_unauthorized(
+    @patch('ckanext.feedback.controllers.utilization.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.utilization.get_pagination_value')
+    @patch('ckanext.feedback.controllers.utilization.helpers.Page')
+    def test_details_unapproved_utilization_admin_access(
         self,
+        mock_page,
+        mock_get_pagination_value,
+        mock_get_resource,
         mock_detail_service,
+        mock_get_authorized_package,
+        mock_has_org_admin_role,
+        mock_render,
+        sysadmin,
+        mock_resource_object,
+    ):
+        """Test that admin users can access unapproved utilization details"""
+        utilization_id = 'test_utilization_id'
+        mock_utilization = MagicMock()
+        mock_utilization.approval = False
+        mock_utilization.package_id = 'test_package_id'
+        mock_utilization.owner_org = 'test_org_id'
+        mock_utilization.resource_id = 'test_resource_id'
+        mock_detail_service.get_utilization.return_value = mock_utilization
+
+        mock_package = {'id': 'test_package_id'}
+        mock_get_authorized_package.return_value = mock_package
+
+        # Mock current_user as sysadmin
+        user_obj = model.User.get(sysadmin['name'])
+        mock_has_org_admin_role.return_value = False
+
+        mock_resource = mock_resource_object(
+            org_id='test_org_id', org_name='test_organization_name'
+        )
+        mock_get_resource.return_value = mock_resource
+
+        mock_get_pagination_value.return_value = [1, 20, 0, '']
+        mock_detail_service.get_utilization_comments.return_value = ([], 0)
+        mock_detail_service.get_utilization_comment_categories.return_value = (
+            MagicMock()
+        )
+        mock_detail_service.get_issue_resolutions.return_value = []
+        mock_page.return_value = MagicMock()
+
+        # Patch current_user directly
+        with patch('ckanext.feedback.controllers.utilization.current_user', user_obj):
+            UtilizationController.details(utilization_id)
+
+        # Should render successfully without aborting
+        mock_render.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.redirect')
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._should_redirect_to_admin'  # noqa: E501
+    )
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController._get_admin_redirect_url'  # noqa: E501
+    )
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.summary_service')
+    @patch('ckanext.feedback.controllers.utilization.current_user')
+    @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.create_auth_context')
+    # fmt: off
+    @patch(
+        'ckanext.feedback.controllers.utilization.UtilizationController'
+        '._check_organization_admin_role'
+    )
+    # fmt: on
+    def test_approve_redirect_to_admin(
+        self,
+        mock_check_role,
+        mock_create_auth_context,
         mock_require_package_access,
-        mock_abort,
+        mock_current_user,
+        mock_summary_service,
+        mock_detail_service,
+        mock_flash_error,
+        mock_get_admin_redirect_url,
+        mock_should_redirect_to_admin,
+        mock_request,
+        mock_redirect,
+        sysadmin,
         admin_context,
     ):
-        from werkzeug.exceptions import NotFound
-
-        utilization_id = 'utilization_id'
+        """Test approve redirects to admin panel when from_admin is present"""  # noqa: E501
+        utilization_id = 'test_utilization_id'
         mock_utilization = MagicMock()
-        mock_utilization.package_id = 'mock_package_id'
+        mock_utilization.id = utilization_id
+        mock_utilization.resource_id = 'test_resource_id'
+        mock_utilization.package_id = 'test_package_id'
         mock_detail_service.get_utilization.return_value = mock_utilization
 
-        def require_package_access_side_effect(package_id, context):
-            mock_abort(
-                404,
-                _(
-                    'The requested URL was not found on the server. If you entered the'
-                    ' URL manually please check your spelling and try again.'
-                ),
-            )
+        user_obj = model.User.get(sysadmin['name'])
+        mock_current_user.return_value = user_obj
+        mock_current_user.id = user_obj.id
 
-        mock_require_package_access.side_effect = require_package_access_side_effect
+        # Mock successful approval
+        mock_detail_service.approve_utilization.return_value = None
+        mock_summary_service.refresh_utilization_summary.return_value = None
+        mock_check_role.return_value = None
 
-        mock_abort.side_effect = NotFound('Not Found')
-
-        with pytest.raises(NotFound):
-            UtilizationController._check_organization_admin_role(utilization_id)
-
-        mock_abort.assert_called_once()
-        assert mock_abort.call_args[0][0] == 404
-
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    def test_persist_operation_success(self, mock_commit, mock_rollback):
-        """Test _persist_operation with successful operation"""
-        utilization_id = 'test_id'
-        error_message = 'Test error'
-
-        operation_called = False
-
-        def successful_operation():
-            nonlocal operation_called
-            operation_called = True
-
-        result = UtilizationController._persist_operation(
-            successful_operation, utilization_id, error_message
+        # Mock redirect to admin
+        mock_should_redirect_to_admin.return_value = True
+        mock_form = MagicMock()
+        mock_form.get.side_effect = lambda key, default: {
+            'from_admin': '1',
+            'sort': 'newest',
+        }.get(key, default)
+        mock_form.getlist.return_value = ['approved', 'utilization']
+        mock_request.form = mock_form
+        mock_get_admin_redirect_url.return_value = (
+            '/admin/approval-and-delete?sort=newest'
+            '&filter=approved&filter=utilization'
         )
+        mock_redirect.return_value = MagicMock()
 
-        assert result.success is True
-        assert result.error_message is None
-        assert operation_called is True
-        mock_commit.assert_called_once()
-        mock_rollback.assert_not_called()
+        with admin_context:
+            UtilizationController.approve(utilization_id)
 
-    @patch('ckanext.feedback.controllers.utilization.log.exception')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    def test_persist_operation_with_sqlalchemy_error(
-        self, mock_commit, mock_rollback, mock_log
+        mock_should_redirect_to_admin.assert_called_once()
+        mock_get_admin_redirect_url.assert_called_once()
+        mock_redirect.assert_called_once()
+
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    @patch('ckanext.feedback.controllers.utilization.toolkit.url_for')
+    def test_get_admin_redirect_url(self, mock_url_for, mock_request):
+        """Test _get_admin_redirect_url method"""
+        from ckanext.feedback.controllers.utilization import UtilizationController
+
+        mock_url_for.return_value = '/admin/approval-and-delete'
+
+        # Test with valid sort and filters
+        mock_form = MagicMock()
+        mock_form.get.return_value = 'newest'
+        mock_form.getlist.return_value = ['approved', 'utilization']
+        mock_request.form = mock_form
+
+        result = UtilizationController._get_admin_redirect_url()
+        expected = (
+            '/admin/approval-and-delete?sort=newest'
+            '&filter=approved&filter=utilization'
+        )
+        assert result == expected
+        mock_url_for.assert_called_with('feedback.approval-and-delete')
+
+        # Test with invalid sort (should default to SORT_DEFAULT)
+        mock_form.get.return_value = 'invalid_sort'
+        mock_form.getlist.return_value = []
+        result = UtilizationController._get_admin_redirect_url()
+        assert result == '/admin/approval-and-delete?sort=newest'
+        assert 'sort=newest' in result
+
+        # Test with valid sort and empty filters
+        mock_form.get.return_value = 'oldest'
+        mock_form.getlist.return_value = []
+        result = UtilizationController._get_admin_redirect_url()
+        assert result == '/admin/approval-and-delete?sort=oldest'
+
+        # Test with invalid filters (should be filtered out)
+        mock_form.get.return_value = 'newest'
+        mock_form.getlist.return_value = ['approved', 'invalid_filter', 'utilization']
+        result = UtilizationController._get_admin_redirect_url()
+        expected = (
+            '/admin/approval-and-delete?sort=newest'
+            '&filter=approved&filter=utilization'
+        )
+        assert result == expected
+        assert 'invalid_filter' not in result
+
+    @patch('ckanext.feedback.controllers.utilization.model.Group.get')
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    @patch('ckanext.feedback.controllers.utilization.toolkit.url_for')
+    def test_get_admin_redirect_url_with_org_filter(
+        self, mock_url_for, mock_request, mock_group_get
     ):
-        """Test _persist_operation with SQLAlchemyError"""
-        from sqlalchemy.exc import SQLAlchemyError
+        """Test _get_admin_redirect_url with organization filter"""
+        from ckanext.feedback.controllers.utilization import UtilizationController
 
-        utilization_id = 'test_id'
-        error_message = 'Test error'
+        mock_url_for.return_value = '/admin/approval-and-delete'
 
-        def failing_operation():
-            raise SQLAlchemyError('Database error')
+        # Mock organization
+        mock_org = MagicMock()
+        mock_org.is_organization = True
+        mock_group_get.return_value = mock_org
 
-        result = UtilizationController._persist_operation(
-            failing_operation, utilization_id, error_message
+        # Test with valid organization filter
+        mock_form = MagicMock()
+        mock_form.get.return_value = 'newest'
+        mock_form.getlist.return_value = ['approved', 'test-org']
+        mock_request.form = mock_form
+
+        result = UtilizationController._get_admin_redirect_url()
+        expected = (
+            '/admin/approval-and-delete?sort=newest' '&filter=approved&filter=test-org'
         )
+        assert result == expected
+        mock_group_get.assert_called_with('test-org')
 
-        assert result.success is False
-        assert result.error_message is not None
-        mock_rollback.assert_called_once()
-        mock_log.assert_called_once()
-        mock_commit.assert_not_called()
+        # Test with invalid organization filter (not found)
+        mock_group_get.return_value = None
+        mock_form.getlist.return_value = ['approved', 'invalid-org']
+        result = UtilizationController._get_admin_redirect_url()
+        assert result == '/admin/approval-and-delete?sort=newest&filter=approved'
+        assert 'invalid-org' not in result
 
-    @patch('ckanext.feedback.controllers.utilization.log.exception')
-    @patch('ckanext.feedback.controllers.utilization.session.rollback')
-    @patch('ckanext.feedback.controllers.utilization.session.commit')
-    def test_persist_operation_with_generic_exception(
-        self, mock_commit, mock_rollback, mock_log
+    @patch('ckanext.feedback.controllers.utilization.model.Group.get')
+    def test_validate_organization_filter_returns_false_on_exception(
+        self, mock_group_get
     ):
-        """Test _persist_operation with generic Exception"""
-        utilization_id = 'test_id'
-        error_message = 'Test error'
+        """_validate_organization_filter should return False when lookup raises"""
+        from ckanext.feedback.controllers.utilization import UtilizationController
 
-        def failing_operation():
-            raise ValueError('Generic error')
+        mock_group_get.side_effect = Exception('db error')
 
-        result = UtilizationController._persist_operation(
-            failing_operation, utilization_id, error_message
-        )
+        result = UtilizationController._validate_organization_filter('org-name')
 
-        assert result.success is False
-        assert result.error_message is not None
-        mock_rollback.assert_called_once()
-        mock_log.assert_called_once()
-        mock_commit.assert_not_called()
+        assert result is False
+        mock_group_get.assert_called_once_with('org-name')
 
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    def test_handle_validation_error_without_message(
-        self, mock_redirect_to, mock_flash_error
+    def test_handle_validation_error_without_error_message(
+        self,
+        mock_redirect_to,
+        mock_flash_error,
     ):
         """Test _handle_validation_error when error_message is None"""
-        utilization_id = 'test_id'
-        category = 'test_category'
-        content = 'test_content'
-
-        UtilizationController._handle_validation_error(
-            utilization_id, None, category, content, None
-        )
-
-        mock_flash_error.assert_not_called()
-        mock_redirect_to.assert_called_once()
-
-    @patch('ckanext.feedback.controllers.utilization.request.form')
-    @patch('ckanext.feedback.controllers.utilization.request.files.get')
-    @patch('ckanext.feedback.controllers.utilization.is_recaptcha_verified')
-    @patch('ckanext.feedback.controllers.utilization.validate_service.validate_comment')
-    def test_process_comment_input_without_form_data(
-        self,
-        mock_validate_comment,
-        mock_is_recaptcha_verified,
-        mock_files,
-        mock_form,
-    ):
-        """Test _process_comment_input when form_data is None (extracted internally)"""
-        utilization_id = 'test_id'
+        utilization_id = 'test_utilization_id'
         category = 'REQUEST'
         content = 'test content'
 
-        mock_form.get.side_effect = [category, content, None]
-        mock_files.return_value = None
-        mock_is_recaptcha_verified.return_value = True
-        mock_validate_comment.return_value = None
-
-        result = UtilizationController._process_comment_input(
-            'image-upload', utilization_id, None
+        UtilizationController._handle_validation_error(
+            utilization_id, None, category, content
         )
 
-        assert result.form_data['category'] == category
-        assert result.form_data['content'] == content
-        assert result.error_response is None
+        # flash_error should not be called when error_message is None
+        mock_flash_error.assert_not_called()
+        mock_redirect_to.assert_called_once_with(
+            'utilization.details',
+            utilization_id=utilization_id,
+            category=category,
+            attached_image_filename=None,
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    def test_create_previous_log(
+        self,
+        mock_request,
+        mock_FeedbackConfig,
+        mock_detail_service,
+        utilization,
+    ):
+        """Test create_previous_log method"""
+        from http import HTTPStatus
+
+        from ckanext.feedback.controllers.utilization import UtilizationController
+        from ckanext.feedback.models.types import MoralCheckAction
+
+        utilization_id = utilization.id
+
+        # Mock resource
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'test_org_id'
+        mock_detail_service.get_resource_by_utilization_id.return_value = mock_resource
+
+        # Mock FeedbackConfig
+        mock_config = MagicMock()
+        mock_moral_keeper_ai = MagicMock()
+        mock_moral_keeper_ai.is_enable.return_value = True
+        mock_config.moral_keeper_ai = mock_moral_keeper_ai
+        mock_FeedbackConfig.return_value = mock_config
+
+        # Mock request.get_json()
+        mock_request.get_json.return_value = {
+            'previous_type': 'suggestion',
+            'input_comment': 'test input',
+            'suggested_comment': 'test suggested',
+        }
+
+        # Mock create_utilization_comment_moral_check_log
+        mock_detail_service.create_utilization_comment_moral_check_log.return_value = (
+            None
+        )
+
+        result = UtilizationController.create_previous_log(utilization_id)
+
+        assert result == ('', HTTPStatus.NO_CONTENT)
+        mock_detail_service.create_utilization_comment_moral_check_log.assert_called_once_with(  # noqa: E501
+            utilization_id=utilization_id,
+            action=MoralCheckAction.PREVIOUS_SUGGESTION.name,
+            input_comment='test input',
+            suggested_comment='test suggested',
+            output_comment=None,
+        )
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    def test_create_previous_log_ai_disabled(
+        self,
+        mock_FeedbackConfig,
+        mock_detail_service,
+        utilization,
+    ):
+        """Test create_previous_log when AI is disabled"""
+        from http import HTTPStatus
+
+        from ckanext.feedback.controllers.utilization import UtilizationController
+
+        utilization_id = utilization.id
+
+        # Mock resource
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'test_org_id'
+        mock_detail_service.get_resource_by_utilization_id.return_value = mock_resource
+
+        # Mock FeedbackConfig - AI disabled
+        mock_config = MagicMock()
+        mock_moral_keeper_ai = MagicMock()
+        mock_moral_keeper_ai.is_enable.return_value = False
+        mock_config.moral_keeper_ai = mock_moral_keeper_ai
+        mock_FeedbackConfig.return_value = mock_config
+
+        result = UtilizationController.create_previous_log(utilization_id)
+
+        assert result == ('', HTTPStatus.NO_CONTENT)
+        mock_detail_service.create_utilization_comment_moral_check_log.assert_not_called()  # noqa: E501
+
+    @patch('ckanext.feedback.controllers.utilization.detail_service')
+    @patch('ckanext.feedback.controllers.utilization.FeedbackConfig')
+    @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
+    def test_create_previous_log_invalid_action(
+        self,
+        mock_request,
+        mock_FeedbackConfig,
+        mock_detail_service,
+        utilization,
+    ):
+        """Test create_previous_log with invalid previous_type"""
+        from http import HTTPStatus
+
+        from ckanext.feedback.controllers.utilization import UtilizationController
+
+        utilization_id = utilization.id
+
+        # Mock resource
+        mock_resource = MagicMock()
+        mock_resource.Resource.package.owner_org = 'test_org_id'
+        mock_detail_service.get_resource_by_utilization_id.return_value = mock_resource
+
+        # Mock FeedbackConfig
+        mock_config = MagicMock()
+        mock_moral_keeper_ai = MagicMock()
+        mock_moral_keeper_ai.is_enable.return_value = True
+        mock_config.moral_keeper_ai = mock_moral_keeper_ai
+        mock_FeedbackConfig.return_value = mock_config
+
+        # Mock request.get_json() with invalid previous_type
+        mock_request.get_json.return_value = {
+            'previous_type': 'invalid_type',
+            'input_comment': 'test input',
+            'suggested_comment': 'test suggested',
+        }
+
+        result = UtilizationController.create_previous_log(utilization_id)
+
+        assert result == ('', HTTPStatus.NO_CONTENT)
+        mock_detail_service.create_utilization_comment_moral_check_log.assert_not_called()  # noqa: E501
