@@ -301,6 +301,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
+            'get_utilization_details_url': (
+                utilization_details_service.get_utilization_details_url
+            ),
         }
 
     # IPackageController
