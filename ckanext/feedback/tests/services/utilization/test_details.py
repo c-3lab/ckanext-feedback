@@ -1143,3 +1143,60 @@ class TestUtilizationCommentMoralCheckLog:
         # Test with no parameters
         result = get_utilization_details_url(utilization_id)
         assert result == '/utilization/test_utilization_id/details'
+
+    @patch('ckanext.feedback.controllers.utilization.model.Session.query')
+    @patch('ckan.plugins.toolkit.url_for')
+    def test_get_utilization_details_url_with_org_filter(
+        self, mock_url_for, mock_query
+    ):
+        """Test get_utilization_details_url with organization filter"""
+        from ckanext.feedback.services.utilization.details import (
+            get_utilization_details_url,
+        )
+
+        utilization_id = 'test_utilization_id'
+        mock_url_for.return_value = '/utilization/test_utilization_id/details'
+
+        # Mock organization query chain
+        mock_org = MagicMock()
+        mock_org.is_organization = True
+        mock_filter = MagicMock()
+        mock_filter.first.return_value = mock_org
+        mock_query.return_value.filter.return_value = mock_filter
+
+        # Test with valid organization filter
+        result = get_utilization_details_url(
+            utilization_id,
+            filters=['approved', 'test-org'],
+        )
+        expected = (
+            '/utilization/test_utilization_id/details'
+            '?filter=approved&filter=test-org'
+        )
+        assert result == expected
+
+    @patch('ckanext.feedback.controllers.utilization.model.Session.query')
+    @patch('ckan.plugins.toolkit.url_for')
+    def test_get_utilization_details_url_org_filter_exception(
+        self, mock_url_for, mock_query
+    ):
+        """Test get_utilization_details_url when org filter validation fails"""
+        from ckanext.feedback.services.utilization.details import (
+            get_utilization_details_url,
+        )
+
+        utilization_id = 'test_utilization_id'
+        mock_url_for.return_value = '/utilization/test_utilization_id/details'
+
+        # Mock query chain to raise exception
+        mock_filter = MagicMock()
+        mock_filter.first.side_effect = Exception('db error')
+        mock_query.return_value.filter.return_value = mock_filter
+
+        # Test with organization filter that causes exception
+        result = get_utilization_details_url(
+            utilization_id,
+            filters=['approved', 'test-org'],
+        )
+        # Should only include 'approved' filter, 'test-org' dropped due to exception
+        assert result == '/utilization/test_utilization_id/details?filter=approved'
