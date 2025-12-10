@@ -310,6 +310,7 @@ def get_utilization_details_url(
         DefaultValues,
         FilterOptions,
         SortOptions,
+        UtilizationController,
     )
 
     params = {}
@@ -322,7 +323,16 @@ def get_utilization_details_url(
 
     # Validate filter parameters
     if filters:
-        validated_filters = [f for f in filters if f in FilterOptions.VALID_FILTERS]
+        validated_filters = []
+        for f in filters:
+            # Check against predefined valid filters
+            if f in FilterOptions.VALID_FILTERS:
+                validated_filters.append(f)
+            # Also validate organization names dynamically
+            elif UtilizationController._validate_organization_filter(f):
+                validated_filters.append(f)
+            # Invalid filters are silently dropped for security
+
         if validated_filters:
             params['filter'] = validated_filters
 
