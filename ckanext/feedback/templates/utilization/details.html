@@ -8,6 +8,21 @@
     {% asset 'feedback/feedback-comment-css' %}
   {% endblock %}
 
+  {# Macro for admin parameter hidden fields #}
+  {% macro admin_params_hidden_fields() %}
+    {% if request.args.get('from_admin') == '1' %}
+      <input type="hidden" name="from_admin" value="1">
+      {% if request.args.get('sort') %}
+        <input type="hidden" name="sort" value="{{ request.args.get('sort') }}">
+      {% endif %}
+      {% if request.args.getlist('filter') %}
+        {% for filter_item in request.args.getlist('filter') %}
+          <input type="hidden" name="filter" value="{{ filter_item }}">
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  {% endmacro %}
+
   {% block breadcrumb_content %}
     <li class="inactive"><a href="{{ h.url_for('utilization.search') }}">{{ _('Utilization') }}</a></li>
     <li class="active"><a href="{{ h.url_for('utilization.details', utilization_id=utilization_id) }}">{{ _('Details') }}</a></li>
@@ -24,19 +39,51 @@
         {% set owner_org = utilization.owner_org %}
         <div>
           {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) %}
-            <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
+            {% if row.approval == false %}
+              {% if request.args.get('from_admin') == '1' %}
+                {# Two buttons when coming from admin panel #}
+                <div class="right-text">
+                  <form name="admin_form_approve" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post" style="display: inline;">
+                    <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">
+                      <i class="fa-solid fa-pen"></i>
+                      {{ _('Edit') }}
+                    </a>
+                    <button class="btn btn-primary right-aligned spaced-left" type="submit" onclick="setButtonDisable(this);">
+                      <i class="fa-solid fa-check"></i>
+                      {{ _('Approve') }}
+                    </button>
+                  </form>
+                  <form name="admin_form_return" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post" style="display: inline;">
+                    {{ admin_params_hidden_fields() }}
+                    <button class="btn btn-primary right-aligned" type="submit" onclick="setButtonDisable(this);">
+                      <i class="fa-solid fa-circle-right"></i>
+                      {{ _('Approve and Return') }}
+                    </button>
+                  </form>
+                </div>
+                <br>
+              {% else %}
+                {# Single button when not from admin panel #}
+                <form name="admin_form" action="{{h.url_for('utilization.approve', utilization_id=utilization_id ) }}" method="post">
+                  <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">
+                    <i class="fa-solid fa-pen"></i>
+                    {{ _('Edit') }}
+                  </a>
+                  <button class="btn btn-primary right-aligned" type="submit" onclick="setButtonDisable(this);">
+                    <i class="fa-solid fa-check"></i>
+                    {{ _('Approve') }}
+                  </button>
+                  <br>
+                </form>
+              {% endif %}
+            {% else %}
+              {# Edit button only when already approved #}
               <a class="btn btn-primary right-aligned spaced-left" href="{{ h.url_for('utilization.edit', utilization_id=utilization_id) }}">
                 <i class="fa-solid fa-pen"></i>
                 {{ _('Edit') }}
               </a>
-              {% if row.approval == false %}
-                <button class="btn btn-primary right-aligned" onclick="setButtonDisable(this);">
-                  <i class="fa-solid fa-check"></i>
-                  {{ _('Approve') }}
-                </button>
-              {% endif %}
               <br>
-            </form>
+            {% endif %}
             <hr class="divider">
           {% endif %}
           <div class="wrap-text">
@@ -164,6 +211,7 @@
                 <div id="comment-action-buttons" class="comment-action-buttons">
                   {% if c.userobj and (c.userobj.sysadmin or h.has_organization_admin_role(owner_org)) and comment.approval == false %}
                     <form class="inline-form pull-left float-start" name="approval_form" style="margin-bottom: 0;" action="{{h.url_for('utilization.approve_comment', utilization_id=utilization_id, comment_id=comment.id) }}" method="post">
+                      {{ admin_params_hidden_fields() }}
                       <button class="btn btn-primary" onclick="setButtonDisable(this);">
                         <i class="fa-solid fa-check"></i>
                         {{ _('Approve') }}
@@ -232,6 +280,7 @@
                                 <div class="comment-action-buttons">
                                   {% if not reply.approval %}
                                     <form class="inline-form" name="approve_reply_form" style="margin-bottom: 0;" action="{{ h.url_for('utilization.approve_reply', utilization_id=utilization_id, reply_id=reply.id) }}" method="post">
+                                      {{ admin_params_hidden_fields() }}
                                       <button class="btn btn-primary" onclick="setButtonDisable(this);">
                                         <i class="fa-solid fa-check"></i>
                                         {{ _('Approve') }}
@@ -292,6 +341,7 @@
                               <div class="comment-action-buttons">
                                 {% if not reply.approval %}
                                   <form class="inline-form" name="approve_reply_form" style="margin-bottom: 0;" action="{{ h.url_for('utilization.approve_reply', utilization_id=utilization_id, reply_id=reply.id) }}" method="post">
+                                    {{ admin_params_hidden_fields() }}
                                     <button class="btn btn-primary" onclick="setButtonDisable(this);">
                                       <i class="fa-solid fa-check"></i>
                                       {{ _('Approve') }}

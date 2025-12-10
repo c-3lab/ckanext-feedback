@@ -1,4 +1,5 @@
 from datetime import datetime
+from urllib.parse import urlencode
 
 import ckan.model as model
 from ckan.common import current_user
@@ -6,6 +7,7 @@ from ckan.lib.uploader import get_uploader
 from ckan.model.group import Group
 from ckan.model.package import Package
 from ckan.model.resource import Resource
+from ckan.plugins import toolkit
 from ckan.types import PUploader
 
 from ckanext.feedback.models.issue import IssueResolution
@@ -86,7 +88,11 @@ def get_utilization_comment(
 
 # Get comments related to the Utilization record
 def get_utilization_comments(
-    utilization_id=None, approval=None, owner_orgs=None, limit=None, offset=None
+    utilization_id=None,
+    approval=None,
+    owner_orgs=None,
+    limit=None,
+    offset=None,
 ):
     query = session.query(UtilizationComment).order_by(
         UtilizationComment.created.desc()
@@ -102,7 +108,6 @@ def get_utilization_comments(
             .join(Package)
             .filter(Package.owner_org.in_(owner_orgs))
         )
-
     results = query.limit(limit).offset(offset).all()
     if limit is not None or offset is not None:
         total_count = query.count()
@@ -126,7 +131,10 @@ def get_utilization_comment_replies(utilization_comment_id, approval=None):
 
 # Create comment for currently displayed utilization
 def create_utilization_comment(
-    utilization_id, category, content, attached_image_filename=None
+    utilization_id,
+    category,
+    content,
+    attached_image_filename=None,
 ):
     comment = UtilizationComment(
         utilization_id=utilization_id,
@@ -138,7 +146,10 @@ def create_utilization_comment(
 
 
 def create_utilization_comment_reply(
-    utilization_comment_id, content, creator_user_id, attached_image_filename=None
+    utilization_comment_id,
+    content,
+    creator_user_id,
+    attached_image_filename=None,
 ):
     reply = UtilizationCommentReply(
         utilization_comment_id=utilization_comment_id,
@@ -251,7 +262,11 @@ def get_utilization_comment_replies_for_display(utilization_comment_id, owner_or
 
 
 def create_utilization_comment_moral_check_log(
-    utilization_id, action, input_comment, suggested_comment, output_comment
+    utilization_id,
+    action,
+    input_comment,
+    suggested_comment,
+    output_comment,
 ):
     now = datetime.now()
 
@@ -283,3 +298,46 @@ def get_resource_by_utilization_id(utilization_id):
 
 def get_utilization_comment_moral_check_logs():
     return session.query(UtilizationCommentMoralCheckLog).all()
+
+
+def get_utilization_details_url(
+    utilization_id,
+    from_admin=False,
+    sort=None,
+    filters=None,
+):
+    from ckanext.feedback.controllers.utilization import (
+        DefaultValues,
+        FilterOptions,
+        SortOptions,
+        UtilizationController,
+    )
+
+    params = {}
+    if from_admin:
+        params['from_admin'] = DefaultValues.FROM_ADMIN_TRUE
+
+    # Validate sort parameter
+    if sort and sort in SortOptions.VALID_SORTS:
+        params['sort'] = sort
+
+    # Validate filter parameters
+    if filters:
+        validated_filters = []
+        for f in filters:
+            # Check against predefined valid filters
+            if f in FilterOptions.VALID_FILTERS:
+                validated_filters.append(f)
+            # Also validate organization names dynamically
+            elif UtilizationController._validate_organization_filter(f):
+                validated_filters.append(f)
+            # Invalid filters are silently dropped for security
+
+        if validated_filters:
+            params['filter'] = validated_filters
+
+    url = toolkit.url_for('utilization.details', utilization_id=utilization_id)
+    if params:
+        query_string = urlencode(params, doseq=True)
+        return f'{url}?{query_string}'
+    return url

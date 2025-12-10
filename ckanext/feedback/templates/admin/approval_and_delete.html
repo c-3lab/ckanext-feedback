@@ -96,7 +96,7 @@
                           <i class="fa-solid fa-seedling"></i>
                           <div class="bubbleText">{{ _('Utilization') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
+                        <a class="col-md-4 text-truncate post-content" href="{{ h.get_utilization_details_url(feedback.utilization_id, from_admin=True, sort=sort, filters=request.args.getlist('filter')) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == 'utilization_comment' %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="fa-stack" style="font-size: 7px;">
@@ -105,7 +105,7 @@
                           </span>
                           <div class="bubbleText">{{ _('Utilization Comment') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
+                        <a class="col-md-4 text-truncate post-content" href="{{ h.get_utilization_details_url(feedback.utilization_id, from_admin=True, sort=sort, filters=request.args.getlist('filter')) }}#comment-created-{{ feedback.comment_id }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == 'utilization_comment_reply' %}
                         <div class="col-md-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="bubble-icon-wrap">
@@ -117,7 +117,7 @@
                           </span>
                           <div class="bubbleText">{{ _('Utilization Comment Reply') }}</div>
                         </div>
-                        <a class="col-md-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
+                        <a class="col-md-4 text-truncate post-content" href="{{ h.get_utilization_details_url(feedback.utilization_id, from_admin=True, sort=sort, filters=request.args.getlist('filter')) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
                       {% endif %}
                       <div class="col-md-2 centered-text" style="display: flex; justify-content: center;">
                         {% if feedback.is_approved %}
@@ -195,7 +195,7 @@
                           <i class="fa-solid fa-seedling"></i>
                           <div class="bubbleText">{{ _('Utilization') }}</div>
                         </div>
-                        <a class="col-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
+                        <a class="col-4 text-truncate post-content" href="{{ h.get_utilization_details_url(feedback.utilization_id, from_admin=True, sort=sort, filters=request.args.getlist('filter')) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == 'utilization_comment' %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="fa-stack" style="font-size: 7px;">
@@ -204,7 +204,7 @@
                           </span>
                           <div class="bubbleText">{{ _('Utilization Comment') }}</div>
                         </div>
-                        <a class="col-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}#comment-created-{{ feedback.comment_id }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
+                        <a class="col-4 text-truncate post-content" href="{{ h.get_utilization_details_url(feedback.utilization_id, from_admin=True, sort=sort, filters=request.args.getlist('filter')) }}#comment-created-{{ feedback.comment_id }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
                       {% elif feedback.feedback_type == 'utilization_comment_reply' %}
                         <div class="col-1 bubble" style="display: flex; justify-content: center; align-items: center; margin-right: 0;">
                           <span class="bubble-icon-wrap">
@@ -216,7 +216,7 @@
                           </span>
                           <div class="bubbleText">{{ _('Utilization Comment Reply') }}</div>
                         </div>
-                        <a class="col-4 text-truncate post-content" href="{{ h.url_for('utilization.details', utilization_id=feedback.utilization_id) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
+                        <a class="col-4 text-truncate post-content" href="{{ h.get_utilization_details_url(feedback.utilization_id, from_admin=True, sort=sort, filters=request.args.getlist('filter')) }}" title="{{ feedback.content }}">{{ feedback.content }}</a>
                       {% endif %}
                       <div class="col-2 text-truncate centered-text" style="display: flex; justify-content: center;">
                         {% if feedback.is_approved %}

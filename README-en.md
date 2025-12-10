@@ -59,6 +59,39 @@ Below are the steps to apply this extension to an existing CKAN environment.
     ```
     * If you encounter an error such as `ckan.ini` not found, run `ckan -c <path to ckan.ini> db upgrade -p feedback` instead.
 
+> [!IMPORTANT]
+> The `ckan` command must be run either from the directory where `ckan.ini` is located, or you must specify the path to `ckan.ini` using the `-c` option.
+
+5. Run the Solr reindexing command
+
+    ```bash
+    ckan -c /path/to/ckan.ini search-index rebuild
+    ```
+
+    **Please note that this may take time depending on the number of datasets.**
+
+>[!NOTE]
+> The above command needs to be executed in the following cases:
+> - During initial installation
+> - When enabling the sort feature
+> - After updates
+>
+> For details on the sort feature, see [Adding Sort Options to the Dataset List Screen](./docs/ja/dataset_sort.md).
+
+>[!TIP]
+> For large numbers of datasets, you can use the `search-index rebuild-fast` command for faster processing.
+> 
+> Before using this command, **please** refer to the official CKAN documentation:
+> - [Command Line Interface (CLI)](https://docs.ckan.org/en/latest/maintaining/cli.html)
+
+### When updating the extension
+
+From the steps above, perform the following:
+
+1. Install ckanext-feedback in your CKAN environment
+4. Create the necessary tables for the feedback functionality
+5. Run the Solr reindexing command
+
 ## Structure
 
 ### Three modules that make up this extension
@@ -77,6 +110,9 @@ Below are the steps to apply this extension to an existing CKAN environment.
 
 * The actions that can be performed vary depending on whether the user is logged in and on the user's privileges (e.g., admin).
   * For details on permissions, see the [Detailed Documentation on Administrator Privileges](./docs/ja/authority.md).
+
+* For detailed information on rebuilding the search index.
+  * For the differences between `rebuild` and `rebuild-fast`, see [Search Index Rebuild Guide](./docs/ja/search_index_rebuild.md).
 
 ## For Developers
 

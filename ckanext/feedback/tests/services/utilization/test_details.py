@@ -1097,3 +1097,106 @@ class TestUtilizationCommentMoralCheckLog:
         reply = session.query(UtilizationCommentReply).first()
         assert reply.content == 'reply content'
         assert reply.attached_image_filename == 'u_reply_img.jpg'
+
+    @patch('ckan.plugins.toolkit.url_for')
+    def test_get_utilization_details_url(self, mock_url_for):
+        """Test get_utilization_details_url function"""
+        from ckanext.feedback.services.utilization.details import (
+            get_utilization_details_url,
+        )
+
+        utilization_id = 'test_utilization_id'
+        mock_url_for.return_value = '/utilization/test_utilization_id/details'
+
+        # Test with from_admin=True, sort, and filters
+        result = get_utilization_details_url(
+            utilization_id,
+            from_admin=True,
+            sort='newest',
+            filters=['approved', 'utilization'],
+        )
+        expected = (
+            '/utilization/test_utilization_id/details?from_admin=1&sort=newest'
+            '&filter=approved&filter=utilization'
+        )
+        assert result == expected
+        mock_url_for.assert_called_with(
+            'utilization.details', utilization_id=utilization_id
+        )
+
+        # Test with from_admin=False
+        result = get_utilization_details_url(utilization_id, from_admin=False)
+        assert result == '/utilization/test_utilization_id/details'
+
+        # Test with only sort
+        result = get_utilization_details_url(utilization_id, sort='oldest')
+        assert result == '/utilization/test_utilization_id/details?sort=oldest'
+
+        # Test with only filters
+        result = get_utilization_details_url(utilization_id, filters=['approved'])
+        assert result == '/utilization/test_utilization_id/details?filter=approved'
+
+        # Test with invalid filters (should be dropped)
+        result = get_utilization_details_url(utilization_id, filters=['invalid'])
+        assert result == '/utilization/test_utilization_id/details'
+
+        # Test with no parameters
+        result = get_utilization_details_url(utilization_id)
+        assert result == '/utilization/test_utilization_id/details'
+
+    @patch('ckanext.feedback.controllers.utilization.model.Session.query')
+    @patch('ckan.plugins.toolkit.url_for')
+    def test_get_utilization_details_url_with_org_filter(
+        self, mock_url_for, mock_query
+    ):
+        """Test get_utilization_details_url with organization filter"""
+        from ckanext.feedback.services.utilization.details import (
+            get_utilization_details_url,
+        )
+
+        utilization_id = 'test_utilization_id'
+        mock_url_for.return_value = '/utilization/test_utilization_id/details'
+
+        # Mock organization query chain
+        mock_org = MagicMock()
+        mock_org.is_organization = True
+        mock_filter = MagicMock()
+        mock_filter.first.return_value = mock_org
+        mock_query.return_value.filter.return_value = mock_filter
+
+        # Test with valid organization filter
+        result = get_utilization_details_url(
+            utilization_id,
+            filters=['approved', 'test-org'],
+        )
+        expected = (
+            '/utilization/test_utilization_id/details'
+            '?filter=approved&filter=test-org'
+        )
+        assert result == expected
+
+    @patch('ckanext.feedback.controllers.utilization.model.Session.query')
+    @patch('ckan.plugins.toolkit.url_for')
+    def test_get_utilization_details_url_org_filter_exception(
+        self, mock_url_for, mock_query
+    ):
+        """Test get_utilization_details_url when org filter validation fails"""
+        from ckanext.feedback.services.utilization.details import (
+            get_utilization_details_url,
+        )
+
+        utilization_id = 'test_utilization_id'
+        mock_url_for.return_value = '/utilization/test_utilization_id/details'
+
+        # Mock query chain to raise exception
+        mock_filter = MagicMock()
+        mock_filter.first.side_effect = Exception('db error')
+        mock_query.return_value.filter.return_value = mock_filter
+
+        # Test with organization filter that causes exception
+        result = get_utilization_details_url(
+            utilization_id,
+            filters=['approved', 'test-org'],
+        )
+        # Should only include 'approved' filter, 'test-org' dropped due to exception
+        assert result == '/utilization/test_utilization_id/details?filter=approved'

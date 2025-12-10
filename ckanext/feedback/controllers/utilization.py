@@ -3,12 +3,13 @@ import os
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Any, Callable
+from urllib.parse import urlencode
 
 import ckan.model as model
 from ckan.common import _, current_user, g, request
 from ckan.lib import helpers
 from ckan.plugins import toolkit
-from flask import Response, send_file
+from flask import Response, redirect, send_file
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.datastructures import FileStorage
 
@@ -79,6 +80,34 @@ class QueryParams:
     WAITING = 'waiting'
     APPROVAL = 'approval'
     DISABLE_KEYWORD = 'disable_keyword'
+    FROM_ADMIN = 'from_admin'
+    SORT = 'sort'
+    FILTER = 'filter'
+
+
+class FilterOptions:
+    """Valid filter options for admin approval page"""
+
+    # Status filters
+    APPROVED = 'approved'
+    UNAPPROVED = 'unapproved'
+
+    # Type filters
+    RESOURCE = 'resource'
+    UTILIZATION = 'utilization'
+    UTIL_COMMENT = 'util-comment'
+    REPLY = 'reply'
+    UTIL_REPLY = 'util-reply'
+
+    VALID_FILTERS = {
+        APPROVED,
+        UNAPPROVED,
+        RESOURCE,
+        UTILIZATION,
+        UTIL_COMMENT,
+        REPLY,
+        UTIL_REPLY,
+    }
 
 
 class DefaultValues:
@@ -89,6 +118,29 @@ class DefaultValues:
     FALSE_STRING = 'False'
     AUTO_SUGGEST_FAILED = 'AUTO_SUGGEST_FAILED'
     EMPTY_STRING = ''
+    SORT_DEFAULT = 'newest'
+    FROM_ADMIN_FALSE = '0'
+    FROM_ADMIN_TRUE = '1'
+
+
+class SortOptions:
+    """Valid sort option values"""
+
+    NEWEST = 'newest'
+    OLDEST = 'oldest'
+    DATASET_ASC = 'dataset_asc'
+    DATASET_DESC = 'dataset_desc'
+    RESOURCE_ASC = 'resource_asc'
+    RESOURCE_DESC = 'resource_desc'
+
+    VALID_SORTS = {
+        NEWEST,
+        OLDEST,
+        DATASET_ASC,
+        DATASET_DESC,
+        RESOURCE_ASC,
+        RESOURCE_DESC,
+    }
 
 
 class MoralCheckActionMap:
@@ -670,6 +722,19 @@ class UtilizationController:
         context = create_auth_context()
         package = get_authorized_package(utilization.package_id, context)
 
+        # Check if utilization is approved - if not, only admins can access
+        if not utilization.approval:
+            # Check if user is admin (sysadmin or organization admin)
+            is_admin = False
+            if isinstance(current_user, model.User):
+                is_admin = current_user.sysadmin or has_organization_admin_role(
+                    utilization.owner_org
+                )
+
+            if not is_admin:
+                # Non-admin users cannot access unapproved utilizations
+                toolkit.abort(HTTPStatus.NOT_FOUND, _('Utilization not found'))
+
         approval = UtilizationController._determine_approval_status(
             utilization.owner_org
         )
@@ -732,10 +797,13 @@ class UtilizationController:
             'Failed to approve utilization. Please try again.',
         )
 
+        # On error, redirect based on which button was used
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
+            return UtilizationController._get_redirect_response(utilization_id)
 
-        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
+        # On success, redirect based on which button was used
+        return UtilizationController._get_redirect_response(utilization_id)
 
     # utilization/<utilization_id>/comment/new
     @staticmethod
@@ -1290,3 +1358,71 @@ class UtilizationController:
         )
 
         return '', HTTPStatus.NO_CONTENT
+
+    @staticmethod
+    def _validate_organization_filter(filter_value: str) -> bool:
+        """Validate if filter value is a valid organization name"""
+        try:
+            # Check if organization exists in database by name
+            org = (
+                model.Session.query(model.Group)
+                .filter(
+                    model.Group.name == filter_value,
+                    model.Group.is_organization.is_(True),
+                )
+                .first()
+            )
+            return org is not None
+        except Exception:
+            return False
+
+    @staticmethod
+    def _get_admin_redirect_url() -> str:
+        """
+        Build admin redirect URL with validated sort and filter parameters.
+        """
+        # Get and validate sort parameter
+        sort = request.form.get(QueryParams.SORT, DefaultValues.SORT_DEFAULT)
+        if sort not in SortOptions.VALID_SORTS:
+            sort = DefaultValues.SORT_DEFAULT
+
+        # Get and validate filter parameters
+        filters = request.form.getlist(QueryParams.FILTER)
+        validated_filters = []
+        for f in filters:
+            # Check against predefined valid filters
+            if f in FilterOptions.VALID_FILTERS:
+                validated_filters.append(f)
+            # Also validate organization names dynamically
+            elif UtilizationController._validate_organization_filter(f):
+                validated_filters.append(f)
+            # Invalid filters are silently dropped for security
+
+        # Build query parameters
+        params = {QueryParams.SORT: sort}
+        if validated_filters:
+            params[QueryParams.FILTER] = validated_filters
+
+        # Build URL with proper encoding (doseq=True for multiple filter values)
+        base_url = toolkit.url_for('feedback.approval-and-delete')
+        query_string = urlencode(params, doseq=True)
+        return f'{base_url}?{query_string}'
+
+    @staticmethod
+    def _should_redirect_to_admin() -> bool:
+        """Check if request came from admin panel"""
+        from_admin = request.form.get(
+            QueryParams.FROM_ADMIN, DefaultValues.FROM_ADMIN_FALSE
+        )
+        return from_admin == DefaultValues.FROM_ADMIN_TRUE
+
+    @staticmethod
+    def _get_redirect_response(utilization_id: str) -> Any:
+        """
+        Get redirect response based on from_admin parameter.
+        Used for both success and error cases.
+        """
+        if UtilizationController._should_redirect_to_admin():
+            redirect_url = UtilizationController._get_admin_redirect_url()
+            return redirect(redirect_url)
+        return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)

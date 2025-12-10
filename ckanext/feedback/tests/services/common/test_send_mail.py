@@ -43,6 +43,7 @@ def mock_get_members(_, a):
 
 
 def mock_show_user(_, b):
+
     return {'name': 'test_user', 'email': 'user@email.com'}
 
 

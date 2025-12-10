@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 def send_email(template_name, organization_id, subject, **kwargs):
     if not FeedbackConfig().notice_email.is_enable():
+
         log.info('email notification is disabled.')
         return
 

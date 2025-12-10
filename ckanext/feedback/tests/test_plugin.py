@@ -1,6 +1,6 @@
 import json
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from ckan import model
@@ -476,3 +476,623 @@ class TestPlugin:
         assert updated['*Comments*'] == 9999
         assert updated['*Rating*'] == 23.3
         assert updated['*Number of Likes*'] == 9999
+
+    @patch('ckanext.feedback.plugin.config')
+    def test_get_solr_url_with_ckan_solr_url(self, mock_config):
+        """Test _get_solr_url() with ckan.solr_url config"""
+        instance = FeedbackPlugin()
+        mock_config.get.side_effect = lambda key: (
+            'http://solr-test:8983/solr/ckan' if key == 'ckan.solr_url' else None
+        )
+        result = instance._get_solr_url()
+        assert result == 'http://solr-test:8983/solr/ckan'
+
+    @patch('ckanext.feedback.plugin.config')
+    def test_get_solr_url_with_solr_url(self, mock_config):
+        """Test _get_solr_url() with solr_url config"""
+        instance = FeedbackPlugin()
+        mock_config.get.side_effect = lambda key: (
+            'http://custom-solr:8983/solr/ckan' if key == 'solr_url' else None
+        )
+        result = instance._get_solr_url()
+        assert result == 'http://custom-solr:8983/solr/ckan'
+
+    @patch('ckanext.feedback.plugin.config')
+    def test_get_solr_url_default(self, mock_config):
+        """Test _get_solr_url() with default fallback"""
+        instance = FeedbackPlugin()
+        mock_config.get.return_value = None
+        result = instance._get_solr_url()
+        assert result == 'http://solr:8983/solr/ckan'
+
+    @patch('ckanext.feedback.plugin.requests')
+    def test_field_exists_in_solr_exception(self, mock_requests):
+        """Test _field_exists_in_solr() when exception occurs"""
+        instance = FeedbackPlugin()
+        mock_requests.get.side_effect = Exception('Connection error')
+        result = instance._field_exists_in_solr('test_field')
+        assert result is False
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_add_solr_field_already_exists(self, mock_requests, mock_log):
+        """Test _add_solr_field() when field already exists"""
+        instance = FeedbackPlugin()
+        existing_fields = ['downloads_total_i', 'likes_total_i']
+        instance._add_solr_field(
+            'http://solr:8983/solr/ckan/schema', 'downloads_total_i', existing_fields
+        )
+        mock_log.debug.assert_called_once_with(
+            "Field 'downloads_total_i' already exists"
+        )
+        mock_requests.post.assert_not_called()
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_add_solr_field_error_response(self, mock_requests, mock_log):
+        """Test _add_solr_field() when response status is not 200/201"""
+        instance = FeedbackPlugin()
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.text = 'Internal Server Error'
+        mock_requests.post.return_value = mock_response
+        instance._add_solr_field('http://solr:8983/solr/ckan/schema', 'test_field', [])
+        mock_log.error.assert_called_once()
+        assert 'Failed to add' in str(mock_log.error.call_args)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_add_solr_field_request_exception(self, mock_requests, mock_log):
+        """Test _add_solr_field() when RequestException occurs"""
+        instance = FeedbackPlugin()
+        # Set requests.exceptions to the real module so exceptions can be caught
+        import requests.exceptions
+
+        mock_requests.exceptions = requests.exceptions
+        # Create a real RequestException instance
+        from requests.exceptions import RequestException
+
+        mock_requests.post.side_effect = RequestException('Timeout')
+        instance._add_solr_field('http://solr:8983/solr/ckan/schema', 'test_field', [])
+        mock_log.error.assert_called_once()
+        assert 'Error adding' in str(mock_log.error.call_args)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_setup_solr_schema_api_not_200(self, mock_requests, mock_log):
+        """Test _setup_solr_schema() when Schema API returns non-200 status"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_requests.get.return_value = mock_response
+
+        instance._setup_solr_schema()
+        mock_log.warning.assert_called_once()
+        assert 'Schema API returned status' in str(mock_log.warning.call_args)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_setup_solr_schema_api_exception(self, mock_requests, mock_log):
+        """Test _setup_solr_schema() when Schema API request fails"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Set requests.exceptions to the real module so exceptions can be caught
+        import requests.exceptions
+
+        mock_requests.exceptions = requests.exceptions
+        # Create a real RequestException instance
+        from requests.exceptions import RequestException
+
+        mock_requests.get.side_effect = RequestException('Connection error')
+
+        instance._setup_solr_schema()
+        # Check that warning was called (could be called multiple times)
+        assert mock_log.warning.called
+        # Check that one of the warning calls contains the expected message
+        warning_calls = [str(call) for call in mock_log.warning.call_args_list]
+        assert any('Schema API not available' in call for call in warning_calls)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_setup_solr_schema_unexpected_exception(self, mock_requests, mock_log):
+        """Test _setup_solr_schema() when unexpected exception occurs"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        mock_requests.get.side_effect = ValueError('Unexpected error')
+
+        instance._setup_solr_schema()
+        mock_log.error.assert_called_once()
+        assert 'Unexpected error in Solr schema setup' in str(mock_log.error.call_args)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    def test_before_dataset_index_no_package_id(
+        self, mock_likes_service, mock_download_service, mock_log
+    ):
+        """Test before_dataset_index() when package_id is missing"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        pkg_dict = {}
+        result = instance.before_dataset_index(pkg_dict)
+        assert result == pkg_dict
+        mock_download_service.get_package_downloads.assert_not_called()
+        mock_likes_service.get_package_like_count.assert_not_called()
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    def test_before_dataset_index_field_not_exists(
+        self, mock_likes_service, mock_download_service, mock_requests, mock_log
+    ):
+        """Test before_dataset_index() when Solr fields don't exist"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock field_exists_in_solr to return False
+        mock_field_response = MagicMock()
+        mock_field_response.status_code = 404
+        mock_requests.get.return_value = mock_field_response
+
+        pkg_dict = {'id': 'test-package-id', 'owner_org': 'test-org'}
+        result = instance.before_dataset_index(pkg_dict)
+
+        assert 'downloads_total_i' not in result
+        assert 'likes_total_i' not in result
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_setup_solr_schema_with_download_and_likes(self, mock_requests, mock_log):
+        """Test _setup_solr_schema() when downloads and likes are enabled"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock successful Schema API response
+        mock_fields_response = MagicMock()
+        mock_fields_response.status_code = 200
+        mock_fields_response.json.return_value = {'fields': []}
+        mock_requests.get.return_value = mock_fields_response
+
+        # Mock successful field addition
+        mock_add_response = MagicMock()
+        mock_add_response.status_code = 200
+        mock_requests.post.return_value = mock_add_response
+
+        instance._setup_solr_schema()
+
+        # Verify that both fields were attempted to be added
+        assert mock_requests.post.call_count == 2
+        mock_log.info.assert_any_call("Solr schema setup completed")
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    @patch('ckanext.feedback.plugin.config')
+    def test_before_dataset_index_fields_exist(
+        self,
+        mock_config,
+        mock_likes_service,
+        mock_download_service,
+        mock_requests,
+        mock_log,
+    ):
+        """Test before_dataset_index() when Solr fields exist"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock config.get to return solr_url and enable values
+        def config_get_side_effect(key, default=None):
+            if key == 'ckan.solr_url' or key == 'solr_url':
+                return 'http://solr:8983/solr/ckan'
+            # Return True for enable configs
+            if 'enable' in key:
+                return True
+            return default
+
+        mock_config.get.side_effect = config_get_side_effect
+
+        # Mock field_exists_in_solr to return True
+        # _field_exists_in_solr calls requests.get with URL like:
+        # http://solr:8983/solr/ckan/schema/fields/downloads_total_i
+        def requests_get_side_effect(url, **kwargs):
+            mock_response = MagicMock()
+            if '/fields/downloads_total_i' in url or '/fields/likes_total_i' in url:
+                mock_response.status_code = 200
+            else:
+                mock_response.status_code = 404
+            return mock_response
+
+        mock_requests.get.side_effect = requests_get_side_effect
+
+        mock_download_service.get_package_downloads.return_value = 100
+        mock_likes_service.get_package_like_count.return_value = 50
+
+        # Use None for owner_org to avoid organization lookup issues
+        # When org_id is empty, is_enable returns the enable value directly
+        pkg_dict = {'id': 'test-package-id', 'owner_org': None}
+        result = instance.before_dataset_index(pkg_dict)
+
+        assert result['downloads_total_i'] == 100
+        assert result['likes_total_i'] == 50
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    def test_before_dataset_index_custom_sort_disabled(
+        self, mock_likes_service, mock_download_service, mock_requests, mock_log
+    ):
+        """Test before_dataset_index() when custom_sort is disabled"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': False},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        pkg_dict = {'id': 'test-package-id', 'owner_org': 'test-org'}
+        result = instance.before_dataset_index(pkg_dict)
+
+        assert 'downloads_total_i' not in result
+        assert 'likes_total_i' not in result
+        mock_download_service.get_package_downloads.assert_not_called()
+        mock_likes_service.get_package_like_count.assert_not_called()
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    def test_before_dataset_index_no_owner_org(
+        self, mock_likes_service, mock_download_service, mock_requests, mock_log
+    ):
+        """Test before_dataset_index() when owner_org is None"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock field_exists_in_solr to return True
+        mock_field_response = MagicMock()
+        mock_field_response.status_code = 200
+        mock_requests.get.return_value = mock_field_response
+
+        mock_download_service.get_package_downloads.return_value = 100
+        mock_likes_service.get_package_like_count.return_value = 50
+
+        pkg_dict = {'id': 'test-package-id'}
+        result = instance.before_dataset_index(pkg_dict)
+
+        assert result['downloads_total_i'] == 100
+        assert result['likes_total_i'] == 50
+
+    @patch('ckanext.feedback.plugin.log')
+    def test_before_dataset_view_package_not_found(self, mock_log):
+        """Test before_dataset_view() when package is not found"""
+        instance = FeedbackPlugin()
+        pkg_dict = {'id': 'non-existent-package'}
+        result = instance.before_dataset_view(pkg_dict)
+        assert result == pkg_dict
+        mock_log.warning.assert_called_once()
+        assert 'not found in before_dataset_view' in str(mock_log.warning.call_args)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    def test_setup_solr_schema_custom_sort_disabled_direct(
+        self, mock_requests, mock_log
+    ):
+        """Test _setup_solr_schema() when custom_sort is disabled (direct test)"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': False},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        instance._setup_solr_schema()
+
+        # Should return early without making any requests
+        mock_requests.get.assert_not_called()
+        mock_log.debug.assert_called_once_with(
+            "Custom sort feature is disabled in feedback_config.json"
+        )
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.services.common.config.config')
+    def test_setup_solr_schema_download_disabled(
+        self, mock_config, mock_requests, mock_log
+    ):
+        """Test _setup_solr_schema() when download is disabled"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': False},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock config.get to return appropriate values
+        def config_get_side_effect(key, default=None):
+            if key == f"{FeedbackConfig().custom_sort.get_ckan_conf_str()}.enable":
+                return True
+            elif key == f"{FeedbackConfig().download.get_ckan_conf_str()}.enable":
+                return False
+            elif key == f"{FeedbackConfig().like.get_ckan_conf_str()}.enable":
+                return True
+            elif key in ('ckan.solr_url', 'solr_url'):
+                return None
+            return default
+
+        mock_config.get.side_effect = config_get_side_effect
+
+        # Mock successful Schema API response
+        mock_fields_response = MagicMock()
+        mock_fields_response.status_code = 200
+        mock_fields_response.json.return_value = {'fields': []}
+        mock_requests.get.return_value = mock_fields_response
+
+        # Mock successful field addition
+        mock_add_response = MagicMock()
+        mock_add_response.status_code = 200
+        mock_requests.post.return_value = mock_add_response
+
+        instance._setup_solr_schema()
+
+        # Should only add likes_total_i field, not downloads_total_i
+        assert mock_requests.post.call_count == 1
+        # Verify that the call was for likes_total_i
+        call_args = mock_requests.post.call_args
+        assert 'likes_total_i' in str(call_args)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.services.common.config.config')
+    def test_setup_solr_schema_like_disabled(
+        self, mock_config, mock_requests, mock_log
+    ):
+        """Test _setup_solr_schema() when like is disabled"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': False},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock config.get to return appropriate values
+        def config_get_side_effect(key, default=None):
+            if key == f"{FeedbackConfig().custom_sort.get_ckan_conf_str()}.enable":
+                return True
+            elif key == f"{FeedbackConfig().download.get_ckan_conf_str()}.enable":
+                return True
+            elif key == f"{FeedbackConfig().like.get_ckan_conf_str()}.enable":
+                return False
+            elif key in ('ckan.solr_url', 'solr_url'):
+                return None
+            return default
+
+        mock_config.get.side_effect = config_get_side_effect
+
+        # Mock successful Schema API response
+        mock_fields_response = MagicMock()
+        mock_fields_response.status_code = 200
+        mock_fields_response.json.return_value = {'fields': []}
+        mock_requests.get.return_value = mock_fields_response
+
+        # Mock successful field addition
+        mock_add_response = MagicMock()
+        mock_add_response.status_code = 200
+        mock_requests.post.return_value = mock_add_response
+
+        instance._setup_solr_schema()
+
+        # Should only add downloads_total_i field, not likes_total_i
+        assert mock_requests.post.call_count == 1
+        # Verify that the call was for downloads_total_i
+        call_args = mock_requests.post.call_args
+        assert 'downloads_total_i' in str(call_args)
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    def test_before_dataset_index_downloads_field_not_exists(
+        self, mock_likes_service, mock_download_service, mock_requests, mock_log
+    ):
+        """Test before_dataset_index() when downloads field doesn't exist
+        but download is enabled"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock field_exists_in_solr: downloads_total_i returns False,
+        # likes_total_i returns True
+        def requests_get_side_effect(url, **kwargs):
+            mock_response = MagicMock()
+            if '/fields/downloads_total_i' in url:
+                mock_response.status_code = 404  # Field doesn't exist
+            elif '/fields/likes_total_i' in url:
+                mock_response.status_code = 200  # Field exists
+            else:
+                mock_response.status_code = 404
+            return mock_response
+
+        mock_requests.get.side_effect = requests_get_side_effect
+
+        mock_download_service.get_package_downloads.return_value = 100
+        mock_likes_service.get_package_like_count.return_value = 50
+
+        pkg_dict = {'id': 'test-package-id', 'owner_org': None}
+        result = instance.before_dataset_index(pkg_dict)
+
+        # downloads_total_i should not be added (field doesn't exist)
+        assert 'downloads_total_i' not in result
+        # likes_total_i should be added (field exists)
+        assert result['likes_total_i'] == 50
+        # download service should not be called since field doesn't exist
+        mock_download_service.get_package_downloads.assert_not_called()
+
+    @patch('ckanext.feedback.plugin.log')
+    @patch('ckanext.feedback.plugin.requests')
+    @patch('ckanext.feedback.plugin.download_summary_service')
+    @patch('ckanext.feedback.plugin.resource_likes_service')
+    def test_before_dataset_index_likes_field_not_exists(
+        self, mock_likes_service, mock_download_service, mock_requests, mock_log
+    ):
+        """Test before_dataset_index() when likes field doesn't exist
+        but like is enabled"""
+        instance = FeedbackPlugin()
+        instance.fb_config = FeedbackConfig()
+        feedback_config = {
+            'modules': {
+                'custom_sort': {'enable': True},
+                'download': {'enable': True},
+                'like': {'enable': True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+        instance.fb_config.load_feedback_config()
+
+        # Mock field_exists_in_solr: downloads_total_i returns True,
+        # likes_total_i returns False
+        def requests_get_side_effect(url, **kwargs):
+            mock_response = MagicMock()
+            if '/fields/downloads_total_i' in url:
+                mock_response.status_code = 200  # Field exists
+            elif '/fields/likes_total_i' in url:
+                mock_response.status_code = 404  # Field doesn't exist
+            else:
+                mock_response.status_code = 404
+            return mock_response
+
+        mock_requests.get.side_effect = requests_get_side_effect
+
+        mock_download_service.get_package_downloads.return_value = 100
+        mock_likes_service.get_package_like_count.return_value = 50
+
+        pkg_dict = {'id': 'test-package-id', 'owner_org': None}
+        result = instance.before_dataset_index(pkg_dict)
+
+        # downloads_total_i should be added (field exists)
+        assert result['downloads_total_i'] == 100
+        # likes_total_i should not be added (field doesn't exist)
+        assert 'likes_total_i' not in result
+        # likes service should not be called since field doesn't exist
+        mock_likes_service.get_package_like_count.assert_not_called()
