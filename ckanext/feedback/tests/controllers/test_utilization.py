@@ -6011,21 +6011,23 @@ class TestUtilizationController:
         assert result == expected
         assert 'invalid_filter' not in result
 
-    @patch('ckanext.feedback.controllers.utilization.model.Group.get')
+    @patch('ckanext.feedback.controllers.utilization.model.Session.query')
     @patch('ckanext.feedback.controllers.utilization.request', new_callable=MagicMock)
     @patch('ckanext.feedback.controllers.utilization.toolkit.url_for')
     def test_get_admin_redirect_url_with_org_filter(
-        self, mock_url_for, mock_request, mock_group_get
+        self, mock_url_for, mock_request, mock_session_query
     ):
         """Test _get_admin_redirect_url with organization filter"""
         from ckanext.feedback.controllers.utilization import UtilizationController
 
         mock_url_for.return_value = '/admin/approval-and-delete'
 
-        # Mock organization
+        # Mock organization query chain
         mock_org = MagicMock()
         mock_org.is_organization = True
-        mock_group_get.return_value = mock_org
+        mock_filter = MagicMock()
+        mock_filter.first.return_value = mock_org
+        mock_session_query.return_value.filter.return_value = mock_filter
 
         # Test with valid organization filter
         mock_form = MagicMock()
@@ -6038,28 +6040,29 @@ class TestUtilizationController:
             '/admin/approval-and-delete?sort=newest' '&filter=approved&filter=test-org'
         )
         assert result == expected
-        mock_group_get.assert_called_with('test-org')
 
         # Test with invalid organization filter (not found)
-        mock_group_get.return_value = None
+        mock_filter.first.return_value = None
         mock_form.getlist.return_value = ['approved', 'invalid-org']
         result = UtilizationController._get_admin_redirect_url()
         assert result == '/admin/approval-and-delete?sort=newest&filter=approved'
         assert 'invalid-org' not in result
 
-    @patch('ckanext.feedback.controllers.utilization.model.Group.get')
+    @patch('ckanext.feedback.controllers.utilization.model.Session.query')
     def test_validate_organization_filter_returns_false_on_exception(
-        self, mock_group_get
+        self, mock_session_query
     ):
         """_validate_organization_filter should return False when lookup raises"""
         from ckanext.feedback.controllers.utilization import UtilizationController
 
-        mock_group_get.side_effect = Exception('db error')
+        # Mock query chain to raise exception
+        mock_filter = MagicMock()
+        mock_filter.first.side_effect = Exception('db error')
+        mock_session_query.return_value.filter.return_value = mock_filter
 
         result = UtilizationController._validate_organization_filter('org-name')
 
         assert result is False
-        mock_group_get.assert_called_once_with('org-name')
 
     @patch('ckanext.feedback.controllers.utilization.helpers.flash_error')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
