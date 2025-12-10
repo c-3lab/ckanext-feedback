@@ -1363,9 +1363,16 @@ class UtilizationController:
     def _validate_organization_filter(filter_value: str) -> bool:
         """Validate if filter value is a valid organization name"""
         try:
-            # Check if organization exists in database
-            org = model.Group.get(filter_value)
-            return org is not None and org.is_organization
+            # Check if organization exists in database by name
+            org = (
+                model.Session.query(model.Group)
+                .filter(
+                    model.Group.name == filter_value,
+                    model.Group.is_organization.is_(True),
+                )
+                .first()
+            )
+            return org is not None
         except Exception:
             return False
 
