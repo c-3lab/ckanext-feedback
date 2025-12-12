@@ -55,7 +55,7 @@ class TestSendMail:
     @patch('ckanext.feedback.services.common.send_mail.toolkit.get_action')
     @patch('ckanext.feedback.services.common.send_mail.toolkit.enqueue_job')
     def test_send_email(self, mock_enqueue_job, mock_get_action):
-        (user, organization_id) = create_org_admin_user()
+        user, organization_id = create_org_admin_user()
         config['ckan.feedback.notice.email.enable'] = True
         config['ckan.feedback.notice.email.template_directory'] = template_dir
         subject = 'test subject'
@@ -112,7 +112,7 @@ class TestSendMail:
     @patch('ckanext.feedback.services.common.send_mail.toolkit.get_action')
     @patch('ckanext.feedback.services.common.send_mail.toolkit.enqueue_job')
     def test_send_email_no_subject(self, mock_enqueue_job, mock_get_action):
-        (user, organization_id) = create_org_admin_user()
+        user, organization_id = create_org_admin_user()
         config['ckan.feedback.notice.email.enable'] = True
         config['ckan.feedback.notice.email.template_directory'] = template_dir
 

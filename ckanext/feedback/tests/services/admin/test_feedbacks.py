@@ -17,7 +17,9 @@ from ckanext.feedback.models.utilization import (
     UtilizationComment,
     UtilizationCommentCategory,
 )
-from ckanext.feedback.services.admin import feedbacks
+from ckanext.feedback.services.admin import (
+    feedbacks,
+)
 from ckanext.feedback.services.admin import (
     resource_comments as resource_comments_service,
 )
