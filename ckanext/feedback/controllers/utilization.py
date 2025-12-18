@@ -895,7 +895,10 @@ class UtilizationController:
             helpers.flash_error(result.error_message, allow_html=True)
         else:
             helpers.flash_success(
-                _('Your reply has been sent.'),
+                _(
+                    'Your reply has been sent.<br>The reply will not be displayed until'
+                    ' approved by an administrator.'
+                ),
                 allow_html=True,
             )
 
