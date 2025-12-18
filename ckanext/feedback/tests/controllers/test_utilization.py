@@ -1524,8 +1524,10 @@ class TestUtilizationController:
     # fmt: on
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     def test_reply_sysadmin_with_image_success(
         self,
+        mock_flash_success,
         mock_redirect,
         mock_commit,
         mock_create,
@@ -1697,7 +1699,10 @@ class TestUtilizationController:
     )
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
-    def test_reply_is_org_admin_path(self, mock_redirect, mock_commit, mock_create, *_):
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
+    def test_reply_is_org_admin_path(
+        self, mock_flash_success, mock_redirect, mock_commit, mock_create, *_
+    ):
         UtilizationController.reply(TEST_UTILIZATION_ID)
         mock_create.assert_called_once()
         mock_commit.assert_called_once()
@@ -2557,8 +2562,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     def test_approve(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_session_commit,
         mock_summary_service,
@@ -3675,8 +3682,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     def test_approve_comment(
         self,
+        mock_flash_success,
         mock_require_package_access,
         mock_redirect_to,
         mock_session_commit,
@@ -4149,8 +4158,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     def test_create_issue_resolution(
         self,
+        mock_flash_success,
         mock_require_package_access,
         mock_redirect_to,
         mock_session_commit,
@@ -4222,8 +4233,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.summary_service')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
     @patch('ckanext.feedback.controllers.utilization.require_package_access')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     def test_create_issue_resolution_without_description(
         self,
+        mock_flash_success,
         mock_require_package_access,
         mock_redirect_to,
         mock_summary_service,
@@ -5709,8 +5722,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.toolkit.abort')
     def test_approve_reply_value_error(
         self,
+        mock_abort,
         mock_redirect,
         mock_commit,
         mock_detail_service,
@@ -5725,12 +5740,9 @@ class TestUtilizationController:
         )
         self._setup_mock_utilization(mock_detail_service)
 
-        with patch('ckanext.feedback.controllers.utilization.log.warning') as mock_log:
-            UtilizationController.approve_reply(TEST_UTILIZATION_ID, TEST_REPLY_ID)
-            mock_log.assert_called_once()
-            self._assert_approve_reply_common(
-                mock_redirect, mock_commit, should_commit=False
-            )
+        UtilizationController.approve_reply(TEST_UTILIZATION_ID, TEST_REPLY_ID)
+        mock_abort.assert_called_once()
+        mock_commit.assert_not_called()
 
     @patch(
         'ckanext.feedback.controllers.utilization.UtilizationController._check_organization_admin_role'  # noqa: E501
@@ -5768,8 +5780,10 @@ class TestUtilizationController:
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.session.commit')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.utilization.helpers.flash_success')
     def test_approve_reply_success(
         self,
+        mock_flash_success,
         mock_redirect,
         mock_commit,
         mock_detail_service,
