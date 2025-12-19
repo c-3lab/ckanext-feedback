@@ -2,13 +2,14 @@ import logging
 import re
 
 from flask import Blueprint, request
+from psycopg2.errors import UndefinedTable
+from sqlalchemy.exc import ProgrammingError
 
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.download.monthly import (
     increment_resource_downloads_monthly,
 )
 from ckanext.feedback.services.download.summary import increment_resource_downloads
-from ckanext.feedback.views.error_handler import add_error_handler
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,24 @@ datastore_blueprint = Blueprint(
     __name__,
     url_prefix='',
 )
+
+
+# Error handlers must be registered before the blueprint is registered with the app
+@datastore_blueprint.errorhandler(ProgrammingError)
+def handle_programming_error(e):
+    if isinstance(e.orig, UndefinedTable):
+        log.error(
+            'Some tables does not exit.'
+            ' Run "ckan --config=/etc/ckan/production.ini feedback init".'
+        )
+    session.rollback()
+    raise e
+
+
+@datastore_blueprint.errorhandler(Exception)
+def handle_exception(e):
+    session.rollback()
+    raise e
 
 
 @datastore_blueprint.before_app_request
@@ -58,6 +77,5 @@ def intercept_datastore_download():
     return None
 
 
-@add_error_handler
 def get_datastore_download_blueprint():
     return datastore_blueprint
