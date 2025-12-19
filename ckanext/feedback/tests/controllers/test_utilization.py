@@ -4,7 +4,7 @@ import pytest
 from ckan import model
 from ckan.common import _, config
 from ckan.plugins import toolkit
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest, NotFound
 
 from ckanext.feedback.controllers.utilization import UtilizationController
 from ckanext.feedback.models.types import MoralCheckAction
@@ -1544,6 +1544,7 @@ class TestUtilizationController:
         mock_create.assert_called_once_with('cid', 'content', sysadmin['id'], 'f.png')
         mock_commit.assert_called_once()
         mock_redirect.assert_called_once()
+        mock_flash_success.assert_called_once()
 
     @patch(
         'ckanext.feedback.controllers.utilization.request.form.get',
@@ -1707,6 +1708,7 @@ class TestUtilizationController:
         mock_create.assert_called_once()
         mock_commit.assert_called_once()
         mock_redirect.assert_called_once()
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
@@ -2595,6 +2597,7 @@ class TestUtilizationController:
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+        mock_flash_success.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.session.rollback')
     @patch('ckanext.feedback.controllers.utilization.detail_service')
@@ -3711,6 +3714,7 @@ class TestUtilizationController:
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+        mock_flash_success.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.session.rollback')
     @patch('ckanext.feedback.controllers.utilization.toolkit.redirect_to')
@@ -4187,6 +4191,7 @@ class TestUtilizationController:
         mock_redirect_to.assert_called_once_with(
             'utilization.details', utilization_id=utilization_id
         )
+        mock_flash_success.assert_called_once()
 
     @patch('ckanext.feedback.controllers.utilization.session.rollback')
     @patch('ckanext.feedback.controllers.utilization.request.form')
@@ -4257,11 +4262,14 @@ class TestUtilizationController:
 
         mock_form.get.return_value = description
         mock_redirect_to.return_value = ''
+        mock_abort.side_effect = BadRequest()
 
         with admin_context.test_request_context():
-            UtilizationController.create_issue_resolution(utilization_id)
+            with pytest.raises(BadRequest):
+                UtilizationController.create_issue_resolution(utilization_id)
 
         mock_abort.assert_called_once_with(400)
+        mock_flash_success.assert_not_called()
 
     @patch('ckanext.feedback.controllers.utilization.detail_service')
     @patch('ckanext.feedback.controllers.utilization.os.path.exists')
@@ -5801,6 +5809,7 @@ class TestUtilizationController:
         self._assert_approve_reply_common(
             mock_redirect, mock_commit, should_commit=True
         )
+        mock_flash_success.assert_called_once()
 
 
 @pytest.mark.usefixtures('with_request_context')
