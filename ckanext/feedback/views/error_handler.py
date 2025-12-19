@@ -7,12 +7,19 @@ from ckanext.feedback.models.session import session
 
 log = logging.getLogger(__name__)
 
+_registered_blueprints = set()
+
 
 def add_error_handler(func):
     def wrapper():
         blueprint = func()
 
-        @blueprint.app_errorhandler(ProgrammingError)
+        if blueprint.name in _registered_blueprints:
+            return blueprint
+
+        _registered_blueprints.add(blueprint.name)
+
+        @blueprint.errorhandler(ProgrammingError)
         def handle_programming_error(e):
             if isinstance(e.orig, UndefinedTable):
                 log.error(
@@ -23,7 +30,7 @@ def add_error_handler(func):
             session.rollback()
             raise e
 
-        @blueprint.app_errorhandler(Exception)
+        @blueprint.errorhandler(Exception)
         def handle_exception(e):
             session.rollback()
             raise e
