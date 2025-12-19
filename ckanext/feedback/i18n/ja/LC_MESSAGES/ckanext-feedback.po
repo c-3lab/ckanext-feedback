@@ -1272,13 +1272,3 @@ msgstr "登録日"
 #: ckanext/feedback/tests/controllers/test_resource.py:3656
 msgid "Test error message"
 msgstr ""
-
-#~ msgid "aggregation"
-#~ msgstr "集計"
-
-#~ msgid "Failed to change status due to invalid status value."
-#~ msgstr "ステータス値が無効なため、ステータスの変更に失敗しました。"
-
-#~ msgid "Your reply has been sent."
-#~ msgstr "返信を送信しました。"
-
