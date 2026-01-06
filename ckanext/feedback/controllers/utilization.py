@@ -734,6 +734,11 @@ class UtilizationController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
+        else:
+            helpers.flash_success(
+                _('The utilization has been approved.'),
+                allow_html=True,
+            )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -888,6 +893,14 @@ class UtilizationController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
+        else:
+            helpers.flash_success(
+                _(
+                    'Your reply has been sent.<br>The reply will not be displayed until'
+                    ' approved by an administrator.'
+                ),
+                allow_html=True,
+            )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -1060,6 +1073,11 @@ class UtilizationController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
+        else:
+            helpers.flash_success(
+                _('The comment has been approved.'),
+                allow_html=True,
+            )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
@@ -1071,13 +1089,17 @@ class UtilizationController:
         try:
             detail_service.approve_utilization_comment_reply(reply_id, current_user.id)
             session.commit()
-        except ValueError as e:
-            log.warning(f'approve_reply ValueError: {e}')
+            helpers.flash_success(
+                _('The reply has been approved.'),
+                allow_html=True,
+            )
         except PermissionError:
             helpers.flash_error(
                 _('Cannot approve reply because its parent comment is not approved.'),
                 allow_html=True,
             )
+        except ValueError:
+            toolkit.abort(HTTPStatus.NOT_FOUND)
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 
     # utilization/<utilization_id>/edit
@@ -1199,6 +1221,11 @@ class UtilizationController:
             return toolkit.redirect_to(
                 'utilization.details', utilization_id=utilization_id
             )
+
+        helpers.flash_success(
+            _('The issue resolution has been registered.'),
+            allow_html=True,
+        )
 
         return toolkit.redirect_to('utilization.details', utilization_id=utilization_id)
 

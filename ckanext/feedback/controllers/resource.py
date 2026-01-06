@@ -659,6 +659,11 @@ class ResourceController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
+        else:
+            helpers.flash_success(
+                _('The comment has been approved.'),
+                allow_html=True,
+            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -673,6 +678,10 @@ class ResourceController:
         try:
             comment_service.approve_reply(reply_id, current_user.id)
             session.commit()
+            helpers.flash_success(
+                _('The reply has been approved.'),
+                allow_html=True,
+            )
         except PermissionError:
             helpers.flash_error(
                 _('Cannot approve reply before the parent comment is approved.'),
@@ -770,6 +779,14 @@ class ResourceController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
+        else:
+            helpers.flash_success(
+                _(
+                    'Your reply has been sent.<br>The reply will not be displayed until'
+                    ' approved by an administrator.'
+                ),
+                allow_html=True,
+            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -961,6 +978,11 @@ class ResourceController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
+        else:
+            helpers.flash_success(
+                _('The status has been updated.'),
+                allow_html=True,
+            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 

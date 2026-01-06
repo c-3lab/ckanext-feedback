@@ -6,7 +6,7 @@ from ckan.common import _, config
 from ckan.logic import get_action
 from ckan.plugins import toolkit
 from flask import g
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest, NotFound
 
 import ckanext.feedback.services.resource.comment as comment_service
 from ckanext.feedback.controllers.resource import ResourceController
@@ -581,9 +581,13 @@ class TestResourceController:
             'comment-checked': True,
         }.get(x, default)
         mock_validate_comment.return_value = None
+        mock_toolkit_abort.side_effect = BadRequest()
 
-        ResourceController.create_comment(resource_id)
+        with pytest.raises(BadRequest):
+            ResourceController.create_comment(resource_id)
+
         mock_toolkit_abort.assert_called_once_with(400)
+        mock_flash_success.assert_not_called()
 
     @patch('ckanext.feedback.controllers.resource.ResourceController.comment')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
@@ -1278,8 +1282,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_approve_comment_with_sysadmin(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_session_commit,
         mock_comment_service,
@@ -1315,6 +1321,7 @@ class TestResourceController:
         mock_redirect_to.assert_called_once_with(
             'resource_comment.comment', resource_id=resource_id
         )
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
@@ -1341,8 +1348,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_approve_comment_with_other_organization_admin_user(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_comment_service,
         mock_toolkit_abort,
@@ -1385,7 +1394,10 @@ class TestResourceController:
         current_user.return_value = user_obj
         g.userobj = current_user
 
-        ResourceController.approve_comment(resource['id'])
+        mock_toolkit_abort.side_effect = NotFound()
+
+        with pytest.raises(NotFound):
+            ResourceController.approve_comment(resource['id'])
 
         mock_toolkit_abort.assert_any_call(
             404,
@@ -1394,6 +1406,7 @@ class TestResourceController:
                 ' manually please check your spelling and try again.'
             ),
         )
+        mock_flash_success.assert_not_called()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.require_package_access')
@@ -1401,8 +1414,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.summary_service')
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.request.form')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_approve_comment_without_resource_comment_id(
         self,
+        mock_flash_success,
         mock_form,
         mock_comment_service,
         mock_summary_service,
@@ -1422,9 +1437,13 @@ class TestResourceController:
         mock_comment_service.get_resource.return_value = mock_resource
 
         mock_form.get.side_effect = [None]
+        mock_toolkit_abort.side_effect = BadRequest()
 
-        ResourceController.approve_comment(resource_id)
+        with pytest.raises(BadRequest):
+            ResourceController.approve_comment(resource_id)
+
         mock_toolkit_abort.assert_called_once_with(400)
+        mock_flash_success.assert_not_called()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.require_package_access')
@@ -1433,8 +1452,10 @@ class TestResourceController:
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_reply_with_sysadmin(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_session_commit,
         mock_comment_service,
@@ -1471,6 +1492,7 @@ class TestResourceController:
         mock_redirect_to.assert_called_once_with(
             'resource_comment.comment', resource_id=resource_id
         )
+        mock_flash_success.assert_called_once()
 
     @pytest.mark.db_test
     @patch('flask_login.utils._get_user')
@@ -2068,8 +2090,10 @@ class TestResourceCommentReactions:
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_reactions_existing_reaction_sysadmin_updates_reaction(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_session_commit,
         mock_comment_service,
@@ -2120,6 +2144,7 @@ class TestResourceCommentReactions:
             'resource_comment.comment',
             resource_id=resource_id,
         )
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.require_package_access')
@@ -2127,8 +2152,10 @@ class TestResourceCommentReactions:
     @patch('ckanext.feedback.controllers.resource.comment_service')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_reactions_no_existing_reaction_sysadmin_creates_reaction(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_session_commit,
         mock_comment_service,
@@ -2179,6 +2206,7 @@ class TestResourceCommentReactions:
             'resource_comment.comment',
             resource_id=resource_id,
         )
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.toolkit.abort')
@@ -3812,8 +3840,10 @@ class TestResourceControllerCommonMethods:
     @patch('ckanext.feedback.controllers.resource.comment_service.approve_reply')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_approve_reply_success(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_commit,
         mock_approve,
@@ -3847,6 +3877,7 @@ class TestResourceControllerCommonMethods:
         mock_redirect_to.assert_called_once_with(
             'resource_comment.comment', resource_id='rid_res'
         )
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
@@ -3955,8 +3986,10 @@ class TestResourceControllerCommonMethods:
     @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_reply_admin_bypass_success(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_commit,
         mock_create_reply,
@@ -3989,6 +4022,7 @@ class TestResourceControllerCommonMethods:
         mock_create_reply.assert_called_once()
         mock_commit.assert_called_once()
         mock_redirect_to.assert_called_once()
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
@@ -3999,8 +4033,10 @@ class TestResourceControllerCommonMethods:
     @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_reply_reply_open_is_enable_raises_then_proceed_as_admin(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_commit,
         mock_create_reply,
@@ -4033,6 +4069,7 @@ class TestResourceControllerCommonMethods:
         mock_create_reply.assert_called_once()
         mock_commit.assert_called_once()
         mock_redirect_to.assert_called_once()
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.helpers.flash_error')
@@ -4426,8 +4463,10 @@ class TestResourceControllerCommonMethods:
     @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_reply_with_image_success(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_commit,
         mock_create_reply,
@@ -4468,6 +4507,7 @@ class TestResourceControllerCommonMethods:
         )
         mock_commit.assert_called_once()
         mock_redirect_to.assert_called_once()
+        mock_flash_success.assert_called_once()
 
     @patch('flask_login.utils._get_user')
     @patch('ckanext.feedback.controllers.resource.FeedbackConfig')
@@ -4588,8 +4628,10 @@ class TestResourceControllerCommonMethods:
     @patch('ckanext.feedback.controllers.resource.comment_service.create_reply')
     @patch('ckanext.feedback.controllers.resource.session.commit')
     @patch('ckanext.feedback.controllers.resource.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.resource.helpers.flash_success')
     def test_reply_is_admin_org_admin_path(
         self,
+        mock_flash_success,
         mock_redirect_to,
         mock_commit,
         mock_create_reply,
@@ -4627,6 +4669,7 @@ class TestResourceControllerCommonMethods:
         )
         mock_commit.assert_called_once()
         mock_redirect_to.assert_called_once()
+        mock_flash_success.assert_called_once()
 
     @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
     @patch('ckanext.feedback.controllers.resource._session')
