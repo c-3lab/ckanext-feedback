@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 import ckan.model as model
 from ckan import plugins
-from ckan.common import _, config
+from ckan.common import _
 from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 from ckan.types import PUploader
@@ -87,10 +87,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
 
-    def is_base_public_folder_bs3(self):
-        base_templates_folder = config.get('ckan.base_public_folder', 'public')
-        return base_templates_folder == 'public-bs3'
-
     # ITemplateHelpers
 
     def get_helpers(self):
@@ -112,7 +108,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 cfg.resource_comment.image_attachment.is_enable
             ),
             'is_organization_admin': check.is_organization_admin,
-            'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
             'user_has_organization_admin_role': check.user_has_organization_admin_role,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
