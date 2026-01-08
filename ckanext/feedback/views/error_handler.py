@@ -7,17 +7,17 @@ from ckanext.feedback.models.session import session
 
 log = logging.getLogger(__name__)
 
-_registered_blueprints = set()
+_registered_blueprints = {}
 
 
 def add_error_handler(func):
     def wrapper():
         blueprint = func()
+        name = blueprint.name
 
-        if blueprint.name in _registered_blueprints:
-            return blueprint
-
-        _registered_blueprints.add(blueprint.name)
+        cached = _registered_blueprints.get(name)
+        if cached is not None:
+            return cached
 
         @blueprint.errorhandler(ProgrammingError)
         def handle_programming_error(e):
@@ -26,7 +26,6 @@ def add_error_handler(func):
                     'Some tables does not exit.'
                     ' Run "ckan --config=/etc/ckan/production.ini feedback init".'
                 )
-
             session.rollback()
             raise e
 
@@ -35,6 +34,7 @@ def add_error_handler(func):
             session.rollback()
             raise e
 
+        _registered_blueprints[name] = blueprint
         return blueprint
 
     return wrapper
