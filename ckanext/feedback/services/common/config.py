@@ -7,6 +7,9 @@ from ckan.common import config
 from ckan.plugins import toolkit
 from werkzeug.utils import import_string
 
+from ckanext.feedback.services.common.feedback_config_validator import (
+    validate_feedback_config,
+)
 from ckanext.feedback.services.organization import organization as organization_service
 
 log = logging.getLogger(__name__)
@@ -84,6 +87,17 @@ class BaseConfig:
                         f"(e.g., {{\"modules\": {{\"{key}\": {{\"enable\": true}}}}}})."
                     )
                     raise toolkit.ValidationError({"message": message})
+                if not isinstance(enable, bool):
+                    raise toolkit.ValidationError(
+                        {
+                            "message": (
+                                "The value of the \"enable\" key is invalid. "
+                                "Please specify a boolean value such as "
+                                "`true` or `false` for the \"enable\" key."
+                            )
+                        }
+                    )
+
                 enable_orgs = conf_tree.get("enable_orgs")
                 disable_orgs = conf_tree.get("disable_orgs")
 
@@ -258,9 +272,6 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
         self.reply_open.default = False
 
-        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
-        self.reply_open.default = False
-
     def load_config(self, feedback_config):
         self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
 
@@ -278,10 +289,6 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.image_attachment.name],
-        )
-        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=fb_comments_conf_path + ['reply_open'],
         )
 
         self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
@@ -452,14 +459,23 @@ class FeedbackConfig(Singleton):
             ) as json_file:
                 self.is_feedback_config_file = True
                 feedback_config = json.load(json_file)
+                validate_feedback_config(feedback_config)
                 for value in self.__dict__.values():
                     if isinstance(value, BaseConfig):
                         value.load_config(feedback_config)
+
         except FileNotFoundError:
             toolkit.error_shout(
                 'The feedback config file not found. '
                 f'{self.feedback_config_path}/feedback_config.json'
             )
             self.is_feedback_config_file = False
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
             toolkit.error_shout('The feedback config file not decoded correctly')
+            raise e
+        except toolkit.ValidationError as e:
+            toolkit.error_shout(
+                'The feedback config file validation failed. '
+                'Please check the file structure and content.'
+            )
+            raise e
