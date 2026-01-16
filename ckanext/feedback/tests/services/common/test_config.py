@@ -22,6 +22,7 @@ ORG_NAME_C = 'org-name-c'
 ORG_NAME_D = 'org-name-d'
 
 
+@pytest.mark.usefixtures("cleanup_feedback_config")
 class TestCheck:
     @patch('ckanext.feedback.services.common.config.import_string')
     def test_seted_download_handler(self, mock_import_string):
@@ -50,11 +51,6 @@ class TestCheck:
         mock_ReCaptchaConfig_load_config,
         mock_NoticeEmailConfig_load_config,
     ):
-        # without feedback_config_file and .ini file
-        try:
-            os.remove('/srv/app/feedback_config.json')
-        except FileNotFoundError:
-            pass
 
         FeedbackConfig().load_feedback_config()
         assert FeedbackConfig().is_feedback_config_file is False
@@ -77,10 +73,12 @@ class TestCheck:
     @patch('ckanext.feedback.plugin.toolkit')
     def test_update_config_attribute_error(self, mock_toolkit):
         feedback_config = {'modules': {}}
+
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
         FeedbackConfig().load_feedback_config()
+
         mock_toolkit.error_shout.call_count == 4
         os.remove('/srv/app/feedback_config.json')
 
@@ -88,12 +86,67 @@ class TestCheck:
     def test_update_config_json_decode_error(self, mock_toolkit):
         with open('/srv/app/feedback_config.json', 'w') as f:
             f.write('{"modules":')
+        with pytest.raises(json.JSONDecodeError):
+            FeedbackConfig().load_feedback_config()
 
-        FeedbackConfig().load_feedback_config()
         mock_toolkit.error_shout.assert_called_once_with(
             'The feedback config file not decoded correctly'
         )
-        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.toolkit.error_shout')
+    def test_load_feedback_config_top_level_not_dict(self, mock_error_shout):
+        feedback_config = [{"modules": {}}]
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        with pytest.raises(ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        mock_error_shout.assert_called_once_with(
+            'The feedback config file validation failed. '
+            'Please check the file structure and content.'
+        )
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+        assert 'object' in error_message.lower() or 'dict' in error_message.lower()
+
+    def test_load_feedback_config_modules_value_not_dict(self):
+        feedback_config = {"modules": "not_dict"}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        with pytest.raises(ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert 'object' in error_message.lower() or 'dict' in error_message.lower()
+
+    def test_load_config_invalid_module_name(self):
+        feedback_config = {
+            "modules": {
+                "invalid_module_name": {"enable": True},
+                "utilizations": {"enable": True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        with pytest.raises(ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            'invalid' in error_message.lower() or 'module' in error_message.lower()
+        ), f"Expected error about invalid module, but got: {error_message}"
+        assert (
+            'invalid_module_name' in error_message
+        ), f"Expected error to mention 'invalid_module_name', but got: {error_message}"
 
     def test_get_commands(self):
         result = FeedbackPlugin.get_commands(self)
@@ -541,15 +594,15 @@ class TestCheck:
     @patch('ckanext.feedback.services.common.config.organization_service')
     def test_module_default_config(self, mock_organization_service):
         # utilization(ckan.ini)
-        config.pop('ckan.feedback.utilization.enable', None)
-        config.pop('ckan.feedback.utilization.enable_orgs', None)
-        config.pop('ckan.feedback.utilization.disable_orgs', None)
+        config.pop('ckan.feedback.utilizations.enable', None)
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
-        assert config.get('ckan.feedback.utilization.enable', None) is None
-        assert config.get('ckan.feedback.utilization.enable_orgs', None) is None
-        assert config.get('ckan.feedback.utilization.disable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.enable', None) is None
+        assert config.get('ckan.feedback.utilizations.enable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().utilization.is_enable() is True
         assert FeedbackConfig().utilization.is_enable(ORG_NAME_A) is True
@@ -564,9 +617,9 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        assert config.get('ckan.feedback.utilization.enable', None) is None
-        assert config.get('ckan.feedback.utilization.enable_orgs', None) is None
-        assert config.get('ckan.feedback.utilization.disable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.enable', None) is None
+        assert config.get('ckan.feedback.utilizations.enable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().utilization.is_enable() is True
         assert FeedbackConfig().utilization.is_enable(ORG_NAME_A) is True
@@ -1544,3 +1597,19 @@ class TestCheck:
         assert result == [ORG_NAME_A, ORG_NAME_B, ORG_NAME_C, ORG_NAME_D]
 
         os.remove('/srv/app/feedback_config.json')
+
+    def test_set_enable_invalid_type_direct_call(self):
+        from ckanext.feedback.services.common.config import UtilizationConfig
+
+        invalid_config = {"modules": {"utilizations": {"enable": "true"}}}
+
+        utilization_config = UtilizationConfig()
+
+        with pytest.raises(toolkit.ValidationError) as exc_info:
+            utilization_config.set_enable_and_enable_orgs_and_disable_orgs(
+                invalid_config
+            )
+
+        error_message = exc_info.value.__dict__.get('error_dict', {}).get('message', '')
+        assert 'enable' in error_message.lower()
+        assert 'boolean' in error_message.lower() or 'invalid' in error_message.lower()
