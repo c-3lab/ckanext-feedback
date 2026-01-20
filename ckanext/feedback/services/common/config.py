@@ -28,10 +28,6 @@ def download_handler():
     return handler
 
 
-def is_list_of_str(value):
-    return isinstance(value, list) and all(isinstance(x, str) for x in value)
-
-
 class Singleton(object):
     _instance = None
 
@@ -60,46 +56,17 @@ class BaseConfig:
     def get_ckan_conf_str(self):
         return '.'.join(self.ckan_conf_prefix + self.conf_path)
 
-    def set_enable_and_enable_orgs_and_disable_orgs(
-        self, feedback_config: dict, fb_conf_path: list = None
-    ):
-        fb_conf_path = fb_conf_path or self.conf_path
-        key_list = self.fb_conf_prefix + fb_conf_path
-
-        conf_tree = feedback_config
-
+    def set_enable_and_enable_orgs_and_disable_orgs(self, module_config: dict = None):
         ckan_conf_str = self.get_ckan_conf_str()
+        if module_config is None:
+            config.pop(f"{ckan_conf_str}.enable", None)
+            config.pop(f"{ckan_conf_str}.enable_orgs", None)
+            config.pop(f"{ckan_conf_str}.disable_orgs", None)
+            return
 
-        for key in key_list:
-            conf_tree = conf_tree.get(key)
-
-            if conf_tree is None:
-                config.pop(f"{ckan_conf_str}.enable", None)
-                return
-
-            if key == key_list[-1]:
-                enable = conf_tree.get("enable")
-                if enable is None:
-                    message = (
-                        f"The configuration of the \"{key}\" module "
-                        "in \"feedback_config.json\" is incomplete. "
-                        "Please specify the \"enable\" key "
-                        f"(e.g., {{\"modules\": {{\"{key}\": {{\"enable\": true}}}}}})."
-                    )
-                    raise toolkit.ValidationError({"message": message})
-                if not isinstance(enable, bool):
-                    raise toolkit.ValidationError(
-                        {
-                            "message": (
-                                "The value of the \"enable\" key is invalid. "
-                                "Please specify a boolean value such as "
-                                "`true` or `false` for the \"enable\" key."
-                            )
-                        }
-                    )
-
-                enable_orgs = conf_tree.get("enable_orgs")
-                disable_orgs = conf_tree.get("disable_orgs")
+        enable = module_config.get("enable")
+        enable_orgs = module_config.get("enable_orgs")
+        disable_orgs = module_config.get("disable_orgs")
 
         config[f"{ckan_conf_str}.enable"] = enable
         if enable_orgs:
@@ -165,7 +132,7 @@ class BaseConfig:
             return False
 
         # Retrieve the list of enabled organizations and disabled
-        # organizations from the ini file
+        # organizations (loaded from feedback_config.json)
         enable_orgs = config.get(f"{ck_conf_str}.enable_orgs")
         disable_orgs = config.get(f"{ck_conf_str}.disable_orgs")
 
@@ -173,32 +140,6 @@ class BaseConfig:
         # nor the list of disabled organizations exists
         if not enable_orgs and not disable_orgs:
             return enable
-
-        # Raise a ValidationError if the list of enabled
-        # organizations exists and is not an array of strings
-        if enable_orgs and not is_list_of_str(enable_orgs):
-            raise toolkit.ValidationError(
-                {
-                    "message": (
-                        "The \"enable_orgs\" key must be a string array "
-                        "to specify valid organizations "
-                        "(e.g., \"enable_orgs\": [\"org-name-a\", \"org-name-b\"])."
-                    )
-                }
-            )
-
-        # Raise a ValidationError if the list of disabled
-        # organizations exists and is not an array of strings
-        if disable_orgs and not is_list_of_str(disable_orgs):
-            raise toolkit.ValidationError(
-                {
-                    "message": (
-                        "The \"disable_orgs\" key must be a string array "
-                        "to specify invalid organizations "
-                        "(e.g., \"disable_orgs\": [\"org-name-a\", \"org-name-b\"])."
-                    )
-                }
-            )
 
         # If both the list of enabled organizations and the list
         # of disabled organizations exist, turn off the organizations
@@ -245,11 +186,14 @@ class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
         self.modal.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
-        fb_feedback_prompt_conf_path = self.conf_path + ['feedback_prompt']
+        module_config = feedback_config.get('modules', {}).get('downloads')
+        self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
+
+        feedback_prompt_config = (
+            module_config.get('feedback_prompt', {}) if module_config else {}
+        )
         self.modal.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=fb_feedback_prompt_conf_path + ['modal'],
+            feedback_prompt_config.get('modal')
         )
 
 
@@ -273,27 +217,22 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.reply_open.default = False
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        module_config = feedback_config.get('modules', {}).get('resources')
+        self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
+        # submodule setting
+        comments_config = module_config.get('comments', {}) if module_config else {}
 
-        fb_comments_conf_path = self.conf_path + ['comments']
         self.repeat_post_limit.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=fb_comments_conf_path + ['repeat_post_limit'],
+            comments_config.get('repeat_post_limit')
         )
-
         self.rating.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=fb_comments_conf_path + [self.rating.name],
+            comments_config.get('rating')
         )
-
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=fb_comments_conf_path + [self.image_attachment.name],
+            comments_config.get('image_attachment')
         )
-
         self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=fb_comments_conf_path + ['reply_open'],
+            comments_config.get('reply_open')
         )
 
 
@@ -303,7 +242,9 @@ class UtilizationConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        # self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        module_config = feedback_config.get('modules', {}).get('utilizations')
+        self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
 
 class UtilizationCommentConfig(BaseConfig, FeedbackConfigInterface):
@@ -318,14 +259,15 @@ class UtilizationCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.reply_open.default = False
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        module_config = feedback_config.get('modules', {}).get('utilizations')
+        self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
+
+        comments_config = module_config.get('comments', {}) if module_config else {}
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=self.conf_path + ['comments', 'image_attachment'],
+            comments_config.get('image_attachment')
         )
-        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=self.conf_path + ['comments', 'reply_open'],
+        self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
+            comments_config.get('reply_open')
         )
 
 
@@ -335,7 +277,9 @@ class LikesConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        # self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        module_config = feedback_config.get('modules', {}).get('likes')
+        self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
 
 class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
@@ -427,7 +371,8 @@ class MoralKeeperAiConfig(BaseConfig, FeedbackConfigInterface):
         self.default = False
 
     def load_config(self, feedback_config):
-        self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
+        module_config = feedback_config.get('modules', {}).get('moral_keeper_ai')
+        self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
 
 class FeedbackConfig(Singleton):
