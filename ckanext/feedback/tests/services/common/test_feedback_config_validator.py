@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 from ckan.plugins import toolkit
@@ -553,3 +554,55 @@ class TestSubModuleValidation:
             json.dump(feedback_config, f)
         FeedbackConfig().load_feedback_config()
         assert FeedbackConfig().is_feedback_config_file is True
+
+    def test_module_config_not_dict(self):
+        feedback_config = {"modules": {"utilizations": "not_a_dict"}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f)
+
+        with pytest.raises(toolkit.ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_message = exc_info.value.__dict__.get('error_dict', {}).get('message', '')
+        assert 'modules.utilizations' in error_message
+        assert 'must be an object' in error_message
+
+    def test_module_with_base_field_but_no_enable(self):
+        feedback_config = {"modules": {"utilizations": {"enable_orgs": ["org1"]}}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f)
+
+        with pytest.raises(toolkit.ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_message = exc_info.value.__dict__.get('error_dict', {}).get('message', '')
+        assert 'modules.utilizations' in error_message
+        assert "must have 'enable' key" in error_message
+
+    def test_module_config_empty_dict(self):
+        feedback_config = {"modules": {"resources": {}}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f)
+
+        with pytest.raises(toolkit.ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_message = exc_info.value.__dict__.get('error_dict', {}).get('message', '')
+        assert 'modules.resources must not be empty' == error_message
+        os.remove('/srv/app/feedback_config.json')
+
+    def test_utilizations_empty_dict(self):
+        feedback_config = {"modules": {"utilizations": {}}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f)
+
+        with pytest.raises(toolkit.ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_message = exc_info.value.__dict__.get('error_dict', {}).get('message', '')
+        assert 'modules.utilizations must not be empty' == error_message
+        os.remove('/srv/app/feedback_config.json')
