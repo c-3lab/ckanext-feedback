@@ -242,7 +242,6 @@ class UtilizationConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
     def load_config(self, feedback_config):
-        # self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
         module_config = feedback_config.get('modules', {}).get('utilizations')
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
@@ -277,7 +276,6 @@ class LikesConfig(BaseConfig, FeedbackConfigInterface):
         self.default = True
 
     def load_config(self, feedback_config):
-        # self.set_enable_and_enable_orgs_and_disable_orgs(feedback_config)
         module_config = feedback_config.get('modules', {}).get('likes')
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
