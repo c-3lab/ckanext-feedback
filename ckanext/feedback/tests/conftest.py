@@ -409,6 +409,12 @@ def cleanup_feedback_config():
         except Exception:
             pass
 
+    if os.path.isfile(config_file_path):
+        try:
+            os.remove(config_file_path)
+        except Exception:
+            pass
+
     yield
 
     try:
@@ -421,4 +427,5 @@ def cleanup_feedback_config():
     except Exception:
         pass
     finally:
+        FeedbackConfig._instance = None
         FeedbackConfig._initialized = False
