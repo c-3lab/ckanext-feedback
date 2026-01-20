@@ -47,6 +47,41 @@ def is_list_of_str(value):
     return isinstance(value, list) and all(isinstance(x, str) for x in value)
 
 
+def validate_module_fields(module_name, module_config):
+    # Validate fields of the top level module.
+    if not isinstance(module_config, dict):
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    f"modules.{module_name} must be an object, "
+                    f"got {type(module_config).__name__}"
+                )
+            }
+        )
+    has_submodule_schema = module_name in MODULE_SUBMODULE_SCHEMAS
+    has_base_field = any(key in module_config for key in BASE_MODULE_SCHEMA.keys())
+
+    # For modules with submodule schemas
+    if has_submodule_schema:
+        if not module_config:
+            raise toolkit.ValidationError(
+                {"message": f"modules.{module_name} must not be empty"}
+            )
+        if has_base_field and "enable" not in module_config:
+            raise toolkit.ValidationError(
+                {"message": f"modules.{module_name} must have 'enable' key"}
+            )
+    # Type check for each field
+    for field_name, expected_type in BASE_MODULE_SCHEMA.items():
+        if field_name in module_config:
+            validate_submodule_field(
+                field_name=field_name,
+                field_value=module_config[field_name],
+                expected_type=expected_type,
+                submodule_path=f"modules.{module_name}",
+            )
+
+
 def validate_submodule_field(field_name, field_value, expected_type, submodule_path):
     # Validate fields of the submodule.
 
@@ -197,4 +232,5 @@ def validate_feedback_config(feedback_config):
         )
 
     for module_name, module_config in feedback_config['modules'].items():
+        validate_module_fields(module_name, module_config)
         validate_module_submodules(module_name, module_config)
