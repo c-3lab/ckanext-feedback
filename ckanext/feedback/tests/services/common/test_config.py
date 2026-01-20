@@ -523,12 +523,7 @@ class TestCheck:
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
 
-        assert error_message == (
-            "The configuration of the \"resources\" module "
-            "in \"feedback_config.json\" is incomplete. "
-            "Please specify the \"enable\" key "
-            "(e.g., {\"modules\": {\"resources\": {\"enable\": true}}})."
-        )
+        assert error_message == "modules.resources must not be empty"
         os.remove('/srv/app/feedback_config.json')
 
         # The value of "enable_orgs" is not an array of strings
@@ -542,22 +537,15 @@ class TestCheck:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
-        FeedbackConfig().load_feedback_config()
-
-        mock_organization_service.get_organization_name_by_id.return_value = (
-            SimpleNamespace(**{'name': ORG_NAME_A})
-        )
-
         with pytest.raises(ValidationError) as exc_info:
-            FeedbackConfig().resource_comment.is_enable(ORG_NAME_A)
+            FeedbackConfig().load_feedback_config()
 
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
 
-        assert error_message == (
-            "The \"enable_orgs\" key must be a string array "
-            "to specify valid organizations "
-            "(e.g., \"enable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+        assert (
+            error_message
+            == 'modules.resources.enable_orgs must be a list of strings,got str'
         )
         os.remove('/srv/app/feedback_config.json')
 
@@ -572,22 +560,15 @@ class TestCheck:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
-        FeedbackConfig().load_feedback_config()
-
-        mock_organization_service.get_organization_name_by_id.return_value = (
-            SimpleNamespace(**{'name': ORG_NAME_A})
-        )
-
         with pytest.raises(ValidationError) as exc_info:
-            FeedbackConfig().resource_comment.is_enable(ORG_NAME_A)
+            FeedbackConfig().load_feedback_config()
 
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
 
         assert (
-            error_message == "The \"disable_orgs\" key must be a string array "
-            "to specify invalid organizations "
-            "(e.g., \"disable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+            error_message
+            == 'modules.resources.disable_orgs must be a list of strings,got str'
         )
         os.remove('/srv/app/feedback_config.json')
 
@@ -1598,18 +1579,103 @@ class TestCheck:
 
         os.remove('/srv/app/feedback_config.json')
 
-    def test_set_enable_invalid_type_direct_call(self):
-        from ckanext.feedback.services.common.config import UtilizationConfig
+    def test_set_enable_and_enable_orgs_and_disable_orgs_with_module_config(self):
+        from ckan.common import config
 
-        invalid_config = {"modules": {"utilizations": {"enable": "true"}}}
+        from ckanext.feedback.services.common.config import DownloadsConfig
 
-        utilization_config = UtilizationConfig()
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
 
-        with pytest.raises(toolkit.ValidationError) as exc_info:
-            utilization_config.set_enable_and_enable_orgs_and_disable_orgs(
-                invalid_config
-            )
+        module_config = {
+            "enable": True,
+            "enable_orgs": ["org-a", "org-b"],
+            "disable_orgs": ["org-c"],
+        }
 
-        error_message = exc_info.value.__dict__.get('error_dict', {}).get('message', '')
-        assert 'enable' in error_message.lower()
-        assert 'boolean' in error_message.lower() or 'invalid' in error_message.lower()
+        downloads_config = DownloadsConfig()
+        downloads_config.set_enable_and_enable_orgs_and_disable_orgs(module_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs') == ["org-a", "org-b"]
+        assert config.get('ckan.feedback.downloads.disable_orgs') == ["org-c"]
+
+    def test_set_enable_and_enable_orgs_and_disable_orgs_with_none(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        config['ckan.feedback.downloads.enable'] = True
+        config['ckan.feedback.downloads.enable_orgs'] = ["org-a"]
+        config['ckan.feedback.downloads.disable_orgs'] = ["org-b"]
+
+        downloads_config = DownloadsConfig()
+        downloads_config.set_enable_and_enable_orgs_and_disable_orgs(None)
+
+        assert config.get('ckan.feedback.downloads.enable') is None
+        assert config.get('ckan.feedback.downloads.enable_orgs') is None
+        assert config.get('ckan.feedback.downloads.disable_orgs') is None
+
+    def test_set_enable_and_enable_orgs_and_disable_orgs_partial_fields(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        module_config = {"enable": False}
+
+        downloads_config = DownloadsConfig()
+        downloads_config.set_enable_and_enable_orgs_and_disable_orgs(module_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is False
+        assert config.get('ckan.feedback.downloads.enable_orgs') is None
+        assert config.get('ckan.feedback.downloads.disable_orgs') is None
+
+    def test_downloads_config_load_config_with_full_config(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        feedback_config = {
+            "modules": {
+                "downloads": {
+                    "enable": True,
+                    "enable_orgs": ["org-a"],
+                    "feedback_prompt": {
+                        "modal": {"enable": False, "disable_orgs": ["org-b"]}
+                    },
+                }
+            }
+        }
+
+        download_config = DownloadsConfig()
+        download_config.load_config(feedback_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs') == ["org-a"]
+        assert (
+            config.get('ckan.feedback.downloads.feedback_prompt.modal.enable') is False
+        )
+        assert config.get(
+            'ckan.feedback.downloads.feedback_prompt.modal.disable_orgs'
+        ) == ["org-b"]
+
+    def test_download_config_load_config_missing_download_module(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+
+        feedback_config = {"modules": {}}
+
+        downloads_config = DownloadsConfig()
+        downloads_config.load_config(feedback_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is None
+        assert config.get('ckan.feedback.downloads.enable_orgs') is None
