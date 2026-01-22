@@ -89,9 +89,9 @@ class TestCheck:
         with pytest.raises(json.JSONDecodeError):
             FeedbackConfig().load_feedback_config()
 
-        mock_toolkit.error_shout.assert_called_once_with(
-            'The feedback config file not decoded correctly'
-        )
+        call_args = mock_toolkit.error_shout.call_args[0][0]
+        assert 'The feedback config file not decoded correctly' in call_args
+        assert 'Expecting' in call_args or 'line' in call_args
 
     @patch('ckanext.feedback.services.common.config.toolkit.error_shout')
     def test_load_feedback_config_top_level_not_dict(self, mock_error_shout):
@@ -100,16 +100,12 @@ class TestCheck:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
-        with pytest.raises(ValidationError) as exc_info:
+        with pytest.raises(ValidationError):
             FeedbackConfig().load_feedback_config()
 
-        mock_error_shout.assert_called_once_with(
-            'The feedback config file validation failed. '
-            'Please check the file structure and content.'
-        )
-        error_dict = exc_info.value.__dict__.get('error_dict')
-        error_message = error_dict.get('message')
-        assert 'object' in error_message.lower() or 'dict' in error_message.lower()
+        call_args = mock_error_shout.call_args[0][0]
+        assert 'The feedback config file validation failed:' in call_args
+        assert 'feedback_config.json must be a JSON object' in call_args
 
     def test_load_feedback_config_modules_value_not_dict(self):
         feedback_config = {"modules": "not_dict"}
