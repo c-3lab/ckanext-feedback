@@ -414,9 +414,9 @@ class FeedbackConfig(Singleton):
             )
             self.is_feedback_config_file = False
         except json.JSONDecodeError as e:
-            error_message = e.__dict__.get('error_dict', {}).get('message', '')
             toolkit.error_shout(
-                f'The feedback config file validation failed: {error_message}'
+                f'The feedback config file not decoded correctly: {e.msg} '
+                f'(line {e.lineno}, column {e.colno})'
             )
             raise e
         except toolkit.ValidationError as e:
