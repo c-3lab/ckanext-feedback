@@ -1,9 +1,9 @@
 from ckan.plugins import toolkit
 
 BASE_MODULE_SCHEMA = {
-    'enable': bool,
-    'enable_orgs': list,
-    'disable_orgs': list,
+    'enable': 'bool',
+    'enable_orgs': 'list[str]',
+    'disable_orgs': 'list[str]',
 }
 
 UTILIZATIONS_COMMENTS_SCHEMA = {
@@ -41,10 +41,6 @@ VALID_MODULE_NAMES = {
     'recaptcha',
     'notice',
 }
-
-
-def is_list_of_str(value):
-    return isinstance(value, list) and all(isinstance(x, str) for x in value)
 
 
 def validate_module_fields(module_name, module_config):
@@ -85,7 +81,7 @@ def validate_module_fields(module_name, module_config):
 def validate_submodule_field(field_name, field_value, expected_type, submodule_path):
     # Validate fields of the submodule.
 
-    if expected_type == bool:
+    if expected_type == 'bool':
         if not isinstance(field_value, bool):
             raise toolkit.ValidationError(
                 {
@@ -95,8 +91,10 @@ def validate_submodule_field(field_name, field_value, expected_type, submodule_p
                     )
                 }
             )
-    elif expected_type == list:
-        if not is_list_of_str(field_value):
+    elif expected_type == 'list[str]':
+        if not isinstance(field_value, list) or not all(
+            isinstance(x, str) for x in field_value
+        ):
             raise toolkit.ValidationError(
                 {
                     "message": (
