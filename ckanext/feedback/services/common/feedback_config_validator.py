@@ -1,45 +1,71 @@
 from ckan.plugins import toolkit
 
+# Constants for module names
+MODULE_DOWNLOADS = 'downloads'
+MODULE_RESOURCES = 'resources'
+MODULE_UTILIZATIONS = 'utilizations'
+MODULE_LIKES = 'likes'
+MODULE_MORAL_KEEPER_AI = 'moral_keeper_ai'
+MODULE_RECAPTCHA = 'recaptcha'
+MODULE_NOTICE = 'notice'
+
+# Constant for the sub-module name
+SUBMODULE_COMMENTS = 'comments'
+SUBMODULE_FEEDBACK_PROMPT = 'feedback_prompt'
+
+# Constants for field names
+FIELD_ENABLE = 'enable'
+FIELD_ENABLE_ORGS = 'enable_orgs'
+FIELD_DISABLE_ORGS = 'disable_orgs'
+
+# Feature/Sub-feature constants
+FEATURE_IMAGE_ATTACHMENT = 'image_attachment'
+FEATURE_REPLY_OPEN = 'reply_open'
+FEATURE_REPEAT_POST_LIMIT = 'repeat_post_limit'
+FEATURE_RATING = 'rating'
+FEATURE_MODAL = 'modal'
+
+# Schema definition
 BASE_MODULE_SCHEMA = {
-    'enable': 'bool',
-    'enable_orgs': 'list[str]',
-    'disable_orgs': 'list[str]',
+    FIELD_ENABLE: 'bool',
+    FIELD_ENABLE_ORGS: 'list[str]',
+    FIELD_DISABLE_ORGS: 'list[str]',
 }
 
 UTILIZATIONS_COMMENTS_SCHEMA = {
-    'valid_submodules': {'image_attachment', 'reply_open'},
+    'valid_submodules': {FEATURE_IMAGE_ATTACHMENT, FEATURE_REPLY_OPEN},
     'submodule_structure': BASE_MODULE_SCHEMA,
 }
 
 RESOURCES_COMMENTS_SCHEMA = {
     'valid_submodules': {
-        'repeat_post_limit',
-        'rating',
-        'image_attachment',
-        'reply_open',
+        FEATURE_REPEAT_POST_LIMIT,
+        FEATURE_RATING,
+        FEATURE_IMAGE_ATTACHMENT,
+        FEATURE_REPLY_OPEN,
     },
     'submodule_structure': BASE_MODULE_SCHEMA,
 }
 
 DOWNLOADS_FEEDBACK_PROMPT_SCHEMA = {
-    'valid_submodules': {'modal'},
+    'valid_submodules': {FEATURE_MODAL},
     'submodule_structure': BASE_MODULE_SCHEMA,
 }
 
 MODULE_SUBMODULE_SCHEMAS = {
-    'utilizations': {'comments': UTILIZATIONS_COMMENTS_SCHEMA},
-    'resources': {'comments': RESOURCES_COMMENTS_SCHEMA},
-    'downloads': {'feedback_prompt': DOWNLOADS_FEEDBACK_PROMPT_SCHEMA},
+    MODULE_UTILIZATIONS: {SUBMODULE_COMMENTS: UTILIZATIONS_COMMENTS_SCHEMA},
+    MODULE_RESOURCES: {SUBMODULE_COMMENTS: RESOURCES_COMMENTS_SCHEMA},
+    MODULE_DOWNLOADS: {SUBMODULE_FEEDBACK_PROMPT: DOWNLOADS_FEEDBACK_PROMPT_SCHEMA},
 }
 
 VALID_MODULE_NAMES = {
-    'utilizations',
-    'resources',
-    'downloads',
-    'likes',
-    'moral_keeper_ai',
-    'recaptcha',
-    'notice',
+    MODULE_UTILIZATIONS,
+    MODULE_RESOURCES,
+    MODULE_DOWNLOADS,
+    MODULE_LIKES,
+    MODULE_MORAL_KEEPER_AI,
+    MODULE_RECAPTCHA,
+    MODULE_NOTICE,
 }
 
 
@@ -63,9 +89,9 @@ def validate_module_fields(module_name, module_config):
             raise toolkit.ValidationError(
                 {"message": f"modules.{module_name} must not be empty"}
             )
-        if has_base_field and "enable" not in module_config:
+        if has_base_field and FIELD_ENABLE not in module_config:
             raise toolkit.ValidationError(
-                {"message": f"modules.{module_name} must have 'enable' key"}
+                {"message": f"modules.{module_name} must have '{FIELD_ENABLE}' key"}
             )
     # Type check for each field
     for field_name, expected_type in BASE_MODULE_SCHEMA.items():
@@ -86,7 +112,7 @@ def validate_submodule_field(field_name, field_value, expected_type, submodule_p
             raise toolkit.ValidationError(
                 {
                     "message": (
-                        f"{submodule_path}.{field_name} must be a boolean"
+                        f"{submodule_path}.{field_name} must be a boolean, "
                         f"got {type(field_value).__name__}"
                     )
                 }
@@ -98,7 +124,7 @@ def validate_submodule_field(field_name, field_value, expected_type, submodule_p
             raise toolkit.ValidationError(
                 {
                     "message": (
-                        f"{submodule_path}.{field_name} must be a list of strings,"
+                        f"{submodule_path}.{field_name} must be a list of strings, "
                         f"got {type(field_value).__name__}"
                     )
                 }
@@ -110,7 +136,7 @@ def validate_submodule_field(field_name, field_value, expected_type, submodule_p
                 "message": (
                     f"Unsupported field type '{expected_type}' for "
                     f"{submodule_path}.{field_name}. "
-                    f"Supported types are: bool, list"
+                    f"Supported types are: 'bool', 'list[str]'"
                 )
             }
         )
