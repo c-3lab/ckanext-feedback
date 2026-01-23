@@ -541,7 +541,7 @@ class TestCheck:
 
         assert (
             error_message
-            == 'modules.resources.enable_orgs must be a list of strings,got str'
+            == 'modules.resources.enable_orgs must be a list of strings, got str'
         )
         os.remove('/srv/app/feedback_config.json')
 
@@ -564,7 +564,7 @@ class TestCheck:
 
         assert (
             error_message
-            == 'modules.resources.disable_orgs must be a list of strings,got str'
+            == 'modules.resources.disable_orgs must be a list of strings, got str'
         )
         os.remove('/srv/app/feedback_config.json')
 
