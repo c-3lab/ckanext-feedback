@@ -8,6 +8,23 @@ from ckan.plugins import toolkit
 from werkzeug.utils import import_string
 
 from ckanext.feedback.services.common.feedback_config_validator import (
+    FEATURE_IMAGE_ATTACHMENT,
+    FEATURE_MODAL,
+    FEATURE_RATING,
+    FEATURE_REPEAT_POST_LIMIT,
+    FEATURE_REPLY_OPEN,
+    FIELD_DISABLE_ORGS,
+    FIELD_ENABLE,
+    FIELD_ENABLE_ORGS,
+    MODULE_DOWNLOADS,
+    MODULE_LIKES,
+    MODULE_MORAL_KEEPER_AI,
+    MODULE_NOTICE,
+    MODULE_RECAPTCHA,
+    MODULE_RESOURCES,
+    MODULE_UTILIZATIONS,
+    SUBMODULE_COMMENTS,
+    SUBMODULE_FEEDBACK_PROMPT,
     validate_feedback_config,
 )
 from ckanext.feedback.services.organization import organization as organization_service
@@ -15,6 +32,7 @@ from ckanext.feedback.services.organization import organization as organization_
 log = logging.getLogger(__name__)
 
 CONFIG_HANDLER_PATH = 'ckan.feedback.download_handler'
+FB_CONF_KEY_MODULES = 'modules'
 
 
 def download_handler():
@@ -50,7 +68,7 @@ class BaseConfig:
         self.default = None
         self.name = name
         self.ckan_conf_prefix = ['ckan', 'feedback']
-        self.fb_conf_prefix = ['modules']
+        self.fb_conf_prefix = [FB_CONF_KEY_MODULES]
         self.conf_path = (parent or []) + [name]
 
     def get_ckan_conf_str(self):
@@ -59,20 +77,20 @@ class BaseConfig:
     def set_enable_and_enable_orgs_and_disable_orgs(self, module_config: dict = None):
         ckan_conf_str = self.get_ckan_conf_str()
         if module_config is None:
-            config.pop(f"{ckan_conf_str}.enable", None)
-            config.pop(f"{ckan_conf_str}.enable_orgs", None)
-            config.pop(f"{ckan_conf_str}.disable_orgs", None)
+            config.pop(f"{ckan_conf_str}.{FIELD_ENABLE}", None)
+            config.pop(f"{ckan_conf_str}.{FIELD_ENABLE_ORGS}", None)
+            config.pop(f"{ckan_conf_str}.{FIELD_DISABLE_ORGS}", None)
             return
 
-        enable = module_config.get("enable")
-        enable_orgs = module_config.get("enable_orgs")
-        disable_orgs = module_config.get("disable_orgs")
+        enable = module_config.get(FIELD_ENABLE)
+        enable_orgs = module_config.get(FIELD_ENABLE_ORGS)
+        disable_orgs = module_config.get(FIELD_DISABLE_ORGS)
 
-        config[f"{ckan_conf_str}.enable"] = enable
+        config[f"{ckan_conf_str}.{FIELD_ENABLE}"] = enable
         if enable_orgs:
-            config[f"{ckan_conf_str}.enable_orgs"] = enable_orgs
+            config[f"{ckan_conf_str}.{FIELD_ENABLE_ORGS}"] = enable_orgs
         if disable_orgs:
-            config[f"{ckan_conf_str}.disable_orgs"] = disable_orgs
+            config[f"{ckan_conf_str}.{FIELD_DISABLE_ORGS}"] = disable_orgs
 
     def set_config(
         self,
@@ -101,7 +119,7 @@ class BaseConfig:
     def is_enable(self, org_id=''):
         ck_conf_str = self.get_ckan_conf_str()
         # Retrieve the on/off value for the feature from the ini file
-        enable = config.get(f"{ck_conf_str}.enable", self.default)
+        enable = config.get(f"{ck_conf_str}.{FIELD_ENABLE}", self.default)
 
         try:
             # Convert the retrieved value to a boolean
@@ -133,8 +151,8 @@ class BaseConfig:
 
         # Retrieve the list of enabled organizations and disabled
         # organizations (loaded from feedback_config.json)
-        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs")
-        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs")
+        enable_orgs = config.get(f"{ck_conf_str}.{FIELD_ENABLE_ORGS}")
+        disable_orgs = config.get(f"{ck_conf_str}.{FIELD_DISABLE_ORGS}")
 
         # Return True if neither the list of enabled organizations
         # nor the list of disabled organizations exists
@@ -158,14 +176,14 @@ class BaseConfig:
 
     def get_enable_org_names(self):
         ck_conf_str = self.get_ckan_conf_str()
-        enable = config.get(f"{ck_conf_str}.enable", self.default)
+        enable = config.get(f"{ck_conf_str}.{FIELD_ENABLE}", self.default)
 
         if not enable:
             return []
 
         all_org_names = organization_service.get_organization_name_list()
-        enable_orgs = config.get(f"{ck_conf_str}.enable_orgs", [])
-        disable_orgs = config.get(f"{ck_conf_str}.disable_orgs", [])
+        enable_orgs = config.get(f"{ck_conf_str}.{FIELD_ENABLE_ORGS}", [])
+        disable_orgs = config.get(f"{ck_conf_str}.{FIELD_DISABLE_ORGS}", [])
 
         if disable_orgs:
             enable_orgs = [org for org in all_org_names if org not in disable_orgs]
@@ -179,110 +197,124 @@ class BaseConfig:
 
 class DownloadsConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('downloads')
+        super().__init__(MODULE_DOWNLOADS)
         self.default = True
-        parents = self.conf_path + ['feedback_prompt']
-        self.modal = BaseConfig('modal', parents)
+        parents = self.conf_path + [SUBMODULE_FEEDBACK_PROMPT]
+        self.modal = BaseConfig(FEATURE_MODAL, parents)
         self.modal.default = True
 
     def load_config(self, feedback_config):
-        module_config = feedback_config.get('modules', {}).get('downloads')
+        module_config = feedback_config.get(FB_CONF_KEY_MODULES, {}).get(
+            MODULE_DOWNLOADS
+        )
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
         feedback_prompt_config = (
-            module_config.get('feedback_prompt', {}) if module_config else {}
+            module_config.get(SUBMODULE_FEEDBACK_PROMPT, {}) if module_config else {}
         )
         self.modal.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_prompt_config.get('modal')
+            feedback_prompt_config.get(FEATURE_MODAL)
         )
 
 
 class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('resources')
+        super().__init__(MODULE_RESOURCES)
         self.default = True
 
-        parents = self.conf_path + ['comment']
+        parents = self.conf_path + [SUBMODULE_COMMENTS]
         # TODO:Standardize to either repeated_post_limit or　repeat_post_limit
         self.repeat_post_limit = BaseConfig('repeated_post_limit', parents)
         self.repeat_post_limit.default = False
 
-        self.rating = BaseConfig('rating', parents)
+        self.rating = BaseConfig(FEATURE_RATING, parents)
         self.rating.default = False
 
-        self.image_attachment = BaseConfig('image_attachment', parents)
+        self.image_attachment = BaseConfig(FEATURE_IMAGE_ATTACHMENT, parents)
         self.image_attachment.default = False
 
-        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
+        self.reply_open = BaseConfig(
+            FEATURE_REPLY_OPEN, self.conf_path + [SUBMODULE_COMMENTS]
+        )
         self.reply_open.default = False
 
     def load_config(self, feedback_config):
-        module_config = feedback_config.get('modules', {}).get('resources')
+        module_config = feedback_config.get(FB_CONF_KEY_MODULES, {}).get(
+            MODULE_RESOURCES
+        )
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
         # submodule setting
-        comments_config = module_config.get('comments', {}) if module_config else {}
+        comments_config = (
+            module_config.get(SUBMODULE_COMMENTS, {}) if module_config else {}
+        )
 
         self.repeat_post_limit.set_enable_and_enable_orgs_and_disable_orgs(
-            comments_config.get('repeat_post_limit')
+            comments_config.get(FEATURE_REPEAT_POST_LIMIT)
         )
         self.rating.set_enable_and_enable_orgs_and_disable_orgs(
-            comments_config.get('rating')
+            comments_config.get(FEATURE_RATING)
         )
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
-            comments_config.get('image_attachment')
+            comments_config.get(FEATURE_IMAGE_ATTACHMENT)
         )
         self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
-            comments_config.get('reply_open')
+            comments_config.get(FEATURE_REPLY_OPEN)
         )
 
 
 class UtilizationConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('utilizations')
+        super().__init__(MODULE_UTILIZATIONS)
         self.default = True
 
     def load_config(self, feedback_config):
-        module_config = feedback_config.get('modules', {}).get('utilizations')
+        module_config = feedback_config.get(FB_CONF_KEY_MODULES, {}).get(
+            MODULE_UTILIZATIONS
+        )
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
 
 class UtilizationCommentConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('utilizations')
+        super().__init__(MODULE_UTILIZATIONS)
         self.default = True
-        parents = self.conf_path + ['comments']
-        self.image_attachment = BaseConfig('image_attachment', parents)
+        parents = self.conf_path + [SUBMODULE_COMMENTS]
+        self.image_attachment = BaseConfig(FEATURE_IMAGE_ATTACHMENT, parents)
         self.image_attachment.default = False
 
-        self.reply_open = BaseConfig('reply_open', parents)
+        self.reply_open = BaseConfig(FEATURE_REPLY_OPEN, parents)
         self.reply_open.default = False
 
     def load_config(self, feedback_config):
-        module_config = feedback_config.get('modules', {}).get('utilizations')
+        module_config = feedback_config.get(FB_CONF_KEY_MODULES, {}).get(
+            MODULE_UTILIZATIONS
+        )
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
-        comments_config = module_config.get('comments', {}) if module_config else {}
-        self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
-            comments_config.get('image_attachment')
+        comments_config = (
+            module_config.get(SUBMODULE_COMMENTS, {}) if module_config else {}
         )
         self.image_attachment.set_enable_and_enable_orgs_and_disable_orgs(
-            comments_config.get('reply_open')
+            comments_config.get(FEATURE_IMAGE_ATTACHMENT)
+        )
+        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
+            comments_config.get(FEATURE_REPLY_OPEN)
         )
 
 
 class LikesConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('likes')
+        super().__init__(MODULE_LIKES)
         self.default = True
 
     def load_config(self, feedback_config):
-        module_config = feedback_config.get('modules', {}).get('likes')
+        module_config = feedback_config.get(FB_CONF_KEY_MODULES, {}).get(MODULE_LIKES)
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
 
 class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('recaptcha')
+        super().__init__(MODULE_RECAPTCHA)
         self.default = False
 
         parents = self.conf_path
@@ -298,8 +330,8 @@ class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
     def load_config(self, feedback_config):
         self.set_config(
             feedback_config=feedback_config,
-            fb_conf_path=self.conf_path + ['enable'],
-            ckan_conf_path=self.conf_path + ['enable'],
+            fb_conf_path=self.conf_path + [FIELD_ENABLE],
+            ckan_conf_path=self.conf_path + [FIELD_ENABLE],
         )
 
         self.privatekey.set_config(feedback_config)
@@ -310,7 +342,7 @@ class ReCaptchaConfig(BaseConfig, FeedbackConfigInterface):
 
 class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('email', ['notice'])
+        super().__init__('email', [MODULE_NOTICE])
         self.default = False
 
         parents = self.conf_path
@@ -350,8 +382,8 @@ class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
     def load_config(self, feedback_config):
         self.set_config(
             feedback_config=feedback_config,
-            fb_conf_path=self.conf_path + ['enable'],
-            ckan_conf_path=self.conf_path + ['enable'],
+            fb_conf_path=self.conf_path + [FIELD_ENABLE],
+            ckan_conf_path=self.conf_path + [FIELD_ENABLE],
         )
 
         self.template_directory.set_config(feedback_config=feedback_config)
@@ -365,11 +397,13 @@ class NoticeEmailConfig(BaseConfig, FeedbackConfigInterface):
 
 class MoralKeeperAiConfig(BaseConfig, FeedbackConfigInterface):
     def __init__(self):
-        super().__init__('moral_keeper_ai')
+        super().__init__(MODULE_MORAL_KEEPER_AI)
         self.default = False
 
     def load_config(self, feedback_config):
-        module_config = feedback_config.get('modules', {}).get('moral_keeper_ai')
+        module_config = feedback_config.get(FB_CONF_KEY_MODULES, {}).get(
+            MODULE_MORAL_KEEPER_AI
+        )
         self.set_enable_and_enable_orgs_and_disable_orgs(module_config)
 
 
