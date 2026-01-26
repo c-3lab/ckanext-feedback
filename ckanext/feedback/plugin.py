@@ -146,6 +146,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
+            'get_organization_with_image': self.get_organization_with_image,
         }
 
     # IPackageController
@@ -257,6 +258,15 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             )
 
         return resource_dict
+
+    @staticmethod
+    def get_organization_with_image(org_id):
+        try:
+            return toolkit.get_action('organization_show')(
+                {'ignore_auth': True}, {'id': org_id}
+            )
+        except Exception:
+            return None
 
     def get_actions(self):
         return {
