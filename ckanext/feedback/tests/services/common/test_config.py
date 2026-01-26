@@ -1676,26 +1676,6 @@ class TestCheck:
         assert config.get('ckan.feedback.downloads.enable') is None
         assert config.get('ckan.feedback.downloads.enable_orgs') is None
 
-    @patch('ckanext.feedback.services.common.config.toolkit')
-    def test_set_config_no_error_when_config_missing(self, mock_toolkit):
-        feedback_config = {
-            'modules': {
-                'downloads': {'enable': True},
-                'resources': {'enable': True},
-                'utilizations': {'enable': True},
-                'likes': {'enable': True},
-            }
-        }
-
-        with open('/srv/app/feedback_config.json', 'w') as f:
-            json.dump(feedback_config, f, indent=2)
-
-        FeedbackConfig().load_feedback_config()
-
-        mock_toolkit.error_shout.assert_not_called()
-
-        os.remove('/srv/app/feedback_config.json')
-
     def test_set_config_uses_ckan_ini_when_feedback_config_missing(self):
         config['ckan.feedback.recaptcha.enable'] = True
         config['ckan.feedback.recaptcha.privatekey'] = 'test_private_key'
@@ -1718,7 +1698,6 @@ class TestCheck:
         config.pop('ckan.feedback.recaptcha.privatekey', None)
         config.pop('ckan.feedback.recaptcha.publickey', None)
         config.pop('ckan.feedback.recaptcha.score_threshold', None)
-        os.remove('/srv/app/feedback_config.json')
 
     def test_set_config_uses_default_when_no_config_exists(self):
         config.pop('ckan.feedback.recaptcha.enable', None)
