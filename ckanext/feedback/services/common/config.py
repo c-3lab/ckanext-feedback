@@ -105,10 +105,9 @@ class BaseConfig:
         value = feedback_config
 
         for key in self.fb_conf_prefix + fb_conf_path:
-            try:
-                value = value.get(key)
-            except AttributeError as e:
-                toolkit.error_shout(e)
+            if value is None or not isinstance(value, dict):
+                return
+            value = value.get(key)
         if value is not None:
             config[ckan_conf_path_str] = value
 
