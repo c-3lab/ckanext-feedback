@@ -79,7 +79,7 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        mock_toolkit.error_shout.call_count == 4
+        mock_toolkit.error_shout.assert_not_called()
         os.remove('/srv/app/feedback_config.json')
 
     @patch('ckanext.feedback.services.common.config.toolkit')
@@ -1675,3 +1675,85 @@ class TestCheck:
 
         assert config.get('ckan.feedback.downloads.enable') is None
         assert config.get('ckan.feedback.downloads.enable_orgs') is None
+
+    @patch('ckanext.feedback.services.common.config.toolkit')
+    def test_set_config_no_error_when_config_missing(self, mock_toolkit):
+        feedback_config = {
+            'modules': {
+                'downloads': {'enable': True},
+                'resources': {'enable': True},
+                'utilizations': {'enable': True},
+                'likes': {'enable': True},
+            }
+        }
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        mock_toolkit.error_shout.assert_not_called()
+
+        os.remove('/srv/app/feedback_config.json')
+
+    def test_set_config_uses_ckan_ini_when_feedback_config_missing(self):
+        config['ckan.feedback.recaptcha.enable'] = True
+        config['ckan.feedback.recaptcha.privatekey'] = 'test_private_key'
+        config['ckan.feedback.recaptcha.publickey'] = 'test_public_key'
+        config['ckan.feedback.recaptcha.score_threshold'] = 0.5
+
+        feedback_config = {'modules': {}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.recaptcha.enable') is True
+        assert FeedbackConfig().recaptcha.privatekey.get() == 'test_private_key'
+        assert FeedbackConfig().recaptcha.publickey.get() == 'test_public_key'
+        assert FeedbackConfig().recaptcha.score_threshold.get() == 0.5
+
+        config.pop('ckan.feedback.recaptcha.enable', None)
+        config.pop('ckan.feedback.recaptcha.privatekey', None)
+        config.pop('ckan.feedback.recaptcha.publickey', None)
+        config.pop('ckan.feedback.recaptcha.score_threshold', None)
+        os.remove('/srv/app/feedback_config.json')
+
+    def test_set_config_uses_default_when_no_config_exists(self):
+        config.pop('ckan.feedback.recaptcha.enable', None)
+        config.pop('ckan.feedback.recaptcha.privatekey', None)
+        config.pop('ckan.feedback.recaptcha.publickey', None)
+        config.pop('ckan.feedback.recaptcha.score_threshold', None)
+        config.pop('ckan.feedback.recaptcha.force_all', None)
+        config.pop('ckan.feedback.notice.email.enable', None)
+        config.pop('ckan.feedback.notice.email.template_directory', None)
+
+        feedback_config = {'modules': {}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert FeedbackConfig().recaptcha.privatekey.get() == ''
+        assert FeedbackConfig().recaptcha.publickey.get() == ''
+        assert FeedbackConfig().recaptcha.score_threshold.get() == 0.5
+        assert FeedbackConfig().recaptcha.force_all.get() is False
+
+        default_template_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                '..',
+                '..',
+                '..',
+                'templates',
+                'email_notification',
+            )
+        )
+        assert (
+            FeedbackConfig().notice_email.template_directory.get()
+            == default_template_dir
+        )
+
+        os.remove('/srv/app/feedback_config.json')
