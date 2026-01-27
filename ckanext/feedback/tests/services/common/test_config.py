@@ -1089,6 +1089,38 @@ class TestCheck:
         )
         os.remove('/srv/app/feedback_config.json')
 
+        # with feedback_config_file enable is True, .ini file enable is False
+        config['ckan.feedback.recaptcha.enable'] = False
+        config.pop('ckan.feedback.recaptcha.publickey', None)
+        config.pop('ckan.feedback.recaptcha.privatekey', None)
+        config.pop('ckan.feedback.recaptcha.score_threshold', None)
+
+        feedback_config = {
+            'modules': {
+                "recaptcha": {
+                    "enable": True,
+                    "publickey": "xxxxxxxxx",
+                    "privatekey": "yyyyyyyy",
+                    "score_threshold": 0.3,
+                },
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.recaptcha.enable', 'None') is True
+        assert config.get('ckan.feedback.recaptcha.publickey', 'None') == "xxxxxxxxx"
+        assert config.get('ckan.feedback.recaptcha.privatekey', 'None') == "yyyyyyyy"
+        assert config.get('ckan.feedback.recaptcha.score_threshold', 'None') == 0.3
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().recaptcha.is_enable() is True
+        assert FeedbackConfig().recaptcha.publickey.get() == "xxxxxxxxx"
+        assert FeedbackConfig().recaptcha.privatekey.get() == "yyyyyyyy"
+        assert FeedbackConfig().recaptcha.score_threshold.get() == 0.3
+        os.remove('/srv/app/feedback_config.json')
+
         # with feedback_config_file enable is True
         config['ckan.feedback.notice.email.enable'] = False
         config.pop('ckan.feedback.notice.email.template_directory', None)
