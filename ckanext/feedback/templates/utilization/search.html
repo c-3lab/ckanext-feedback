@@ -80,7 +80,9 @@
                 </div>
               </td>
               <td>
-                {{ h.get_organization(row.owner_org).display_name|truncate(20) }}
+                {{% set org = h.get_organization(row.owner_org) %}}
+                {{ org.get('display_name', org.get('name', ''))|truncate(20) }}
+                {# {{ h.get_organization(row.owner_org).display_name|truncate(20) }} #}
               </td>
               <td>{{ row.package_title|truncate(30) }}</td>
               <td>{{ row.resource_name|truncate(20) }}</td>
