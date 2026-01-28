@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 import ckan.model as model
 from ckan import plugins
 from ckan.common import _
+from ckan.lib import helpers as core_helpers
 from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 from ckan.types import PUploader
@@ -16,7 +17,6 @@ from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.upload import FeedbackUpload
 from ckanext.feedback.services.download import summary as download_summary_service
-from ckanext.feedback.services.organization import organization as organization_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
@@ -137,7 +137,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_rating': resource_summary_service.get_package_rating,
             'get_resource_like_count': resource_likes_service.get_resource_like_count,
             'get_package_like_count': resource_likes_service.get_package_like_count,
-            'get_organization': organization_service.get_organization,
             'is_enabled_feedback_recaptcha': cfg.recaptcha.is_enable,
             'is_feedback_recaptcha_force_all': cfg.recaptcha.force_all.get,
             'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
@@ -146,7 +145,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
-            'get_organization_with_image': self.get_organization_with_image,
+            'get_organization': core_helpers.get_organization,
         }
 
     # IPackageController
@@ -258,15 +257,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             )
 
         return resource_dict
-
-    @staticmethod
-    def get_organization_with_image(org_id):
-        try:
-            return toolkit.get_action('organization_show')(
-                {'ignore_auth': True}, {'id': org_id}
-            )
-        except Exception:
-            return None
 
     def get_actions(self):
         return {
