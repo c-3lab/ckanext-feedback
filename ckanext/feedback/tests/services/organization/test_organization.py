@@ -1,4 +1,5 @@
 import pytest
+from ckan.lib import helpers as core_helpers
 
 from ckanext.feedback.services.organization import organization as organization_service
 
@@ -6,8 +7,12 @@ from ckanext.feedback.services.organization import organization as organization_
 @pytest.mark.db_test
 class TestOrganization:
     def test_get_organization(self, organization):
-        result = organization_service.get_organization(organization['id'])
-        assert result.id == organization['id']
+        result = core_helpers.get_organization(organization['id'])
+        assert isinstance(result, dict)
+        assert result['id'] == organization['id']
+        assert 'image_display_url' in result
+        assert result['name'] == organization['name']
+        assert result['title'] == organization['title']
 
     def test_get_org_list_without_id(self, organization):
         result = organization_service.get_org_list()
