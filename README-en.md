@@ -9,6 +9,15 @@ The mechanism for receiving opinions/requests and reports on usage examples from
 
 Feedback enables an ecosystem between users and providers that continually improves the data.
 
+
+## Supported CKAN Versions
+
+| CKAN version  | Compatible? |
+|------------------|----------|
+| 2.10             | ✔️ YES |
+| 2.11             | ✔️ YES |
+
+
 ## Main features
 
 * 👀 Visualization function for aggregate information (number of downloads, number of uses, number of problems solved)
