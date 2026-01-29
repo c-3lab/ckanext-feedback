@@ -457,27 +457,6 @@ msgstr "無効なファイル拡張子です。許可されている形式：png
 msgid "Invalid file type. Only image files are allowed."
 msgstr "無効なファイル形式です。画像ファイルのみ許可されています。"
 
-#: ckanext/feedback/templates/header.html:27
-msgid "View dashboard"
-msgstr "ダッシュボードを表示"
-
-#: ckanext/feedback/templates/header.html:35
-#: ckanext/feedback/templates/header.html:37
-msgid "Profile settings"
-msgstr "プロフィール設定"
-
-#: ckanext/feedback/templates/header.html:51
-msgid "Account"
-msgstr "アカウント"
-
-#: ckanext/feedback/templates/header.html:90
-msgid "Toggle navigation"
-msgstr "トグル ナビゲーション"
-
-#: ckanext/feedback/templates/header.html:102
-msgid "Datasets"
-msgstr "データセット"
-
 #: ckanext/feedback/templates/admin/admin.html:10
 #: ckanext/feedback/templates/admin/admin.html:13
 #: ckanext/feedback/templates/admin/admin.html:19
@@ -486,22 +465,6 @@ msgstr "データセット"
 #: ckanext/feedback/templates/header.html:111
 msgid "Feedback Admin"
 msgstr "フィードバック管理"
-
-#: ckanext/feedback/templates/header.html:113
-msgid "About"
-msgstr "About"
-
-#: ckanext/feedback/templates/header.html:120
-msgid "Search Datasets..."
-msgstr "データセット検索"
-
-#: ckanext/feedback/templates/header.html:121
-msgid "Search"
-msgstr "検索"
-
-#: ckanext/feedback/templates/header.html:121
-msgid "Search datasets..."
-msgstr "データセット検索"
 
 #: ckanext/feedback/templates/header.html:122
 #: ckanext/feedback/templates/utilization/search.html:29
