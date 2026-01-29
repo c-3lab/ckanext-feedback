@@ -12,10 +12,10 @@ Feedback enables an ecosystem between users and providers that continually impro
 
 ## Supported CKAN Versions
 
-| CKAN version  | Compatible? |
+| CKAN version  | Feedback Plugin |Compatible? |
 |------------------|----------|
-| 2.10             | ✔️ YES |
-| 2.11             | ✔️ YES |
+| 2.10             | ~1.4.6 |✔️ YES |
+| 2.11             |  |⏳ PLANNED |
 
 
 ## Main features
