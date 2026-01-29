@@ -193,13 +193,6 @@ msgstr "ステータス"
 msgid "Type"
 msgstr "種類"
 
-#: ckanext/feedback/controllers/admin.py:186
-#: ckanext/feedback/services/admin/feedbacks.py:276
-#: ckanext/feedback/templates/admin/aggregation.html:24
-#: ckanext/feedback/templates/utilization/search.html:58
-msgid "Organization"
-msgstr "組織"
-
 #: ckanext/feedback/controllers/admin.py:242
 #: ckanext/feedback/controllers/admin.py:260
 msgid ""
@@ -464,24 +457,8 @@ msgstr "無効なファイル拡張子です。許可されている形式：png
 msgid "Invalid file type. Only image files are allowed."
 msgstr "無効なファイル形式です。画像ファイルのみ許可されています。"
 
-#: ckanext/feedback/templates/header.html:11
-msgid "Sysadmin settings"
-msgstr "プロフィール設定"
-
-#: ckanext/feedback/templates/header.html:13
-msgid "Admin"
-msgstr ""
-
-#: ckanext/feedback/templates/header.html:19
-msgid "View profile"
-msgstr ""
-
 #: ckanext/feedback/templates/header.html:27
 msgid "View dashboard"
-msgstr "ダッシュボードを表示"
-
-#: ckanext/feedback/templates/header.html:29
-msgid "Dashboard"
 msgstr "ダッシュボードを表示"
 
 #: ckanext/feedback/templates/header.html:35
@@ -489,18 +466,9 @@ msgstr "ダッシュボードを表示"
 msgid "Profile settings"
 msgstr "プロフィール設定"
 
-#: ckanext/feedback/templates/header.html:42
-#: ckanext/feedback/templates/header.html:44
-msgid "Log out"
-msgstr ""
-
 #: ckanext/feedback/templates/header.html:51
 msgid "Account"
 msgstr "アカウント"
-
-#: ckanext/feedback/templates/header.html:54
-msgid "Log in"
-msgstr ""
 
 #: ckanext/feedback/templates/header.html:90
 msgid "Toggle navigation"
@@ -508,15 +476,7 @@ msgstr "トグル ナビゲーション"
 
 #: ckanext/feedback/templates/header.html:102
 msgid "Datasets"
-msgstr "データセット検索"
-
-#: ckanext/feedback/templates/header.html:104
-msgid "Organizations"
-msgstr "組織"
-
-#: ckanext/feedback/templates/header.html:106
-msgid "Groups"
-msgstr ""
+msgstr "データセット"
 
 #: ckanext/feedback/templates/admin/admin.html:10
 #: ckanext/feedback/templates/admin/admin.html:13
@@ -660,20 +620,6 @@ msgstr "リソース名　降順"
 msgid "Approval"
 msgstr "承認"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:46
-#: ckanext/feedback/templates/utilization/edit.html:67
-msgid "Delete"
-msgstr ""
-
-#: ckanext/feedback/templates/admin/approval_and_delete.html:53
-#: ckanext/feedback/templates/resource/comment.html:28
-#: ckanext/feedback/templates/utilization/details.html:45
-#: ckanext/feedback/templates/utilization/edit.html:24
-#: ckanext/feedback/templates/utilization/new.html:24
-#: ckanext/feedback/templates/utilization/search.html:59
-msgid "Dataset"
-msgstr ""
-
 #: ckanext/feedback/templates/admin/approval_and_delete.html:54
 #: ckanext/feedback/templates/resource/comment.html:31
 #: ckanext/feedback/templates/utilization/details.html:48
@@ -711,10 +657,6 @@ msgstr "チェックしたCHECKED_ROWS項目を完全に削除します。この
 #: ckanext/feedback/templates/admin/approval_and_delete.html:157
 msgid "What are Approval and Delete"
 msgstr "承認・削除について"
-
-#: ckanext/feedback/templates/package/resource_read.html:7
-msgid "Manage"
-msgstr ""
 
 #: ckanext/feedback/templates/package/resource_read.html:26
 msgid "View"
@@ -778,10 +720,6 @@ msgstr "閉じる"
 msgid "URL:"
 msgstr "URL:"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:78
-msgid "Explore"
-msgstr ""
-
 #: ckanext/feedback/templates/package/snippets/resource_item.html:88
 msgid "Preview"
 msgstr "確認"
@@ -793,12 +731,6 @@ msgstr "詳細情報の表示"
 #: ckanext/feedback/templates/package/snippets/resource_item.html:101
 msgid "liked"
 msgstr "いいね"
-
-#: ckanext/feedback/templates/package/snippets/resource_item.html:131
-#: ckanext/feedback/templates/utilization/details.html:30
-#: ckanext/feedback/templates/utilization/edit.html:13
-msgid "Edit"
-msgstr ""
 
 #: ckanext/feedback/templates/resource/comment.html:19
 #: ckanext/feedback/templates/resource/comment_check.html:12
