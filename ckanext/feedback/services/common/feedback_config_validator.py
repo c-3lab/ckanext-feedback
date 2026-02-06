@@ -1,0 +1,260 @@
+from ckan.plugins import toolkit
+
+# Constants for module names
+MODULE_DOWNLOADS = 'downloads'
+MODULE_RESOURCES = 'resources'
+MODULE_UTILIZATIONS = 'utilizations'
+MODULE_LIKES = 'likes'
+MODULE_MORAL_KEEPER_AI = 'moral_keeper_ai'
+MODULE_RECAPTCHA = 'recaptcha'
+MODULE_NOTICE = 'notice'
+
+# Constant for the sub-module name
+SUBMODULE_COMMENTS = 'comments'
+SUBMODULE_FEEDBACK_PROMPT = 'feedback_prompt'
+
+# Constants for field names
+FIELD_ENABLE = 'enable'
+FIELD_ENABLE_ORGS = 'enable_orgs'
+FIELD_DISABLE_ORGS = 'disable_orgs'
+
+# Feature/Sub-feature constants
+FEATURE_IMAGE_ATTACHMENT = 'image_attachment'
+FEATURE_REPLY_OPEN = 'reply_open'
+FEATURE_REPEAT_POST_LIMIT = 'repeat_post_limit'
+FEATURE_RATING = 'rating'
+FEATURE_MODAL = 'modal'
+
+# Schema definition
+BASE_MODULE_SCHEMA = {
+    FIELD_ENABLE: 'bool',
+    FIELD_ENABLE_ORGS: 'list[str]',
+    FIELD_DISABLE_ORGS: 'list[str]',
+}
+
+UTILIZATIONS_COMMENTS_SCHEMA = {
+    'valid_submodules': {FEATURE_IMAGE_ATTACHMENT, FEATURE_REPLY_OPEN},
+    'submodule_structure': BASE_MODULE_SCHEMA,
+}
+
+RESOURCES_COMMENTS_SCHEMA = {
+    'valid_submodules': {
+        FEATURE_REPEAT_POST_LIMIT,
+        FEATURE_RATING,
+        FEATURE_IMAGE_ATTACHMENT,
+        FEATURE_REPLY_OPEN,
+    },
+    'submodule_structure': BASE_MODULE_SCHEMA,
+}
+
+DOWNLOADS_FEEDBACK_PROMPT_SCHEMA = {
+    'valid_submodules': {FEATURE_MODAL},
+    'submodule_structure': BASE_MODULE_SCHEMA,
+}
+
+MODULE_SUBMODULE_SCHEMAS = {
+    MODULE_UTILIZATIONS: {SUBMODULE_COMMENTS: UTILIZATIONS_COMMENTS_SCHEMA},
+    MODULE_RESOURCES: {SUBMODULE_COMMENTS: RESOURCES_COMMENTS_SCHEMA},
+    MODULE_DOWNLOADS: {SUBMODULE_FEEDBACK_PROMPT: DOWNLOADS_FEEDBACK_PROMPT_SCHEMA},
+}
+
+VALID_MODULE_NAMES = {
+    MODULE_UTILIZATIONS,
+    MODULE_RESOURCES,
+    MODULE_DOWNLOADS,
+    MODULE_LIKES,
+    MODULE_MORAL_KEEPER_AI,
+    MODULE_RECAPTCHA,
+    MODULE_NOTICE,
+}
+
+
+def validate_module_fields(module_name, module_config):
+    # Validate fields of the top level module.
+    if not isinstance(module_config, dict):
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    f"modules.{module_name} must be an object, "
+                    f"got {type(module_config).__name__}"
+                )
+            }
+        )
+    has_submodule_schema = module_name in MODULE_SUBMODULE_SCHEMAS
+    has_base_field = any(key in module_config for key in BASE_MODULE_SCHEMA.keys())
+
+    # For modules with submodule schemas
+    if has_submodule_schema:
+        if not module_config:
+            raise toolkit.ValidationError(
+                {"message": f"modules.{module_name} must not be empty"}
+            )
+        if has_base_field and FIELD_ENABLE not in module_config:
+            raise toolkit.ValidationError(
+                {"message": f"modules.{module_name} must have '{FIELD_ENABLE}' key"}
+            )
+    # Type check for each field
+    for field_name, expected_type in BASE_MODULE_SCHEMA.items():
+        if field_name in module_config:
+            validate_submodule_field(
+                field_name=field_name,
+                field_value=module_config[field_name],
+                expected_type=expected_type,
+                submodule_path=f"modules.{module_name}",
+            )
+
+
+def validate_submodule_field(field_name, field_value, expected_type, submodule_path):
+    # Validate fields of the submodule.
+
+    if expected_type == 'bool':
+        if not isinstance(field_value, bool):
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        f"{submodule_path}.{field_name} must be a boolean, "
+                        f"got {type(field_value).__name__}"
+                    )
+                }
+            )
+    elif expected_type == 'list[str]':
+        if not isinstance(field_value, list) or not all(
+            isinstance(x, str) for x in field_value
+        ):
+            raise toolkit.ValidationError(
+                {
+                    "message": (
+                        f"{submodule_path}.{field_name} must be a list of strings, "
+                        f"got {type(field_value).__name__}"
+                    )
+                }
+            )
+    # Defensive code for unsupported types
+    else:
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    f"Unsupported field type '{expected_type}' for "
+                    f"{submodule_path}.{field_name}. "
+                    f"Supported types are: 'bool', 'list[str]'"
+                )
+            }
+        )
+
+
+def validate_submodule_structure(
+    submodule_name, submodule_config, submodule_path, expected_structure
+):
+
+    if not isinstance(submodule_config, dict):
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    f"{submodule_path} must be an object, "
+                    f"got {type(submodule_config).__name__}"
+                )
+            }
+        )
+
+    for field_name, expected_type in expected_structure.items():
+        if field_name in submodule_config:
+            validate_submodule_field(
+                field_name=field_name,
+                field_value=submodule_config[field_name],
+                expected_type=expected_type,
+                submodule_path=submodule_path,
+            )
+
+
+def validate_submodule(module_name, submodule_key, parent_config, schema):
+
+    if submodule_key not in parent_config:
+        return
+
+    submodule_config = parent_config[submodule_key]
+    parent_path = f"{module_name}.{submodule_key}"
+
+    if not isinstance(submodule_config, dict):
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    f"{parent_path} must be an object, "
+                    f"got {type(submodule_config).__name__}"
+                )
+            }
+        )
+
+    valid_submodules = schema['valid_submodules']
+    actual_submodules = set(submodule_config.keys())
+    invalid_submodules = actual_submodules - valid_submodules
+    if invalid_submodules:
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    f"Invalid submodule names in {parent_path}: "
+                    f"{sorted(invalid_submodules)}. "
+                    f"Valid submodule names are: {sorted(valid_submodules)}"
+                )
+            }
+        )
+
+    expected_structure = schema['submodule_structure']
+    for submodule_name in actual_submodules:
+        submodule_path = f"{parent_path}.{submodule_name}"
+        validate_submodule_structure(
+            submodule_name=submodule_name,
+            submodule_config=submodule_config[submodule_name],
+            submodule_path=submodule_path,
+            expected_structure=expected_structure,
+        )
+
+
+def validate_module_submodules(module_name, module_config):
+    if module_name not in MODULE_SUBMODULE_SCHEMAS:
+        return
+
+    module_schemas = MODULE_SUBMODULE_SCHEMAS[module_name]
+
+    for submodule_key, schema in module_schemas.items():
+        validate_submodule(
+            module_name=module_name,
+            submodule_key=submodule_key,
+            parent_config=module_config,
+            schema=schema,
+        )
+
+
+def validate_feedback_config(feedback_config):
+    if not isinstance(feedback_config, dict):
+        raise toolkit.ValidationError(
+            {"message": "feedback_config.json must be a JSON object"}
+        )
+    if "modules" not in feedback_config:
+        raise toolkit.ValidationError(
+            {"message": "feedback_config.json must have a 'modules' key"}
+        )
+    if not isinstance(feedback_config["modules"], dict):
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    "'modules' must be an object, "
+                    f"got {type(feedback_config['modules']).__name__}"
+                )
+            }
+        )
+    actual_modules_names = set(feedback_config['modules'].keys())
+    invalid_modules = actual_modules_names - VALID_MODULE_NAMES
+
+    if invalid_modules:
+        raise toolkit.ValidationError(
+            {
+                "message": (
+                    f"Invalid module names found: {sorted(invalid_modules)}. "
+                    f"Valid module names are: {sorted(VALID_MODULE_NAMES)}"
+                )
+            }
+        )
+
+    for module_name, module_config in feedback_config['modules'].items():
+        validate_module_fields(module_name, module_config)
+        validate_module_submodules(module_name, module_config)
