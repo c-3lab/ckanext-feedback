@@ -131,7 +131,7 @@ curl -L -o ckanext/feedback/i18n/ckan.pot \
 """
 
 babel-filter = """
-python3 development/scripts/i18n.py
+python3 development/scripts/remove_duplicates.py
 """
 
 babel-full = ["update-ckan-pot", "babel-extract", "babel-filter", "babel-update", "babel-clean", "babel-compile"]
