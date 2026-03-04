@@ -3,7 +3,8 @@ from typing import Any, Dict, Optional
 
 import ckan.model as model
 from ckan import plugins
-from ckan.common import _, config
+from ckan.common import _
+from ckan.lib import helpers as core_helpers
 from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 from ckan.types import PUploader
@@ -16,7 +17,6 @@ from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.upload import FeedbackUpload
 from ckanext.feedback.services.download import summary as download_summary_service
-from ckanext.feedback.services.organization import organization as organization_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
@@ -87,10 +87,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
 
-    def is_base_public_folder_bs3(self):
-        base_templates_folder = config.get('ckan.base_public_folder', 'public')
-        return base_templates_folder == 'public-bs3'
-
     # ITemplateHelpers
 
     def get_helpers(self):
@@ -112,7 +108,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 cfg.resource_comment.image_attachment.is_enable
             ),
             'is_organization_admin': check.is_organization_admin,
-            'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
             'user_has_organization_admin_role': check.user_has_organization_admin_role,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
@@ -142,7 +137,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_rating': resource_summary_service.get_package_rating,
             'get_resource_like_count': resource_likes_service.get_resource_like_count,
             'get_package_like_count': resource_likes_service.get_package_like_count,
-            'get_organization': organization_service.get_organization,
             'is_enabled_feedback_recaptcha': cfg.recaptcha.is_enable,
             'is_feedback_recaptcha_force_all': cfg.recaptcha.force_all.get,
             'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
@@ -151,6 +145,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
+            'get_organization': core_helpers.get_organization,
         }
 
     # IPackageController

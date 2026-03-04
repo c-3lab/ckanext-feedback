@@ -3,12 +3,6 @@ from ckan.model.group import Group
 from ckanext.feedback.models.session import session
 
 
-# Get organization using owner_org
-def get_organization(owner_org):
-    organization = session.query(Group).filter(Group.id == owner_org).first()
-    return organization
-
-
 def get_org_list(id=None):
     query = session.query(Group.name, Group.title).filter(
         Group.state == "active",

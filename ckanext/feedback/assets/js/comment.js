@@ -1,5 +1,4 @@
 const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
-const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
 
 document.addEventListener('DOMContentLoaded', () => {
   const textareas = document.getElementsByName('comment-content');
@@ -86,7 +85,6 @@ window.addEventListener('pageshow', (event) => {
     sendButton.style.pointerEvents = "auto";
     sendButton.style.background = "";
     sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
   });
 });
 
@@ -188,7 +186,7 @@ function createReplyPreview(src) {
 
 
 
-function checkCommentExists(button, bs3=false) {
+function checkCommentExists(button) {
   let comment
   if ( button.id === "comment-button" ) {
     comment = document.getElementById('comment-content').value;
@@ -218,18 +216,14 @@ function checkCommentExists(button, bs3=false) {
   Array.from(sendButtons).forEach(button => {
     button.style.pointerEvents = "none";
     button.style.background = "#333333";
-    if (!bs3) {
-      button.innerHTML = spinner + button.innerHTML;
-    }else{
-      button.innerHTML = spinner_bs3 + button.innerHTML;
-    }
+    button.innerHTML = spinner + button.innerHTML;
   });
   sessionStorage.removeItem('is_suggestion');
 
   return true;
 }
 
-function checkReplyExists(button, bs3=false) {
+function checkReplyExists(button) {
   button.style.pointerEvents = 'none';
 
   const errorElement = document.getElementById('reply-error');
@@ -261,11 +255,7 @@ function checkReplyExists(button, bs3=false) {
     sendButtons.forEach(button => {
       button.style.pointerEvents = "none";
       button.style.background = "#333333";
-      if (!bs3) {
-        button.innerHTML = spinner + button.innerHTML;
-      } else {
-        button.innerHTML = spinner_bs3 + button.innerHTML;
-      }
+      button.innerHTML = spinner + button.innerHTML;
     });
   }
 
