@@ -51,6 +51,20 @@ log = logging.getLogger(__name__)
 _session = session
 
 
+def _update_package_search_index(package_id):
+    """
+    Update Solr index for a specific package.
+    This is needed when download/like counts change without package metadata changing.
+    """
+    try:
+        from ckan.lib.search import rebuild
+
+        rebuild(package_id)
+        log.debug(f"Updated search index for package {package_id}")
+    except Exception as e:
+        log.warning(f"Failed to update search index for package {package_id}: {e}")
+
+
 class FormFields:
     """Form field name constants"""
 
@@ -659,11 +673,6 @@ class ResourceController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
-        else:
-            helpers.flash_success(
-                _('The comment has been approved.'),
-                allow_html=True,
-            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -678,10 +687,6 @@ class ResourceController:
         try:
             comment_service.approve_reply(reply_id, current_user.id)
             session.commit()
-            helpers.flash_success(
-                _('The reply has been approved.'),
-                allow_html=True,
-            )
         except PermissionError:
             helpers.flash_error(
                 _('Cannot approve reply before the parent comment is approved.'),
@@ -779,14 +784,6 @@ class ResourceController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
-        else:
-            helpers.flash_success(
-                _(
-                    'Your reply has been sent.<br>The reply will not be displayed until'
-                    ' approved by an administrator.'
-                ),
-                allow_html=True,
-            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 
@@ -907,6 +904,13 @@ class ResourceController:
                 'Error', status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype='text/plain'
             )
 
+        # Update Solr index to reflect new like count
+        try:
+            resource = comment_service.get_resource(resource_id)
+            _update_package_search_index(resource.Resource.package_id)
+        except Exception as e:
+            log.warning(f"Failed to update search index after like toggle: {e}")
+
         resp = Response('OK', status=HTTPStatus.OK, mimetype='text/plain')
         return set_like_status_cookie(resp, resource_id, like_status)
 
@@ -978,11 +982,6 @@ class ResourceController:
 
         if not result.success:
             helpers.flash_error(result.error_message, allow_html=True)
-        else:
-            helpers.flash_success(
-                _('The status has been updated.'),
-                allow_html=True,
-            )
 
         return toolkit.redirect_to('resource_comment.comment', resource_id=resource_id)
 

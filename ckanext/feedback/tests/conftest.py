@@ -1,4 +1,3 @@
-import os
 import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, patch
@@ -357,6 +356,11 @@ def mock_current_user_fixture():
         g.userobj = current_user
 
     return _mock_current_user
+    #     user_obj = model.User.get(user['name'])
+    #     # mock current_user
+    #     current_user.return_value = user_obj
+
+    # return _mock_current_user
 
 
 @pytest.fixture(scope='function')
@@ -389,43 +393,3 @@ def utilization_comment_moral_check_log(utilization):
     session.add(moral_check_log)
     session.flush()
     return moral_check_log
-
-
-@pytest.fixture(autouse=True)
-def cleanup_feedback_config():
-    from ckanext.feedback.services.common.config import FeedbackConfig
-
-    config_file_path = '/srv/app/feedback_config.json'
-
-    FeedbackConfig._instance = None
-    FeedbackConfig._initialized = False
-
-    file_existed_before = os.path.isfile(config_file_path)
-    original_content = None
-    if file_existed_before:
-        try:
-            with open(config_file_path, 'r') as f:
-                original_content = f.read()
-        except Exception:
-            pass
-
-    if os.path.isfile(config_file_path):
-        try:
-            os.remove(config_file_path)
-        except Exception:
-            pass
-
-    yield
-
-    try:
-        if file_existed_before and original_content is not None:
-            with open(config_file_path, 'w') as f:
-                f.write(original_content)
-        else:
-            if os.path.isfile(config_file_path):
-                os.remove(config_file_path)
-    except Exception:
-        pass
-    finally:
-        FeedbackConfig._instance = None
-        FeedbackConfig._initialized = False

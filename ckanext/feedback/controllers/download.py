@@ -18,6 +18,20 @@ from ckanext.feedback.services.resource.comment import get_resource
 log = logging.getLogger(__name__)
 
 
+def _update_package_search_index(package_id):
+    """
+    Update Solr index for a specific package.
+    This is needed when download/like counts change without package metadata changing.
+    """
+    try:
+        from ckan.lib.search import rebuild
+
+        rebuild(package_id)
+        log.debug(f"Updated search index for package {package_id}")
+    except Exception as e:
+        log.warning(f"Failed to update search index for package {package_id}: {e}")
+
+
 class DownloadController:
     # extend default download function to count when a resource is downloaded
     @staticmethod
@@ -31,6 +45,9 @@ class DownloadController:
                 increment_resource_downloads(resource_id)
                 increment_resource_downloads_monthly(resource_id)
                 session.commit()
+
+                # Update Solr index to reflect new download count
+                _update_package_search_index(id)
             except Exception as e:
                 session.rollback()
                 log.warning(f'Transaction rolled back for resource {resource_id}')

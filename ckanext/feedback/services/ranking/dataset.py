@@ -65,7 +65,7 @@ def get_count_by_period(model, column, start_year_month, end_year_month):
     end_base = datetime.strptime(end_year_month, '%Y-%m').replace(
         day=1, hour=0, minute=0, second=0, microsecond=0
     )
-    # 次月1日（排他的上限）
+    # The first day of the following month (exclusive upper limit)
     if end_base.month == 12:
         next_month_start = end_base.replace(year=end_base.year + 1, month=1)
     else:
