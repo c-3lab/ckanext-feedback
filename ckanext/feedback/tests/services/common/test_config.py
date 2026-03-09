@@ -22,6 +22,7 @@ ORG_NAME_C = 'org-name-c'
 ORG_NAME_D = 'org-name-d'
 
 
+@pytest.mark.usefixtures("cleanup_feedback_config")
 class TestCheck:
     @patch('ckanext.feedback.services.common.config.import_string')
     def test_seted_download_handler(self, mock_import_string):
@@ -50,11 +51,6 @@ class TestCheck:
         mock_ReCaptchaConfig_load_config,
         mock_NoticeEmailConfig_load_config,
     ):
-        # without feedback_config_file and .ini file
-        try:
-            os.remove('/srv/app/feedback_config.json')
-        except FileNotFoundError:
-            pass
 
         FeedbackConfig().load_feedback_config()
         assert FeedbackConfig().is_feedback_config_file is False
@@ -77,23 +73,76 @@ class TestCheck:
     @patch('ckanext.feedback.plugin.toolkit')
     def test_update_config_attribute_error(self, mock_toolkit):
         feedback_config = {'modules': {}}
+
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
         FeedbackConfig().load_feedback_config()
-        mock_toolkit.error_shout.call_count == 4
+
+        mock_toolkit.error_shout.assert_not_called()
         os.remove('/srv/app/feedback_config.json')
 
     @patch('ckanext.feedback.services.common.config.toolkit')
     def test_update_config_json_decode_error(self, mock_toolkit):
         with open('/srv/app/feedback_config.json', 'w') as f:
             f.write('{"modules":')
+        with pytest.raises(json.JSONDecodeError):
+            FeedbackConfig().load_feedback_config()
 
-        FeedbackConfig().load_feedback_config()
-        mock_toolkit.error_shout.assert_called_once_with(
-            'The feedback config file not decoded correctly'
-        )
-        os.remove('/srv/app/feedback_config.json')
+        call_args = mock_toolkit.error_shout.call_args[0][0]
+        assert 'The feedback config file not decoded correctly' in call_args
+        assert 'Expecting' in call_args or 'line' in call_args
+
+    @patch('ckanext.feedback.services.common.config.toolkit.error_shout')
+    def test_load_feedback_config_top_level_not_dict(self, mock_error_shout):
+        feedback_config = [{"modules": {}}]
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        with pytest.raises(ValidationError):
+            FeedbackConfig().load_feedback_config()
+
+        call_args = mock_error_shout.call_args[0][0]
+        assert 'The feedback config file validation failed:' in call_args
+        assert 'feedback_config.json must be a JSON object' in call_args
+
+    def test_load_feedback_config_modules_value_not_dict(self):
+        feedback_config = {"modules": "not_dict"}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        with pytest.raises(ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert 'object' in error_message.lower() or 'dict' in error_message.lower()
+
+    def test_load_config_invalid_module_name(self):
+        feedback_config = {
+            "modules": {
+                "invalid_module_name": {"enable": True},
+                "utilizations": {"enable": True},
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        with pytest.raises(ValidationError) as exc_info:
+            FeedbackConfig().load_feedback_config()
+
+        error_dict = exc_info.value.__dict__.get('error_dict')
+        error_message = error_dict.get('message')
+
+        assert (
+            'invalid' in error_message.lower() or 'module' in error_message.lower()
+        ), f"Expected error about invalid module, but got: {error_message}"
+        assert (
+            'invalid_module_name' in error_message
+        ), f"Expected error to mention 'invalid_module_name', but got: {error_message}"
 
     def test_get_commands(self):
         result = FeedbackPlugin.get_commands(self)
@@ -470,12 +519,7 @@ class TestCheck:
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
 
-        assert error_message == (
-            "The configuration of the \"resources\" module "
-            "in \"feedback_config.json\" is incomplete. "
-            "Please specify the \"enable\" key "
-            "(e.g., {\"modules\": {\"resources\": {\"enable\": true}}})."
-        )
+        assert error_message == "modules.resources must not be empty"
         os.remove('/srv/app/feedback_config.json')
 
         # The value of "enable_orgs" is not an array of strings
@@ -489,22 +533,15 @@ class TestCheck:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
-        FeedbackConfig().load_feedback_config()
-
-        mock_organization_service.get_organization_name_by_id.return_value = (
-            SimpleNamespace(**{'name': ORG_NAME_A})
-        )
-
         with pytest.raises(ValidationError) as exc_info:
-            FeedbackConfig().resource_comment.is_enable(ORG_NAME_A)
+            FeedbackConfig().load_feedback_config()
 
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
 
-        assert error_message == (
-            "The \"enable_orgs\" key must be a string array "
-            "to specify valid organizations "
-            "(e.g., \"enable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+        assert (
+            error_message
+            == 'modules.resources.enable_orgs must be a list of strings, got str'
         )
         os.remove('/srv/app/feedback_config.json')
 
@@ -519,37 +556,30 @@ class TestCheck:
         with open('/srv/app/feedback_config.json', 'w') as f:
             json.dump(feedback_config, f, indent=2)
 
-        FeedbackConfig().load_feedback_config()
-
-        mock_organization_service.get_organization_name_by_id.return_value = (
-            SimpleNamespace(**{'name': ORG_NAME_A})
-        )
-
         with pytest.raises(ValidationError) as exc_info:
-            FeedbackConfig().resource_comment.is_enable(ORG_NAME_A)
+            FeedbackConfig().load_feedback_config()
 
         error_dict = exc_info.value.__dict__.get('error_dict')
         error_message = error_dict.get('message')
 
         assert (
-            error_message == "The \"disable_orgs\" key must be a string array "
-            "to specify invalid organizations "
-            "(e.g., \"disable_orgs\": [\"org-name-a\", \"org-name-b\"])."
+            error_message
+            == 'modules.resources.disable_orgs must be a list of strings, got str'
         )
         os.remove('/srv/app/feedback_config.json')
 
     @patch('ckanext.feedback.services.common.config.organization_service')
     def test_module_default_config(self, mock_organization_service):
         # utilization(ckan.ini)
-        config.pop('ckan.feedback.utilization.enable', None)
-        config.pop('ckan.feedback.utilization.enable_orgs', None)
-        config.pop('ckan.feedback.utilization.disable_orgs', None)
+        config.pop('ckan.feedback.utilizations.enable', None)
+        config.pop('ckan.feedback.utilizations.enable_orgs', None)
+        config.pop('ckan.feedback.utilizations.disable_orgs', None)
 
         FeedbackConfig().load_feedback_config()
 
-        assert config.get('ckan.feedback.utilization.enable', None) is None
-        assert config.get('ckan.feedback.utilization.enable_orgs', None) is None
-        assert config.get('ckan.feedback.utilization.disable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.enable', None) is None
+        assert config.get('ckan.feedback.utilizations.enable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is False
         assert FeedbackConfig().utilization.is_enable() is True
         assert FeedbackConfig().utilization.is_enable(ORG_NAME_A) is True
@@ -564,9 +594,9 @@ class TestCheck:
 
         FeedbackConfig().load_feedback_config()
 
-        assert config.get('ckan.feedback.utilization.enable', None) is None
-        assert config.get('ckan.feedback.utilization.enable_orgs', None) is None
-        assert config.get('ckan.feedback.utilization.disable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.enable', None) is None
+        assert config.get('ckan.feedback.utilizations.enable_orgs', None) is None
+        assert config.get('ckan.feedback.utilizations.disable_orgs', None) is None
         assert FeedbackConfig().is_feedback_config_file is True
         assert FeedbackConfig().utilization.is_enable() is True
         assert FeedbackConfig().utilization.is_enable(ORG_NAME_A) is True
@@ -1059,6 +1089,38 @@ class TestCheck:
         )
         os.remove('/srv/app/feedback_config.json')
 
+        # with feedback_config_file enable is True, .ini file enable is False
+        config['ckan.feedback.recaptcha.enable'] = False
+        config.pop('ckan.feedback.recaptcha.publickey', None)
+        config.pop('ckan.feedback.recaptcha.privatekey', None)
+        config.pop('ckan.feedback.recaptcha.score_threshold', None)
+
+        feedback_config = {
+            'modules': {
+                "recaptcha": {
+                    "enable": True,
+                    "publickey": "xxxxxxxxx",
+                    "privatekey": "yyyyyyyy",
+                    "score_threshold": 0.3,
+                },
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.recaptcha.enable', 'None') is True
+        assert config.get('ckan.feedback.recaptcha.publickey', 'None') == "xxxxxxxxx"
+        assert config.get('ckan.feedback.recaptcha.privatekey', 'None') == "yyyyyyyy"
+        assert config.get('ckan.feedback.recaptcha.score_threshold', 'None') == 0.3
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().recaptcha.is_enable() is True
+        assert FeedbackConfig().recaptcha.publickey.get() == "xxxxxxxxx"
+        assert FeedbackConfig().recaptcha.privatekey.get() == "yyyyyyyy"
+        assert FeedbackConfig().recaptcha.score_threshold.get() == 0.3
+        os.remove('/srv/app/feedback_config.json')
+
         # with feedback_config_file enable is True
         config['ckan.feedback.notice.email.enable'] = False
         config.pop('ckan.feedback.notice.email.template_directory', None)
@@ -1542,5 +1604,167 @@ class TestCheck:
         result = FeedbackConfig().resource_comment.get_enable_org_names()
 
         assert result == [ORG_NAME_A, ORG_NAME_B, ORG_NAME_C, ORG_NAME_D]
+
+        os.remove('/srv/app/feedback_config.json')
+
+    def test_set_enable_and_enable_orgs_and_disable_orgs_with_module_config(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        module_config = {
+            "enable": True,
+            "enable_orgs": ["org-a", "org-b"],
+            "disable_orgs": ["org-c"],
+        }
+
+        downloads_config = DownloadsConfig()
+        downloads_config.set_enable_and_enable_orgs_and_disable_orgs(module_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs') == ["org-a", "org-b"]
+        assert config.get('ckan.feedback.downloads.disable_orgs') == ["org-c"]
+
+    def test_set_enable_and_enable_orgs_and_disable_orgs_with_none(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        config['ckan.feedback.downloads.enable'] = True
+        config['ckan.feedback.downloads.enable_orgs'] = ["org-a"]
+        config['ckan.feedback.downloads.disable_orgs'] = ["org-b"]
+
+        downloads_config = DownloadsConfig()
+        downloads_config.set_enable_and_enable_orgs_and_disable_orgs(None)
+
+        assert config.get('ckan.feedback.downloads.enable') is None
+        assert config.get('ckan.feedback.downloads.enable_orgs') is None
+        assert config.get('ckan.feedback.downloads.disable_orgs') is None
+
+    def test_set_enable_and_enable_orgs_and_disable_orgs_partial_fields(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+        config.pop('ckan.feedback.downloads.disable_orgs', None)
+
+        module_config = {"enable": False}
+
+        downloads_config = DownloadsConfig()
+        downloads_config.set_enable_and_enable_orgs_and_disable_orgs(module_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is False
+        assert config.get('ckan.feedback.downloads.enable_orgs') is None
+        assert config.get('ckan.feedback.downloads.disable_orgs') is None
+
+    def test_downloads_config_load_config_with_full_config(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        feedback_config = {
+            "modules": {
+                "downloads": {
+                    "enable": True,
+                    "enable_orgs": ["org-a"],
+                    "feedback_prompt": {
+                        "modal": {"enable": False, "disable_orgs": ["org-b"]}
+                    },
+                }
+            }
+        }
+
+        download_config = DownloadsConfig()
+        download_config.load_config(feedback_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is True
+        assert config.get('ckan.feedback.downloads.enable_orgs') == ["org-a"]
+        assert (
+            config.get('ckan.feedback.downloads.feedback_prompt.modal.enable') is False
+        )
+        assert config.get(
+            'ckan.feedback.downloads.feedback_prompt.modal.disable_orgs'
+        ) == ["org-b"]
+
+    def test_download_config_load_config_missing_download_module(self):
+        from ckan.common import config
+
+        from ckanext.feedback.services.common.config import DownloadsConfig
+
+        config.pop('ckan.feedback.downloads.enable', None)
+        config.pop('ckan.feedback.downloads.enable_orgs', None)
+
+        feedback_config = {"modules": {}}
+
+        downloads_config = DownloadsConfig()
+        downloads_config.load_config(feedback_config)
+
+        assert config.get('ckan.feedback.downloads.enable') is None
+        assert config.get('ckan.feedback.downloads.enable_orgs') is None
+
+    def test_set_config_uses_ckan_ini_when_feedback_config_missing(self):
+        config['ckan.feedback.recaptcha.enable'] = True
+        config['ckan.feedback.recaptcha.privatekey'] = 'test_private_key'
+        config['ckan.feedback.recaptcha.publickey'] = 'test_public_key'
+        config['ckan.feedback.recaptcha.score_threshold'] = 0.5
+
+        feedback_config = {'modules': {}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert config.get('ckan.feedback.recaptcha.enable') is True
+        assert FeedbackConfig().recaptcha.privatekey.get() == 'test_private_key'
+        assert FeedbackConfig().recaptcha.publickey.get() == 'test_public_key'
+        assert FeedbackConfig().recaptcha.score_threshold.get() == 0.5
+
+        config.pop('ckan.feedback.recaptcha.enable', None)
+        config.pop('ckan.feedback.recaptcha.privatekey', None)
+        config.pop('ckan.feedback.recaptcha.publickey', None)
+        config.pop('ckan.feedback.recaptcha.score_threshold', None)
+
+    def test_set_config_uses_default_when_no_config_exists(self):
+        config.pop('ckan.feedback.recaptcha.enable', None)
+        config.pop('ckan.feedback.recaptcha.privatekey', None)
+        config.pop('ckan.feedback.recaptcha.publickey', None)
+        config.pop('ckan.feedback.recaptcha.score_threshold', None)
+        config.pop('ckan.feedback.recaptcha.force_all', None)
+        config.pop('ckan.feedback.notice.email.enable', None)
+        config.pop('ckan.feedback.notice.email.template_directory', None)
+
+        feedback_config = {'modules': {}}
+
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert FeedbackConfig().recaptcha.privatekey.get() == ''
+        assert FeedbackConfig().recaptcha.publickey.get() == ''
+        assert FeedbackConfig().recaptcha.score_threshold.get() == 0.5
+        assert FeedbackConfig().recaptcha.force_all.get() is False
+
+        default_template_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                '..',
+                '..',
+                '..',
+                'templates',
+                'email_notification',
+            )
+        )
+        assert (
+            FeedbackConfig().notice_email.template_directory.get()
+            == default_template_dir
+        )
 
         os.remove('/srv/app/feedback_config.json')
