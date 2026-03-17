@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2025-12-19 11:59+0900\n"
+"POT-Creation-Date: 2026-01-23 13:59+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -19,89 +19,87 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: ckanext/feedback/plugin.py:388 ckanext/feedback/plugin.py:443
-#: ckanext/feedback/plugin.py:445
-#: ckanext/feedback/templates/package/search.html:7
+#: ckanext/feedback/plugin.py:167 ckanext/feedback/plugin.py:222
+#: ckanext/feedback/plugin.py:224
 #: ckanext/feedback/templates/package/snippets/resource_item.html:31
-#: ckanext/feedback/templates/snippets/package_item.html:30
-#: ckanext/feedback/tests/test_plugin.py:187
-#: ckanext/feedback/tests/test_plugin.py:201
-#: ckanext/feedback/tests/test_plugin.py:262
+#: ckanext/feedback/templates/snippets/package_item.html:26
+#: ckanext/feedback/tests/test_plugin.py:179
+#: ckanext/feedback/tests/test_plugin.py:193
+#: ckanext/feedback/tests/test_plugin.py:254
 msgid "Downloads"
 msgstr "ダウンロード数"
 
-#: ckanext/feedback/plugin.py:394 ckanext/feedback/plugin.py:450
-#: ckanext/feedback/plugin.py:452
+#: ckanext/feedback/plugin.py:173 ckanext/feedback/plugin.py:229
+#: ckanext/feedback/plugin.py:231
 #: ckanext/feedback/templates/package/snippets/resource_item.html:40
-#: ckanext/feedback/templates/snippets/package_item.html:40
-#: ckanext/feedback/tests/test_plugin.py:188
-#: ckanext/feedback/tests/test_plugin.py:202
-#: ckanext/feedback/tests/test_plugin.py:263
+#: ckanext/feedback/templates/snippets/package_item.html:36
+#: ckanext/feedback/tests/test_plugin.py:180
+#: ckanext/feedback/tests/test_plugin.py:194
+#: ckanext/feedback/tests/test_plugin.py:255
 msgid "Utilizations"
 msgstr "利活用数"
 
-#: ckanext/feedback/plugin.py:400 ckanext/feedback/plugin.py:455
-#: ckanext/feedback/plugin.py:457
+#: ckanext/feedback/plugin.py:179 ckanext/feedback/plugin.py:234
+#: ckanext/feedback/plugin.py:236
 #: ckanext/feedback/templates/package/snippets/resource_item.html:67
-#: ckanext/feedback/templates/snippets/package_item.html:72
+#: ckanext/feedback/templates/snippets/package_item.html:68
 #: ckanext/feedback/templates/utilization/details.html:58
-#: ckanext/feedback/tests/test_plugin.py:189
-#: ckanext/feedback/tests/test_plugin.py:203
-#: ckanext/feedback/tests/test_plugin.py:264
+#: ckanext/feedback/tests/test_plugin.py:181
+#: ckanext/feedback/tests/test_plugin.py:195
+#: ckanext/feedback/tests/test_plugin.py:256
 msgid "Issue Resolutions"
 msgstr "課題解決数"
 
-#: ckanext/feedback/plugin.py:410 ckanext/feedback/plugin.py:462
-#: ckanext/feedback/plugin.py:464
+#: ckanext/feedback/plugin.py:189 ckanext/feedback/plugin.py:241
+#: ckanext/feedback/plugin.py:243
 #: ckanext/feedback/templates/package/snippets/resource_item.html:49
 #: ckanext/feedback/templates/resource/comment.html:35
-#: ckanext/feedback/templates/snippets/package_item.html:51
-#: ckanext/feedback/templates/utilization/details.html:84
+#: ckanext/feedback/templates/snippets/package_item.html:47
+#: ckanext/feedback/templates/utilization/details.html:73
 #: ckanext/feedback/templates/utilization/search.html:61
-#: ckanext/feedback/tests/test_plugin.py:190
-#: ckanext/feedback/tests/test_plugin.py:204
-#: ckanext/feedback/tests/test_plugin.py:265
+#: ckanext/feedback/tests/test_plugin.py:182
+#: ckanext/feedback/tests/test_plugin.py:196
+#: ckanext/feedback/tests/test_plugin.py:257
 msgid "Comments"
 msgstr "コメント数"
 
-#: ckanext/feedback/plugin.py:415 ckanext/feedback/plugin.py:468
-#: ckanext/feedback/plugin.py:470
+#: ckanext/feedback/plugin.py:194 ckanext/feedback/plugin.py:247
+#: ckanext/feedback/plugin.py:249
 #: ckanext/feedback/templates/package/snippets/resource_item.html:57
 #: ckanext/feedback/templates/resource/comment.html:46
-#: ckanext/feedback/templates/snippets/package_item.html:62
-#: ckanext/feedback/tests/test_plugin.py:205
-#: ckanext/feedback/tests/test_plugin.py:272
+#: ckanext/feedback/templates/snippets/package_item.html:58
+#: ckanext/feedback/tests/test_plugin.py:197
+#: ckanext/feedback/tests/test_plugin.py:264
 msgid "Rating"
 msgstr "評価"
 
-#: ckanext/feedback/plugin.py:423 ckanext/feedback/plugin.py:475
-#: ckanext/feedback/plugin.py:477
-#: ckanext/feedback/templates/package/search.html:7
+#: ckanext/feedback/plugin.py:202 ckanext/feedback/plugin.py:254
+#: ckanext/feedback/plugin.py:256
 #: ckanext/feedback/templates/package/snippets/resource_item.html:22
-#: ckanext/feedback/templates/snippets/package_item.html:21
-#: ckanext/feedback/tests/test_plugin.py:191
-#: ckanext/feedback/tests/test_plugin.py:206
-#: ckanext/feedback/tests/test_plugin.py:266
+#: ckanext/feedback/templates/snippets/package_item.html:17
+#: ckanext/feedback/tests/test_plugin.py:183
+#: ckanext/feedback/tests/test_plugin.py:198
+#: ckanext/feedback/tests/test_plugin.py:258
 msgid "Number of Likes"
 msgstr "いいね数"
 
 #: ckanext/feedback/components/comment.py:22
-#: ckanext/feedback/templates/resource/comment.html:371
+#: ckanext/feedback/templates/resource/comment.html:346
 msgid "Not Started"
 msgstr "未対応"
 
 #: ckanext/feedback/components/comment.py:23
-#: ckanext/feedback/templates/resource/comment.html:375
+#: ckanext/feedback/templates/resource/comment.html:350
 msgid "In Progress"
 msgstr "対応中"
 
 #: ckanext/feedback/components/comment.py:24
-#: ckanext/feedback/templates/resource/comment.html:379
+#: ckanext/feedback/templates/resource/comment.html:354
 msgid "Completed"
 msgstr "対応済み"
 
 #: ckanext/feedback/components/comment.py:25
-#: ckanext/feedback/templates/resource/comment.html:383
+#: ckanext/feedback/templates/resource/comment.html:358
 msgid "Rejected"
 msgstr "見送り"
 
@@ -109,12 +107,12 @@ msgstr "見送り"
 #: ckanext/feedback/templates/admin/approval_and_delete.html:11
 #: ckanext/feedback/templates/admin/approval_and_delete.html:14
 #: ckanext/feedback/templates/admin/approval_and_delete.html:33
-#: ckanext/feedback/templates/admin/approval_and_delete.html:242
+#: ckanext/feedback/templates/admin/approval_and_delete.html:139
 msgid "Approval and Delete"
 msgstr "承認・削除"
 
 #: ckanext/feedback/controllers/admin.py:43
-#: ckanext/feedback/templates/admin/approval_and_delete.html:264
+#: ckanext/feedback/templates/admin/approval_and_delete.html:161
 msgid ""
 "This is the management screen for approving or deleting resource "
 "comments, utilization method registration requests, and utilization "
@@ -137,8 +135,7 @@ msgid ""
 msgstr "組織のリソースに対するフィードバックを集計したデータを、CSV形式でダウンロードできる画面です。"
 
 #: ckanext/feedback/controllers/admin.py:157
-#: ckanext/feedback/templates/admin/approval_and_delete.html:124
-#: ckanext/feedback/templates/admin/approval_and_delete.html:223
+#: ckanext/feedback/templates/admin/approval_and_delete.html:121
 #: ckanext/feedback/templates/utilization/search.html:40
 #: ckanext/feedback/templates/utilization/search.html:91
 #: ckanext/feedback/templates/utilization/search.html:98
@@ -146,21 +143,18 @@ msgid "Approved"
 msgstr "承認済"
 
 #: ckanext/feedback/controllers/admin.py:158
-#: ckanext/feedback/templates/admin/approval_and_delete.html:126
-#: ckanext/feedback/templates/admin/approval_and_delete.html:225
+#: ckanext/feedback/templates/admin/approval_and_delete.html:123
 msgid "Waiting"
 msgstr "承認待ち"
 
 #: ckanext/feedback/controllers/admin.py:162
-#: ckanext/feedback/templates/admin/approval_and_delete.html:81
-#: ckanext/feedback/templates/admin/approval_and_delete.html:181
+#: ckanext/feedback/templates/admin/approval_and_delete.html:79
 msgid "Resource Comment"
 msgstr "リソースコメント"
 
 #: ckanext/feedback/controllers/admin.py:163
-#: ckanext/feedback/templates/admin/approval_and_delete.html:97
-#: ckanext/feedback/templates/admin/approval_and_delete.html:196
-#: ckanext/feedback/templates/header.html:115
+#: ckanext/feedback/templates/admin/approval_and_delete.html:94
+#: ckanext/feedback/templates/header.html:108
 #: ckanext/feedback/templates/utilization/comment_check.html:11
 #: ckanext/feedback/templates/utilization/details.html:12
 #: ckanext/feedback/templates/utilization/edit.html:11
@@ -170,32 +164,26 @@ msgid "Utilization"
 msgstr "利活用方法"
 
 #: ckanext/feedback/controllers/admin.py:164
-#: ckanext/feedback/templates/admin/approval_and_delete.html:106
-#: ckanext/feedback/templates/admin/approval_and_delete.html:205
+#: ckanext/feedback/templates/admin/approval_and_delete.html:103
 msgid "Utilization Comment"
 msgstr "利活用コメント"
 
 # | msgid "Resource Comment"
 #: ckanext/feedback/controllers/admin.py:165
-#: ckanext/feedback/templates/admin/approval_and_delete.html:90
-#: ckanext/feedback/templates/admin/approval_and_delete.html:190
-#, fuzzy
+#: ckanext/feedback/templates/admin/approval_and_delete.html:88
 msgid "Resource Comment Reply"
 msgstr "リソースコメント"
 
 # | msgid "Utilization Comment"
 #: ckanext/feedback/controllers/admin.py:166
-#: ckanext/feedback/templates/admin/approval_and_delete.html:118
-#: ckanext/feedback/templates/admin/approval_and_delete.html:217
-#, fuzzy
+#: ckanext/feedback/templates/admin/approval_and_delete.html:115
 msgid "Utilization Comment Reply"
 msgstr "利活用コメント"
 
 #: ckanext/feedback/controllers/admin.py:176
 #: ckanext/feedback/services/admin/feedbacks.py:272
-#: ckanext/feedback/templates/admin/approval_and_delete.html:58
-#: ckanext/feedback/templates/admin/approval_and_delete.html:159
-#: ckanext/feedback/templates/resource/comment.html:363
+#: ckanext/feedback/templates/admin/approval_and_delete.html:57
+#: ckanext/feedback/templates/resource/comment.html:338
 #: ckanext/feedback/templates/utilization/search.html:36
 #: ckanext/feedback/templates/utilization/search.html:64
 msgid "Status"
@@ -203,17 +191,9 @@ msgstr "ステータス"
 
 #: ckanext/feedback/controllers/admin.py:181
 #: ckanext/feedback/services/admin/feedbacks.py:274
-#: ckanext/feedback/templates/admin/approval_and_delete.html:56
-#: ckanext/feedback/templates/admin/approval_and_delete.html:157
+#: ckanext/feedback/templates/admin/approval_and_delete.html:55
 msgid "Type"
 msgstr "種類"
-
-#: ckanext/feedback/controllers/admin.py:186
-#: ckanext/feedback/services/admin/feedbacks.py:276
-#: ckanext/feedback/templates/admin/aggregation.html:24
-#: ckanext/feedback/templates/utilization/search.html:58
-msgid "Organization"
-msgstr "組織"
 
 #: ckanext/feedback/controllers/admin.py:242
 #: ckanext/feedback/controllers/admin.py:260
@@ -481,91 +461,16 @@ msgstr "無効なファイル拡張子です。許可されている形式：png
 msgid "Invalid file type. Only image files are allowed."
 msgstr "無効なファイル形式です。画像ファイルのみ許可されています。"
 
-#: ckanext/feedback/templates/header.html:11
-msgid "Sysadmin settings"
-msgstr "システム管理者設定"
-
-#: ckanext/feedback/templates/header.html:13
-msgid "Admin"
-msgstr "管理者"
-
-#: ckanext/feedback/templates/header.html:19
-msgid "View profile"
-msgstr "プロフィールを表示"
-
-#: ckanext/feedback/templates/header.html:27
-msgid "View dashboard"
-msgstr "ダッシュボード"
-
-#: ckanext/feedback/templates/header.html:29
-msgid "Dashboard"
-msgstr "ダッシュボード"
-
-#: ckanext/feedback/templates/header.html:35
-#: ckanext/feedback/templates/header.html:37
-msgid "Profile settings"
-msgstr "プロフィール設定"
-
-#: ckanext/feedback/templates/header.html:42
-#: ckanext/feedback/templates/header.html:44
-msgid "Log out"
-msgstr "ログアウト"
-
-#: ckanext/feedback/templates/header.html:51
-msgid "Account"
-msgstr "アカウント"
-
-#: ckanext/feedback/templates/header.html:54
-msgid "Log in"
-msgstr "ログイン"
-
-#: ckanext/feedback/templates/header.html:56
-msgid "Register"
-msgstr "保存"
-
-#: ckanext/feedback/templates/header.html:91
-#: ckanext/feedback/templates/header.html:96
-msgid "Toggle navigation"
-msgstr "トグル ナビゲーション"
-
-#: ckanext/feedback/templates/header.html:109
-msgid "Datasets"
-msgstr "データセット"
-
-#: ckanext/feedback/templates/header.html:111
-msgid "Organizations"
-msgstr "組織"
-
-#: ckanext/feedback/templates/header.html:113
-msgid "Groups"
-msgstr "グループ"
-
 #: ckanext/feedback/templates/admin/admin.html:10
 #: ckanext/feedback/templates/admin/admin.html:13
 #: ckanext/feedback/templates/admin/admin.html:19
 #: ckanext/feedback/templates/admin/aggregation.html:10
 #: ckanext/feedback/templates/admin/approval_and_delete.html:11
-#: ckanext/feedback/templates/header.html:118
+#: ckanext/feedback/templates/header.html:111
 msgid "Feedback Admin"
 msgstr "フィードバック管理"
 
-#: ckanext/feedback/templates/header.html:120
-msgid "About"
-msgstr "About"
-
-#: ckanext/feedback/templates/header.html:127
-msgid "Search Datasets..."
-msgstr "データセット検索"
-
-#: ckanext/feedback/templates/header.html:128
-msgid "Search"
-msgstr "検索"
-
-#: ckanext/feedback/templates/header.html:128
-msgid "Search datasets..."
-msgstr "データセット検索"
-
-#: ckanext/feedback/templates/header.html:129
+#: ckanext/feedback/templates/header.html:122
 #: ckanext/feedback/templates/utilization/search.html:29
 msgid "Submit"
 msgstr "検索"
@@ -597,9 +502,8 @@ msgstr "月"
 #: ckanext/feedback/templates/package/resource_read.html:52
 #: ckanext/feedback/templates/package/resource_read.html:56
 #: ckanext/feedback/templates/package/resource_read.html:62
-#: ckanext/feedback/templates/package/resource_read.html:72
-#: ckanext/feedback/templates/package/resource_read.html:79
-#: ckanext/feedback/templates/package/snippets/resource_item.html:122
+#: ckanext/feedback/templates/package/resource_read.html:71
+#: ckanext/feedback/templates/package/snippets/resource_item.html:114
 msgid "Download"
 msgstr "ダウンロード"
 
@@ -630,7 +534,7 @@ msgid "The data is aggregated for all available periods and can be exported."
 msgstr "現在集計可能なすべての期間で集計したデータを出力します。"
 
 #: ckanext/feedback/templates/admin/aggregation.html:87
-#: ckanext/feedback/templates/admin/approval_and_delete.html:244
+#: ckanext/feedback/templates/admin/approval_and_delete.html:141
 msgid "The organization does not exist."
 msgstr "組織が存在しません。"
 
@@ -679,29 +583,11 @@ msgstr "リソース名　昇順"
 msgid "Resource Name Descending"
 msgstr "リソース名　降順"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:43
-#: ckanext/feedback/templates/admin/approval_and_delete.html:144
+#: ckanext/feedback/templates/admin/approval_and_delete.html:42
 msgid "Approval"
 msgstr "承認"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:47
-#: ckanext/feedback/templates/admin/approval_and_delete.html:148
-#: ckanext/feedback/templates/utilization/edit.html:74
-msgid "Delete"
-msgstr "削除"
-
 #: ckanext/feedback/templates/admin/approval_and_delete.html:54
-#: ckanext/feedback/templates/admin/approval_and_delete.html:155
-#: ckanext/feedback/templates/resource/comment.html:28
-#: ckanext/feedback/templates/utilization/details.html:45
-#: ckanext/feedback/templates/utilization/edit.html:24
-#: ckanext/feedback/templates/utilization/new.html:24
-#: ckanext/feedback/templates/utilization/search.html:59
-msgid "Dataset"
-msgstr "データセット"
-
-#: ckanext/feedback/templates/admin/approval_and_delete.html:55
-#: ckanext/feedback/templates/admin/approval_and_delete.html:156
 #: ckanext/feedback/templates/resource/comment.html:31
 #: ckanext/feedback/templates/utilization/details.html:48
 #: ckanext/feedback/templates/utilization/edit.html:27
@@ -709,41 +595,35 @@ msgstr "データセット"
 msgid "Resource"
 msgstr "リソース"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:57
-#: ckanext/feedback/templates/admin/approval_and_delete.html:158
+#: ckanext/feedback/templates/admin/approval_and_delete.html:56
 msgid "Post Content"
 msgstr "投稿内容"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:135
-#: ckanext/feedback/templates/admin/approval_and_delete.html:234
+#: ckanext/feedback/templates/admin/approval_and_delete.html:132
 msgid "There are no applications."
 msgstr "申請はありません。"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:249
+#: ckanext/feedback/templates/admin/approval_and_delete.html:146
 msgid "Please select at least one checkbox."
 msgstr "少なくとも1つのチェックボックスを選択してください。"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:250
+#: ckanext/feedback/templates/admin/approval_and_delete.html:147
 msgid "Please select the checkbox whose status is Waiting."
 msgstr "ステータスが承認待ちのチェックボックスを選択してください。"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:251
+#: ckanext/feedback/templates/admin/approval_and_delete.html:148
 msgid "Is it okay to approve checked WAITING_ROWS item(s)?"
 msgstr "チェックしたWAITING_ROWS項目を承認してもよろしいですか？"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:252
+#: ckanext/feedback/templates/admin/approval_and_delete.html:149
 msgid ""
 "Completely delete checked CHECKED_ROWS item(s). This operation cannot be "
 "undone, are you sure?"
 msgstr "チェックしたCHECKED_ROWS項目を完全に削除します。この操作を元に戻すことはできませんが、よろしいですか？"
 
-#: ckanext/feedback/templates/admin/approval_and_delete.html:260
+#: ckanext/feedback/templates/admin/approval_and_delete.html:157
 msgid "What are Approval and Delete"
 msgstr "承認・削除について"
-
-#: ckanext/feedback/templates/package/resource_read.html:7
-msgid "Manage"
-msgstr "管理"
 
 #: ckanext/feedback/templates/package/resource_read.html:26
 msgid "View"
@@ -754,82 +634,70 @@ msgid "API Endpoint"
 msgstr "API エンドポイント"
 
 #: ckanext/feedback/templates/package/resource_read.html:45
-#: ckanext/feedback/templates/package/snippets/resource_item.html:130
+#: ckanext/feedback/templates/package/snippets/resource_item.html:122
 msgid "Go to resource"
 msgstr "リソースへ行く"
 
-#: ckanext/feedback/templates/package/resource_read.html:70
-#: ckanext/feedback/templates/package/resource_read.html:77
+#: ckanext/feedback/templates/package/resource_read.html:69
 msgid "List of downloadable formats"
 msgstr "ダウンロード可能フォーマット一覧"
 
-#: ckanext/feedback/templates/package/resource_read.html:111
-#: ckanext/feedback/templates/package/resource_read.html:167
-#: ckanext/feedback/templates/package/snippets/resource_item.html:147
+#: ckanext/feedback/templates/package/resource_read.html:102
+#: ckanext/feedback/templates/package/resource_read.html:154
+#: ckanext/feedback/templates/package/snippets/resource_item.html:139
 #: ckanext/feedback/templates/utilization/new.html:15
 msgid "Create utilization application"
 msgstr "利活用方法登録申請"
 
-#: ckanext/feedback/templates/package/resource_read.html:118
-#: ckanext/feedback/templates/package/resource_read.html:156
-#: ckanext/feedback/templates/package/snippets/resource_item.html:155
+#: ckanext/feedback/templates/package/resource_read.html:109
+#: ckanext/feedback/templates/package/resource_read.html:143
+#: ckanext/feedback/templates/package/snippets/resource_item.html:147
 #: ckanext/feedback/templates/resource/comment.html:16
 #: ckanext/feedback/templates/resource/comment.html:38
-#: ckanext/feedback/templates/utilization/details.html:88
+#: ckanext/feedback/templates/utilization/details.html:77
 msgid "Comment"
 msgstr "コメント"
 
-#: ckanext/feedback/templates/package/resource_read.html:140
+#: ckanext/feedback/templates/package/resource_read.html:127
 msgid ""
 "Thank you for downloading!<br>If you like, please give us your feedback "
 "to help us improve our data."
 msgstr "ダウンロードありがとうございます！<br>よければ、データ改善のためのフィードバックをお願いします！"
 
-#: ckanext/feedback/templates/package/resource_read.html:142
+#: ckanext/feedback/templates/package/resource_read.html:129
 msgid "How about giving likes?"
 msgstr "いいねを押していきませんか？"
 
-#: ckanext/feedback/templates/package/resource_read.html:151
-#: ckanext/feedback/templates/package/resource_read.html:153
+#: ckanext/feedback/templates/package/resource_read.html:138
+#: ckanext/feedback/templates/package/resource_read.html:140
 msgid "How about leaving a comment?"
 msgstr "コメントをしていきませんか？"
 
-#: ckanext/feedback/templates/package/resource_read.html:162
-#: ckanext/feedback/templates/package/resource_read.html:164
+#: ckanext/feedback/templates/package/resource_read.html:149
+#: ckanext/feedback/templates/package/resource_read.html:151
 msgid "How about sharing your way of using it?"
 msgstr "活用方法を共有しませんか？"
 
-#: ckanext/feedback/templates/package/resource_read.html:178
+#: ckanext/feedback/templates/package/resource_read.html:161
 msgid "Close"
 msgstr "閉じる"
 
-#: ckanext/feedback/templates/package/resource_read.html:190
-#: ckanext/feedback/templates/package/resource_read.html:202
+#: ckanext/feedback/templates/package/resource_read.html:173
+#: ckanext/feedback/templates/package/resource_read.html:185
 msgid "URL:"
 msgstr "URL:"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:79
-#: ckanext/feedback/templates/package/snippets/resource_item.html:85
-msgid "Explore"
-msgstr "探索"
-
-#: ckanext/feedback/templates/package/snippets/resource_item.html:96
+#: ckanext/feedback/templates/package/snippets/resource_item.html:88
 msgid "Preview"
 msgstr "プレビュー"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:99
+#: ckanext/feedback/templates/package/snippets/resource_item.html:91
 msgid "More information"
 msgstr "詳細情報の表示"
 
-#: ckanext/feedback/templates/package/snippets/resource_item.html:109
+#: ckanext/feedback/templates/package/snippets/resource_item.html:101
 msgid "liked"
 msgstr "いいね"
-
-#: ckanext/feedback/templates/package/snippets/resource_item.html:139
-#: ckanext/feedback/templates/utilization/details.html:30
-#: ckanext/feedback/templates/utilization/edit.html:13
-msgid "Edit"
-msgstr "編集"
 
 #: ckanext/feedback/templates/resource/comment.html:19
 #: ckanext/feedback/templates/resource/comment_check.html:12
@@ -850,195 +718,183 @@ msgstr "評価を選択してください。"
 
 #: ckanext/feedback/templates/resource/comment.html:72
 #: ckanext/feedback/templates/resource/suggestion.html:22
-#: ckanext/feedback/templates/utilization/details.html:101
+#: ckanext/feedback/templates/utilization/details.html:90
 #: ckanext/feedback/templates/utilization/suggestion.html:25
 msgid "Please enter your comment"
 msgstr "コメントを入力してください。"
 
 #: ckanext/feedback/templates/resource/comment.html:73
-#: ckanext/feedback/templates/resource/comment.html:435
+#: ckanext/feedback/templates/resource/comment.html:406
 #: ckanext/feedback/templates/resource/suggestion.html:23
-#: ckanext/feedback/templates/utilization/details.html:102
-#: ckanext/feedback/templates/utilization/details.html:359
+#: ckanext/feedback/templates/utilization/details.html:91
+#: ckanext/feedback/templates/utilization/details.html:330
 #: ckanext/feedback/templates/utilization/suggestion.html:26
 #: ckanext/feedback/tests/controllers/test_resource.py:3018
 msgid "Please keep the comment length below 1000"
 msgstr "コメントは1000文字以下にしてください"
 
 #: ckanext/feedback/templates/resource/comment.html:80
-#: ckanext/feedback/templates/resource/comment.html:449
-#: ckanext/feedback/templates/utilization/details.html:109
-#: ckanext/feedback/templates/utilization/details.html:373
+#: ckanext/feedback/templates/resource/comment.html:420
+#: ckanext/feedback/templates/utilization/details.html:98
+#: ckanext/feedback/templates/utilization/details.html:344
 msgid "Image Attachment"
 msgstr "画像添付"
 
-#: ckanext/feedback/templates/resource/comment.html:90
-#: ckanext/feedback/templates/resource/comment.html:95
-#: ckanext/feedback/templates/resource/expect_suggestion.html:50
-#: ckanext/feedback/templates/resource/expect_suggestion.html:55
-#: ckanext/feedback/templates/utilization/details.html:119
-#: ckanext/feedback/templates/utilization/details.html:124
-#: ckanext/feedback/templates/utilization/expect_suggestion.html:51
-#: ckanext/feedback/templates/utilization/expect_suggestion.html:56
+#: ckanext/feedback/templates/resource/comment.html:89
+#: ckanext/feedback/templates/resource/expect_suggestion.html:49
+#: ckanext/feedback/templates/utilization/details.html:107
+#: ckanext/feedback/templates/utilization/expect_suggestion.html:50
 msgid "Review"
 msgstr "確認"
 
-#: ckanext/feedback/templates/resource/comment.html:103
-#: ckanext/feedback/templates/utilization/details.html:132
+#: ckanext/feedback/templates/resource/comment.html:96
+#: ckanext/feedback/templates/utilization/details.html:114
 msgid "Please check before sending"
 msgstr "送信前にご確認ください"
 
-#: ckanext/feedback/templates/resource/comment.html:105
-#: ckanext/feedback/templates/utilization/details.html:134
+#: ckanext/feedback/templates/resource/comment.html:98
+#: ckanext/feedback/templates/utilization/details.html:116
 msgid "Comment Policy"
 msgstr "コメントポリシー"
 
-#: ckanext/feedback/templates/resource/comment.html:107
-#: ckanext/feedback/templates/utilization/details.html:136
+#: ckanext/feedback/templates/resource/comment.html:100
+#: ckanext/feedback/templates/utilization/details.html:118
 msgid "Constructive criticism"
 msgstr "建設的な批判"
 
-#: ckanext/feedback/templates/resource/comment.html:107
-#: ckanext/feedback/templates/utilization/details.html:136
+#: ckanext/feedback/templates/resource/comment.html:100
+#: ckanext/feedback/templates/utilization/details.html:118
 msgid ""
 "When seeking improvements, provide constructive and specific criticism. "
 "Including alternative suggestions or problem-solving proposals can lead "
 "to improvements that meet the needs."
 msgstr "改善を求めるときは、建設的で具体的な批判をしてください。代替案や問題解決案を含めると、ニーズを満たす改善につながる可能性があります。"
 
-#: ckanext/feedback/templates/resource/comment.html:108
-#: ckanext/feedback/templates/utilization/details.html:137
+#: ckanext/feedback/templates/resource/comment.html:101
+#: ckanext/feedback/templates/utilization/details.html:119
 msgid "Respect Privacy and Ethics"
 msgstr "プライバシーと倫理を尊重する"
 
-#: ckanext/feedback/templates/resource/comment.html:108
-#: ckanext/feedback/templates/utilization/details.html:137
+#: ckanext/feedback/templates/resource/comment.html:101
+#: ckanext/feedback/templates/utilization/details.html:119
 msgid ""
 "When posting comments, remember to protect personal information and "
 "consider ethical implications."
 msgstr "コメントを投稿するときは、個人情報を保護し、倫理的な影響を考慮することを忘れないでください。"
 
-#: ckanext/feedback/templates/resource/comment.html:109
-#: ckanext/feedback/templates/utilization/details.html:138
+#: ckanext/feedback/templates/resource/comment.html:102
+#: ckanext/feedback/templates/utilization/details.html:120
 msgid "Positive Feedback"
 msgstr "肯定的なフィードバック"
 
-#: ckanext/feedback/templates/resource/comment.html:109
-#: ckanext/feedback/templates/utilization/details.html:138
+#: ckanext/feedback/templates/resource/comment.html:102
+#: ckanext/feedback/templates/utilization/details.html:120
 msgid ""
 "Positive comments contribute more to the motivation of data providers and"
 " provide valuable deta than aggressive negative comments."
 msgstr "肯定的なコメントは、攻撃的な否定的なコメントよりも、データ プロバイダーのモチベーションに大きく貢献し、貴重なデータを提供します。"
 
-#: ckanext/feedback/templates/resource/comment.html:116
+#: ckanext/feedback/templates/resource/comment.html:109
 msgid "* You have already commented on this data resource"
 msgstr "※ 既にコメント送信済みです"
 
-#: ckanext/feedback/templates/resource/comment.html:128
-#: ckanext/feedback/templates/resource/comment.html:238
-#: ckanext/feedback/templates/resource/comment.html:299
-#: ckanext/feedback/templates/utilization/details.html:152
-#: ckanext/feedback/templates/utilization/details.html:226
-#: ckanext/feedback/templates/utilization/details.html:286
+#: ckanext/feedback/templates/resource/comment.html:121
+#: ckanext/feedback/templates/resource/comment.html:217
+#: ckanext/feedback/templates/resource/comment.html:278
+#: ckanext/feedback/templates/utilization/details.html:134
+#: ckanext/feedback/templates/utilization/details.html:201
+#: ckanext/feedback/templates/utilization/details.html:261
 #: ckanext/feedback/templates/utilization/search.html:38
 #: ckanext/feedback/templates/utilization/search.html:93
 #: ckanext/feedback/templates/utilization/search.html:100
 msgid "Unapproved"
 msgstr "未承認"
 
-#: ckanext/feedback/templates/resource/comment.html:158
-#: ckanext/feedback/templates/resource/comment.html:386
+#: ckanext/feedback/templates/resource/comment.html:151
+#: ckanext/feedback/templates/resource/comment.html:361
 msgid "Highly rated by organization administrators"
 msgstr "組織管理者からの高評価"
 
-#: ckanext/feedback/templates/resource/comment.html:168
-#: ckanext/feedback/templates/resource/comment.html:173
+#: ckanext/feedback/templates/resource/comment.html:160
 msgid "Status Change"
 msgstr "ステータス変更"
 
-#: ckanext/feedback/templates/resource/comment.html:183
-#: ckanext/feedback/templates/resource/comment.html:188
-#: ckanext/feedback/templates/resource/comment.html:234
-#: ckanext/feedback/templates/resource/comment.html:295
-#: ckanext/feedback/templates/utilization/details.html:178
-#: ckanext/feedback/templates/utilization/details.html:183
-#: ckanext/feedback/templates/utilization/details.html:222
-#: ckanext/feedback/templates/utilization/details.html:282
+#: ckanext/feedback/templates/resource/comment.html:168
+#: ckanext/feedback/templates/resource/comment.html:213
+#: ckanext/feedback/templates/resource/comment.html:274
+#: ckanext/feedback/templates/utilization/details.html:159
+#: ckanext/feedback/templates/utilization/details.html:197
+#: ckanext/feedback/templates/utilization/details.html:257
 msgid "Reply"
 msgstr "返信"
 
-#: ckanext/feedback/templates/resource/comment.html:197
-#: ckanext/feedback/templates/resource/comment.html:249
-#: ckanext/feedback/templates/resource/comment.html:310
+#: ckanext/feedback/templates/resource/comment.html:176
+#: ckanext/feedback/templates/resource/comment.html:228
+#: ckanext/feedback/templates/resource/comment.html:289
 #: ckanext/feedback/templates/utilization/details.html:35
-#: ckanext/feedback/templates/utilization/details.html:169
-#: ckanext/feedback/templates/utilization/details.html:237
-#: ckanext/feedback/templates/utilization/details.html:297
+#: ckanext/feedback/templates/utilization/details.html:151
+#: ckanext/feedback/templates/utilization/details.html:212
+#: ckanext/feedback/templates/utilization/details.html:272
 msgid "Approve"
 msgstr "承認"
 
-#: ckanext/feedback/templates/resource/comment.html:212
-#: ckanext/feedback/templates/resource/comment.html:262
-#: ckanext/feedback/templates/resource/comment.html:323
+#: ckanext/feedback/templates/resource/comment.html:191
+#: ckanext/feedback/templates/resource/comment.html:241
+#: ckanext/feedback/templates/resource/comment.html:302
 #: ckanext/feedback/templates/resource/comment_check.html:52
 #: ckanext/feedback/templates/utilization/comment_check.html:42
-#: ckanext/feedback/templates/utilization/details.html:198
-#: ckanext/feedback/templates/utilization/details.html:250
-#: ckanext/feedback/templates/utilization/details.html:310
+#: ckanext/feedback/templates/utilization/details.html:173
+#: ckanext/feedback/templates/utilization/details.html:225
+#: ckanext/feedback/templates/utilization/details.html:285
 msgid "Attached Image"
 msgstr "添付画像"
 
-#: ckanext/feedback/templates/resource/comment.html:232
-#: ckanext/feedback/templates/resource/comment.html:293
-#: ckanext/feedback/templates/utilization/details.html:220
-#: ckanext/feedback/templates/utilization/details.html:280
+#: ckanext/feedback/templates/resource/comment.html:211
+#: ckanext/feedback/templates/resource/comment.html:272
+#: ckanext/feedback/templates/utilization/details.html:195
+#: ckanext/feedback/templates/utilization/details.html:255
 msgid "Reply from the Administrator"
 msgstr "管理者からの返信"
 
-#: ckanext/feedback/templates/resource/comment.html:275
-#: ckanext/feedback/templates/resource/comment.html:278
-#: ckanext/feedback/templates/utilization/details.html:263
-#: ckanext/feedback/templates/utilization/details.html:266
+#: ckanext/feedback/templates/resource/comment.html:254
+#: ckanext/feedback/templates/resource/comment.html:257
+#: ckanext/feedback/templates/utilization/details.html:238
+#: ckanext/feedback/templates/utilization/details.html:241
 msgid "Show replies"
 msgstr "返信を表示"
 
-#: ckanext/feedback/templates/resource/comment.html:276
-#: ckanext/feedback/templates/utilization/details.html:264
+#: ckanext/feedback/templates/resource/comment.html:255
+#: ckanext/feedback/templates/utilization/details.html:239
 msgid "Hide replies"
 msgstr "返信を非表示にする"
 
-#: ckanext/feedback/templates/resource/comment.html:367
+#: ckanext/feedback/templates/resource/comment.html:342
 msgid "Status None"
 msgstr "ステータスなし"
 
-#: ckanext/feedback/templates/resource/comment.html:401
-#: ckanext/feedback/templates/resource/comment.html:460
-#: ckanext/feedback/templates/resource/comment.html:465
-#: ckanext/feedback/templates/resource/comment_check.html:76
-#: ckanext/feedback/templates/resource/comment_check.html:81
-#: ckanext/feedback/templates/utilization/comment_check.html:66
-#: ckanext/feedback/templates/utilization/comment_check.html:71
-#: ckanext/feedback/templates/utilization/details.html:384
-#: ckanext/feedback/templates/utilization/details.html:389
-#: ckanext/feedback/templates/utilization/details.html:431
-#: ckanext/feedback/templates/utilization/edit.html:61
-#: ckanext/feedback/templates/utilization/edit.html:66
+#: ckanext/feedback/templates/resource/comment.html:376
+#: ckanext/feedback/templates/resource/comment.html:430
+#: ckanext/feedback/templates/resource/comment_check.html:75
+#: ckanext/feedback/templates/utilization/comment_check.html:65
+#: ckanext/feedback/templates/utilization/details.html:354
+#: ckanext/feedback/templates/utilization/details.html:390
+#: ckanext/feedback/templates/utilization/edit.html:60
 #: ckanext/feedback/templates/utilization/new.html:64
 msgid "Send"
 msgstr "送信"
 
-#: ckanext/feedback/templates/resource/comment.html:428
-#: ckanext/feedback/templates/utilization/details.html:352
+#: ckanext/feedback/templates/resource/comment.html:399
+#: ckanext/feedback/templates/utilization/details.html:323
 msgid "Input"
 msgstr "入力欄"
 
-#: ckanext/feedback/templates/resource/comment.html:434
-#: ckanext/feedback/templates/utilization/details.html:358
+#: ckanext/feedback/templates/resource/comment.html:405
+#: ckanext/feedback/templates/utilization/details.html:329
 msgid "Please enter your reply"
 msgstr "返信を入力してください。"
 
-#: ckanext/feedback/templates/resource/comment.html:440
-#: ckanext/feedback/templates/utilization/details.html:364
+#: ckanext/feedback/templates/resource/comment.html:411
+#: ckanext/feedback/templates/utilization/details.html:335
 msgid "Image preview will appear here"
 msgstr "画像プレビューはここに表示されます"
 
@@ -1104,17 +960,13 @@ msgstr "入力コメント"
 msgid "Suggested Comments"
 msgstr "提案コメント"
 
-#: ckanext/feedback/templates/resource/suggestion.html:61
-#: ckanext/feedback/templates/resource/suggestion.html:66
-#: ckanext/feedback/templates/utilization/suggestion.html:62
-#: ckanext/feedback/templates/utilization/suggestion.html:67
+#: ckanext/feedback/templates/resource/suggestion.html:60
+#: ckanext/feedback/templates/utilization/suggestion.html:61
 msgid "Review the input comment"
 msgstr "入力コメントを確認"
 
-#: ckanext/feedback/templates/resource/suggestion.html:91
-#: ckanext/feedback/templates/resource/suggestion.html:96
-#: ckanext/feedback/templates/utilization/suggestion.html:90
-#: ckanext/feedback/templates/utilization/suggestion.html:95
+#: ckanext/feedback/templates/resource/suggestion.html:83
+#: ckanext/feedback/templates/utilization/suggestion.html:82
 msgid "Review the suggested comment"
 msgstr "提案コメントを確認"
 
@@ -1143,41 +995,38 @@ msgstr "URL"
 msgid "Utilization description"
 msgstr "利活用内容"
 
-#: ckanext/feedback/templates/utilization/details.html:73
-#: ckanext/feedback/templates/utilization/details.html:78
+#: ckanext/feedback/templates/utilization/details.html:68
 msgid "Resolve issue"
 msgstr "課題解決"
 
-#: ckanext/feedback/templates/utilization/details.html:406
-#: ckanext/feedback/templates/utilization/details.html:408
+#: ckanext/feedback/templates/utilization/details.html:368
 msgid "Certification of issue resolution"
 msgstr "課題解決の認定"
 
-#: ckanext/feedback/templates/utilization/details.html:414
+#: ckanext/feedback/templates/utilization/details.html:373
 msgid "What is certification of issue resolution?"
 msgstr "課題解決の認定とは？"
 
-#: ckanext/feedback/templates/utilization/details.html:415
+#: ckanext/feedback/templates/utilization/details.html:374
 msgid ""
 "If it is determined that the content of the utilization method leads to "
 "the solution of the problem, it can be certified as a problem solution."
 msgstr "利活用方法の内容が課題の解決につながると判断したものを課題解決として認定することができます。"
 
-#: ckanext/feedback/templates/utilization/details.html:418
-#: ckanext/feedback/templates/utilization/details.html:457
+#: ckanext/feedback/templates/utilization/details.html:377
+#: ckanext/feedback/templates/utilization/details.html:411
 msgid "Resolved Issue"
 msgstr "解決された課題"
 
-#: ckanext/feedback/templates/utilization/details.html:423
+#: ckanext/feedback/templates/utilization/details.html:382
 msgid "Please enter your issue resolution content"
 msgstr "課題解決内容を入力してください"
 
-#: ckanext/feedback/templates/utilization/details.html:445
-#: ckanext/feedback/templates/utilization/details.html:447
+#: ckanext/feedback/templates/utilization/details.html:402
 msgid "Resolved Issue details"
 msgstr "課題解決内容詳細"
 
-#: ckanext/feedback/templates/utilization/details.html:456
+#: ckanext/feedback/templates/utilization/details.html:410
 msgid "Certificated"
 msgstr "認定日"
 
@@ -1280,3 +1129,4 @@ msgstr "登録日"
 #: ckanext/feedback/tests/controllers/test_resource.py:3656
 msgid "Test error message"
 msgstr ""
+

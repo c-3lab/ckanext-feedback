@@ -142,14 +142,6 @@ class TestPlugin:
         # Should only have download_bp (no datastore_download_bp)
         assert 'download_bp' in blueprints
 
-    def test_is_base_public_folder_bs3(self):
-        instance = FeedbackPlugin()
-        assert instance.is_base_public_folder_bs3() is False
-
-        config['ckan.base_public_folder'] = 'public-bs3'
-        instance.update_config(config)
-        assert instance.is_base_public_folder_bs3() is True
-
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')

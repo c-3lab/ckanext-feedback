@@ -187,17 +187,6 @@ class AdminController:
                 )
             )
 
-        # minimal debug log for traceability
-        try:
-            log.debug(
-                'approval_and_delete: filters=%s sort=%s total=%s',
-                active_filters,
-                sort,
-                total_count,
-            )
-        except Exception:
-            pass
-
         return toolkit.render(
             'admin/approval_and_delete.html',
             {
