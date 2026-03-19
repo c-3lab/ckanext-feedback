@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from ckan.model.resource import Resource
@@ -9,6 +10,8 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentSummary,
 )
 from ckanext.feedback.models.session import session
+
+log = logging.getLogger(__name__)
 
 
 # Get comments of the target package
@@ -25,6 +28,20 @@ def get_package_comments(package_id):
     return count or 0
 
 
+def get_package_comments_bulk(package_ids):
+    rows = (
+        session.query(Resource.package_id, func.sum(ResourceCommentSummary.comment))
+        .join(Resource, ResourceCommentSummary.resource_id == Resource.id)
+        .filter(
+            Resource.package_id.in_(package_ids),
+            Resource.state == "active",
+        )
+        .group_by(Resource.package_id)
+        .all()
+    )
+    return {str(r.package_id): r[1] or 0 for r in rows}
+
+
 # Get comments of the target resource
 def get_resource_comments(resource_id):
     count = (
@@ -35,7 +52,7 @@ def get_resource_comments(resource_id):
     return count or 0
 
 
-# Get rating of the target package
+# Get rating of the target get_package_issue_resolutions_bulk
 def get_package_rating(package_id):
     row = (
         session.query(
@@ -55,6 +72,30 @@ def get_package_rating(package_id):
         return row.total_rating / row.rating_comment
     else:
         return 0
+
+
+def get_package_rating_bulk(package_ids):
+    rows = (
+        session.query(
+            Resource.package_id,
+            func.sum(
+                ResourceCommentSummary.rating * ResourceCommentSummary.rating_comment
+            ).label('total'),
+            func.sum(ResourceCommentSummary.rating_comment).label('denom'),
+        )
+        .join(Resource, ResourceCommentSummary.resource_id == Resource.id)
+        .filter(
+            Resource.package_id.in_(package_ids),
+            Resource.state == "active",
+        )
+        .group_by(Resource.package_id)
+        .all()
+    )
+    result = {}
+    for r in rows:
+        pid = str(r.package_id)
+        result[pid] = (r.total / r.denom) if r.denom and r.denom > 0 else 0
+    return result
 
 
 # Get rating of the target resource
