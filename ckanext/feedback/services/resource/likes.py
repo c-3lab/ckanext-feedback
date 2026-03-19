@@ -115,6 +115,20 @@ def get_package_like_count(package_id):
     return count or 0
 
 
+def get_package_like_count_bulk(package_ids):
+    rows = (
+        session.query(Resource.package_id, func.sum(ResourceLike.like_count))
+        .join(Resource, ResourceLike.resource_id == Resource.id)
+        .filter(
+            Resource.package_id.in_(package_ids),
+            Resource.state == "active",
+        )
+        .group_by(Resource.package_id)
+        .all()
+    )
+    return {str(r.package_id): r[1] or 0 for r in rows}
+
+
 def get_resource_like_count_monthly(resource_id, period):
     count = (
         session.query(ResourceLikeMonthly.like_count)
