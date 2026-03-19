@@ -55,7 +55,7 @@
       {% if h.is_enabled_rating(package.owner_org) %}
         <div class="utilization-data bubble">
           <i class="fa-solid fa-star" style="vertical-align: middle;"></i>
-          {{ (stats.rating|default(0)|float)|round(1) }}
+          {{ stats.rating|default(0) }}
           <div class="bubbleText">{{ _('Rating') }}</div>
         </div>
       {% endif %}
