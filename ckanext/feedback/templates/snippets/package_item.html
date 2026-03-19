@@ -3,6 +3,7 @@
 {% block resources_inner %}
   {% asset 'feedback/feedback-package-item-css' %}
   {% asset 'feedback/feedback-tooltip-css' %}
+  {% set stats = package_stats if package_stats is defined else {} %}
   {% for resource in h.dict_list_reduce(package.resources, 'format') %}
     <li>
       {% if h.is_base_public_folder_bs3() %}
@@ -17,7 +18,7 @@
     {% if h.is_enabled_likes(package.owner_org) %}
       <div class="bubble">
         <i class="fa-solid fa-thumbs-up" style="vertical-align: middle;"></i>
-        {{ h.get_package_like_count(package.id) }}
+        {{ stats.like_count|default(0) }}
         <div class="bubbleText">{{ _('Number of Likes') }}</div>
       </div>
     {% endif %}
@@ -26,7 +27,7 @@
     {% if h.is_enabled_downloads(package.owner_org) %}
       <div class = "bubble">
         <i class="fa-solid fa-arrow-circle-down" style="vertical-align: middle;"></i>
-        {{ h.get_package_downloads(package.id) }}
+        {{ stats.downloads|default(0) }}
         <div class="bubbleText">{{ _('Downloads') }}</div>
       </div>
     {% endif %}
@@ -36,7 +37,7 @@
       <a style="color: inherit; text-decoration: none; background-color: transparent;" href="{{ h.url_for('utilization.search', package_id=package.id, disable_keyword=true) }}">
         <div class="utilization-data bubble">
           <i class="fa-solid fa-seedling" style="vertical-align: middle;"></i>
-            {{ h.get_package_utilizations(package.id) }}
+          {{ stats.utilizations|default(0) }}
           <div class="bubbleText">{{ _('Utilizations') }}</div>
         </div>
       </a>
@@ -47,7 +48,7 @@
       <a style="color: inherit; text-decoration: none; background-color: transparent;" href="{{ h.url_for(package.type ~ '.read', id=package.name) }}">
         <div class="utilization-data bubble">
           <i class="fa-solid fa-comment-dots" style="vertical-align: middle;"></i>
-          {{ h.get_package_comments(package.id) }}
+          {{ stats.comments|default(0) }}
           <div class="bubbleText">{{ _('Comments') }}</div>
         </div>
       </a>
@@ -58,7 +59,7 @@
       {% if h.is_enabled_rating(package.owner_org) %}
         <div class="utilization-data bubble">
           <i class="fa-solid fa-star" style="vertical-align: middle;"></i>
-          {{ h.get_package_rating(package.id)|round(1) }}
+          {{ (stats.rating|default(0)|float)|round(1) }}
           <div class="bubbleText">{{ _('Rating') }}</div>
         </div>
       {% endif %}
@@ -68,7 +69,7 @@
     {% if h.is_enabled_utilizations(package.owner_org) %}
       <div class="bubble">
         <i class="issue-resolution fa-solid fa-award" style="vertical-align: middle;"></i>
-        {{ h.get_package_issue_resolutions(package.id) }}
+        {{ stats.issue_resolutions|default(0) }}
         <div class="bubbleText">{{ _('Issue Resolutions') }}</div>
       </div>
     {% endif %}

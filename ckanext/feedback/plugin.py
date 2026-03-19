@@ -5,6 +5,7 @@ import ckan.model as model
 import requests
 from ckan import plugins
 from ckan.common import _, config
+from ckan.lib import helpers as core_helpers
 from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 from ckan.types import PUploader
@@ -17,7 +18,7 @@ from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.upload import FeedbackUpload
 from ckanext.feedback.services.download import summary as download_summary_service
-from ckanext.feedback.services.organization import organization as organization_service
+from ckanext.feedback.services.package import summary as package_summary_service
 from ckanext.feedback.services.resource import comment as comment_service
 from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
@@ -291,7 +292,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_package_rating': resource_summary_service.get_package_rating,
             'get_resource_like_count': resource_likes_service.get_resource_like_count,
             'get_package_like_count': resource_likes_service.get_package_like_count,
-            'get_organization': organization_service.get_organization,
             'is_enabled_feedback_recaptcha': cfg.recaptcha.is_enable,
             'is_feedback_recaptcha_force_all': cfg.recaptcha.force_all.get,
             'get_feedback_recaptcha_publickey': cfg.recaptcha.publickey.get,
@@ -301,6 +301,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'like_status': ResourceController.like_status,
             'create_category_icon': CommentComponent.create_category_icon,
             'CommentComponent': CommentComponent,
+            'get_package_feedback_stats_bulk': (
+                package_summary_service.get_package_feedback_stats_bulk
+            ),
+            'get_organization': core_helpers.get_organization,
         }
 
     # IPackageController
@@ -366,12 +370,23 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return pkg_dict
 
     def before_dataset_view(self, pkg_dict: Dict[str, Any]) -> Dict[str, Any]:
+        from flask import request
+
+        skip_endpoints = (
+            'dataset.search',
+            'home.index',
+            'organization.read',
+            'group.read',
+            'user.read',
+        )
+        if request.endpoint in skip_endpoints:
+            return pkg_dict
+
         package_id = pkg_dict['id']
         package = model.Package.get(package_id)
 
         # Skip if package does not exist or has been removed
         if package is None:
-            log.warning(f"Package {package_id} not found in before_dataset_view")
             return pkg_dict
 
         owner_org = package.owner_org
@@ -380,48 +395,42 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         if not pkg_dict['extras']:
             pkg_dict['extras'] = []
 
-        def add_pkg_dict_extras(key: str, value: str):
+        def add_pkg_dict_extras(key: str, value: any):
             pkg_dict['extras'].append({'key': key, 'value': value})
 
+        stats_by_id = package_summary_service.get_package_feedback_stats_bulk(
+            [pkg_dict]
+        )
+        stats = stats_by_id.get(pkg_dict['id'], {})
+
         if cfg.download.is_enable(owner_org):
-            add_pkg_dict_extras(
-                key=_('Downloads'),
-                value=download_summary_service.get_package_downloads(package_id),
-            )
+            add_pkg_dict_extras(key=_('Downloads'), value=stats.get('downloads', 0))
 
         if cfg.utilization.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Utilizations'),
-                value=(
-                    utilization_summary_service.get_package_utilizations(package_id)
-                ),
+                value=(stats.get('utilizations', 0)),
             )
             add_pkg_dict_extras(
                 key=_('Issue Resolutions'),
-                value=(
-                    utilization_summary_service.get_package_issue_resolutions(
-                        package_id
-                    )
-                ),
+                value=(stats.get('issue_resolutions', 0)),
             )
 
         if cfg.resource_comment.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Comments'),
-                value=resource_summary_service.get_package_comments(package_id),
+                value=stats.get('comments', 0),
             )
             if cfg.resource_comment.rating.is_enable(owner_org):
                 add_pkg_dict_extras(
                     key=_('Rating'),
-                    value=round(
-                        resource_summary_service.get_package_rating(package_id), 1
-                    ),
+                    value=round(stats.get('rating', 0) or 0, 1),
                 )
 
         if cfg.like.is_enable(owner_org):
             add_pkg_dict_extras(
                 key=_('Number of Likes'),
-                value=resource_likes_service.get_package_like_count(package_id),
+                value=stats.get('like_count', 0),
             )
 
         return pkg_dict
