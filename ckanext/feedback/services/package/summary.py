@@ -49,12 +49,13 @@ def get_package_feedback_stats_bulk(packages):
     by_id = {}
 
     for pid in package_ids:
+        raw_rating = rating.get(pid, 0)
         by_id[pid] = {
             "like_count": likes.get(pid, 0),
             "downloads": downloads.get(pid, 0),
             "utilizations": utilizations.get(pid, 0),
             "comments": comments.get(pid, 0),
-            "rating": rating.get(pid, 0),
+            "rating": 0 if raw_rating == 0 else round(raw_rating, 1),
             "issue_resolutions": issue_resolutions.get(pid, 0),
         }
 
