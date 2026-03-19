@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 
 
 def get_package_downloads(package_id):
-    log.warning("[OLD]get_downloads count=%d", len(package_id))
     count = (
         session.query(func.sum(DownloadSummary.download))
         .join(Resource)

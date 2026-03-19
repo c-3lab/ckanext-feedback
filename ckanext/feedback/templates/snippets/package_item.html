@@ -6,11 +6,7 @@
   {% set stats = package_stats if package_stats is defined else {} %}
   {% for resource in h.dict_list_reduce(package.resources, 'format') %}
     <li>
-      {% if h.is_base_public_folder_bs3() %}
-        <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
-      {% else %}
         <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="badge badge-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
-      {% endif %}
     </li>
   {% endfor %}
   <br>
@@ -59,7 +55,7 @@
       {% if h.is_enabled_rating(package.owner_org) %}
         <div class="utilization-data bubble">
           <i class="fa-solid fa-star" style="vertical-align: middle;"></i>
-          {{ (stats.rating|default(0)|float)|round(1) }}
+          {{ stats.rating|default(0) }}
           <div class="bubbleText">{{ _('Rating') }}</div>
         </div>
       {% endif %}

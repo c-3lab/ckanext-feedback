@@ -237,10 +237,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         blueprints.append(api.get_feedback_api_blueprint())
         return blueprints
 
-    def is_base_public_folder_bs3(self):
-        base_templates_folder = config.get('ckan.base_public_folder', 'public')
-        return base_templates_folder == 'public-bs3'
-
     # ITemplateHelpers
 
     def get_helpers(self):
@@ -262,7 +258,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 cfg.resource_comment.image_attachment.is_enable
             ),
             'is_organization_admin': check.is_organization_admin,
-            'is_base_public_folder_bs3': self.is_base_public_folder_bs3,
             'has_organization_admin_role': check.has_organization_admin_role,
             'user_has_organization_admin_role': check.user_has_organization_admin_role,
             'get_resource_downloads': download_summary_service.get_resource_downloads,
@@ -422,9 +417,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 value=stats.get('comments', 0),
             )
             if cfg.resource_comment.rating.is_enable(owner_org):
+                rating_value = stats.get('rating', 0) or 0
                 add_pkg_dict_extras(
                     key=_('Rating'),
-                    value=round(stats.get('rating', 0) or 0, 1),
+                    value=0 if rating_value == 0 else round(rating_value, 1),
                 )
 
         if cfg.like.is_enable(owner_org):
@@ -476,8 +472,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             if cfg.resource_comment.rating.is_enable(owner_org):
                 if _('Rating') != 'Rating':
                     resource_dict.pop('Rating', None)
-                resource_dict[_('Rating')] = round(
-                    resource_summary_service.get_resource_rating(resource_id), 1
+                rating_value = resource_summary_service.get_resource_rating(resource_id)
+                resource_dict[_('Rating')] = (
+                    0 if rating_value == 0 else round(rating_value, 1)
                 )
 
         if cfg.like.is_enable(owner_org):

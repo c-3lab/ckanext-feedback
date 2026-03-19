@@ -105,7 +105,9 @@ def get_resource_rating(resource_id):
         .filter(ResourceCommentSummary.resource_id == resource_id)
         .scalar()
     )
-    return rating or 0
+    if rating is None or rating == 0:
+        return 0
+    return round(rating, 1)
 
 
 # Create new resource summary
