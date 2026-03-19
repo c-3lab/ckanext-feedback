@@ -417,9 +417,10 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 value=stats.get('comments', 0),
             )
             if cfg.resource_comment.rating.is_enable(owner_org):
+                rating_value = stats.get('rating', 0) or 0
                 add_pkg_dict_extras(
                     key=_('Rating'),
-                    value=round(stats.get('rating', 0) or 0, 1),
+                    value=0 if rating_value == 0 else round(rating_value, 1),
                 )
 
         if cfg.like.is_enable(owner_org):
@@ -471,8 +472,9 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             if cfg.resource_comment.rating.is_enable(owner_org):
                 if _('Rating') != 'Rating':
                     resource_dict.pop('Rating', None)
-                resource_dict[_('Rating')] = round(
-                    resource_summary_service.get_resource_rating(resource_id), 1
+                rating_value = resource_summary_service.get_resource_rating(resource_id)
+                resource_dict[_('Rating')] = (
+                    0 if rating_value == 0 else round(rating_value, 1)
                 )
 
         if cfg.like.is_enable(owner_org):
