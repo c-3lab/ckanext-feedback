@@ -26,6 +26,20 @@ def get_package_utilizations(package_id):
     return count or 0
 
 
+def get_package_utilizations_bulk(package_ids):
+    rows = (
+        session.query(Resource.package_id, func.sum(UtilizationSummary.utilization))
+        .join(Resource, UtilizationSummary.resource_id == Resource.id)
+        .filter(
+            Resource.package_id.in_(package_ids),
+            Resource.state == "active",
+        )
+        .group_by(Resource.package_id)
+        .all()
+    )
+    return {str(r.package_id): r[1] or 0 for r in rows}
+
+
 # Get utilization summary count of the target resource
 def get_resource_utilizations(resource_id):
     count = (
@@ -99,6 +113,23 @@ def get_resource_issue_resolutions(resource_id):
         .scalar()
     )
     return count or 0
+
+
+def get_package_issue_resolutions_bulk(package_ids):
+    rows = (
+        session.query(
+            Resource.package_id, func.sum(IssueResolutionSummary.issue_resolution)
+        )
+        .join(Utilization, IssueResolutionSummary.utilization_id == Utilization.id)
+        .join(Resource)
+        .filter(
+            Resource.package_id.in_(package_ids),
+            Resource.state == "active",
+        )
+        .group_by(Resource.package_id)
+        .all()
+    )
+    return {str(r.package_id): r[1] or 0 for r in rows}
 
 
 def increment_issue_resolution_summary(utilization_id):
