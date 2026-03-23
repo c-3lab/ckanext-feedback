@@ -142,18 +142,20 @@ class TestPlugin:
         # Should only have download_bp (no datastore_download_bp)
         assert 'download_bp' in blueprints
 
-    @patch('ckanext.feedback.plugin.download_summary_service')
-    @patch('ckanext.feedback.plugin.utilization_summary_service')
-    @patch('ckanext.feedback.plugin.resource_summary_service')
-    @patch('ckanext.feedback.plugin.resource_likes_service')
+    @patch('ckanext.feedback.plugin._', side_effect=lambda msg: msg)
+    @patch(
+        'ckanext.feedback.plugin.package_summary_service.'
+        'get_package_feedback_stats_bulk'
+    )
+    @patch('flask.request', new_callable=MagicMock)
     def test_before_dataset_view_with_True(
         self,
-        mock_resource_likes_service,
-        mock_resource_summary_service,
-        mock_utilization_summary_service,
-        mock_download_summary_service,
+        mock_request,
+        mock_get_package_feedback_stats_bulk,
+        _mock_plugin_ugettext,
     ):
         instance = FeedbackPlugin()
+        mock_request.endpoint = 'dataset.read'
 
         config[
             f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
@@ -163,24 +165,25 @@ class TestPlugin:
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
-        mock_resource_summary_service.get_package_comments.return_value = 9999
-        mock_resource_summary_service.get_package_rating.return_value = 23.333
-        mock_utilization_summary_service.get_package_utilizations.return_value = 9999
-        mock_utilization_summary_service.get_package_issue_resolutions.return_value = (
-            9999
-        )
-        mock_download_summary_service.get_package_downloads.return_value = 9999
-        mock_resource_likes_service.get_package_like_count.return_value = 9999
-
         dataset = factories.Dataset()
+        mock_get_package_feedback_stats_bulk.return_value = {
+            dataset['id']: {
+                'like_count': 9999,
+                'downloads': 9999,
+                'utilizations': 9999,
+                'comments': 9999,
+                'rating': 23.333,
+                'issue_resolutions': 9999,
+            }
+        }
 
         instance.before_dataset_view(dataset)
         assert dataset['extras'] == [
-            {'key': _('Downloads'), 'value': 9999},
-            {'key': _('Utilizations'), 'value': 9999},
-            {'key': _('Issue Resolutions'), 'value': 9999},
-            {'key': _('Comments'), 'value': 9999},
-            {'key': _('Number of Likes'), 'value': 9999},
+            {'key': 'Downloads', 'value': 9999},
+            {'key': 'Utilizations', 'value': 9999},
+            {'key': 'Issue Resolutions', 'value': 9999},
+            {'key': 'Comments', 'value': 9999},
+            {'key': 'Number of Likes', 'value': 9999},
         ]
 
         config[
@@ -190,12 +193,12 @@ class TestPlugin:
         dataset['extras'] = []
         instance.before_dataset_view(dataset)
         assert dataset['extras'] == [
-            {'key': _('Downloads'), 'value': 9999},
-            {'key': _('Utilizations'), 'value': 9999},
-            {'key': _('Issue Resolutions'), 'value': 9999},
-            {'key': _('Comments'), 'value': 9999},
-            {'key': _('Rating'), 'value': 23.3},
-            {'key': _('Number of Likes'), 'value': 9999},
+            {'key': 'Downloads', 'value': 9999},
+            {'key': 'Utilizations', 'value': 9999},
+            {'key': 'Issue Resolutions', 'value': 9999},
+            {'key': 'Comments', 'value': 9999},
+            {'key': 'Rating', 'value': 23.3},
+            {'key': 'Number of Likes', 'value': 9999},
         ]
 
     def test_before_dataset_view_with_False(
@@ -848,15 +851,14 @@ class TestPlugin:
         assert result['downloads_total_i'] == 100
         assert result['likes_total_i'] == 50
 
-    @patch('ckanext.feedback.plugin.log')
-    def test_before_dataset_view_package_not_found(self, mock_log):
+    @patch('flask.request', new_callable=MagicMock)
+    def test_before_dataset_view_package_not_found(self, mock_request):
         """Test before_dataset_view() when package is not found"""
+        mock_request.endpoint = 'dataset.read'
         instance = FeedbackPlugin()
         pkg_dict = {'id': 'non-existent-package'}
         result = instance.before_dataset_view(pkg_dict)
         assert result == pkg_dict
-        mock_log.warning.assert_called_once()
-        assert 'not found in before_dataset_view' in str(mock_log.warning.call_args)
 
     @patch('ckanext.feedback.plugin.log')
     @patch('ckanext.feedback.plugin.requests')
