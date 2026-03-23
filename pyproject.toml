@@ -146,5 +146,9 @@ addopts = [
     "--cov-branch",
     "--cov-report=term-missing",
     "--cov-report=xml:/tmp/coverage.xml",
+    "--cov-config=.coveragerc",
     "--disable-warnings",
 ]
+
+[tool.coverage.run]
+data_file = "/tmp/.coverage.ckanext-feedback"
