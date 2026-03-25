@@ -2,7 +2,7 @@
 # Clone CKAN and checkout ckan-2.10.4
 git submodule update --init --recursive
 cd ./external/ckan-docker
-git checkout 89c900fe1c45565c6bb2723d99216ecf334ce44e
+git checkout a870d3a166441e5acbda57497144231e4dba02c0
 cd ../../
 # Copy docker/.env.template as .env
 cp .env.dev external/ckan-docker/.env

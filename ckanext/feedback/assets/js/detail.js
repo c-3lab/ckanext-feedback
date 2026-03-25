@@ -1,5 +1,4 @@
 const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
-const spinner_bs3 = '<span class="fa fa-spinner fa-spin" role="status" aria-hidden="true"></span>'
 
 document.addEventListener('DOMContentLoaded', () => {
   const textareas = document.getElementsByName('comment-content');
@@ -48,7 +47,6 @@ window.addEventListener('pageshow', (event) => {
     sendButton.style.pointerEvents = "auto";
     sendButton.style.background = "";
     sendButton.innerHTML = sendButton.innerHTML.replace(spinner, '');
-    sendButton.innerHTML = sendButton.innerHTML.replace(spinner_bs3, '');
   });
 });
 
@@ -125,7 +123,7 @@ function resetFileInput() {
   }
 }
 
-function checkCommentExists(button, bs3=false) {
+function checkCommentExists(button) {
   let comment
   if ( button.id === "comment-button" ) {
     comment = document.getElementById('comment-content').value;
@@ -152,11 +150,7 @@ function checkCommentExists(button, bs3=false) {
   Array.from(sendButtons).forEach(sendButton => {
     sendButton.style.pointerEvents = "none";
     sendButton.style.background = "#333333";
-    if (!bs3) {
-      sendButton.innerHTML = spinner + sendButton.innerHTML;
-    }else{
-      sendButton.innerHTML = spinner_bs3 + sendButton.innerHTML;
-    }
+    sendButton.innerHTML = spinner + sendButton.innerHTML;
   });
   sessionStorage.removeItem('is_suggestion');
   
@@ -265,7 +259,7 @@ function toggleReplies(commentId) {
   }
 }
 
-function checkReplyExists(button, bs3=false) {
+function checkReplyExists(button) {
   button.style.pointerEvents = 'none';
 
   const errorElement = document.getElementById('reply-error');
@@ -297,11 +291,7 @@ function checkReplyExists(button, bs3=false) {
     sendButtons.forEach(btn => {
       btn.style.pointerEvents = 'none';
       btn.style.background = '#333333';
-      if (!bs3) {
-        btn.innerHTML = spinner + btn.innerHTML;
-      } else {
-        btn.innerHTML = spinner_bs3 + btn.innerHTML;
-      }
+      btn.innerHTML = spinner + btn.innerHTML;
     });
   }
 
