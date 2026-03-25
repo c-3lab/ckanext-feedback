@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, patch
@@ -33,6 +34,8 @@ from ckanext.feedback.models.utilization import (
     UtilizationCommentMoralCheckLog,
 )
 from ckanext.feedback.services.resource.summary import refresh_resource_summary
+
+os.environ.setdefault('COVERAGE_FILE', '/tmp/.coverage.ckanext-feedback')
 
 
 @pytest.fixture(autouse=True)

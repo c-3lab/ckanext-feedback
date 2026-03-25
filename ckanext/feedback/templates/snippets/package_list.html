@@ -1,0 +1,15 @@
+{% ckan_extends %}
+
+{% block package_list %}
+{% if packages %}
+{% set package_list = packages|list %}
+{% set package_stats_by_id = h.get_package_feedback_stats_bulk(package_list) %}
+<ul class="{{ list_class or 'dataset-list list-unstyled' }}">
+    {% for package in package_list %}
+    {% set pkg_stats = package_stats_by_id.get(package.id,{}) %}
+    {% snippet 'snippets/package_item.html', package=package, package_stats=pkg_stats, item_class=item_class,
+    hide_resources=hide_resources %}
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

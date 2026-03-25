@@ -1,4 +1,5 @@
 [run]
+data_file = /tmp/.coverage.ckanext-feedback
 omit =
     development/*
     */migration/*
