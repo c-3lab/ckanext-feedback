@@ -6,6 +6,7 @@ from ckanext.feedback.models.download import DownloadSummary
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.download.summary import (
     get_package_downloads,
+    get_package_downloads_bulk,
     get_resource_downloads,
     increment_resource_downloads,
 )
@@ -25,6 +26,14 @@ class TestDownloadServices:
         assert (
             get_package_downloads(resource['package_id']) == download_summary.download
         )
+
+    def test_get_package_downloads_bulk_with_data(self, resource, download_summary):
+        result = get_package_downloads_bulk([resource['package_id']])
+        assert result == {resource['package_id']: download_summary.download}
+
+    def test_get_package_downloads_bulk_with_no_data(self, resource):
+        result = get_package_downloads_bulk(['non-existent-package-id'])
+        assert result == {}
 
     def test_get_resource_download(self, resource, download_summary):
         assert get_resource_downloads(resource['id']) == download_summary.download

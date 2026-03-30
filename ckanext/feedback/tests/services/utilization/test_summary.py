@@ -9,7 +9,9 @@ from ckanext.feedback.models.utilization import Utilization, UtilizationSummary
 from ckanext.feedback.services.utilization.summary import (
     create_utilization_summary,
     get_package_issue_resolutions,
+    get_package_issue_resolutions_bulk,
     get_package_utilizations,
+    get_package_utilizations_bulk,
     get_resource_issue_resolutions,
     get_resource_utilizations,
     increment_issue_resolution_summary,
@@ -97,6 +99,19 @@ class TestUtilizationDetailsService:
         assert utilization_summary.created == datetime(2024, 1, 1, 15, 0, 0)
         assert utilization_summary.updated == datetime(2024, 1, 1, 15, 0, 0)
 
+    def test_get_package_utilizations_bulk_with_data(self, dataset, resource):
+        id = str(uuid.uuid4())
+        register_utilization(id, resource['id'], 'title', 'description', True)
+        refresh_utilization_summary(resource['id'])
+        session.commit()
+
+        result = get_package_utilizations_bulk([dataset['id']])
+        assert result == {dataset['id']: 1}
+
+    def test_get_package_utilizations_bulk_with_no_data(self):
+        result = get_package_utilizations_bulk(['non-existent-package-id'])
+        assert result == {}
+
     def test_get_package_issue_resolutions(self, dataset, resource):
         utilization_id = str(uuid.uuid4())
         title = 'test title'
@@ -124,6 +139,21 @@ class TestUtilizationDetailsService:
         resister_issue_resolution_summary(str(uuid.uuid4()), utilization_id, time, time)
 
         assert get_resource_issue_resolutions(resource['id']) == 1
+
+    def test_get_package_issue_resolutions_bulk_with_data(self, dataset, resource):
+        utilization_id = str(uuid.uuid4())
+        time = datetime.now()
+        register_utilization(
+            utilization_id, resource['id'], 'title', 'description', True
+        )
+        resister_issue_resolution_summary(str(uuid.uuid4()), utilization_id, time, time)
+
+        result = get_package_issue_resolutions_bulk([dataset['id']])
+        assert result == {dataset['id']: 1}
+
+    def test_get_package_issue_resolutions_bulk_with_no_data(self):
+        result = get_package_issue_resolutions_bulk(['non-existent-package-id'])
+        assert result == {}
 
     @pytest.mark.freeze_time(datetime(2024, 1, 1, 15, 0, 0))
     def test_increment_issue_resolution_summary(self, utilization):
