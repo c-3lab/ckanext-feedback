@@ -8,6 +8,7 @@ from ckanext.feedback.services.resource.likes import (
     decrement_resource_like_count,
     decrement_resource_like_count_monthly,
     get_package_like_count,
+    get_package_like_count_bulk,
     get_resource_like_count,
     get_resource_like_count_monthly,
     increment_resource_like_count,
@@ -128,6 +129,14 @@ class TestLikes:
         assert (
             get_package_like_count(resource['package_id']) == resource_like.like_count
         )
+
+    def test_get_package_like_count_bulk_with_data(self, resource, resource_like):
+        result = get_package_like_count_bulk([resource['package_id']])
+        assert result == {resource['package_id']: resource_like.like_count}
+
+    def test_get_package_like_count_bulk_with_no_data(self, resource):
+        result = get_package_like_count_bulk(['non-existent-package-id'])
+        assert result == {}
 
     def test_get_resource_like_count_monthly(self, resource_like_monthly):
         assert (

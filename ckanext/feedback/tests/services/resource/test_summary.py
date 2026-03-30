@@ -14,7 +14,9 @@ from ckanext.feedback.services.resource.comment import (
 from ckanext.feedback.services.resource.summary import (
     create_resource_summary,
     get_package_comments,
+    get_package_comments_bulk,
     get_package_rating,
+    get_package_rating_bulk,
     get_resource_comments,
     get_resource_rating,
     refresh_resource_summary,
@@ -26,6 +28,14 @@ class TestSummary:
     def test_get_package_comments(self, resource, resource_comment):
         result = get_package_comments(resource['package_id'])
         assert result == 1
+
+    def test_get_package_comments_bulk_with_data(self, resource, resource_comment):
+        result = get_package_comments_bulk([resource['package_id']])
+        assert result == {resource['package_id']: 1}
+
+    def test_get_package_comments_bulk_with_no_data(self):
+        result = get_package_comments_bulk(['non-existent-package-id'])
+        assert result == {}
 
     def test_get_resource_comments(self, resource, resource_comment):
         result = get_resource_comments(resource['id'])
@@ -39,9 +49,22 @@ class TestSummary:
         result = get_package_rating(resource['package_id'])
         assert result == 0
 
+    def test_get_package_rating_bulk_with_data(self, resource, resource_comment):
+        result = get_package_rating_bulk([resource['package_id']])
+        assert resource['package_id'] in result
+        assert result[resource['package_id']] == resource_comment.rating
+
+    def test_get_package_rating_bulk_with_no_data(self):
+        result = get_package_rating_bulk(['non-existent-package-id'])
+        assert result == {}
+
     def test_get_resource_rating(self, resource, resource_comment):
         result = get_resource_rating(resource['id'])
         assert result == resource_comment.rating
+
+    def test_get_resource_rating_with_no_summary(self, resource):
+        result = get_resource_rating(resource['id'])
+        assert result == 0
 
     def test_create_resource_summary(self, resource):
         create_resource_summary(resource['id'])
