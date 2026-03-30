@@ -201,10 +201,32 @@ class TestPlugin:
             {'key': 'Number of Likes', 'value': 9999},
         ]
 
+        dataset['extras'] = [{'key': 'existing_key', 'value': 'existing_value'}]
+        instance.before_dataset_view(dataset)
+        assert dataset['extras'] == [
+            {'key': 'existing_key', 'value': 'existing_value'},
+            {'key': 'Downloads', 'value': 9999},
+            {'key': 'Utilizations', 'value': 9999},
+            {'key': 'Issue Resolutions', 'value': 9999},
+            {'key': 'Comments', 'value': 9999},
+            {'key': 'Rating', 'value': 23.3},
+            {'key': 'Number of Likes', 'value': 9999},
+        ]
+
+    @patch('ckanext.feedback.plugin._', side_effect=lambda msg: msg)
+    @patch(
+        'ckanext.feedback.plugin.package_summary_service.'
+        'get_package_feedback_stats_bulk'
+    )
+    @patch('flask.request', new_callable=MagicMock)
     def test_before_dataset_view_with_False(
         self,
+        mock_request,
+        mock_get_package_feedback_stats_bulk,
+        _mock_plugin_ugettext,
     ):
         instance = FeedbackPlugin()
+        mock_request.endpoint = 'dataset.read'
 
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
             False
@@ -212,14 +234,19 @@ class TestPlugin:
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
+
         dataset = factories.Dataset()
-        dataset['extras'] = [
-            'test',
-        ]
-        before_dataset = dataset
+        mock_get_package_feedback_stats_bulk.return_value = {dataset['id']: {}}
+        dataset['extras'] = [{'key': 'already', 'value': 'exists'}]
 
         instance.before_dataset_view(dataset)
-        assert before_dataset == dataset
+        assert dataset['extras'] == [{'key': 'already', 'value': 'exists'}]
+
+        mock_request.endpoint = 'dataset.search'
+        dataset['extras'] = [{'key': 'already', 'value': 'exists'}]
+        result = instance.before_dataset_view(dataset)
+        assert result == dataset
+        assert dataset['extras'] == [{'key': 'already', 'value': 'exists'}]
 
     @patch('ckanext.feedback.plugin.download_summary_service')
     @patch('ckanext.feedback.plugin.utilization_summary_service')
