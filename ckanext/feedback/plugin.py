@@ -29,6 +29,7 @@ from ckanext.feedback.views import admin, api, download, likes, resource, utiliz
 log = logging.getLogger(__name__)
 
 
+@toolkit.blanket.config_declarations
 class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # Declare class implements
     plugins.implements(plugins.IConfigurer)
@@ -68,12 +69,12 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         3. Default fallback
         """
         # Try CKAN standard config key first
-        solr_url = config.get('ckan.solr_url')
+        solr_url = config.get('ckan.solr_url', None)
         if solr_url:
             return solr_url
 
         # Try alternative config key
-        solr_url = config.get('solr_url')
+        solr_url = config.get('solr_url', None)
         if solr_url:
             return solr_url
 
@@ -109,7 +110,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             existing_fields: List of existing field names
         """
         if field_name in existing_fields:
-            log.debug(f"Field '{field_name}' already exists")
             return
 
         log.info(f"Adding '{field_name}' field to Solr schema")
@@ -344,11 +344,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                     download_summary_service.get_package_downloads(package_id) or 0
                 )
                 pkg_dict['downloads_total_i'] = int(downloads)
-                org_info = f" (org: {owner_org})" if owner_org else " (no org)"
-                log.debug(
-                    f"[SOLR INDEX] downloads_total_i={downloads} "
-                    f"for {package_id}{org_info}"
-                )
 
         # Add number of likes as an integer field
         # Only add if likes feature is enabled for this organization
@@ -357,10 +352,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             if likes_field_exists:
                 likes = resource_likes_service.get_package_like_count(package_id) or 0
                 pkg_dict['likes_total_i'] = int(likes)
-                org_info = f" (org: {owner_org})" if owner_org else " (no org)"
-                log.debug(
-                    f"[SOLR INDEX] likes_total_i={likes} " f"for {package_id}{org_info}"
-                )
 
         return pkg_dict
 
