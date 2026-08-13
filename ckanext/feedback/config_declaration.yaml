@@ -1,0 +1,71 @@
+version: 1
+
+groups:
+  - annotation: Feedback Settings
+
+    options:
+      - key: ckan.feedback.likes.enable_orgs
+        type: list
+
+      - key: ckan.feedback.likes.disable_orgs
+        type: list
+
+      - key: ckan.feedback.downloads.enable_orgs
+        type: list
+
+      - key: ckan.feedback.downloads.disable_orgs
+        type: list
+
+      - key: ckan.feedback.utilizations.enable_orgs
+        type: list
+
+      - key: ckan.feedback.utilizations.disable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.enable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.disable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.rating.enable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.rating.disable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.image_attachment.enable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.image_attachment.disable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.reply_open.enable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.reply_open.disable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.repeated_post_limit.enable_orgs
+        type: list
+
+      - key: ckan.feedback.resources.comment.repeated_post_limit.disable_orgs
+        type: list
+
+      - key: ckan.feedback.utilizations.comments.image_attachment.enable_orgs
+        type: list
+
+      - key: ckan.feedback.utilizations.comments.image_attachment.disable_orgs
+        type: list
+
+      - key: ckan.feedback.downloads.feedback_prompt.enable_orgs
+        type: list
+
+      - key: ckan.feedback.downloads.feedback_prompt.disable_orgs
+        type: list
+
+      - key: ckan.ckan.feedback.download_handler.enable_orgs
+        type: list
+
+      - key: ckan.ckan.feedback.download_handler.disable_orgs
+        type: list
