@@ -69,3 +69,6 @@ groups:
 
       - key: ckan.ckan.feedback.download_handler.disable_orgs
         type: list
+
+      - key: ckan.feedback.download_handler
+        type: base

@@ -20,7 +20,7 @@ def download_handler():
         handler = import_string(handler_path, silent=True)
     else:
         handler = None
-        log.warning(f'Missing {CONFIG_HANDLER_PATH} config option.')
+        log.info(f'Missing {CONFIG_HANDLER_PATH} config option.')
 
     return handler
 
