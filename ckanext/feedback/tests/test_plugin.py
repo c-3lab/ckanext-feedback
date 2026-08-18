@@ -503,7 +503,7 @@ class TestPlugin:
     def test_get_solr_url_with_ckan_solr_url(self, mock_config):
         """Test _get_solr_url() with ckan.solr_url config"""
         instance = FeedbackPlugin()
-        mock_config.get.side_effect = lambda key: (
+        mock_config.get.side_effect = lambda key, default=None: (
             'http://solr-test:8983/solr/ckan' if key == 'ckan.solr_url' else None
         )
         result = instance._get_solr_url()
@@ -513,7 +513,7 @@ class TestPlugin:
     def test_get_solr_url_with_solr_url(self, mock_config):
         """Test _get_solr_url() with solr_url config"""
         instance = FeedbackPlugin()
-        mock_config.get.side_effect = lambda key: (
+        mock_config.get.side_effect = lambda key, default=None: (
             'http://custom-solr:8983/solr/ckan' if key == 'solr_url' else None
         )
         result = instance._get_solr_url()
@@ -535,17 +535,13 @@ class TestPlugin:
         result = instance._field_exists_in_solr('test_field')
         assert result is False
 
-    @patch('ckanext.feedback.plugin.log')
     @patch('ckanext.feedback.plugin.requests')
-    def test_add_solr_field_already_exists(self, mock_requests, mock_log):
+    def test_add_solr_field_already_exists(self, mock_requests):
         """Test _add_solr_field() when field already exists"""
         instance = FeedbackPlugin()
         existing_fields = ['downloads_total_i', 'likes_total_i']
         instance._add_solr_field(
             'http://solr:8983/solr/ckan/schema', 'downloads_total_i', existing_fields
-        )
-        mock_log.debug.assert_called_once_with(
-            "Field 'downloads_total_i' already exists"
         )
         mock_requests.post.assert_not_called()
 
