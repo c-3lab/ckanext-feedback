@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-feedback 1.3.6\n"
 "Report-Msgid-Bugs-To: info.c3lab@gmail.com\n"
-"POT-Creation-Date: 2026-03-25 17:46+0900\n"
+"POT-Creation-Date: 2026-08-25 16:15+0900\n"
 "PO-Revision-Date: 2023-03-01 14:16+0900\n"
 "Last-Translator: c3Lab <info.c3lab@gmail.com>\n"
 "Language: ja\n"
@@ -18,61 +18,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
-
-#: ckanext/feedback/plugin.py:402 ckanext/feedback/plugin.py:448
-#: ckanext/feedback/plugin.py:450
-#: ckanext/feedback/templates/package/search.html:7
-#: ckanext/feedback/templates/package/snippets/resource_item.html:31
-#: ckanext/feedback/templates/snippets/package_item.html:27
-#: ckanext/feedback/tests/test_plugin.py:257
-msgid "Downloads"
-msgstr "ダウンロード数"
-
-#: ckanext/feedback/plugin.py:406 ckanext/feedback/plugin.py:455
-#: ckanext/feedback/plugin.py:457
-#: ckanext/feedback/templates/package/snippets/resource_item.html:40
-#: ckanext/feedback/templates/snippets/package_item.html:37
-#: ckanext/feedback/tests/test_plugin.py:258
-msgid "Utilizations"
-msgstr "利活用数"
-
-#: ckanext/feedback/plugin.py:410 ckanext/feedback/plugin.py:460
-#: ckanext/feedback/plugin.py:462
-#: ckanext/feedback/templates/package/snippets/resource_item.html:67
-#: ckanext/feedback/templates/snippets/package_item.html:69
-#: ckanext/feedback/templates/utilization/details.html:58
-#: ckanext/feedback/tests/test_plugin.py:259
-msgid "Issue Resolutions"
-msgstr "課題解決数"
-
-#: ckanext/feedback/plugin.py:416 ckanext/feedback/plugin.py:467
-#: ckanext/feedback/plugin.py:469
-#: ckanext/feedback/templates/package/snippets/resource_item.html:49
-#: ckanext/feedback/templates/resource/comment.html:35
-#: ckanext/feedback/templates/snippets/package_item.html:48
-#: ckanext/feedback/templates/utilization/details.html:73
-#: ckanext/feedback/templates/utilization/search.html:61
-#: ckanext/feedback/tests/test_plugin.py:260
-msgid "Comments"
-msgstr "コメント数"
-
-#: ckanext/feedback/plugin.py:422 ckanext/feedback/plugin.py:473
-#: ckanext/feedback/plugin.py:476
-#: ckanext/feedback/templates/package/snippets/resource_item.html:57
-#: ckanext/feedback/templates/resource/comment.html:46
-#: ckanext/feedback/templates/snippets/package_item.html:59
-#: ckanext/feedback/tests/test_plugin.py:267
-msgid "Rating"
-msgstr "評価"
-
-#: ckanext/feedback/plugin.py:428 ckanext/feedback/plugin.py:481
-#: ckanext/feedback/plugin.py:483
-#: ckanext/feedback/templates/package/search.html:7
-#: ckanext/feedback/templates/package/snippets/resource_item.html:22
-#: ckanext/feedback/templates/snippets/package_item.html:18
-#: ckanext/feedback/tests/test_plugin.py:261
-msgid "Number of Likes"
-msgstr "いいね数"
 
 #: ckanext/feedback/components/comment.py:22
 #: ckanext/feedback/templates/resource/comment.html:346
@@ -394,6 +339,68 @@ msgstr "利活用方法の更新に成功しました。"
 #: ckanext/feedback/controllers/utilization.py:1174
 msgid "The utilization has been successfully deleted."
 msgstr "利活用方法の削除に成功しました。"
+
+#: ckanext/feedback/lib/helpers.py:14
+#: ckanext/feedback/templates/package/search.html:7
+#: ckanext/feedback/templates/package/snippets/resource_item.html:22
+#: ckanext/feedback/templates/snippets/package_item.html:18
+#: ckanext/feedback/tests/test_plugin.py:482
+msgid "Number of Likes"
+msgstr "いいね数"
+
+#: ckanext/feedback/lib/helpers.py:15
+#: ckanext/feedback/templates/package/snippets/resource_item.html:49
+#: ckanext/feedback/templates/resource/comment.html:35
+#: ckanext/feedback/templates/snippets/package_item.html:48
+#: ckanext/feedback/templates/utilization/details.html:73
+#: ckanext/feedback/templates/utilization/search.html:61
+#: ckanext/feedback/tests/test_plugin.py:483
+msgid "Comments"
+msgstr "コメント数"
+
+#: ckanext/feedback/lib/helpers.py:16
+#: ckanext/feedback/templates/package/search.html:7
+#: ckanext/feedback/templates/package/snippets/resource_item.html:31
+#: ckanext/feedback/templates/snippets/package_item.html:27
+#: ckanext/feedback/tests/test_plugin.py:484
+msgid "Downloads"
+msgstr "ダウンロード数"
+
+# | msgid "Utilization"
+#: ckanext/feedback/lib/helpers.py:17
+#: ckanext/feedback/templates/package/snippets/resource_item.html:40
+#: ckanext/feedback/templates/snippets/package_item.html:37
+#: ckanext/feedback/tests/test_plugin.py:485
+msgid "Utilizations"
+msgstr "利活用数"
+
+#: ckanext/feedback/lib/helpers.py:18
+#: ckanext/feedback/templates/package/snippets/resource_item.html:67
+#: ckanext/feedback/templates/snippets/package_item.html:69
+#: ckanext/feedback/templates/utilization/details.html:58
+#: ckanext/feedback/tests/test_plugin.py:486
+msgid "Issue Resolutions"
+msgstr "課題解決数"
+
+#: ckanext/feedback/lib/helpers.py:19
+#: ckanext/feedback/templates/package/snippets/resource_item.html:57
+#: ckanext/feedback/templates/resource/comment.html:46
+#: ckanext/feedback/templates/snippets/package_item.html:59
+#: ckanext/feedback/tests/test_plugin.py:487
+msgid "Rating"
+msgstr "評価"
+
+# | msgid "Feedback Likes"
+#: ckanext/feedback/lib/helpers.py:46
+#: ckanext/feedback/templates/package/resource_read.html:234
+#: ckanext/feedback/tests/test_plugin.py:482
+#: ckanext/feedback/tests/test_plugin.py:483
+#: ckanext/feedback/tests/test_plugin.py:484
+#: ckanext/feedback/tests/test_plugin.py:485
+#: ckanext/feedback/tests/test_plugin.py:486
+#: ckanext/feedback/tests/test_plugin.py:487
+msgid "Feedback"
+msgstr "フィードバック"
 
 #: ckanext/feedback/services/common/upload.py:56
 #: ckanext/feedback/services/common/upload.py:67
@@ -1006,3 +1013,21 @@ msgstr "登録日"
 #: ckanext/feedback/tests/controllers/test_resource.py:3701
 msgid "Test error message"
 msgstr ""
+
+msgid "feedback_total_like_count"
+msgstr "フィードバック 合計いいね数"
+
+msgid "feedback_total_comments"
+msgstr "フィードバック 合計コメント数"
+
+msgid "feedback_total_downloads"
+msgstr "フィードバック 合計ダウンロード数"
+
+msgid "feedback_total_utilizations"
+msgstr "フィードバック 合計利活用数"
+
+msgid "feedback_total_issue_resolutions"
+msgstr "フィードバック 合計課題解決数"
+
+msgid "feedback_average_rating"
+msgstr "フィードバック 平均評価"

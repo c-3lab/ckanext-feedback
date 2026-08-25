@@ -21,3 +21,11 @@
   padding-bottom: 15px;
   font-size: 17px;
 }
+
+/* Feedback fields in the resource "Additional Information" table */
+.feedback-section-header th,
+.feedback-field th,
+.feedback-field td {
+  background-color: transparent;
+  color: inherit;
+}
