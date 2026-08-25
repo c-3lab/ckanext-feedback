@@ -40,16 +40,9 @@ def get_solr_url():
     Get Solr URL from CKAN config.
 
     Checks multiple possible config keys in order:
-    1. ckan.solr_url (CKAN standard)
-    2. solr_url (alternative)
-    3. Default fallback
+    1. solr_url (CKAN standard)
+    2. Default fallback
     """
-    # Try CKAN standard config key first
-    solr_url = config.get('ckan.solr_url')
-    if solr_url:
-        return solr_url
-
-    # Try alternative config key
     solr_url = config.get('solr_url')
     if solr_url:
         return solr_url

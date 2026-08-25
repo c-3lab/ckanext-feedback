@@ -1000,7 +1000,14 @@ class ResourceController:
         ):
             return '', HTTPStatus.NO_CONTENT
 
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if data is None:
+            log.warning(
+                'create_previous_log: request body is missing or not valid JSON '
+                '(resource_id=%s)',
+                resource_id,
+            )
+            return '', HTTPStatus.NO_CONTENT
         previous_type = data.get('previous_type', None)
         input_comment = data.get('input_comment', None)
         suggested_comment = data.get('suggested_comment', None)

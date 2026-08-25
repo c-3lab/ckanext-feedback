@@ -64,11 +64,9 @@ groups:
       - key: ckan.feedback.downloads.feedback_prompt.disable_orgs
         type: list
 
-      - key: ckan.ckan.feedback.download_handler.enable_orgs
-        type: list
-
-      - key: ckan.ckan.feedback.download_handler.disable_orgs
-        type: list
-
       - key: ckan.feedback.download_handler
         type: base
+        description: >
+          Custom download handler function path
+          (e.g. ckanext.googleanalytics.views:download).
+          If not set, the default CKAN resource download handler is used.
