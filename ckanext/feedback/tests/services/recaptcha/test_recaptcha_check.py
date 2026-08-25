@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 from ckan import model
 from ckan.common import config
 
@@ -108,3 +109,22 @@ class TestCheck:
         config['ckan.feedback.recaptcha.publickey'] = 'test_publick_key'
         ret_value = FeedbackConfig().recaptcha.publickey.get()
         assert ret_value == 'test_publick_key'
+
+    @pytest.mark.parametrize(
+        'exception',
+        [
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException,
+        ],
+    )
+    @patch('ckanext.feedback.services.recaptcha.check.requests.get')
+    def test_recaptcha_request_error(self, mock_get, exception):
+        config['ckan.feedback.recaptcha.enable'] = True
+        config['ckan.feedback.recaptcha.privatekey'] = 'test_private_key'
+
+        mock_request = MagicMock()
+        mock_request.form.get.return_value = 'test_recaptcha_response'
+        mock_get.side_effect = exception('error')
+
+        assert check.is_recaptcha_verified(mock_request) is False

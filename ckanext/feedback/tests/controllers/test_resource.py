@@ -2875,6 +2875,30 @@ class TestResourceCreatePreviousLog:
         mock_rollback.assert_called_once()
         assert result == ('', 204)
 
+    @patch('ckanext.feedback.controllers.resource.comment_service.get_resource')
+    @patch('ckanext.feedback.controllers.resource.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.resource.'
+        'comment_service.create_resource_comment_moral_check_log'
+    )
+    def test_create_previous_log_without_json_body(
+        self,
+        mock_create_resource_comment_moral_check_log,
+        mock_get_json,
+        mock_get_resource,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource.return_value = resource
+        mock_get_json.return_value = None
+
+        return_value = ResourceController.create_previous_log(resource['id'])
+
+        mock_create_resource_comment_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)
+
 
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
 class TestResourceControllerCommonMethods:

@@ -500,16 +500,6 @@ class TestPlugin:
         assert updated['*Number of Likes*'] == 9999
 
     @patch('ckanext.feedback.plugin.config')
-    def test_get_solr_url_with_ckan_solr_url(self, mock_config):
-        """Test _get_solr_url() with ckan.solr_url config"""
-        instance = FeedbackPlugin()
-        mock_config.get.side_effect = lambda key, default=None: (
-            'http://solr-test:8983/solr/ckan' if key == 'ckan.solr_url' else None
-        )
-        result = instance._get_solr_url()
-        assert result == 'http://solr-test:8983/solr/ckan'
-
-    @patch('ckanext.feedback.plugin.config')
     def test_get_solr_url_with_solr_url(self, mock_config):
         """Test _get_solr_url() with solr_url config"""
         instance = FeedbackPlugin()

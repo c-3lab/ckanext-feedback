@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
 from ckan.common import config
 
 from ckanext.feedback.services.common import ai_functions
@@ -110,3 +111,33 @@ class TestAIFunctions:
         ret = ai_functions.suggest_ai_comment(content)
 
         assert ret is None
+
+    @patch('ckanext.feedback.services.common.ai_functions.importlib.import_module')
+    def test_check_ai_comment_import_error(self, mock_import_module):
+        mock_import_module.side_effect = ImportError('no module')
+
+        with pytest.raises(ImportError):
+            ai_functions.check_ai_comment('comment_content')
+
+    @patch('ckanext.feedback.services.common.ai_functions.importlib.import_module')
+    def test_check_ai_comment_check_error(self, mock_import_module):
+        mock_ai = MagicMock()
+        mock_ai.check.side_effect = Exception('AI error')
+        mock_import_module.return_value.MoralKeeperAI.return_value = mock_ai
+
+        with pytest.raises(Exception):
+            ai_functions.check_ai_comment('comment_content')
+
+    @patch('ckanext.feedback.services.common.ai_functions.importlib.import_module')
+    def test_suggest_ai_comment_import_error(self, mock_import_module):
+        mock_import_module.side_effect = ModuleNotFoundError('no module')
+
+        assert ai_functions.suggest_ai_comment('comment_content') is None
+
+    @patch('ckanext.feedback.services.common.ai_functions.importlib.import_module')
+    def test_suggest_ai_comment_suggest_error(self, mock_import_module):
+        mock_ai = MagicMock()
+        mock_ai.suggest.side_effect = Exception('AI error')
+        mock_import_module.return_value.MoralKeeperAI.return_value = mock_ai
+
+        assert ai_functions.suggest_ai_comment('comment_content') is None
