@@ -23,7 +23,9 @@
 }
 
 /* Feedback fields in the resource "Additional Information" table */
-.feedback-section-header th,
+.feedback-section-header {
+  display: none;
+}
 .feedback-field th,
 .feedback-field td {
   background-color: transparent;
