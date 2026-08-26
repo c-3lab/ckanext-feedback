@@ -10,6 +10,7 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 
+import ckanext.feedback.actions as actions
 from ckanext.feedback.command import feedback
 from ckanext.feedback.components.comment import CommentComponent
 from ckanext.feedback.controllers.api import ranking as get_action_controllers
@@ -480,6 +481,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def get_actions(self):
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
+            'feedback_package_show': actions.package_show,
         }
 
     # IUploader
