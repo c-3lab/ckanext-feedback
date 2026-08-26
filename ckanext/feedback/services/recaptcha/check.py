@@ -41,17 +41,7 @@ def _check_recaptcha_v3_base(request: Request) -> None:
 
     timeout = config.get('ckan.requests.timeout')
 
-    try:
-        data = requests.get(recaptcha_server_name, params, timeout=timeout).json()
-    except requests.exceptions.Timeout:
-        logger.error('reCAPTCHA request timed out.')
-        raise CaptchaError()
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f'reCAPTCHA connection error: {e}')
-        raise CaptchaError()
-    except requests.exceptions.RequestException as e:
-        logger.error(f'reCAPTCHA request failed: {e}')
-        raise CaptchaError()
+    data = requests.get(recaptcha_server_name, params, timeout=timeout).json()
     score_threshold = float(FeedbackConfig().recaptcha.score_threshold.get())
 
     try:

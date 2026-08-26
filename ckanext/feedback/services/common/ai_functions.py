@@ -10,17 +10,9 @@ def is_api_error(ng_reasons):
 
 
 def check_ai_comment(comment):
-    try:
-        MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
-    except (ImportError, ModuleNotFoundError) as e:
-        log.exception(f'moral_keeper_ai module is not available: {e}')
-        raise
-    try:
-        ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
-        judgement, ng_reasons = ai.check(comment)
-    except Exception as e:
-        log.exception(f'AI check failed: {e}')
-        raise
+    MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
+    ai = MoralKeeperAI(timeout=120, max_retries=10, repeat=3)
+    judgement, ng_reasons = ai.check(comment)
     if is_api_error(ng_reasons):
         log.exception('AI response failed. %s', ng_reasons)
     return judgement
@@ -29,14 +21,6 @@ def check_ai_comment(comment):
 def suggest_ai_comment(comment):
     if not comment:
         return None
-    try:
-        MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
-    except (ImportError, ModuleNotFoundError) as e:
-        log.exception(f'moral_keeper_ai module is not available: {e}')
-        return None
-    try:
-        ai = MoralKeeperAI(timeout=120, max_retries=10)
-        return ai.suggest(comment)
-    except Exception as e:
-        log.exception(f'AI suggest failed: {e}')
-        return None
+    MoralKeeperAI = importlib.import_module('moral_keeper_ai').MoralKeeperAI
+    ai = MoralKeeperAI(timeout=120, max_retries=10)
+    return ai.suggest(comment)
