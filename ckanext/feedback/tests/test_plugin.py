@@ -479,12 +479,12 @@ class TestPlugin:
 
         feedback_fields = feedback_helpers.get_feedback_fields(updated)
 
-        assert feedback_fields[f"{_('Feedback')}_{_('Number of Likes')}"] == 9999
-        assert feedback_fields[f"{_('Feedback')}_{_('Comments')}"] == 9999
-        assert feedback_fields[f"{_('Feedback')}_{_('Downloads')}"] == 9999
-        assert feedback_fields[f"{_('Feedback')}_{_('Utilizations')}"] == 9999
-        assert feedback_fields[f"{_('Feedback')}_{_('Issue Resolutions')}"] == 9999
-        assert feedback_fields[f"{_('Feedback')}_{_('Rating')}"] == 23.3
+        assert feedback_fields[f"{_('Feedback')} {_('Number of Likes')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Comments')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Downloads')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Utilizations')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Issue Resolutions')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Rating')}"] == 23.3
 
     def test_dataset_feedback_total_field_labels(self):
         """
@@ -494,34 +494,34 @@ class TestPlugin:
 
         assert (
             feedback_helpers.get_feedback_field_label('feedback_total_like_count')
-            == f"{_('Feedback')}_{_('Feedback Total Likes')}"
+            == f"{_('Feedback')} {_('Total Likes')}"
         )
 
         assert (
             feedback_helpers.get_feedback_field_label('feedback_total_comments')
-            == f"{_('Feedback')}_{_('Feedback Total Comments')}"
+            == f"{_('Feedback')} {_('Total Comments')}"
         )
 
         assert (
             feedback_helpers.get_feedback_field_label('feedback_total_downloads')
-            == f"{_('Feedback')}_{_('Feedback Total Downloads')}"
+            == f"{_('Feedback')} {_('Total Downloads')}"
         )
 
         assert (
             feedback_helpers.get_feedback_field_label('feedback_total_utilizations')
-            == f"{_('Feedback')}_{_('Feedback Total Utilizations')}"
+            == f"{_('Feedback')} {_('Total Utilizations')}"
         )
 
         assert (
             feedback_helpers.get_feedback_field_label(
                 'feedback_total_issue_resolutions'
             )
-            == f"{_('Feedback')}_{_('Feedback Total Issue Resolutions')}"
+            == f"{_('Feedback')} {_('Total Issue Resolutions')}"
         )
 
         assert (
             feedback_helpers.get_feedback_field_label('feedback_average_rating')
-            == f"{_('Feedback')}_{_('Feedback Average Rating')}"
+            == f"{_('Feedback')} {_('Average Rating')}"
         )
 
     @patch('ckanext.feedback.plugin.config')
