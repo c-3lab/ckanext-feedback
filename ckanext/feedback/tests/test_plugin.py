@@ -548,8 +548,8 @@ class TestPlugin:
 
     def test_dataset_feedback_total_field_labels(self):
         """
-        Dataset用 feedback_total_* フィールドが
-        正しい表示ラベルへ変換されることを確認する
+        Verify that Dataset feedback_total_* fields are converted to the correct
+        display labels.
         """
 
         assert (

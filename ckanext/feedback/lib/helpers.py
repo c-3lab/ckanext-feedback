@@ -30,14 +30,14 @@ _FEEDBACK_FIELD_LABEL_GETTERS = OrderedDict(
 
 def get_feedback_field_label(field_key):
     """
-    feedback_* フィールド名を表示用ラベルに変換する
+    Convert a feedback_* field name into a display label.
 
     Args:
-        field_key: feedback_* 形式のフィールド名
+        field_key: A field name in the feedback_* format.
 
     Returns:
-        「フィードバック_」（多言語環境では「Feedback_」）を接頭辞に持つ
-        表示用ラベル
+        A display label prefixed with "Feedback_"
+        (or "フィードバック_" in multilingual environments).
     """
 
     label_getter = _FEEDBACK_FIELD_LABEL_GETTERS.get(field_key)
@@ -48,14 +48,15 @@ def get_feedback_field_label(field_key):
 
 def get_feedback_fields(resource):
     """
-    リソースからフィードバック関連フィールドを抽出する
+    Extract feedback-related fields from a resource.
 
     Args:
-        resource: リソース辞書
+        resource: A resource dictionary.
 
     Returns:
-        表示用ラベルをキーとし、値を値とした辞書
-        （フィールドの並び順は _FEEDBACK_FIELD_LABEL_GETTERS の定義順）
+        A dictionary where the keys are display labels
+        and the values are the corresponding field values.
+        (The field order follows the definition order of _FEEDBACK_FIELD_LABEL_GETTERS.)
     """
 
     fields = OrderedDict()
