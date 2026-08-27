@@ -395,6 +395,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             pkg_dict['extras'] = []
 
         def add_pkg_dict_extras(key: str, value: any):
+            for extra in pkg_dict['extras']:
+                if extra.get('key') == key:
+                    extra['value'] = value
+                    return
+
             pkg_dict['extras'].append({'key': key, 'value': value})
 
         stats_by_id = package_summary_service.get_package_feedback_stats_bulk(
