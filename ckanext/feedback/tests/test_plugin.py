@@ -12,6 +12,8 @@ from ckanext.feedback.command.feedback import (
     create_resource_tables,
     create_utilization_tables,
 )
+from ckanext.feedback.controllers.api import package_show
+from ckanext.feedback.controllers.api import ranking as get_action_controllers
 from ckanext.feedback.lib import helpers as feedback_helpers
 from ckanext.feedback.plugin import FeedbackPlugin
 from ckanext.feedback.services.common.config import FeedbackConfig
@@ -55,6 +57,13 @@ class TestPlugin:
         commands = instance.get_commands()
         assert len(commands) == 1
         assert commands[0].name == 'feedback'
+
+    def test_get_actions(self):
+        instance = FeedbackPlugin()
+        actions = instance.get_actions()
+        assert actions["datasets_ranking"] == get_action_controllers.datasets_ranking
+
+        assert actions["package_show"] == package_show.package_show
 
     @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
     @patch('ckanext.feedback.plugin.download')
