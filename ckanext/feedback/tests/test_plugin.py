@@ -229,6 +229,54 @@ class TestPlugin:
         'get_package_feedback_stats_bulk'
     )
     @patch('flask.request', new_callable=MagicMock)
+    def test_before_dataset_view_updates_existing_extra(
+        self,
+        mock_request,
+        mock_get_package_feedback_stats_bulk,
+    ):
+        instance = FeedbackPlugin()
+
+        mock_request.endpoint = 'dataset.read'
+
+        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+
+        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
+
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
+            False
+        )
+
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
+
+        dataset = factories.Dataset()
+
+        dataset["extras"] = [
+            {
+                "key": "feedback_total_downloads",
+                "value": 1,
+            }
+        ]
+
+        mock_get_package_feedback_stats_bulk.return_value = {
+            dataset["id"]: {
+                "downloads": 9999,
+            }
+        }
+
+        instance.before_dataset_view(dataset)
+
+        assert dataset["extras"] == [
+            {
+                "key": "feedback_total_downloads",
+                "value": 9999,
+            }
+        ]
+
+    @patch(
+        'ckanext.feedback.plugin.package_summary_service.'
+        'get_package_feedback_stats_bulk'
+    )
+    @patch('flask.request', new_callable=MagicMock)
     def test_before_dataset_view_with_False(
         self,
         mock_request,
