@@ -164,15 +164,18 @@ class TestPlugin:
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
+        mock_get_package_feedback_stats_bulk.return_value = {}
         dataset = factories.Dataset()
+        dataset["extras"] = []
+
         mock_get_package_feedback_stats_bulk.return_value = {
-            dataset['id']: {
-                'like_count': 9999,
-                'downloads': 9999,
-                'utilizations': 9999,
-                'comments': 9999,
-                'rating': 23.333,
-                'issue_resolutions': 9999,
+            dataset["id"]: {
+                "like_count": 9999,
+                "downloads": 9999,
+                "utilizations": 9999,
+                "comments": 9999,
+                "rating": 23.333,
+                "issue_resolutions": 9999,
             }
         }
 
