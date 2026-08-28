@@ -11,6 +11,8 @@ from ckan.plugins import toolkit
 from ckan.types import PUploader
 
 import ckanext.feedback.controllers.api.package_show as package_show
+import ckanext.feedback.controllers.api.resource_search as resource_search
+import ckanext.feedback.controllers.api.resource_show as resource_show
 from ckanext.feedback.command import feedback
 from ckanext.feedback.components.comment import CommentComponent
 from ckanext.feedback.controllers.api import ranking as get_action_controllers
@@ -487,6 +489,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
             'package_show': package_show.package_show,
+            'resource_show': resource_show.resource_show,
+            'resource_search': resource_search.resource_search,
         }
 
     # IUploader
