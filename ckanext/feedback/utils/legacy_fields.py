@@ -1,3 +1,8 @@
+"""Temporary compatibility utilities for legacy feedback fields.
+
+Remove these helpers after the legacy database migration is complete.
+"""
+
 LEGACY_FEEDBACK_KEYS = {
     "いいね数",
     "コメント数",
@@ -15,14 +20,14 @@ LEGACY_FEEDBACK_KEYS = {
 
 
 def remove_legacy_resource_feedback_fields(resource_dict):
-    """Exclude legacy feedback items from the resource dictionary"""
+    """Remove legacy feedback fields from a resource dictionary"""
 
     for key in LEGACY_FEEDBACK_KEYS:
         resource_dict.pop(key, None)
 
 
 def remove_legacy_package_feedback_fields(package_dict):
-    """Exclude old feedback items from the dictionary"""
+    """Remove legacy feedback fields from a package dictionary"""
 
     package_dict["extras"] = [
         extra
