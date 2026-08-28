@@ -140,3 +140,12 @@ def get_resource_like_count_monthly(resource_id, period):
     )
 
     return count or 0
+
+
+def get_resource_like_count_bulk(resource_ids):
+    rows = (
+        session.query(ResourceLike.resource_id, ResourceLike.like_count)
+        .filter(ResourceLike.resource_id.in_(resource_ids))
+        .all()
+    )
+    return {str(r[0]): r[1] or 0 for r in rows}

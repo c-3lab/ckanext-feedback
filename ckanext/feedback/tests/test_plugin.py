@@ -1202,3 +1202,74 @@ class TestPlugin:
         assert 'likes_total_i' not in result
         # likes service should not be called since field doesn't exist
         mock_likes_service.get_package_like_count.assert_not_called()
+
+    @patch('ckanext.feedback.utils.feedback_fields.package_summary_service')
+    def test_after_dataset_search_overwrites_indexed_values(
+        self,
+        mock_package_summary_service,
+    ):
+        instance = FeedbackPlugin()
+
+        for feature in ('resource_comment', 'utilization', 'download', 'like'):
+            conf = getattr(FeedbackConfig(), feature)
+            config[f"{conf.get_ckan_conf_str()}.enable"] = True
+        config[
+            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
+        ] = True
+
+        mock_package_summary_service.get_package_feedback_stats_bulk.return_value = {
+            'test-package-id': {
+                'like_count': 1,
+                'comments': 2,
+                'downloads': 49,
+                'utilizations': 0,
+                'issue_resolutions': 0,
+                'rating': 4.0,
+            }
+        }
+        mock_package_summary_service.get_resource_feedback_stats_bulk.return_value = {
+            'test-resource-id': {
+                'like_count': 1,
+                'comments': 2,
+                'downloads': 49,
+                'utilizations': 0,
+                'issue_resolutions': 0,
+                'rating': 4.0,
+            }
+        }
+
+        # values Solr kept from the last time the dataset was indexed
+        search_results = {
+            'results': [
+                {
+                    'id': 'test-package-id',
+                    'owner_org': None,
+                    'extras': [
+                        {'key': 'frequency', 'value': '随時'},
+                        {'key': 'feedback_total_downloads', 'value': 1},
+                    ],
+                    'resources': [
+                        {
+                            'id': 'test-resource-id',
+                            'feedback_downloads': 1,
+                            'ダウンロード数': 1,
+                        }
+                    ],
+                }
+            ]
+        }
+
+        result = instance.after_dataset_search(search_results, {})
+
+        pkg_dict = result['results'][0]
+        extras = {extra['key']: extra['value'] for extra in pkg_dict['extras']}
+        resource = pkg_dict['resources'][0]
+
+        assert extras['frequency'] == '随時'
+        assert extras['feedback_total_downloads'] == 49
+        assert extras['feedback_total_comments'] == 2
+        assert extras['feedback_average_rating'] == 4.0
+        assert resource['feedback_downloads'] == 49
+        assert resource['feedback_comments'] == 2
+        assert resource['feedback_rating'] == 4.0
+        assert 'ダウンロード数' not in resource

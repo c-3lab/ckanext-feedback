@@ -65,3 +65,12 @@ def increment_resource_downloads(resource_id):
         },
     )
     session.execute(download_summary)
+
+
+def get_resource_downloads_bulk(resource_ids):
+    rows = (
+        session.query(DownloadSummary.resource_id, DownloadSummary.download)
+        .filter(DownloadSummary.resource_id.in_(resource_ids))
+        .all()
+    )
+    return {str(r[0]): r[1] or 0 for r in rows}

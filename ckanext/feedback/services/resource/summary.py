@@ -178,3 +178,23 @@ def refresh_resource_summary(resource_id):
         },
     )
     session.execute(summary)
+
+
+def get_resource_comments_bulk(resource_ids):
+    rows = (
+        session.query(
+            ResourceCommentSummary.resource_id, ResourceCommentSummary.comment
+        )
+        .filter(ResourceCommentSummary.resource_id.in_(resource_ids))
+        .all()
+    )
+    return {str(r[0]): r[1] or 0 for r in rows}
+
+
+def get_resource_rating_bulk(resource_ids):
+    rows = (
+        session.query(ResourceCommentSummary.resource_id, ResourceCommentSummary.rating)
+        .filter(ResourceCommentSummary.resource_id.in_(resource_ids))
+        .all()
+    )
+    return {str(r[0]): round(r[1], 1) if r[1] else 0 for r in rows}

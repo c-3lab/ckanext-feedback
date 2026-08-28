@@ -10,7 +10,6 @@ from ckan.lib.plugins import DefaultTranslation
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 
-import ckanext.feedback.controllers.api.package_search as package_search
 import ckanext.feedback.controllers.api.package_show as package_show
 import ckanext.feedback.controllers.api.resource_search as resource_search
 import ckanext.feedback.controllers.api.resource_show as resource_show
@@ -29,6 +28,8 @@ from ckanext.feedback.services.resource import likes as resource_likes_service
 from ckanext.feedback.services.resource import summary as resource_summary_service
 from ckanext.feedback.services.utilization import details as utilization_details_service
 from ckanext.feedback.services.utilization import summary as utilization_summary_service
+from ckanext.feedback.utils.feedback_fields import add_package_feedback_fields
+from ckanext.feedback.utils.legacy_fields import remove_legacy_package_feedback_fields
 from ckanext.feedback.views import admin, api, download, likes, resource, utilization
 
 log = logging.getLogger(__name__)
@@ -311,6 +312,26 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IPackageController
 
+    def after_dataset_search(self, search_results, search_params):
+        """
+        Hook called after a Solr search.
+
+        Solr stores the package dict as it was when the dataset was last
+        indexed, so its feedback values are a snapshot. Feedback values change
+        without the dataset being modified, so they are read from the database
+        and written over the indexed ones.
+        """
+        results = search_results.get('results', [])
+
+        for pkg_dict in results:
+            remove_legacy_package_feedback_fields(pkg_dict)
+
+        add_package_feedback_fields(
+            results, getattr(self, 'fb_config', FeedbackConfig())
+        )
+
+        return search_results
+
     def before_dataset_index(self, pkg_dict):
         """
         Hook called before Solr indexing.
@@ -492,7 +513,6 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'package_show': package_show.package_show,
             'resource_show': resource_show.resource_show,
             'resource_search': resource_search.resource_search,
-            'package_search': package_search.package_search,
         }
 
     # IUploader

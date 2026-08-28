@@ -60,3 +60,31 @@ def get_package_feedback_stats_bulk(packages):
         }
 
     return by_id
+
+
+def get_resource_feedback_stats_bulk(resource_ids):
+    if not resource_ids:
+        return {}
+
+    likes = resource_likes_service.get_resource_like_count_bulk(resource_ids)
+    downloads = download_summary_service.get_resource_downloads_bulk(resource_ids)
+    utilizations = utilization_summary_service.get_resource_utilizations_bulk(
+        resource_ids
+    )
+    comments = resource_summary_service.get_resource_comments_bulk(resource_ids)
+    rating = resource_summary_service.get_resource_rating_bulk(resource_ids)
+    issue_resolutions = utilization_summary_service.get_resource_issue_resolutions_bulk(
+        resource_ids
+    )
+
+    return {
+        rid: {
+            "like_count": likes.get(rid, 0),
+            "downloads": downloads.get(rid, 0),
+            "utilizations": utilizations.get(rid, 0),
+            "comments": comments.get(rid, 0),
+            "rating": rating.get(rid, 0),
+            "issue_resolutions": issue_resolutions.get(rid, 0),
+        }
+        for rid in resource_ids
+    }

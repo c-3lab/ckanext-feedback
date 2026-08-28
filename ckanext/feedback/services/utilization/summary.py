@@ -149,3 +149,25 @@ def increment_issue_resolution_summary(utilization_id):
         },
     )
     session.execute(issue_resolution_summary)
+
+
+def get_resource_utilizations_bulk(resource_ids):
+    rows = (
+        session.query(UtilizationSummary.resource_id, UtilizationSummary.utilization)
+        .filter(UtilizationSummary.resource_id.in_(resource_ids))
+        .all()
+    )
+    return {str(r[0]): r[1] or 0 for r in rows}
+
+
+def get_resource_issue_resolutions_bulk(resource_ids):
+    rows = (
+        session.query(
+            Utilization.resource_id, func.sum(IssueResolutionSummary.issue_resolution)
+        )
+        .join(Utilization, IssueResolutionSummary.utilization_id == Utilization.id)
+        .filter(Utilization.resource_id.in_(resource_ids))
+        .group_by(Utilization.resource_id)
+        .all()
+    )
+    return {str(r[0]): r[1] or 0 for r in rows}
