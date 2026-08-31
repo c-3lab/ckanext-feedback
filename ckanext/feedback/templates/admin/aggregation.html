@@ -79,6 +79,112 @@
             </div>
             <p style="margin-top: 5px;">{{ _('The data is aggregated for all available periods and can be exported.') }}</p>
           </div>
+            <div class="download-item">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">
+                    <strong>{{ _('Comment Monthly Report') }}</strong>
+                  </span>
+                
+                  <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;">
+                    <strong>{{ _('Month') }} :</strong>
+                  </p>
+                
+                  <input
+                    type="month"
+                    name="comment_month"
+                    id="commentMonthPicker"
+                    style="font-size: 16px;"
+                    max="{{ max_month }}"
+                    min="2023-04"
+                    value="{{ default_month }}"
+                  >
+                </div>
+              
+                {% set comment_monthly_action =
+                   h.url_for('feedback.download_comment_monthly') %}
+                
+                <button
+                  class="btn btn-primary"
+                  style="margin-left: auto;"
+                  onclick="csvDownload('{{ comment_monthly_action }}')">
+                
+                  <i class="fa-solid fa-arrow-circle-down"></i>
+                  {{ _('Download') }}
+                </button>
+              </div>
+            
+              <p style="margin-top: 5px;">
+                {{ _('The comment data is aggregated for the specified month and can be exported.') }}
+              </p>
+            </div>
+            <div class="download-item">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">
+                    <strong>{{ _('Comment Yearly Report') }}</strong>
+                  </span>
+                
+                  <p style="font-size: 16px; margin-left: auto; margin-bottom: 0px;">
+                    <strong>{{ _('Year') }} :</strong>
+                  </p>
+                
+                  <select
+                    id="commentYearSelect"
+                    name="comment_year"
+                    style="font-size: 16px;">
+                
+                    {% for year in range(2023, max_year + 1) %}
+                      <option value="{{ year }}"
+                        {% if year == default_year %}selected{% endif %}>
+                        {{ year }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              
+                {% set comment_yearly_action =
+                   h.url_for('feedback.download_comment_yearly') %}
+                
+                <button
+                  class="btn btn-primary"
+                  style="margin-left: auto;"
+                  onclick="csvDownload('{{ comment_yearly_action }}')">
+                
+                  <i class="fa-solid fa-arrow-circle-down"></i>
+                  {{ _('Download') }}
+                </button>
+              </div>
+            
+              <p style="margin-top: 5px;">
+                {{ _('The comment data is aggregated for the specified year from January 1 to December 31 and can be exported.') }}
+              </p>
+            </div>
+            <div class="download-item">
+              <div style="display: flex; align-items: center; gap: 8px;">
+              
+                <span style="font-size: 16px;">
+                  <strong>{{ _('Comment All-Time Report') }}</strong>
+                </span>
+              
+                {% set comment_all_time_action =
+                   h.url_for('feedback.download_comment_all_time') %}
+                
+                <button
+                  class="btn btn-primary"
+                  style="margin-left: auto;"
+                  onclick="csvDownload('{{ comment_all_time_action }}')">
+                
+                  <i class="fa-solid fa-arrow-circle-down"></i>
+                  {{ _('Download') }}
+                </button>
+              </div>
+            
+              <p style="margin-top: 5px;">
+                {{ _('The comment data is aggregated for all available periods and can be exported.') }}
+              </p>
+            </div>
+          </div>
         </form>
       {% else %}
         <div class="module-title">

@@ -13,6 +13,7 @@ from flask import Response
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.admin import aggregation as aggregation_service
+from ckanext.feedback.services.admin import comment_aggregation
 from ckanext.feedback.services.admin import feedbacks as feedback_service
 from ckanext.feedback.services.admin import resource_comment_replies as reply_service
 from ckanext.feedback.services.admin import (
@@ -605,6 +606,56 @@ class AdminController:
         )
 
     @staticmethod
+    def export_comment_csv_response(results, filename):
+        output = io.BytesIO()
+        text_wrapper = io.TextIOWrapper(
+            output,
+            encoding='utf-8-sig',
+            newline='',
+        )
+
+        try:
+            writer = csv.writer(text_wrapper)
+
+            writer.writerow(
+                [
+                    _("resource_id"),
+                    _("group_title"),
+                    _("package_title"),
+                    _("resource_name"),
+                    _("comment_content"),
+                ]
+            )
+
+            for row in results:
+                writer.writerow(
+                    [
+                        row.resource_id or '',
+                        row.organization_title or '',
+                        row.package_title or '',
+                        row.resource_name or '',
+                        row.comment_content or '',
+                    ]
+                )
+
+            text_wrapper.flush()
+
+        finally:
+            text_wrapper.detach()
+
+        output.seek(0)
+
+        return Response(
+            output,
+            mimetype="text/csv charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename*=UTF-8''{filename}; " f"filename={filename}"
+                )
+            },
+        )
+
+    @staticmethod
     @check_administrator
     def download_monthly():
         select_organization_name = request.args.get('group_added')
@@ -652,3 +703,67 @@ class AdminController:
         encoded_filename = urllib.parse.quote(filename)
 
         return AdminController.export_csv_response(results, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_comment_monthly():
+        select_organization_name = request.args.get('group_added')
+        select_month = request.args.get('comment_month')
+
+        results = comment_aggregation.get_monthly_comments(
+            select_organization_name,
+            select_month,
+        )
+
+        year, month = select_month.split("-")
+
+        filename = "{}_{}.csv".format(
+            _("comment_monthly_report"),
+            f"{year}{month}",
+        )
+
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_comment_csv_response(
+            results,
+            encoded_filename,
+        )
+
+    @staticmethod
+    @check_administrator
+    def download_comment_yearly():
+        select_organization_name = request.args.get('group_added')
+        select_year = request.args.get('comment_year')
+
+        results = comment_aggregation.get_yearly_comments(
+            select_organization_name,
+            select_year,
+        )
+
+        filename = "{}_{}.csv".format(
+            _("comment_yearly_report"),
+            f"{select_year}",
+        )
+
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_comment_csv_response(
+            results,
+            encoded_filename,
+        )
+
+    @staticmethod
+    @check_administrator
+    def download_comment_all_time():
+        select_organization_name = request.args.get('group_added')
+
+        results = comment_aggregation.get_all_time_comments(select_organization_name)
+
+        filename = "{}.csv".format(_("comment_all_time_report"))
+
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_comment_csv_response(
+            results,
+            encoded_filename,
+        )
