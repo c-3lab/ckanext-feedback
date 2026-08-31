@@ -11,6 +11,7 @@ LEGACY_FEEDBACK_KEYS = {
     "Downloads",
     "Utilizations",
     "Issue Resolutions",
+    "Rating",
 }
 
 
