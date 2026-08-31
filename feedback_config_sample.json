@@ -44,6 +44,14 @@
         },
         "moral_keeper_ai": {
             "enable": true
+        },
+        "recaptcha": {
+            "enable": false
+        },
+        "notice": {
+            "email": {
+                "enable": false
+            }
         }
     }
 }

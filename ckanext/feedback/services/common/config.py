@@ -20,7 +20,7 @@ def download_handler():
         handler = import_string(handler_path, silent=True)
     else:
         handler = None
-        log.warning(f'Missing {CONFIG_HANDLER_PATH} config option.')
+        log.debug(f'Missing {CONFIG_HANDLER_PATH} config option.')
 
     return handler
 
@@ -106,10 +106,10 @@ class BaseConfig:
         value = feedback_config
 
         for key in self.fb_conf_prefix + fb_conf_path:
-            try:
-                value = value.get(key)
-            except AttributeError as e:
-                toolkit.error_shout(e)
+            if not isinstance(value, dict):
+                value = None
+                break
+            value = value.get(key)
         if value is not None:
             config[ckan_conf_path_str] = value
 
