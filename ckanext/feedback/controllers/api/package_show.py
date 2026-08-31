@@ -25,13 +25,11 @@ LEGACY_RESOURCE_FEEDBACK_KEYS = {
     "ダウンロード数",
     "利活用数",
     "課題解決数",
-    "評価",
     "Number of Likes",
     "Comments",
     "Downloads",
     "Utilizations",
     "Issue Resolutions",
-    "Rating",
 }
 
 
