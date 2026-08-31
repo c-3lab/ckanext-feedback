@@ -5,26 +5,7 @@ from ckan.plugins import toolkit
 from ckanext.feedback.services.package import summary as package_summary_service
 
 # Field names used in the past
-LEGACY_PACKAGE_FEEDBACK_KEYS = {
-    "いいね数",
-    "コメント数",
-    "ダウンロード数",
-    "利活用数",
-    "課題解決数",
-    "Number of Likes",
-    "Comments",
-    "Downloads",
-    "Utilizations",
-    "Issue Resolutions",
-}
-
-
-LEGACY_RESOURCE_FEEDBACK_KEYS = {
-    "いいね数",
-    "コメント数",
-    "ダウンロード数",
-    "利活用数",
-    "課題解決数",
+LEGACY_FEEDBACK_KEYS = {
     "Number of Likes",
     "Comments",
     "Downloads",
@@ -40,12 +21,12 @@ def remove_legacy_feedback_fields(package_dict):
     package_dict["extras"] = [
         extra
         for extra in package_dict.get("extras", [])
-        if extra.get("key") not in LEGACY_PACKAGE_FEEDBACK_KEYS
+        if extra.get("key") not in LEGACY_FEEDBACK_KEYS
     ]
 
     # Exclude the old key from the root of each resource
     for resource_dict in package_dict.get("resources", []):
-        for key in LEGACY_RESOURCE_FEEDBACK_KEYS:
+        for key in LEGACY_FEEDBACK_KEYS:
             resource_dict.pop(key, None)
 
 
