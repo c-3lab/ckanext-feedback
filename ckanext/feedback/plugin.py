@@ -67,7 +67,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         1. solr_url (CKAN standard)
         2. Default fallback
         """
-        solr_url = config.get('solr_url')
+        solr_url = config.get('solr_url') or config.get('ckan.solr_url')
         if solr_url:
             return solr_url
 
