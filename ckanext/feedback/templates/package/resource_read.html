@@ -39,39 +39,24 @@
           <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
         </tr>
       
-        {% for key, value in h.format_resource_items(res.items()) %}
-          {% if key not in ('created', 'metadata modified', 'last modified', 'format') %}
-      
-            <tr class="toggle-more">
-              <th scope="row">
-              
-                {% if key == 'feedback comments' %}
-                  {{ _('Feedback') }} {{ _('Comments') }}
-              
-                {% elif key == 'feedback downloads' %}
-                  {{ _('Feedback') }} {{ _('Downloads') }}
-              
-                {% elif key == 'feedback issue resolutions' %}
-                  {{ _('Feedback') }} {{ _('Issue Resolutions') }}
-              
-                {% elif key == 'feedback like count' %}
-                  {{ _('Feedback') }} {{ _('Number of Likes') }}
-              
-                {% elif key == 'feedback utilizations' %}
-                  {{ _('Feedback') }} {{ _('Utilizations') }}
-              
-                {% else %}
-                  {{ key | capitalize }}
-              
-                {% endif %}
-              
-              </th>
-            
-              <td>{{ value }}</td>
-            
-            </tr>
-          
+        {% for key, value in res.items() %}
+          {% if not h.should_hide_resource_field(key) %}
+            {% for formatted_key, formatted_value in h.format_resource_items([(key, value)]) %}
+              {% if formatted_key not in ('created', 'metadata modified', 'last modified', 'format') %}
+                <tr class="toggle-more">
+                  <th scope="row">{{ formatted_key | capitalize }}</th>
+                  <td>{{ formatted_value }}</td>
+                </tr>
+              {% endif %}
+            {% endfor %}
           {% endif %}
+        {% endfor %}
+
+        {% for label, value in h.get_feedback_fields(res).items() %}
+          <tr class="toggle-more feedback-field">
+            <th scope="row">{{ label }}</th>
+            <td>{{ value }}</td>
+          </tr>
         {% endfor %}
           
       </tbody>

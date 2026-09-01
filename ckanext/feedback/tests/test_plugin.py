@@ -14,6 +14,7 @@ from ckanext.feedback.command.feedback import (
 )
 from ckanext.feedback.controllers.api import package_show
 from ckanext.feedback.controllers.api import ranking as get_action_controllers
+from ckanext.feedback.controllers.api import resource_show
 from ckanext.feedback.lib import helpers as feedback_helpers
 from ckanext.feedback.plugin import FeedbackPlugin
 from ckanext.feedback.services.common.config import FeedbackConfig
@@ -64,6 +65,7 @@ class TestPlugin:
         assert actions["datasets_ranking"] == get_action_controllers.datasets_ranking
 
         assert actions["package_show"] == package_show.package_show
+        assert actions["resource_show"] == resource_show.resource_show
 
     @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
     @patch('ckanext.feedback.plugin.download')
@@ -456,11 +458,19 @@ class TestPlugin:
         mock_resource_likes_service.get_resource_like_count.return_value = 8
 
         resource = factories.Resource()
+        resource[_('Number of Likes')] = 1
+        resource[_('Comments')] = 0
 
         instance.before_resource_show(resource)
 
         # No language-dependent keys should ever be injected
         for legacy_key in (
+            _('Number of Likes'),
+            _('Comments'),
+            _('Downloads'),
+            _('Utilizations'),
+            _('Issue Resolutions'),
+            _('Rating'),
             'Downloads',
             'Utilizations',
             'Issue Resolutions',
