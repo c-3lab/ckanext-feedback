@@ -11,9 +11,11 @@ from ckan.plugins import toolkit
 from ckan.types import PUploader
 
 import ckanext.feedback.controllers.api.package_show as package_show
+import ckanext.feedback.controllers.api.resource_show as resource_show
 from ckanext.feedback.command import feedback
 from ckanext.feedback.components.comment import CommentComponent
 from ckanext.feedback.controllers.api import ranking as get_action_controllers
+from ckanext.feedback.controllers.api.resource_show import remove_legacy_feedback_fields
 from ckanext.feedback.controllers.resource import ResourceController
 from ckanext.feedback.lib import helpers as feedback_helpers
 from ckanext.feedback.services.common import check
@@ -304,6 +306,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_organization': core_helpers.get_organization,
             'get_feedback_fields': feedback_helpers.get_feedback_fields,
             'get_feedback_field_label': feedback_helpers.get_feedback_field_label,
+            'should_hide_resource_field': feedback_helpers.should_hide_resource_field,
         }
 
     # IPackageController
@@ -439,6 +442,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     # IResourceController
 
     def before_resource_show(self, resource_dict: Dict[str, Any]) -> Dict[str, Any]:
+        remove_legacy_feedback_fields(resource_dict)
+
         owner_org = model.Package.get(resource_dict['package_id']).owner_org
         resource_id = resource_dict['id']
         cfg = getattr(self, 'fb_config', FeedbackConfig())
@@ -487,6 +492,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
             'package_show': package_show.package_show,
+            'resource_show': resource_show.resource_show,
         }
 
     # IUploader

@@ -9,6 +9,17 @@ from ckan.common import _
 # Maps the language-independent API field name (feedback_*) to a function
 # that lazily returns the translated base label (evaluated per request, so
 # that the current locale is always respected).
+RESOURCE_FEEDBACK_KEYS = frozenset(
+    [
+        'feedback_like_count',
+        'feedback_comments',
+        'feedback_downloads',
+        'feedback_utilizations',
+        'feedback_issue_resolutions',
+        'feedback_rating',
+    ]
+)
+
 _FEEDBACK_FIELD_LABEL_GETTERS = OrderedDict(
     [
         ('feedback_like_count', lambda: _('Number of Likes')),
@@ -26,6 +37,17 @@ _FEEDBACK_FIELD_LABEL_GETTERS = OrderedDict(
         ('feedback_average_rating', lambda: _('Average Rating')),
     ]
 )
+
+
+def should_hide_resource_field(field_key):
+    """Return True when a resource field should not appear in Additional Information."""
+
+    if field_key in RESOURCE_FEEDBACK_KEYS or field_key.startswith('feedback_'):
+        return True
+
+    from ckanext.feedback.controllers.api.package_show import LEGACY_FEEDBACK_KEYS
+
+    return field_key in LEGACY_FEEDBACK_KEYS
 
 
 def get_feedback_field_label(field_key):

@@ -12,6 +12,13 @@ LEGACY_FEEDBACK_KEYS = {
     "Utilizations",
     "Issue Resolutions",
     "Rating",
+    # Legacy keys persisted in resource.extras (Japanese locale)
+    "いいね数",
+    "コメント数",
+    "ダウンロード数",
+    "利活用数",
+    "課題解決数",
+    "評価",
 }
 
 
