@@ -307,6 +307,7 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             'get_feedback_fields': feedback_helpers.get_feedback_fields,
             'get_feedback_field_label': feedback_helpers.get_feedback_field_label,
             'should_hide_resource_field': feedback_helpers.should_hide_resource_field,
+            'format_resource_items': feedback_helpers.format_resource_items,
         }
 
     # IPackageController

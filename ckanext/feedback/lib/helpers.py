@@ -3,6 +3,7 @@
 from collections import OrderedDict
 
 from ckan.common import _
+from ckan.plugins import toolkit
 
 # Order matters: this defines the display order of feedback fields in the
 # "Additional Information" table on the resource detail page.
@@ -118,3 +119,28 @@ def get_feedback_fields(resource):
             fields[get_feedback_field_label(field_key)] = resource[field_key]
 
     return fields
+
+
+@toolkit.chained_helper
+def format_resource_items(next_helper, items):
+    """Translate feedback_* resource field names before core formats them.
+
+    A theme may override package/resource_read.html and render resource fields
+    through this core helper, which never calls gettext -- it only does
+    `key.replace('_', ' ')`. Translating the keys here keeps the labels correct
+    whichever template wins the block.
+    """
+
+    return next_helper(
+        [
+            (
+                (
+                    get_feedback_field_label(key)
+                    if key in _FEEDBACK_FIELD_LABEL_GETTERS
+                    else key
+                ),
+                value,
+            )
+            for key, value in items
+        ]
+    )

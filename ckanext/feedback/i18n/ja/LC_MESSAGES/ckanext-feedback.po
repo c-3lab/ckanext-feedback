@@ -915,7 +915,7 @@ msgstr ""
 "あなたの入力は不適切とみなされる可能性があります。\n"
 "入力されたコメントに基づいて、表現を緩和したコメントを提案します。\n"
 "送信するコメントを選択してください。\n"
-"各コメントを編集することもできます。\n"
+"各コメントを編集することもできます。"
 
 #: ckanext/feedback/templates/resource/suggestion.html:34
 #: ckanext/feedback/templates/utilization/suggestion.html:37
