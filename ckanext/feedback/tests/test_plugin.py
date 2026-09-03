@@ -12,6 +12,10 @@ from ckanext.feedback.command.feedback import (
     create_resource_tables,
     create_utilization_tables,
 )
+from ckanext.feedback.controllers.api import package_show
+from ckanext.feedback.controllers.api import ranking as get_action_controllers
+from ckanext.feedback.controllers.api import resource_show
+from ckanext.feedback.lib import helpers as feedback_helpers
 from ckanext.feedback.plugin import FeedbackPlugin
 from ckanext.feedback.services.common.config import FeedbackConfig
 
@@ -54,6 +58,14 @@ class TestPlugin:
         commands = instance.get_commands()
         assert len(commands) == 1
         assert commands[0].name == 'feedback'
+
+    def test_get_actions(self):
+        instance = FeedbackPlugin()
+        actions = instance.get_actions()
+        assert actions["datasets_ranking"] == get_action_controllers.datasets_ranking
+
+        assert actions["package_show"] == package_show.package_show
+        assert actions["resource_show"] == resource_show.resource_show
 
     @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
     @patch('ckanext.feedback.plugin.download')
@@ -142,7 +154,6 @@ class TestPlugin:
         # Should only have download_bp (no datastore_download_bp)
         assert 'download_bp' in blueprints
 
-    @patch('ckanext.feedback.plugin._', side_effect=lambda msg: msg)
     @patch(
         'ckanext.feedback.plugin.package_summary_service.'
         'get_package_feedback_stats_bulk'
@@ -152,7 +163,6 @@ class TestPlugin:
         self,
         mock_request,
         mock_get_package_feedback_stats_bulk,
-        _mock_plugin_ugettext,
     ):
         instance = FeedbackPlugin()
         mock_request.endpoint = 'dataset.read'
@@ -165,25 +175,28 @@ class TestPlugin:
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
+        mock_get_package_feedback_stats_bulk.return_value = {}
         dataset = factories.Dataset()
+        dataset["extras"] = []
+
         mock_get_package_feedback_stats_bulk.return_value = {
-            dataset['id']: {
-                'like_count': 9999,
-                'downloads': 9999,
-                'utilizations': 9999,
-                'comments': 9999,
-                'rating': 23.333,
-                'issue_resolutions': 9999,
+            dataset["id"]: {
+                "like_count": 9999,
+                "downloads": 9999,
+                "utilizations": 9999,
+                "comments": 9999,
+                "rating": 23.333,
+                "issue_resolutions": 9999,
             }
         }
 
         instance.before_dataset_view(dataset)
         assert dataset['extras'] == [
-            {'key': 'Downloads', 'value': 9999},
-            {'key': 'Utilizations', 'value': 9999},
-            {'key': 'Issue Resolutions', 'value': 9999},
-            {'key': 'Comments', 'value': 9999},
-            {'key': 'Number of Likes', 'value': 9999},
+            {'key': 'feedback_total_downloads', 'value': 9999},
+            {'key': 'feedback_total_utilizations', 'value': 9999},
+            {'key': 'feedback_total_issue_resolutions', 'value': 9999},
+            {'key': 'feedback_total_comments', 'value': 9999},
+            {'key': 'feedback_total_like_count', 'value': 9999},
         ]
 
         config[
@@ -193,27 +206,74 @@ class TestPlugin:
         dataset['extras'] = []
         instance.before_dataset_view(dataset)
         assert dataset['extras'] == [
-            {'key': 'Downloads', 'value': 9999},
-            {'key': 'Utilizations', 'value': 9999},
-            {'key': 'Issue Resolutions', 'value': 9999},
-            {'key': 'Comments', 'value': 9999},
-            {'key': 'Rating', 'value': 23.3},
-            {'key': 'Number of Likes', 'value': 9999},
+            {'key': 'feedback_total_downloads', 'value': 9999},
+            {'key': 'feedback_total_utilizations', 'value': 9999},
+            {'key': 'feedback_total_issue_resolutions', 'value': 9999},
+            {'key': 'feedback_total_comments', 'value': 9999},
+            {'key': 'feedback_average_rating', 'value': 23.3},
+            {'key': 'feedback_total_like_count', 'value': 9999},
         ]
 
         dataset['extras'] = [{'key': 'existing_key', 'value': 'existing_value'}]
         instance.before_dataset_view(dataset)
         assert dataset['extras'] == [
             {'key': 'existing_key', 'value': 'existing_value'},
-            {'key': 'Downloads', 'value': 9999},
-            {'key': 'Utilizations', 'value': 9999},
-            {'key': 'Issue Resolutions', 'value': 9999},
-            {'key': 'Comments', 'value': 9999},
-            {'key': 'Rating', 'value': 23.3},
-            {'key': 'Number of Likes', 'value': 9999},
+            {'key': 'feedback_total_downloads', 'value': 9999},
+            {'key': 'feedback_total_utilizations', 'value': 9999},
+            {'key': 'feedback_total_issue_resolutions', 'value': 9999},
+            {'key': 'feedback_total_comments', 'value': 9999},
+            {'key': 'feedback_average_rating', 'value': 23.3},
+            {'key': 'feedback_total_like_count', 'value': 9999},
         ]
 
-    @patch('ckanext.feedback.plugin._', side_effect=lambda msg: msg)
+    @patch(
+        'ckanext.feedback.plugin.package_summary_service.'
+        'get_package_feedback_stats_bulk'
+    )
+    @patch('flask.request', new_callable=MagicMock)
+    def test_before_dataset_view_updates_existing_extra(
+        self,
+        mock_request,
+        mock_get_package_feedback_stats_bulk,
+    ):
+        instance = FeedbackPlugin()
+
+        mock_request.endpoint = 'dataset.read'
+
+        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
+
+        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
+
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
+            False
+        )
+
+        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
+
+        dataset = factories.Dataset()
+
+        dataset["extras"] = [
+            {
+                "key": "feedback_total_downloads",
+                "value": 1,
+            }
+        ]
+
+        mock_get_package_feedback_stats_bulk.return_value = {
+            dataset["id"]: {
+                "downloads": 9999,
+            }
+        }
+
+        instance.before_dataset_view(dataset)
+
+        assert dataset["extras"] == [
+            {
+                "key": "feedback_total_downloads",
+                "value": 9999,
+            }
+        ]
+
     @patch(
         'ckanext.feedback.plugin.package_summary_service.'
         'get_package_feedback_stats_bulk'
@@ -223,7 +283,6 @@ class TestPlugin:
         self,
         mock_request,
         mock_get_package_feedback_stats_bulk,
-        _mock_plugin_ugettext,
     ):
         instance = FeedbackPlugin()
         mock_request.endpoint = 'dataset.read'
@@ -281,17 +340,17 @@ class TestPlugin:
         resource = factories.Resource()
 
         instance.before_resource_show(resource)
-        assert resource[_('Downloads')] == 9999
-        assert resource[_('Utilizations')] == 9999
-        assert resource[_('Issue Resolutions')] == 9999
-        assert resource[_('Comments')] == 9999
-        assert resource[_('Number of Likes')] == 9999
+        assert resource['feedback_downloads'] == 9999
+        assert resource['feedback_utilizations'] == 9999
+        assert resource['feedback_issue_resolutions'] == 9999
+        assert resource['feedback_comments'] == 9999
+        assert resource['feedback_like_count'] == 9999
 
         config[
             f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
         ] = True
         instance.before_resource_show(resource)
-        assert resource[_('Rating')] == 23.3
+        assert resource['feedback_rating'] == 23.3
 
     def test_before_resource_show_with_False(
         self,
@@ -370,15 +429,17 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
     @patch('ckanext.feedback.plugin.resource_likes_service')
-    @patch('ckanext.feedback.plugin._')
-    def test_before_resource_show_with_translation(
+    def test_before_resource_show_keys_are_language_independent(
         self,
-        mock_translation,
         mock_resource_likes_service,
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
     ):
+        """The resource_show API keys (feedback_*) must stay stable and
+        language-independent regardless of the active locale, since the
+        localized label is only computed at template-render time via
+        helpers.get_feedback_field_label()."""
         instance = FeedbackPlugin()
 
         config[
@@ -389,20 +450,6 @@ class TestPlugin:
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
-        # Mock translation function to return Japanese
-        def mock_translate(key):
-            translations = {
-                'Downloads': 'ダウンロード数',
-                'Utilizations': '活用事例数',
-                'Issue Resolutions': '課題解決数',
-                'Comments': 'コメント数',
-                'Rating': '評価',
-                'Number of Likes': 'いいね数',
-            }
-            return translations.get(key, key)
-
-        mock_translation.side_effect = mock_translate
-
         mock_resource_summary_service.get_resource_comments.return_value = 5
         mock_resource_summary_service.get_resource_rating.return_value = 4.5
         mock_utilization_summary_service.get_resource_utilizations.return_value = 3
@@ -411,30 +458,35 @@ class TestPlugin:
         mock_resource_likes_service.get_resource_like_count.return_value = 8
 
         resource = factories.Resource()
-        # Add English keys that should be removed
-        resource['Downloads'] = 0
-        resource['Utilizations'] = 0
-        resource['Issue Resolutions'] = 0
-        resource['Comments'] = 0
-        resource['Rating'] = 0
-        resource['Number of Likes'] = 0
+        resource[_('Number of Likes')] = 1
+        resource[_('Comments')] = 0
 
         instance.before_resource_show(resource)
 
-        # Check that English keys were removed and Japanese keys were added
-        assert 'Downloads' not in resource
-        assert 'Utilizations' not in resource
-        assert 'Issue Resolutions' not in resource
-        assert 'Comments' not in resource
-        assert 'Rating' not in resource
-        assert 'Number of Likes' not in resource
+        # No language-dependent keys should ever be injected
+        for legacy_key in (
+            _('Number of Likes'),
+            _('Comments'),
+            _('Downloads'),
+            _('Utilizations'),
+            _('Issue Resolutions'),
+            _('Rating'),
+            'Downloads',
+            'Utilizations',
+            'Issue Resolutions',
+            'Comments',
+            'Rating',
+            'Number of Likes',
+        ):
+            assert legacy_key not in resource
 
-        assert resource['ダウンロード数'] == 10
-        assert resource['活用事例数'] == 3
-        assert resource['課題解決数'] == 2
-        assert resource['コメント数'] == 5
-        assert resource['評価'] == 4.5
-        assert resource['いいね数'] == 8
+        # Stable, language-independent API keys are always used
+        assert resource['feedback_downloads'] == 10
+        assert resource['feedback_utilizations'] == 3
+        assert resource['feedback_issue_resolutions'] == 2
+        assert resource['feedback_comments'] == 5
+        assert resource['feedback_rating'] == 4.5
+        assert resource['feedback_like_count'] == 8
 
     @patch('ckanext.feedback.plugin.FeedbackUpload')
     def test_get_uploader(self, mock_feedback_upload):
@@ -462,13 +514,17 @@ class TestPlugin:
     @patch('ckanext.feedback.plugin.utilization_summary_service')
     @patch('ckanext.feedback.plugin.resource_summary_service')
     @patch('ckanext.feedback.plugin.resource_likes_service')
-    def test_before_resource_show_with_translation_wrapper(
+    def test_before_resource_show_feedback_fields_display_labels(
         self,
         mock_resource_likes_service,
         mock_resource_summary_service,
         mock_utilization_summary_service,
         mock_download_summary_service,
     ):
+        """The feedback_* keys added to the resource dict must be
+        translatable into a "Feedback_"-prefixed display label via
+        helpers.get_feedback_fields()/get_feedback_field_label(), which is
+        how the resource "Additional Information" table renders them."""
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[
             f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
@@ -489,15 +545,54 @@ class TestPlugin:
         instance = FeedbackPlugin()
         resource = factories.Resource()
 
-        with patch('ckanext.feedback.plugin._', new=lambda s: f'*{s}*'):
-            updated = instance.before_resource_show(resource)
+        updated = instance.before_resource_show(resource)
 
-        assert updated['*Downloads*'] == 9999
-        assert updated['*Utilizations*'] == 9999
-        assert updated['*Issue Resolutions*'] == 9999
-        assert updated['*Comments*'] == 9999
-        assert updated['*Rating*'] == 23.3
-        assert updated['*Number of Likes*'] == 9999
+        feedback_fields = feedback_helpers.get_feedback_fields(updated)
+
+        assert feedback_fields[f"{_('Feedback')} {_('Number of Likes')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Comments')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Downloads')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Utilizations')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Issue Resolutions')}"] == 9999
+        assert feedback_fields[f"{_('Feedback')} {_('Rating')}"] == 23.3
+
+    def test_dataset_feedback_total_field_labels(self):
+        """
+        Verify that Dataset feedback_total_* fields are converted to the correct
+        display labels.
+        """
+
+        assert (
+            feedback_helpers.get_feedback_field_label('feedback_total_like_count')
+            == f"{_('Feedback')} {_('Total Likes')}"
+        )
+
+        assert (
+            feedback_helpers.get_feedback_field_label('feedback_total_comments')
+            == f"{_('Feedback')} {_('Total Comments')}"
+        )
+
+        assert (
+            feedback_helpers.get_feedback_field_label('feedback_total_downloads')
+            == f"{_('Feedback')} {_('Total Downloads')}"
+        )
+
+        assert (
+            feedback_helpers.get_feedback_field_label('feedback_total_utilizations')
+            == f"{_('Feedback')} {_('Total Utilizations')}"
+        )
+
+        assert (
+            feedback_helpers.get_feedback_field_label(
+                'feedback_total_issue_resolutions'
+            )
+            == f"{_('Feedback')} {_('Total Issue Resolutions')}"
+        )
+
+        assert (
+            feedback_helpers.get_feedback_field_label('feedback_average_rating')
+            == f"{_('Feedback')} {_('Average Rating')}"
+        )
 
     @patch('ckanext.feedback.plugin.config')
     def test_get_solr_url_with_ckan_solr_url(self, mock_config):
