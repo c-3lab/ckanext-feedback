@@ -38,6 +38,28 @@ _FEEDBACK_FIELD_LABEL_GETTERS = OrderedDict(
     ]
 )
 
+# CKAN core and themes (e.g. bodik_theme) render dataset extras as
+# `{{ _(key) }}` and never reach get_feedback_field_label(), so each raw key
+# needs a catalog entry of its own. Written as `_()` literals so that
+# `pybabel extract` keeps them in the pot -- babel-clean
+# (msgattrib --no-obsolete) deletes any entry the pot does not list.
+_EXTRAS_KEY_LABEL_GETTERS = OrderedDict(
+    [
+        ('feedback_total_like_count', lambda: _('feedback_total_like_count')),
+        ('feedback_total_comments', lambda: _('feedback_total_comments')),
+        ('feedback_total_downloads', lambda: _('feedback_total_downloads')),
+        (
+            'feedback_total_utilizations',
+            lambda: _('feedback_total_utilizations'),
+        ),
+        (
+            'feedback_total_issue_resolutions',
+            lambda: _('feedback_total_issue_resolutions'),
+        ),
+        ('feedback_average_rating', lambda: _('feedback_average_rating')),
+    ]
+)
+
 
 def should_hide_resource_field(field_key):
     """Return True when a resource field should not appear in Additional Information."""
@@ -61,6 +83,15 @@ def get_feedback_field_label(field_key):
         A display label prefixed with "Feedback_"
         (or "フィードバック_" in multilingual environments).
     """
+
+    # Prefer the raw-key entry so that this helper and a theme rendering
+    # `{{ _(key) }}` produce the same label. Falls through when the catalog has
+    # no entry for the key (the getter returns the msgid unchanged).
+    extras_getter = _EXTRAS_KEY_LABEL_GETTERS.get(field_key)
+    if extras_getter:
+        label = extras_getter()
+        if label != field_key:
+            return label
 
     label_getter = _FEEDBACK_FIELD_LABEL_GETTERS.get(field_key)
     base_label = label_getter() if label_getter else field_key
