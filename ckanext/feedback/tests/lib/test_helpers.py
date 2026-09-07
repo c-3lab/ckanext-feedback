@@ -22,10 +22,16 @@ class TestHelpers:
 
     def test_populate_resource_feedback_fields_returns_early_without_ids(self):
         resource_dict = {'id': 'resource-id'}
-        assert feedback_helpers.populate_resource_feedback_fields(resource_dict) is resource_dict
+        assert (
+            feedback_helpers.populate_resource_feedback_fields(resource_dict)
+            is resource_dict
+        )
 
         resource_dict = {'package_id': 'package-id'}
-        assert feedback_helpers.populate_resource_feedback_fields(resource_dict) is resource_dict
+        assert (
+            feedback_helpers.populate_resource_feedback_fields(resource_dict)
+            is resource_dict
+        )
 
     @patch('ckanext.feedback.lib.helpers.model.Package.get')
     def test_populate_resource_feedback_fields_returns_early_when_package_missing(
@@ -35,7 +41,10 @@ class TestHelpers:
         mock_package_get.return_value = None
         resource_dict = {'id': 'resource-id', 'package_id': 'missing-package-id'}
 
-        assert feedback_helpers.populate_resource_feedback_fields(resource_dict) is resource_dict
+        assert (
+            feedback_helpers.populate_resource_feedback_fields(resource_dict)
+            is resource_dict
+        )
 
     @patch('ckanext.feedback.lib.helpers.resource_summary_service')
     @patch('ckanext.feedback.lib.helpers.model.Package.get')
@@ -44,7 +53,9 @@ class TestHelpers:
         mock_package_get,
         mock_resource_summary_service,
     ):
-        mock_package_get.return_value = type('Package', (), {'owner_org': 'test-org-id'})()
+        mock_package_get.return_value = type(
+            'Package', (), {'owner_org': 'test-org-id'}
+        )()
         mock_resource_summary_service.get_resource_feedback_stats.return_value = {
             'like_count': 8,
             'downloads': 10,
@@ -101,11 +112,15 @@ class TestHelpers:
         self,
         mock_package_get,
     ):
-        mock_package_get.return_value = type('Package', (), {'owner_org': 'test-org-id'})()
+        mock_package_get.return_value = type(
+            'Package', (), {'owner_org': 'test-org-id'}
+        )()
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
         config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
-        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = False
+        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
+            False
+        )
 
         package_dict = {
             'id': 'test-package-id',
@@ -126,7 +141,9 @@ class TestHelpers:
         self,
         mock_package_get,
     ):
-        mock_package_get.return_value = type('Package', (), {'owner_org': 'test-org-id'})()
+        mock_package_get.return_value = type(
+            'Package', (), {'owner_org': 'test-org-id'}
+        )()
         config[
             f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
         ] = True
