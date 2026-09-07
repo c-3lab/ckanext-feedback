@@ -46,9 +46,7 @@ def test_resource_show_removes_legacy_keys_and_sets_feedback_fields(
 
     mock_core_resource_show.return_value = resource_dict
     mock_resource_get.return_value = object()
-    mock_package_get.return_value = type(
-        'Package', (), {'owner_org': 'test-org-id'}
-    )()
+    mock_package_get.return_value = type('Package', (), {'owner_org': 'test-org-id'})()
     mock_get_resource_feedback_stats.return_value = {
         "like_count": 123,
         "downloads": 117,
@@ -94,9 +92,7 @@ def test_resource_show_omits_feedback_fields_when_modules_disabled(
 
     mock_core_resource_show.return_value = resource_dict
     mock_resource_get.return_value = object()
-    mock_package_get.return_value = type(
-        'Package', (), {'owner_org': 'test-org-id'}
-    )()
+    mock_package_get.return_value = type('Package', (), {'owner_org': 'test-org-id'})()
     mock_get_resource_feedback_stats.return_value = {
         "like_count": 123,
         "downloads": 117,

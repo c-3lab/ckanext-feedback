@@ -128,9 +128,7 @@ def populate_resource_feedback_fields(
 
     if cfg.utilization.is_enable(owner_org):
         resource_dict['feedback_utilizations'] = stats.get('utilizations', 0)
-        resource_dict['feedback_issue_resolutions'] = stats.get(
-            'issue_resolutions', 0
-        )
+        resource_dict['feedback_issue_resolutions'] = stats.get('issue_resolutions', 0)
 
     if cfg.resource_comment.is_enable(owner_org):
         resource_dict['feedback_comments'] = stats.get('comments', 0)
