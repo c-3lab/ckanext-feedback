@@ -17,6 +17,7 @@ def remove_legacy_feedback_fields(package_dict):
         extra
         for extra in package_dict.get("extras", [])
         if extra.get("key") not in LEGACY_FEEDBACK_KEYS
+        and extra.get("key") not in feedback_helpers.PACKAGE_FEEDBACK_EXTRA_KEYS
     ]
 
     # Exclude feedback keys from the root of each resource
@@ -46,30 +47,7 @@ def package_show(context, data_dict):
 
     stats = stats_by_id.get(package_dict["id"], {})
 
-    extras = package_dict.setdefault("extras", [])
-
-    existing_keys = {extra.get("key") for extra in extras}
-
-    mappings = {
-        "feedback_total_like_count": stats.get("like_count", 0),
-        "feedback_total_comments": stats.get("comments", 0),
-        "feedback_total_downloads": stats.get("downloads", 0),
-        "feedback_total_utilizations": stats.get("utilizations", 0),
-        "feedback_total_issue_resolutions": stats.get("issue_resolutions", 0),
-        "feedback_average_rating": stats.get("rating", 0),
-    }
-
-    for key, value in mappings.items():
-
-        if key in existing_keys:
-            continue
-
-        extras.append(
-            {
-                "key": key,
-                "value": value,
-            }
-        )
+    feedback_helpers.populate_package_feedback_extras(package_dict, stats)
 
     for resource_dict in package_dict.get("resources", []):
         feedback_helpers.populate_resource_feedback_fields(resource_dict)

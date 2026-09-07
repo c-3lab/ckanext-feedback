@@ -44,6 +44,17 @@ RESOURCE_FEEDBACK_KEYS = frozenset(
     ]
 )
 
+PACKAGE_FEEDBACK_EXTRA_KEYS = frozenset(
+    [
+        'feedback_total_like_count',
+        'feedback_total_comments',
+        'feedback_total_downloads',
+        'feedback_total_utilizations',
+        'feedback_total_issue_resolutions',
+        'feedback_average_rating',
+    ]
+)
+
 _FEEDBACK_FIELD_LABEL_GETTERS = OrderedDict(
     [
         ('feedback_like_count', lambda: _('Number of Likes')),
@@ -133,6 +144,63 @@ def populate_resource_feedback_fields(
         resource_dict['feedback_like_count'] = stats.get('like_count', 0)
 
     return resource_dict
+
+
+def strip_package_feedback_extras(package_dict: Dict[str, Any]) -> None:
+    """Remove feedback extras so they are not returned when modules are disabled."""
+
+    package_dict['extras'] = [
+        extra
+        for extra in package_dict.get('extras', [])
+        if extra.get('key') not in PACKAGE_FEEDBACK_EXTRA_KEYS
+    ]
+
+
+def populate_package_feedback_extras(
+    package_dict: Dict[str, Any],
+    stats: Dict[str, Any],
+    cfg: Optional[FeedbackConfig] = None,
+) -> Dict[str, Any]:
+    """Add feedback_total_* extras for API/display responses only."""
+
+    package = model.Package.get(package_dict.get('id'))
+    if package is None:
+        return package_dict
+
+    cfg = cfg or FeedbackConfig()
+    owner_org = package.owner_org
+    extras = package_dict.setdefault('extras', [])
+
+    def add_extra(key: str, value: Any) -> None:
+        for extra in extras:
+            if extra.get('key') == key:
+                extra['value'] = value
+                return
+        extras.append({'key': key, 'value': value})
+
+    if cfg.download.is_enable(owner_org):
+        add_extra('feedback_total_downloads', stats.get('downloads', 0))
+
+    if cfg.utilization.is_enable(owner_org):
+        add_extra('feedback_total_utilizations', stats.get('utilizations', 0))
+        add_extra(
+            'feedback_total_issue_resolutions',
+            stats.get('issue_resolutions', 0),
+        )
+
+    if cfg.resource_comment.is_enable(owner_org):
+        add_extra('feedback_total_comments', stats.get('comments', 0))
+        if cfg.resource_comment.rating.is_enable(owner_org):
+            rating_value = stats.get('rating', 0) or 0
+            add_extra(
+                'feedback_average_rating',
+                0 if rating_value == 0 else round(rating_value, 1),
+            )
+
+    if cfg.like.is_enable(owner_org):
+        add_extra('feedback_total_like_count', stats.get('like_count', 0))
+
+    return package_dict
 
 
 def should_hide_resource_field(field_key):
