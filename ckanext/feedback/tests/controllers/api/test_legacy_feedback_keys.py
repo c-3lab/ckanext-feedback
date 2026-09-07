@@ -23,7 +23,7 @@ def test_remove_legacy_feedback_fields_removes_japanese_keys_from_resources():
     resource_dict = package_dict["resources"][0]
     assert "いいね数" not in resource_dict
     assert "コメント数" not in resource_dict
-    assert resource_dict["feedback_like_count"] == 123
+    assert "feedback_like_count" not in resource_dict
 
 
 def test_remove_resource_legacy_feedback_fields_removes_japanese_keys():

@@ -2,24 +2,11 @@ import ckan.model as model
 from ckan.logic.action.get import package_show as core_package_show
 from ckan.plugins import toolkit
 
+from ckanext.feedback.lib import helpers as feedback_helpers
 from ckanext.feedback.services.package import summary as package_summary_service
 
-# Field names used in the past
-LEGACY_FEEDBACK_KEYS = {
-    "Number of Likes",
-    "Comments",
-    "Downloads",
-    "Utilizations",
-    "Issue Resolutions",
-    "Rating",
-    # Legacy keys persisted in resource.extras (Japanese locale)
-    "いいね数",
-    "コメント数",
-    "ダウンロード数",
-    "利活用数",
-    "課題解決数",
-    "評価",
-}
+# Re-export for backwards compatibility with existing imports/tests.
+LEGACY_FEEDBACK_KEYS = feedback_helpers.LEGACY_FEEDBACK_KEYS
 
 
 def remove_legacy_feedback_fields(package_dict):
@@ -32,10 +19,9 @@ def remove_legacy_feedback_fields(package_dict):
         if extra.get("key") not in LEGACY_FEEDBACK_KEYS
     ]
 
-    # Exclude the old key from the root of each resource
+    # Exclude feedback keys from the root of each resource
     for resource_dict in package_dict.get("resources", []):
-        for key in LEGACY_FEEDBACK_KEYS:
-            resource_dict.pop(key, None)
+        feedback_helpers.strip_resource_feedback_fields(resource_dict)
 
 
 @toolkit.side_effect_free
@@ -84,5 +70,8 @@ def package_show(context, data_dict):
                 "value": value,
             }
         )
+
+    for resource_dict in package_dict.get("resources", []):
+        feedback_helpers.populate_resource_feedback_fields(resource_dict)
 
     return package_dict

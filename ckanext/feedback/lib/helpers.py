@@ -1,9 +1,32 @@
 """Helper functions for feedback visualization."""
 
 from collections import OrderedDict
+from typing import Any, Dict, Optional
 
+import ckan.model as model
 from ckan.common import _
 from ckan.plugins import toolkit
+
+from ckanext.feedback.services.common.config import FeedbackConfig
+from ckanext.feedback.services.resource import summary as resource_summary_service
+
+# Field names used in the past (may still exist in resource.extras from older releases).
+LEGACY_FEEDBACK_KEYS = frozenset(
+    {
+        'Number of Likes',
+        'Comments',
+        'Downloads',
+        'Utilizations',
+        'Issue Resolutions',
+        'Rating',
+        'いいね数',
+        'コメント数',
+        'ダウンロード数',
+        '利活用数',
+        '課題解決数',
+        '評価',
+    }
+)
 
 # Order matters: this defines the display order of feedback fields in the
 # "Additional Information" table on the resource detail page.
@@ -62,13 +85,61 @@ _EXTRAS_KEY_LABEL_GETTERS = OrderedDict(
 )
 
 
+def strip_resource_feedback_fields(resource_dict: Dict[str, Any]) -> None:
+    """Remove feedback fields so they are not persisted via package_update."""
+
+    for key in list(resource_dict):
+        if key in LEGACY_FEEDBACK_KEYS or key in RESOURCE_FEEDBACK_KEYS:
+            resource_dict.pop(key, None)
+
+
+def populate_resource_feedback_fields(
+    resource_dict: Dict[str, Any],
+    cfg: Optional[FeedbackConfig] = None,
+) -> Dict[str, Any]:
+    """Add feedback_* fields for API/display responses only."""
+
+    resource_id = resource_dict.get('id')
+    package_id = resource_dict.get('package_id')
+    if not resource_id or not package_id:
+        return resource_dict
+
+    package = model.Package.get(package_id)
+    if package is None:
+        return resource_dict
+
+    cfg = cfg or FeedbackConfig()
+    owner_org = package.owner_org
+    stats = resource_summary_service.get_resource_feedback_stats(resource_id)
+
+    if cfg.download.is_enable(owner_org):
+        resource_dict['feedback_downloads'] = stats.get('downloads', 0)
+
+    if cfg.utilization.is_enable(owner_org):
+        resource_dict['feedback_utilizations'] = stats.get('utilizations', 0)
+        resource_dict['feedback_issue_resolutions'] = stats.get(
+            'issue_resolutions', 0
+        )
+
+    if cfg.resource_comment.is_enable(owner_org):
+        resource_dict['feedback_comments'] = stats.get('comments', 0)
+        if cfg.resource_comment.rating.is_enable(owner_org):
+            rating_value = stats.get('rating', 0) or 0
+            resource_dict['feedback_rating'] = (
+                0 if rating_value == 0 else round(rating_value, 1)
+            )
+
+    if cfg.like.is_enable(owner_org):
+        resource_dict['feedback_like_count'] = stats.get('like_count', 0)
+
+    return resource_dict
+
+
 def should_hide_resource_field(field_key):
     """Return True when a resource field should not appear in Additional Information."""
 
     if field_key in RESOURCE_FEEDBACK_KEYS or field_key.startswith('feedback_'):
         return True
-
-    from ckanext.feedback.controllers.api.package_show import LEGACY_FEEDBACK_KEYS
 
     return field_key in LEGACY_FEEDBACK_KEYS
 
@@ -114,9 +185,15 @@ def get_feedback_fields(resource):
     """
 
     fields = OrderedDict()
-    for field_key in _FEEDBACK_FIELD_LABEL_GETTERS:
-        if field_key in resource:
-            fields[get_feedback_field_label(field_key)] = resource[field_key]
+    populated = populate_resource_feedback_fields(
+        {
+            'id': resource.get('id'),
+            'package_id': resource.get('package_id'),
+        }
+    )
+    for field_key in RESOURCE_FEEDBACK_KEYS:
+        if field_key in populated:
+            fields[get_feedback_field_label(field_key)] = populated[field_key]
 
     return fields
 

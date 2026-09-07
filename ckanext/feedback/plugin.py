@@ -445,47 +445,26 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
     def before_resource_show(self, resource_dict: Dict[str, Any]) -> Dict[str, Any]:
         remove_legacy_feedback_fields(resource_dict)
 
-        owner_org = model.Package.get(resource_dict['package_id']).owner_org
-        resource_id = resource_dict['id']
-        cfg = getattr(self, 'fb_config', FeedbackConfig())
-
         # If datastore plugin is not loaded, set datastore_active to False
         # to prevent template errors when trying to build datastore.dump URLs
         if not plugins.plugin_loaded('datastore'):
             if resource_dict.get('datastore_active', False):
                 resource_dict['datastore_active'] = False
 
-        if cfg.download.is_enable(owner_org):
-            downloads_value = download_summary_service.get_resource_downloads(
-                resource_id
-            )
-            resource_dict['feedback_downloads'] = downloads_value
-
-        if cfg.utilization.is_enable(owner_org):
-            utilizations_value = utilization_summary_service.get_resource_utilizations(
-                resource_id
-            )
-            issue_resolutions_value = (
-                utilization_summary_service.get_resource_issue_resolutions(resource_id)
-            )
-            resource_dict['feedback_utilizations'] = utilizations_value
-            resource_dict['feedback_issue_resolutions'] = issue_resolutions_value
-
-        if cfg.resource_comment.is_enable(owner_org):
-            comments_value = resource_summary_service.get_resource_comments(resource_id)
-            resource_dict['feedback_comments'] = comments_value
-            if cfg.resource_comment.rating.is_enable(owner_org):
-                rating_value = resource_summary_service.get_resource_rating(resource_id)
-                rating_rounded = 0 if rating_value == 0 else round(rating_value, 1)
-                resource_dict['feedback_rating'] = rating_rounded
-
-        if cfg.like.is_enable(owner_org):
-            like_count_value = resource_likes_service.get_resource_like_count(
-                resource_id
-            )
-            resource_dict['feedback_like_count'] = like_count_value
-
         return resource_dict
+
+    def before_resource_create(
+        self, context: Dict[str, Any], resource_dict: Dict[str, Any]
+    ) -> None:
+        feedback_helpers.strip_resource_feedback_fields(resource_dict)
+
+    def before_resource_update(
+        self,
+        context: Dict[str, Any],
+        current: Dict[str, Any],
+        resource_dict: Dict[str, Any],
+    ) -> None:
+        feedback_helpers.strip_resource_feedback_fields(resource_dict)
 
     # IActions
 

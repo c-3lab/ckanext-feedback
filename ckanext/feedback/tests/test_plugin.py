@@ -307,70 +307,57 @@ class TestPlugin:
         assert result == dataset
         assert dataset['extras'] == [{'key': 'already', 'value': 'exists'}]
 
-    @patch('ckanext.feedback.plugin.download_summary_service')
-    @patch('ckanext.feedback.plugin.utilization_summary_service')
-    @patch('ckanext.feedback.plugin.resource_summary_service')
-    @patch('ckanext.feedback.plugin.resource_likes_service')
-    def test_before_resource_show_with_True(
+    @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
+    def test_before_resource_show_strips_feedback_fields(
         self,
-        mock_resource_likes_service,
-        mock_resource_summary_service,
-        mock_utilization_summary_service,
-        mock_download_summary_service,
+        mock_plugin_loaded,
     ):
+        """Feedback fields must not remain on resource_dict during package_show.
+
+        CKAN may call package_update with that dict, which would persist unknown
+        keys into resource.extras.
+        """
+        mock_plugin_loaded.return_value = True
         instance = FeedbackPlugin()
 
-        config[
-            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
-        ] = False
-        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
-        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = True
-        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
-        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
-
-        mock_resource_summary_service.get_resource_comments.return_value = 9999
-        mock_resource_summary_service.get_resource_rating.return_value = 23.333
-        mock_utilization_summary_service.get_resource_utilizations.return_value = 9999
-        mock_utilization_summary_service.get_resource_issue_resolutions.return_value = (
-            9999
-        )
-        mock_download_summary_service.get_resource_downloads.return_value = 9999
-        mock_resource_likes_service.get_resource_like_count.return_value = 9999
-
         resource = factories.Resource()
+        resource['feedback_downloads'] = 10
+        resource['feedback_like_count'] = 8
+        resource['いいね数'] = 1
+        resource['Number of Likes'] = 1
 
         instance.before_resource_show(resource)
-        assert resource['feedback_downloads'] == 9999
-        assert resource['feedback_utilizations'] == 9999
-        assert resource['feedback_issue_resolutions'] == 9999
-        assert resource['feedback_comments'] == 9999
-        assert resource['feedback_like_count'] == 9999
 
-        config[
-            f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
-        ] = True
-        instance.before_resource_show(resource)
-        assert resource['feedback_rating'] == 23.3
+        assert 'feedback_downloads' not in resource
+        assert 'feedback_like_count' not in resource
+        assert 'いいね数' not in resource
+        assert 'Number of Likes' not in resource
 
-    def test_before_resource_show_with_False(
-        self,
-    ):
+    def test_before_resource_create_strips_feedback_fields(self):
         instance = FeedbackPlugin()
+        resource = {
+            'package_id': 'package-id',
+            'feedback_downloads': 1,
+            'feedback_like_count': 2,
+        }
 
-        config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = (
-            False
-        )
-        config[f"{FeedbackConfig().utilization.get_ckan_conf_str()}.enable"] = False
-        config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = False
-        config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = False
-        resource = factories.Resource()
-        resource['extras'] = [
-            'test',
-        ]
-        before_resource = resource
+        instance.before_resource_create({}, resource)
 
-        instance.before_resource_show(resource)
-        assert before_resource == resource
+        assert 'feedback_downloads' not in resource
+        assert 'feedback_like_count' not in resource
+
+    def test_before_resource_update_strips_feedback_fields(self):
+        instance = FeedbackPlugin()
+        current = factories.Resource()
+        resource = {
+            'id': current['id'],
+            'package_id': current['package_id'],
+            'feedback_comments': 3,
+        }
+
+        instance.before_resource_update({}, current, resource)
+
+        assert 'feedback_comments' not in resource
 
     @patch('ckanext.feedback.plugin.plugins.plugin_loaded')
     def test_before_resource_show_datastore_not_loaded(
@@ -425,22 +412,19 @@ class TestPlugin:
         # Should remain True (not modified)
         assert resource['datastore_active'] is True
 
-    @patch('ckanext.feedback.plugin.download_summary_service')
-    @patch('ckanext.feedback.plugin.utilization_summary_service')
-    @patch('ckanext.feedback.plugin.resource_summary_service')
-    @patch('ckanext.feedback.plugin.resource_likes_service')
-    def test_before_resource_show_keys_are_language_independent(
+    @patch('ckanext.feedback.lib.helpers.resource_summary_service')
+    def test_populate_resource_feedback_fields(
         self,
-        mock_resource_likes_service,
         mock_resource_summary_service,
-        mock_utilization_summary_service,
-        mock_download_summary_service,
     ):
-        """The resource_show API keys (feedback_*) must stay stable and
-        language-independent regardless of the active locale, since the
-        localized label is only computed at template-render time via
-        helpers.get_feedback_field_label()."""
-        instance = FeedbackPlugin()
+        mock_resource_summary_service.get_resource_feedback_stats.return_value = {
+            'like_count': 8,
+            'downloads': 10,
+            'utilizations': 3,
+            'comments': 5,
+            'rating': 4.5,
+            'issue_resolutions': 2,
+        }
 
         config[
             f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
@@ -450,43 +434,15 @@ class TestPlugin:
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
-        mock_resource_summary_service.get_resource_comments.return_value = 5
-        mock_resource_summary_service.get_resource_rating.return_value = 4.5
-        mock_utilization_summary_service.get_resource_utilizations.return_value = 3
-        mock_utilization_summary_service.get_resource_issue_resolutions.return_value = 2
-        mock_download_summary_service.get_resource_downloads.return_value = 10
-        mock_resource_likes_service.get_resource_like_count.return_value = 8
-
         resource = factories.Resource()
-        resource[_('Number of Likes')] = 1
-        resource[_('Comments')] = 0
+        populated = feedback_helpers.populate_resource_feedback_fields(resource)
 
-        instance.before_resource_show(resource)
-
-        # No language-dependent keys should ever be injected
-        for legacy_key in (
-            _('Number of Likes'),
-            _('Comments'),
-            _('Downloads'),
-            _('Utilizations'),
-            _('Issue Resolutions'),
-            _('Rating'),
-            'Downloads',
-            'Utilizations',
-            'Issue Resolutions',
-            'Comments',
-            'Rating',
-            'Number of Likes',
-        ):
-            assert legacy_key not in resource
-
-        # Stable, language-independent API keys are always used
-        assert resource['feedback_downloads'] == 10
-        assert resource['feedback_utilizations'] == 3
-        assert resource['feedback_issue_resolutions'] == 2
-        assert resource['feedback_comments'] == 5
-        assert resource['feedback_rating'] == 4.5
-        assert resource['feedback_like_count'] == 8
+        assert populated['feedback_downloads'] == 10
+        assert populated['feedback_utilizations'] == 3
+        assert populated['feedback_issue_resolutions'] == 2
+        assert populated['feedback_comments'] == 5
+        assert populated['feedback_rating'] == 4.5
+        assert populated['feedback_like_count'] == 8
 
     @patch('ckanext.feedback.plugin.FeedbackUpload')
     def test_get_uploader(self, mock_feedback_upload):
@@ -510,21 +466,12 @@ class TestPlugin:
 
         mock_feedback_upload.assert_not_called()
 
-    @patch('ckanext.feedback.plugin.download_summary_service')
-    @patch('ckanext.feedback.plugin.utilization_summary_service')
-    @patch('ckanext.feedback.plugin.resource_summary_service')
-    @patch('ckanext.feedback.plugin.resource_likes_service')
-    def test_before_resource_show_feedback_fields_display_labels(
+    @patch('ckanext.feedback.lib.helpers.resource_summary_service')
+    def test_get_feedback_fields_display_labels(
         self,
-        mock_resource_likes_service,
         mock_resource_summary_service,
-        mock_utilization_summary_service,
-        mock_download_summary_service,
     ):
-        """The feedback_* keys added to the resource dict must be
-        translatable into a "Feedback_"-prefixed display label via
-        helpers.get_feedback_fields()/get_feedback_field_label(), which is
-        how the resource "Additional Information" table renders them."""
+        """Feedback display labels are built from live stats, not resource_dict keys."""
         config[f"{FeedbackConfig().resource_comment.get_ckan_conf_str()}.enable"] = True
         config[
             f"{FeedbackConfig().resource_comment.rating.get_ckan_conf_str()}.enable"
@@ -533,21 +480,17 @@ class TestPlugin:
         config[f"{FeedbackConfig().download.get_ckan_conf_str()}.enable"] = True
         config[f"{FeedbackConfig().like.get_ckan_conf_str()}.enable"] = True
 
-        mock_resource_summary_service.get_resource_comments.return_value = 9999
-        mock_resource_summary_service.get_resource_rating.return_value = 23.333
-        mock_utilization_summary_service.get_resource_utilizations.return_value = 9999
-        mock_utilization_summary_service.get_resource_issue_resolutions.return_value = (
-            9999
-        )
-        mock_download_summary_service.get_resource_downloads.return_value = 9999
-        mock_resource_likes_service.get_resource_like_count.return_value = 9999
+        mock_resource_summary_service.get_resource_feedback_stats.return_value = {
+            'like_count': 9999,
+            'downloads': 9999,
+            'utilizations': 9999,
+            'comments': 9999,
+            'rating': 23.333,
+            'issue_resolutions': 9999,
+        }
 
-        instance = FeedbackPlugin()
         resource = factories.Resource()
-
-        updated = instance.before_resource_show(resource)
-
-        feedback_fields = feedback_helpers.get_feedback_fields(updated)
+        feedback_fields = feedback_helpers.get_feedback_fields(resource)
 
         assert feedback_fields[f"{_('Feedback')} {_('Number of Likes')}"] == 9999
         assert feedback_fields[f"{_('Feedback')} {_('Comments')}"] == 9999
