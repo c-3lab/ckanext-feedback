@@ -1155,3 +1155,45 @@ class TestPlugin:
         assert 'likes_total_i' not in result
         # likes service should not be called since field doesn't exist
         mock_likes_service.get_package_like_count.assert_not_called()
+
+
+class TestStripFeedbackFromIndex:
+    def test_strip_feedback_from_index(self):
+        inner = {
+            'extras': [
+                {'key': 'feedback_total_like_count', 'value': 5},
+                {'key': 'いいね数', 'value': 3},
+                {'key': 'note', 'value': 'keep'},
+            ],
+            'resources': [
+                {'name': 'example.csv', 'feedback_like_count': 5, 'いいね数': 3}
+            ],
+        }
+        pkg_dict = {
+            'data_dict': json.dumps(inner),
+            'validated_data_dict': json.dumps(inner),
+            'extras_feedback_total_like_count': 5,
+            'feedback_total_like_count': 5,
+            'extras_NumberofLikes': 3,
+            'NumberofLikes': 3,
+            'extras_note': 'keep',
+        }
+
+        FeedbackPlugin._strip_feedback_from_index(pkg_dict)
+
+        for json_field in ('data_dict', 'validated_data_dict'):
+            data = json.loads(pkg_dict[json_field])
+            assert data['extras'] == [{'key': 'note', 'value': 'keep'}]
+            assert data['resources'] == [{'name': 'example.csv'}]
+        assert 'extras_feedback_total_like_count' not in pkg_dict
+        assert 'feedback_total_like_count' not in pkg_dict
+        assert 'extras_NumberofLikes' not in pkg_dict
+        assert 'NumberofLikes' not in pkg_dict
+        assert pkg_dict['extras_note'] == 'keep'
+
+    def test_strip_feedback_from_index_without_json_fields(self):
+        pkg_dict = {'id': 'package-id'}
+
+        FeedbackPlugin._strip_feedback_from_index(pkg_dict)
+
+        assert pkg_dict == {'id': 'package-id'}

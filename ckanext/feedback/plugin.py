@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Any, Dict, Optional
 
@@ -7,6 +8,7 @@ from ckan import plugins
 from ckan.common import config
 from ckan.lib import helpers as core_helpers
 from ckan.lib.plugins import DefaultTranslation
+from ckan.lib.search.index import KEY_CHARS
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 
@@ -312,6 +314,33 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
     # IPackageController
 
+    @staticmethod
+    def _strip_feedback_from_index(pkg_dict):
+        """Keep feedback fields out of the Solr document.
+
+        Solr stores data_dict/validated_data_dict as a package_show cache, so
+        anything left here reappears in the UI/API even after the plugin is
+        disabled.
+        """
+        for json_field in ('data_dict', 'validated_data_dict'):
+            serialized = pkg_dict.get(json_field)
+            if serialized:
+                data = json.loads(serialized)
+                package_show.remove_legacy_feedback_fields(data)
+                pkg_dict[json_field] = json.dumps(data)
+
+        feedback_keys = (
+            feedback_helpers.PACKAGE_FEEDBACK_EXTRA_KEYS
+            | feedback_helpers.LEGACY_FEEDBACK_KEYS
+        )
+        for key in feedback_keys:
+            # The indexer copies each extra to 'extras_<key>' and '<key>'
+            # after filtering the key through KEY_CHARS.
+            sanitized = ''.join(c for c in key if c in KEY_CHARS)
+            pkg_dict.pop('extras_' + sanitized, None)
+            if sanitized:
+                pkg_dict.pop(sanitized, None)
+
     def before_dataset_index(self, pkg_dict):
         """
         Hook called before Solr indexing.
@@ -323,6 +352,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         Organization-specific settings are considered when adding fields.
         """
+        self._strip_feedback_from_index(pkg_dict)
+
         package_id = pkg_dict.get('id')
 
         if not package_id:
