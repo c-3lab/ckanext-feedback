@@ -10,6 +10,9 @@ from ckanext.feedback.models.resource_comment import (
     ResourceCommentSummary,
 )
 from ckanext.feedback.models.session import session
+from ckanext.feedback.services.download import summary as download_summary_service
+from ckanext.feedback.services.resource import likes as resource_likes_service
+from ckanext.feedback.services.utilization import summary as utilization_summary_service
 
 log = logging.getLogger(__name__)
 
@@ -96,6 +99,21 @@ def get_package_rating_bulk(package_ids):
         pid = str(r.package_id)
         result[pid] = (r.total / r.denom) if r.denom and r.denom > 0 else 0
     return result
+
+
+def get_resource_feedback_stats(resource_id):
+    return {
+        "like_count": resource_likes_service.get_resource_like_count(resource_id),
+        "downloads": download_summary_service.get_resource_downloads(resource_id),
+        "utilizations": utilization_summary_service.get_resource_utilizations(
+            resource_id
+        ),
+        "comments": get_resource_comments(resource_id),
+        "rating": get_resource_rating(resource_id),
+        "issue_resolutions": utilization_summary_service.get_resource_issue_resolutions(
+            resource_id
+        ),
+    }
 
 
 # Get rating of the target resource

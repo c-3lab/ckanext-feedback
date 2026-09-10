@@ -1,0 +1,46 @@
+{% ckan_extends %}
+
+{% block extras scoped %}
+
+  {% set feedback_order = [
+    'feedback_total_like_count',
+    'feedback_total_comments',
+    'feedback_total_downloads',
+    'feedback_total_utilizations',
+    'feedback_total_issue_resolutions',
+    'feedback_average_rating'
+  ] %}
+
+  {# 通常項目を表示 #}
+  {% for extra in h.sorted_extras(pkg_dict.extras) %}
+    {% set key, value = extra %}
+    {% if key not in feedback_order %}
+      <tr rel="dc:relation">
+        <th scope="row" class="dataset-label" property="rdfs:label">
+          {{ _(key|e) }}
+        </th>
+        <td class="dataset-details" property="rdf:value">
+          {{ value }}
+        </td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+
+  {# Feedback項目をResourceと同じ順序で表示 #}
+  {% for feedback_key in feedback_order %}
+    {% for extra in h.sorted_extras(pkg_dict.extras) %}
+      {% set key, value = extra %}
+      {% if key == feedback_key %}
+        <tr rel="dc:relation" class="feedback-field">
+          <th scope="row" class="dataset-label" property="rdfs:label">
+            {{ h.get_feedback_field_label(key) }}
+          </th>
+          <td class="dataset-details" property="rdf:value">
+            {{ value }}
+          </td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+{% endblock %}

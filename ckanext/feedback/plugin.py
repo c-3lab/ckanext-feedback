@@ -1,19 +1,25 @@
+import json
 import logging
 from typing import Any, Dict, Optional
 
 import ckan.model as model
 import requests
 from ckan import plugins
-from ckan.common import _, config
+from ckan.common import config
 from ckan.lib import helpers as core_helpers
 from ckan.lib.plugins import DefaultTranslation
+from ckan.lib.search.index import KEY_CHARS
 from ckan.plugins import toolkit
 from ckan.types import PUploader
 
+import ckanext.feedback.controllers.api.package_show as package_show
+import ckanext.feedback.controllers.api.resource_show as resource_show
 from ckanext.feedback.command import feedback
 from ckanext.feedback.components.comment import CommentComponent
 from ckanext.feedback.controllers.api import ranking as get_action_controllers
+from ckanext.feedback.controllers.api.resource_show import remove_legacy_feedback_fields
 from ckanext.feedback.controllers.resource import ResourceController
+from ckanext.feedback.lib import helpers as feedback_helpers
 from ckanext.feedback.services.common import check
 from ckanext.feedback.services.common.config import FeedbackConfig
 from ckanext.feedback.services.common.upload import FeedbackUpload
@@ -300,9 +306,40 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
                 package_summary_service.get_package_feedback_stats_bulk
             ),
             'get_organization': core_helpers.get_organization,
+            'get_feedback_fields': feedback_helpers.get_feedback_fields,
+            'get_feedback_field_label': feedback_helpers.get_feedback_field_label,
+            'should_hide_resource_field': feedback_helpers.should_hide_resource_field,
+            'format_resource_items': feedback_helpers.format_resource_items,
         }
 
     # IPackageController
+
+    @staticmethod
+    def _strip_feedback_from_index(pkg_dict):
+        """Keep feedback fields out of the Solr document.
+
+        Solr stores data_dict/validated_data_dict as a package_show cache, so
+        anything left here reappears in the UI/API even after the plugin is
+        disabled.
+        """
+        for json_field in ('data_dict', 'validated_data_dict'):
+            serialized = pkg_dict.get(json_field)
+            if serialized:
+                data = json.loads(serialized)
+                package_show.remove_legacy_feedback_fields(data)
+                pkg_dict[json_field] = json.dumps(data)
+
+        feedback_keys = (
+            feedback_helpers.PACKAGE_FEEDBACK_EXTRA_KEYS
+            | feedback_helpers.LEGACY_FEEDBACK_KEYS
+        )
+        for key in feedback_keys:
+            # The indexer copies each extra to 'extras_<key>' and '<key>'
+            # after filtering the key through KEY_CHARS.
+            sanitized = ''.join(c for c in key if c in KEY_CHARS)
+            pkg_dict.pop('extras_' + sanitized, None)
+            if sanitized:
+                pkg_dict.pop(sanitized, None)
 
     def before_dataset_index(self, pkg_dict):
         """
@@ -315,6 +352,8 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
 
         Organization-specific settings are considered when adding fields.
         """
+        self._strip_feedback_from_index(pkg_dict)
+
         package_id = pkg_dict.get('id')
 
         if not package_id:
@@ -391,6 +430,11 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             pkg_dict['extras'] = []
 
         def add_pkg_dict_extras(key: str, value: any):
+            for extra in pkg_dict['extras']:
+                if extra.get('key') == key:
+                    extra['value'] = value
+                    return
+
             pkg_dict['extras'].append({'key': key, 'value': value})
 
         stats_by_id = package_summary_service.get_package_feedback_stats_bulk(
@@ -399,44 +443,38 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
         stats = stats_by_id.get(pkg_dict['id'], {})
 
         if cfg.download.is_enable(owner_org):
-            add_pkg_dict_extras(key=_('Downloads'), value=stats.get('downloads', 0))
+            downloads_value = stats.get('downloads', 0)
+            add_pkg_dict_extras(key='feedback_total_downloads', value=downloads_value)
 
         if cfg.utilization.is_enable(owner_org):
+            utilizations_value = stats.get('utilizations', 0)
+            issue_resolutions_value = stats.get('issue_resolutions', 0)
             add_pkg_dict_extras(
-                key=_('Utilizations'),
-                value=(stats.get('utilizations', 0)),
+                key='feedback_total_utilizations', value=utilizations_value
             )
             add_pkg_dict_extras(
-                key=_('Issue Resolutions'),
-                value=(stats.get('issue_resolutions', 0)),
+                key='feedback_total_issue_resolutions',
+                value=issue_resolutions_value,
             )
 
         if cfg.resource_comment.is_enable(owner_org):
-            add_pkg_dict_extras(
-                key=_('Comments'),
-                value=stats.get('comments', 0),
-            )
+            comments_value = stats.get('comments', 0)
+            add_pkg_dict_extras(key='feedback_total_comments', value=comments_value)
             if cfg.resource_comment.rating.is_enable(owner_org):
                 rating_value = stats.get('rating', 0) or 0
-                add_pkg_dict_extras(
-                    key=_('Rating'),
-                    value=0 if rating_value == 0 else round(rating_value, 1),
-                )
+                rating_rounded = 0 if rating_value == 0 else round(rating_value, 1)
+                add_pkg_dict_extras(key='feedback_average_rating', value=rating_rounded)
 
         if cfg.like.is_enable(owner_org):
-            add_pkg_dict_extras(
-                key=_('Number of Likes'),
-                value=stats.get('like_count', 0),
-            )
+            like_count_value = stats.get('like_count', 0)
+            add_pkg_dict_extras(key='feedback_total_like_count', value=like_count_value)
 
         return pkg_dict
 
     # IResourceController
 
     def before_resource_show(self, resource_dict: Dict[str, Any]) -> Dict[str, Any]:
-        owner_org = model.Package.get(resource_dict['package_id']).owner_org
-        resource_id = resource_dict['id']
-        cfg = getattr(self, 'fb_config', FeedbackConfig())
+        remove_legacy_feedback_fields(resource_dict)
 
         # If datastore plugin is not loaded, set datastore_active to False
         # to prevent template errors when trying to build datastore.dump URLs
@@ -444,53 +482,28 @@ class FeedbackPlugin(plugins.SingletonPlugin, DefaultTranslation):
             if resource_dict.get('datastore_active', False):
                 resource_dict['datastore_active'] = False
 
-        if cfg.download.is_enable(owner_org):
-            if _('Downloads') != 'Downloads':
-                resource_dict.pop('Downloads', None)
-            resource_dict[_('Downloads')] = (
-                download_summary_service.get_resource_downloads(resource_id)
-            )
-
-        if cfg.utilization.is_enable(owner_org):
-            if _('Utilizations') != 'Utilizations':
-                resource_dict.pop('Utilizations', None)
-            resource_dict[_('Utilizations')] = (
-                utilization_summary_service.get_resource_utilizations(resource_id)
-            )
-            if _('Issue Resolutions') != 'Issue Resolutions':
-                resource_dict.pop('Issue Resolutions', None)
-            resource_dict[_('Issue Resolutions')] = (
-                utilization_summary_service.get_resource_issue_resolutions(resource_id)
-            )
-
-        if cfg.resource_comment.is_enable(owner_org):
-            if _('Comments') != 'Comments':
-                resource_dict.pop('Comments', None)
-            resource_dict[_('Comments')] = (
-                resource_summary_service.get_resource_comments(resource_id)
-            )
-            if cfg.resource_comment.rating.is_enable(owner_org):
-                if _('Rating') != 'Rating':
-                    resource_dict.pop('Rating', None)
-                rating_value = resource_summary_service.get_resource_rating(resource_id)
-                resource_dict[_('Rating')] = (
-                    0 if rating_value == 0 else round(rating_value, 1)
-                )
-
-        if cfg.like.is_enable(owner_org):
-            if _('Number of Likes') != 'Number of Likes':
-                resource_dict.pop('Number of Likes', None)
-            resource_dict[_('Number of Likes')] = (
-                resource_likes_service.get_resource_like_count(resource_id)
-            )
-
         return resource_dict
+
+    def before_resource_create(
+        self, context: Dict[str, Any], resource_dict: Dict[str, Any]
+    ) -> None:
+        feedback_helpers.strip_resource_feedback_fields(resource_dict)
+
+    def before_resource_update(
+        self,
+        context: Dict[str, Any],
+        current: Dict[str, Any],
+        resource_dict: Dict[str, Any],
+    ) -> None:
+        feedback_helpers.strip_resource_feedback_fields(resource_dict)
 
     # IActions
 
     def get_actions(self):
         return {
             'datasets_ranking': get_action_controllers.datasets_ranking,
+            'package_show': package_show.package_show,
+            'resource_show': resource_show.resource_show,
         }
 
     # IUploader
