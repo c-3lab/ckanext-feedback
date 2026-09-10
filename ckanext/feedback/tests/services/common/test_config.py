@@ -814,15 +814,11 @@ class TestCheck:
             is None
         )
         assert (
-            config.get(
-                'ckan.feedback.resources.comment.reply_open.enable_orgs', None
-            )
+            config.get('ckan.feedback.resources.comment.reply_open.enable_orgs', None)
             is None
         )
         assert (
-            config.get(
-                'ckan.feedback.resources.comment.reply_open.disable_orgs', None
-            )
+            config.get('ckan.feedback.resources.comment.reply_open.disable_orgs', None)
             is None
         )
         assert FeedbackConfig().is_feedback_config_file is False
@@ -852,15 +848,11 @@ class TestCheck:
             is None
         )
         assert (
-            config.get(
-                'ckan.feedback.resources.comment.reply_open.enable_orgs', None
-            )
+            config.get('ckan.feedback.resources.comment.reply_open.enable_orgs', None)
             is None
         )
         assert (
-            config.get(
-                'ckan.feedback.resources.comment.reply_open.disable_orgs', None
-            )
+            config.get('ckan.feedback.resources.comment.reply_open.disable_orgs', None)
             is None
         )
         assert FeedbackConfig().is_feedback_config_file is True
@@ -1583,11 +1575,15 @@ class TestCheck:
         mock_organization_service.get_organization_name_by_id.return_value = (
             SimpleNamespace(**{'name': ORG_NAME_A})
         )
-        assert FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_A) is True
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_A) is True
+        )
         mock_organization_service.get_organization_name_by_id.return_value = (
             SimpleNamespace(**{'name': ORG_NAME_B})
         )
-        assert FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_B) is False
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_B) is False
+        )
 
         os.remove('/srv/app/feedback_config.json')
 
