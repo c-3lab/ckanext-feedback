@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 from abc import ABC, abstractmethod
 
@@ -9,20 +8,12 @@ from werkzeug.utils import import_string
 
 from ckanext.feedback.services.organization import organization as organization_service
 
-log = logging.getLogger(__name__)
-
 CONFIG_HANDLER_PATH = 'ckan.feedback.download_handler'
 
 
 def download_handler():
     handler_path = config.get(CONFIG_HANDLER_PATH)
-    if handler_path:
-        handler = import_string(handler_path, silent=True)
-    else:
-        handler = None
-        log.warning(f'Missing {CONFIG_HANDLER_PATH} config option.')
-
-    return handler
+    return import_string(handler_path, silent=True) if handler_path else None
 
 
 def is_list_of_str(value):
@@ -106,10 +97,10 @@ class BaseConfig:
         value = feedback_config
 
         for key in self.fb_conf_prefix + fb_conf_path:
-            try:
-                value = value.get(key)
-            except AttributeError as e:
-                toolkit.error_shout(e)
+            if not isinstance(value, dict):
+                value = None
+                break
+            value = value.get(key)
         if value is not None:
             config[ckan_conf_path_str] = value
 
@@ -255,10 +246,7 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
         self.image_attachment = BaseConfig('image_attachment', parents)
         self.image_attachment.default = False
 
-        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
-        self.reply_open.default = False
-
-        self.reply_open = BaseConfig('reply_open', self.conf_path + ['comments'])
+        self.reply_open = BaseConfig('reply_open', parents)
         self.reply_open.default = False
 
     def load_config(self, feedback_config):
@@ -279,11 +267,6 @@ class ResourceCommentConfig(BaseConfig, FeedbackConfigInterface):
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + [self.image_attachment.name],
         )
-        self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
-            feedback_config=feedback_config,
-            fb_conf_path=fb_comments_conf_path + ['reply_open'],
-        )
-
         self.reply_open.set_enable_and_enable_orgs_and_disable_orgs(
             feedback_config=feedback_config,
             fb_conf_path=fb_comments_conf_path + ['reply_open'],

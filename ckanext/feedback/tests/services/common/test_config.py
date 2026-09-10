@@ -802,6 +802,75 @@ class TestCheck:
         )
         os.remove('/srv/app/feedback_config.json')
 
+        # reply_open(ckan.ini)
+        config.pop('ckan.feedback.resources.comment.reply_open.enable', None)
+        config.pop('ckan.feedback.resources.comment.reply_open.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.reply_open.disable_orgs', None)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get('ckan.feedback.resources.comment.reply_open.enable', None)
+            is None
+        )
+        assert (
+            config.get('ckan.feedback.resources.comment.reply_open.enable_orgs', None)
+            is None
+        )
+        assert (
+            config.get('ckan.feedback.resources.comment.reply_open.disable_orgs', None)
+            is None
+        )
+        assert FeedbackConfig().is_feedback_config_file is False
+        assert FeedbackConfig().resource_comment.reply_open.is_enable() is False
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_A) is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_B) is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_C) is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_D) is False
+        )
+
+        # reply_open(feedback_config.json)
+        feedback_config = {"modules": {}}
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get('ckan.feedback.resources.comment.reply_open.enable', None)
+            is None
+        )
+        assert (
+            config.get('ckan.feedback.resources.comment.reply_open.enable_orgs', None)
+            is None
+        )
+        assert (
+            config.get('ckan.feedback.resources.comment.reply_open.disable_orgs', None)
+            is None
+        )
+        assert FeedbackConfig().is_feedback_config_file is True
+        assert FeedbackConfig().resource_comment.reply_open.is_enable() is False
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_A) is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_B) is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_C) is False
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_D) is False
+        )
+        os.remove('/srv/app/feedback_config.json')
+
         # downloads(ckan.ini)
         config.pop('ckan.feedback.downloads.enable', None)
         config.pop('ckan.feedback.downloads.enable_orgs', None)
@@ -1457,6 +1526,65 @@ class TestCheck:
             FeedbackConfig().notice_email.subject_resource_comment.get()
             == 'test_subject_resource_comment'
         )
+        os.remove('/srv/app/feedback_config.json')
+
+    @patch('ckanext.feedback.services.common.config.organization_service')
+    def test_resource_comment_reply_open_loads_comment_config_key(
+        self, mock_organization_service
+    ):
+        config.pop('ckan.feedback.resources.comment.reply_open.enable', None)
+        config.pop('ckan.feedback.resources.comment.reply_open.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comment.reply_open.disable_orgs', None)
+        config.pop('ckan.feedback.resources.comments.reply_open.enable', None)
+        config.pop('ckan.feedback.resources.comments.reply_open.enable_orgs', None)
+        config.pop('ckan.feedback.resources.comments.reply_open.disable_orgs', None)
+
+        feedback_config = {
+            "modules": {
+                "resources": {
+                    "enable": True,
+                    "comments": {
+                        "reply_open": {
+                            "enable": True,
+                            "enable_orgs": [ORG_NAME_A],
+                        }
+                    },
+                }
+            }
+        }
+        with open('/srv/app/feedback_config.json', 'w') as f:
+            json.dump(feedback_config, f, indent=2)
+
+        FeedbackConfig().load_feedback_config()
+
+        assert (
+            config.get('ckan.feedback.resources.comment.reply_open.enable', None)
+            is True
+        )
+        assert config.get(
+            'ckan.feedback.resources.comment.reply_open.enable_orgs', None
+        ) == [ORG_NAME_A]
+        assert (
+            config.get('ckan.feedback.resources.comments.reply_open.enable', None)
+            is None
+        )
+        assert (
+            config.get('ckan.feedback.resources.comments.reply_open.enable_orgs', None)
+            is None
+        )
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_A})
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_A) is True
+        )
+        mock_organization_service.get_organization_name_by_id.return_value = (
+            SimpleNamespace(**{'name': ORG_NAME_B})
+        )
+        assert (
+            FeedbackConfig().resource_comment.reply_open.is_enable(ORG_NAME_B) is False
+        )
+
         os.remove('/srv/app/feedback_config.json')
 
     def test_get_enable_org_names_with_enable_is_False(self):
