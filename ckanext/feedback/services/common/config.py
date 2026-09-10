@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 from abc import ABC, abstractmethod
 
@@ -9,20 +8,12 @@ from werkzeug.utils import import_string
 
 from ckanext.feedback.services.organization import organization as organization_service
 
-log = logging.getLogger(__name__)
-
 CONFIG_HANDLER_PATH = 'ckan.feedback.download_handler'
 
 
 def download_handler():
     handler_path = config.get(CONFIG_HANDLER_PATH)
-    if handler_path:
-        handler = import_string(handler_path, silent=True)
-    else:
-        handler = None
-        log.debug(f'Missing {CONFIG_HANDLER_PATH} config option.')
-
-    return handler
+    return import_string(handler_path, silent=True) if handler_path else None
 
 
 def is_list_of_str(value):
