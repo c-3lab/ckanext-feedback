@@ -624,6 +624,10 @@ class AdminController:
                     _("package_title"),
                     _("resource_name"),
                     _("comment_content"),
+                    _("comment_reply"),
+                    _("comment_created"),
+                    _("comment_rating"),
+                    _("comment_category"),
                 ]
             )
 
@@ -635,6 +639,14 @@ class AdminController:
                         row.package_title or '',
                         row.resource_name or '',
                         row.comment_content or '',
+                        row.comment_reply or '',
+                        (
+                            row.created.strftime('%Y-%m-%d %H:%M:%S')
+                            if row.created
+                            else ''
+                        ),
+                        row.rating if row.rating is not None else '',
+                        _(row.category.value) if row.category else '',
                     ]
                 )
 
