@@ -254,7 +254,17 @@ class AdminController:
                     allow_html=True,
                 )
         # Commit all DB changes in one transaction
-        session.commit()
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for approve_target')
+            log.exception(f'Failed to commit approve_target: {e}')
+            helpers.flash_error(
+                _('Failed to approve items. Please try again.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to('feedback.approval-and-delete')
         helpers.flash_success(
             f'{target} ' + _('item(s) were approved.'),
             allow_html=True,
@@ -290,7 +300,17 @@ class AdminController:
             util_reply_service.delete_utilization_comment_replies(util_replies)
             target += len(util_replies)
         # Commit all DB changes in one transaction
-        session.commit()
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for delete_target')
+            log.exception(f'Failed to commit delete_target: {e}')
+            helpers.flash_error(
+                _('Failed to delete items. Please try again.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to('feedback.approval-and-delete')
         helpers.flash_success(
             f'{target} ' + _('item(s) were completely deleted.'),
             allow_html=True,
@@ -610,11 +630,24 @@ class AdminController:
         select_organization_name = request.args.get('group_added')
         select_month = request.args.get('month')
 
-        results = aggregation_service.get_monthly_data(
-            select_organization_name, select_month
-        )
+        if not select_month:
+            log.error('download_monthly: missing required query parameter "month"')
+            toolkit.abort(400, _('Missing required parameter: month'))
 
-        year, month = select_month.split("-")
+        try:
+            year, month = select_month.split("-")
+        except (ValueError, AttributeError) as e:
+            log.error(f'download_monthly: invalid month format "{select_month}": {e}')
+            toolkit.abort(400, _('Invalid month format. Expected YYYY-MM.'))
+
+        try:
+            results = aggregation_service.get_monthly_data(
+                select_organization_name, select_month
+            )
+        except Exception as e:
+            log.exception(f'download_monthly: failed to get monthly data: {e}')
+            toolkit.abort(500, _('Failed to retrieve monthly data.'))
+
         filename = "{}_{}.csv".format(
             _("feedback_monthly_report"),
             f"{year}{month}",
@@ -629,9 +662,23 @@ class AdminController:
         select_organization_name = request.args.get('group_added')
         select_year = request.args.get('year')
 
-        results = aggregation_service.get_yearly_data(
-            select_organization_name, select_year
-        )
+        if not select_year:
+            log.error('download_yearly: missing required query parameter "year"')
+            toolkit.abort(400, _('Missing required parameter: year'))
+
+        try:
+            int(select_year)
+        except (ValueError, TypeError) as e:
+            log.error(f'download_yearly: invalid year format "{select_year}": {e}')
+            toolkit.abort(400, _('Invalid year format. Expected YYYY.'))
+
+        try:
+            results = aggregation_service.get_yearly_data(
+                select_organization_name, select_year
+            )
+        except Exception as e:
+            log.exception(f'download_yearly: failed to get yearly data: {e}')
+            toolkit.abort(500, _('Failed to retrieve yearly data.'))
 
         filename = "{}_{}.csv".format(
             _("feedback_yearly_report"),
