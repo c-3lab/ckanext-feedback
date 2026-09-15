@@ -13,6 +13,9 @@ from ckanext.feedback.models.resource_comment import (
 )
 from ckanext.feedback.models.session import session
 
+ENTRY_TYPE_COMMENT = 'comment'
+ENTRY_TYPE_REPLY = 'reply'
+
 CommentCsvRow = namedtuple(
     'CommentCsvRow',
     [
@@ -20,13 +23,15 @@ CommentCsvRow = namedtuple(
         'organization_title',
         'package_title',
         'resource_name',
-        'comment_content',
-        'comment_reply',
+        'entry_type',
+        'content',
         'created',
         'rating',
         'category',
     ],
 )
+
+ReplyRow = namedtuple('ReplyRow', ['content', 'created'])
 
 
 def _apply_common_filters(query, organization_name):
@@ -108,6 +113,7 @@ def _get_replies_by_comment_id(comment_ids):
         session.query(
             ResourceCommentReply.resource_comment_id,
             ResourceCommentReply.content,
+            ResourceCommentReply.created,
         )
         .filter(
             ResourceCommentReply.resource_comment_id.in_(comment_ids),
@@ -121,16 +127,21 @@ def _get_replies_by_comment_id(comment_ids):
     )
 
     replies_by_comment_id = {}
-    for comment_id, content in replies:
-        replies_by_comment_id.setdefault(comment_id, []).append(content)
+    for comment_id, content, created in replies:
+        replies_by_comment_id.setdefault(comment_id, []).append(
+            ReplyRow(content=content, created=created)
+        )
     return replies_by_comment_id
+
+
+def _normalize_rating(rating):
+    return rating if rating is not None else 0
 
 
 def _expand_comment_rows(comments, replies_by_comment_id):
     rows = []
 
     for comment in comments:
-        replies = replies_by_comment_id.get(comment.comment_id, [])
         base_fields = {
             'resource_id': comment.resource_id,
             'organization_title': comment.organization_title,
@@ -138,28 +149,26 @@ def _expand_comment_rows(comments, replies_by_comment_id):
             'resource_name': comment.resource_name,
         }
 
-        if not replies:
-            rows.append(
-                CommentCsvRow(
-                    **base_fields,
-                    comment_content=comment.comment_content,
-                    comment_reply='',
-                    created=comment.created,
-                    rating=comment.rating,
-                    category=comment.category,
-                )
+        rows.append(
+            CommentCsvRow(
+                **base_fields,
+                entry_type=ENTRY_TYPE_COMMENT,
+                content=comment.comment_content,
+                created=comment.created,
+                rating=_normalize_rating(comment.rating),
+                category=comment.category,
             )
-            continue
+        )
 
-        for index, reply_content in enumerate(replies):
+        for reply in replies_by_comment_id.get(comment.comment_id, []):
             rows.append(
                 CommentCsvRow(
                     **base_fields,
-                    comment_content=comment.comment_content if index == 0 else '',
-                    comment_reply=reply_content,
-                    created=comment.created if index == 0 else None,
-                    rating=comment.rating if index == 0 else None,
-                    category=comment.category if index == 0 else None,
+                    entry_type=ENTRY_TYPE_REPLY,
+                    content=reply.content,
+                    created=reply.created,
+                    rating=0,
+                    category=None,
                 )
             )
 

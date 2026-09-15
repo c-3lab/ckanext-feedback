@@ -623,8 +623,8 @@ class AdminController:
                     _("group_title"),
                     _("package_title"),
                     _("resource_name"),
+                    _("comment_entry_type"),
                     _("comment_content"),
-                    _("comment_reply"),
                     _("comment_created"),
                     _("comment_rating"),
                     _("comment_category"),
@@ -632,21 +632,26 @@ class AdminController:
             )
 
             for row in results:
+                if row.entry_type == 'reply':
+                    entry_type_label = _("comment_entry_type_reply")
+                else:
+                    entry_type_label = _("comment_entry_type_comment")
+
                 writer.writerow(
                     [
                         row.resource_id or '',
                         row.organization_title or '',
                         row.package_title or '',
                         row.resource_name or '',
-                        row.comment_content or '',
-                        row.comment_reply or '',
+                        entry_type_label,
+                        row.content or '',
                         (
                             row.created.strftime('%Y-%m-%d %H:%M:%S')
                             if row.created
                             else ''
                         ),
-                        row.rating if row.rating is not None else '',
-                        _(row.category.value) if row.category else '',
+                        row.rating if row.rating is not None else 0,
+                        _(row.category.value) if row.category else '-',
                     ]
                 )
 
