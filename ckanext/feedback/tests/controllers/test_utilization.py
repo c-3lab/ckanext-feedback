@@ -6122,3 +6122,30 @@ class TestUtilizationCreatePreviousLog:
         assert result.form_data['category'] == category
         assert result.form_data['content'] == content
         assert result.error_response is None
+
+    @patch(
+        'ckanext.feedback.controllers.utilization.'
+        'detail_service.get_resource_by_utilization_id'
+    )
+    @patch('ckanext.feedback.controllers.utilization.request.get_json')
+    @patch(
+        'ckanext.feedback.controllers.utilization.detail_service'
+        '.create_utilization_comment_moral_check_log'
+    )
+    def test_create_previous_log_without_json_body(
+        self,
+        mock_create_moral_check_log,
+        mock_get_json,
+        mock_get_resource_by_utilization_id,
+    ):
+        config['ckan.feedback.moral_keeper_ai.enable'] = True
+
+        resource = MagicMock()
+        resource.Resource.package.owner_org = 'mock_organization_id'
+        mock_get_resource_by_utilization_id.return_value = resource
+        mock_get_json.return_value = None
+
+        return_value = UtilizationController.create_previous_log(TEST_UTILIZATION_ID)
+
+        mock_create_moral_check_log.assert_not_called()
+        assert return_value == ('', 204)
