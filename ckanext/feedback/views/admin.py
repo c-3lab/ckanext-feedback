@@ -55,6 +55,24 @@ rules = [
         admin.AdminController.download_all_time,
         {'methods': ['GET']},
     ),
+    (
+        '/admin/aggregation/download_comment_monthly',
+        'download_comment_monthly',
+        admin.AdminController.download_comment_monthly,
+        {'methods': ['GET']},
+    ),
+    (
+        '/admin/aggregation/download_comment_yearly',
+        'download_comment_yearly',
+        admin.AdminController.download_comment_yearly,
+        {'methods': ['GET']},
+    ),
+    (
+        '/admin/aggregation/download_comment_all_time',
+        'download_comment_all_time',
+        admin.AdminController.download_comment_all_time,
+        {'methods': ['GET']},
+    ),
 ]
 for rule, endpoint, view_func, *others in rules:
     options = next(iter(others), {})
