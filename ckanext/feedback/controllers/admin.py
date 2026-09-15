@@ -13,6 +13,7 @@ from flask import Response
 from ckanext.feedback.controllers.pagination import get_pagination_value
 from ckanext.feedback.models.session import session
 from ckanext.feedback.services.admin import aggregation as aggregation_service
+from ckanext.feedback.services.admin import comment_aggregation
 from ckanext.feedback.services.admin import feedbacks as feedback_service
 from ckanext.feedback.services.admin import resource_comment_replies as reply_service
 from ckanext.feedback.services.admin import (
@@ -254,7 +255,17 @@ class AdminController:
                     allow_html=True,
                 )
         # Commit all DB changes in one transaction
-        session.commit()
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for approve_target')
+            log.exception(f'Failed to commit approve_target: {e}')
+            helpers.flash_error(
+                _('Failed to approve items. Please try again.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to('feedback.approval-and-delete')
         helpers.flash_success(
             f'{target} ' + _('item(s) were approved.'),
             allow_html=True,
@@ -290,7 +301,17 @@ class AdminController:
             util_reply_service.delete_utilization_comment_replies(util_replies)
             target += len(util_replies)
         # Commit all DB changes in one transaction
-        session.commit()
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            log.warning('Transaction rolled back for delete_target')
+            log.exception(f'Failed to commit delete_target: {e}')
+            helpers.flash_error(
+                _('Failed to delete items. Please try again.'),
+                allow_html=True,
+            )
+            return toolkit.redirect_to('feedback.approval-and-delete')
         helpers.flash_success(
             f'{target} ' + _('item(s) were completely deleted.'),
             allow_html=True,
@@ -605,16 +626,96 @@ class AdminController:
         )
 
     @staticmethod
+    def export_comment_csv_response(results, filename):
+        output = io.BytesIO()
+        text_wrapper = io.TextIOWrapper(
+            output,
+            encoding='utf-8-sig',
+            newline='',
+        )
+
+        try:
+            writer = csv.writer(text_wrapper)
+
+            writer.writerow(
+                [
+                    _("resource_id"),
+                    _("group_title"),
+                    _("package_title"),
+                    _("resource_name"),
+                    _("comment_entry_type"),
+                    _("comment_content"),
+                    _("comment_created"),
+                    _("comment_rating"),
+                    _("comment_category"),
+                ]
+            )
+
+            for row in results:
+                if row.entry_type == 'reply':
+                    entry_type_label = _("comment_entry_type_reply")
+                else:
+                    entry_type_label = _("comment_entry_type_comment")
+
+                writer.writerow(
+                    [
+                        row.resource_id or '',
+                        row.organization_title or '',
+                        row.package_title or '',
+                        row.resource_name or '',
+                        entry_type_label,
+                        row.content or '',
+                        (
+                            row.created.strftime('%Y-%m-%d %H:%M:%S')
+                            if row.created
+                            else ''
+                        ),
+                        row.rating if row.rating is not None else 0,
+                        _(row.category.value) if row.category else '-',
+                    ]
+                )
+
+            text_wrapper.flush()
+
+        finally:
+            text_wrapper.detach()
+
+        output.seek(0)
+
+        return Response(
+            output,
+            mimetype="text/csv charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename*=UTF-8''{filename}; " f"filename={filename}"
+                )
+            },
+        )
+
+    @staticmethod
     @check_administrator
     def download_monthly():
         select_organization_name = request.args.get('group_added')
         select_month = request.args.get('month')
 
-        results = aggregation_service.get_monthly_data(
-            select_organization_name, select_month
-        )
+        if not select_month:
+            log.error('download_monthly: missing required query parameter "month"')
+            toolkit.abort(400, _('Missing required parameter: month'))
 
-        year, month = select_month.split("-")
+        try:
+            year, month = select_month.split("-")
+        except (ValueError, AttributeError) as e:
+            log.error(f'download_monthly: invalid month format "{select_month}": {e}')
+            toolkit.abort(400, _('Invalid month format. Expected YYYY-MM.'))
+
+        try:
+            results = aggregation_service.get_monthly_data(
+                select_organization_name, select_month
+            )
+        except Exception as e:
+            log.exception(f'download_monthly: failed to get monthly data: {e}')
+            toolkit.abort(500, _('Failed to retrieve monthly data.'))
+
         filename = "{}_{}.csv".format(
             _("feedback_monthly_report"),
             f"{year}{month}",
@@ -629,9 +730,23 @@ class AdminController:
         select_organization_name = request.args.get('group_added')
         select_year = request.args.get('year')
 
-        results = aggregation_service.get_yearly_data(
-            select_organization_name, select_year
-        )
+        if not select_year:
+            log.error('download_yearly: missing required query parameter "year"')
+            toolkit.abort(400, _('Missing required parameter: year'))
+
+        try:
+            int(select_year)
+        except (ValueError, TypeError) as e:
+            log.error(f'download_yearly: invalid year format "{select_year}": {e}')
+            toolkit.abort(400, _('Invalid year format. Expected YYYY.'))
+
+        try:
+            results = aggregation_service.get_yearly_data(
+                select_organization_name, select_year
+            )
+        except Exception as e:
+            log.exception(f'download_yearly: failed to get yearly data: {e}')
+            toolkit.abort(500, _('Failed to retrieve yearly data.'))
 
         filename = "{}_{}.csv".format(
             _("feedback_yearly_report"),
@@ -652,3 +767,67 @@ class AdminController:
         encoded_filename = urllib.parse.quote(filename)
 
         return AdminController.export_csv_response(results, encoded_filename)
+
+    @staticmethod
+    @check_administrator
+    def download_comment_monthly():
+        select_organization_name = request.args.get('group_added')
+        select_month = request.args.get('comment_month')
+
+        results = comment_aggregation.get_monthly_comments(
+            select_organization_name,
+            select_month,
+        )
+
+        year, month = select_month.split("-")
+
+        filename = "{}_{}.csv".format(
+            _("comment_monthly_report"),
+            f"{year}{month}",
+        )
+
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_comment_csv_response(
+            results,
+            encoded_filename,
+        )
+
+    @staticmethod
+    @check_administrator
+    def download_comment_yearly():
+        select_organization_name = request.args.get('group_added')
+        select_year = request.args.get('comment_year')
+
+        results = comment_aggregation.get_yearly_comments(
+            select_organization_name,
+            select_year,
+        )
+
+        filename = "{}_{}.csv".format(
+            _("comment_yearly_report"),
+            f"{select_year}",
+        )
+
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_comment_csv_response(
+            results,
+            encoded_filename,
+        )
+
+    @staticmethod
+    @check_administrator
+    def download_comment_all_time():
+        select_organization_name = request.args.get('group_added')
+
+        results = comment_aggregation.get_all_time_comments(select_organization_name)
+
+        filename = "{}.csv".format(_("comment_all_time_report"))
+
+        encoded_filename = urllib.parse.quote(filename)
+
+        return AdminController.export_comment_csv_response(
+            results,
+            encoded_filename,
+        )

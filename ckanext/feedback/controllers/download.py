@@ -27,7 +27,6 @@ def _update_package_search_index(package_id):
         from ckan.lib.search import rebuild
 
         rebuild(package_id)
-        log.debug(f"Updated search index for package {package_id}")
     except Exception as e:
         log.warning(f"Failed to update search index for package {package_id}: {e}")
 

@@ -1362,6 +1362,120 @@ class TestAdminControllerWithContext:
         assert response.mimetype == "text/csv", "Mimetype should be 'text/csv'"
         assert response.data == b"mock_csv", "Response content mismatch"
 
+    @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    def test_approve_target_commit_failure(
+        self,
+        mock_getlist,
+        mock_session,
+        mock_flash_error,
+        mock_redirect_to,
+    ):
+        mock_getlist.side_effect = [None, None, None, None, None]
+        mock_session.commit.side_effect = Exception('commit failed')
+
+        AdminController.approve_target()
+
+        mock_session.rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
+
+    @patch('ckanext.feedback.controllers.admin.toolkit.redirect_to')
+    @patch('ckanext.feedback.controllers.admin.helpers.flash_error')
+    @patch('ckanext.feedback.controllers.admin.session')
+    @patch('ckanext.feedback.controllers.admin.request.form.getlist')
+    def test_delete_target_commit_failure(
+        self,
+        mock_getlist,
+        mock_session,
+        mock_flash_error,
+        mock_redirect_to,
+    ):
+        mock_getlist.side_effect = [None, None, None, None, None]
+        mock_session.commit.side_effect = Exception('commit failed')
+
+        AdminController.delete_target()
+
+        mock_session.rollback.assert_called_once()
+        mock_flash_error.assert_called_once()
+        mock_redirect_to.assert_called_once_with('feedback.approval-and-delete')
+
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    def test_download_monthly_without_month(self, mock_get, mock_abort):
+        mock_get.side_effect = lambda key: None
+        mock_abort.side_effect = Exception('abort')
+
+        with pytest.raises(Exception, match='abort'):
+            AdminController.download_monthly()
+
+        assert mock_abort.call_args[0][0] == 400
+
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    def test_download_monthly_invalid_month(self, mock_get, mock_abort):
+        mock_get.side_effect = lambda key: {"month": "2024"}.get(key)
+        mock_abort.side_effect = Exception('abort')
+
+        with pytest.raises(Exception, match='abort'):
+            AdminController.download_monthly()
+
+        assert mock_abort.call_args[0][0] == 400
+
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.aggregation_service.get_monthly_data')
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    def test_download_monthly_service_error(
+        self, mock_get, mock_get_monthly_data, mock_abort
+    ):
+        mock_get.side_effect = lambda key: {"month": "2024-03"}.get(key)
+        mock_get_monthly_data.side_effect = Exception('db error')
+        mock_abort.side_effect = Exception('abort')
+
+        with pytest.raises(Exception, match='abort'):
+            AdminController.download_monthly()
+
+        assert mock_abort.call_args[0][0] == 500
+
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    def test_download_yearly_without_year(self, mock_get, mock_abort):
+        mock_get.side_effect = lambda key: None
+        mock_abort.side_effect = Exception('abort')
+
+        with pytest.raises(Exception, match='abort'):
+            AdminController.download_yearly()
+
+        assert mock_abort.call_args[0][0] == 400
+
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    def test_download_yearly_invalid_year(self, mock_get, mock_abort):
+        mock_get.side_effect = lambda key: {"year": "invalid"}.get(key)
+        mock_abort.side_effect = Exception('abort')
+
+        with pytest.raises(Exception, match='abort'):
+            AdminController.download_yearly()
+
+        assert mock_abort.call_args[0][0] == 400
+
+    @patch('ckanext.feedback.controllers.admin.toolkit.abort')
+    @patch('ckanext.feedback.controllers.admin.aggregation_service.get_yearly_data')
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    def test_download_yearly_service_error(
+        self, mock_get, mock_get_yearly_data, mock_abort
+    ):
+        mock_get.side_effect = lambda key: {"year": "2024"}.get(key)
+        mock_get_yearly_data.side_effect = Exception('db error')
+        mock_abort.side_effect = Exception('abort')
+
+        with pytest.raises(Exception, match='abort'):
+            AdminController.download_yearly()
+
+        assert mock_abort.call_args[0][0] == 500
+
 
 @pytest.mark.db_test
 @pytest.mark.usefixtures('user_context')

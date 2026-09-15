@@ -204,3 +204,13 @@ input[name="tab-menu"] {
   border-bottom: 1px dotted #ddd;
   padding: 10px 20px;
 }
+
+/* CKAN legacy CSS hides .js .tab-content unless it has .active on the container.
+   Bootstrap 5 puts .active on .tab-pane instead, so override for aggregation tabs. */
+.js #aggregation-tab-content.tab-content {
+  display: block;
+}
+
+#aggregation-form .module-title {
+  border-bottom: none;
+}
