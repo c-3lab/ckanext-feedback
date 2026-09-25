@@ -11,6 +11,12 @@ from dateutil.relativedelta import relativedelta
 from flask import Response, g
 
 from ckanext.feedback.controllers.admin import AdminController
+from ckanext.feedback.models.resource_comment import ResourceCommentCategory
+from ckanext.feedback.services.admin.comment_aggregation import (
+    ENTRY_TYPE_COMMENT,
+    ENTRY_TYPE_REPLY,
+    CommentCsvRow,
+)
 
 log = logging.getLogger(__name__)
 
@@ -1475,6 +1481,157 @@ class TestAdminControllerWithContext:
             AdminController.download_yearly()
 
         assert mock_abort.call_args[0][0] == 500
+
+    def test_export_comment_csv_response(self):
+        comment_row = CommentCsvRow(
+            resource_id='12345',
+            organization_title='Group A',
+            package_title='Package B',
+            resource_name='Resource C',
+            entry_type=ENTRY_TYPE_COMMENT,
+            content='comment content',
+            created=datetime(2024, 3, 10, 10, 0, 0),
+            rating=4,
+            category=ResourceCommentCategory.QUESTION,
+        )
+        reply_row = CommentCsvRow(
+            resource_id='12345',
+            organization_title='Group A',
+            package_title='Package B',
+            resource_name='Resource C',
+            entry_type=ENTRY_TYPE_REPLY,
+            content='reply content',
+            created=None,
+            rating=None,
+            category=None,
+        )
+
+        response = AdminController.export_comment_csv_response(
+            [comment_row, reply_row],
+            'test.csv',
+        )
+
+        assert response.mimetype == 'text/csv charset=utf-8'
+        assert (
+            "attachment; filename*=UTF-8''test.csv"
+            in response.headers['Content-Disposition']
+        )
+
+        output = io.BytesIO(response.data)
+        output.seek(0)
+        text_wrapper = io.TextIOWrapper(output, encoding='utf-8-sig', newline='')
+        reader = csv.reader(text_wrapper)
+
+        header = next(reader)
+        expected_header = [
+            'resource_id',
+            'group_title',
+            'package_title',
+            'resource_name',
+            'comment_entry_type',
+            'comment_content',
+            'comment_created',
+            'comment_rating',
+            'comment_category',
+        ]
+        assert header == expected_header
+
+        comment_csv_row = next(reader)
+        assert comment_csv_row[0] == '12345'
+        assert comment_csv_row[4] == 'comment_entry_type_comment'
+        assert comment_csv_row[5] == 'comment content'
+        assert comment_csv_row[6] == '2024-03-10 10:00:00'
+        assert comment_csv_row[7] == '4'
+        assert comment_csv_row[8] == 'Question'
+
+        reply_csv_row = next(reader)
+        assert reply_csv_row[4] == 'comment_entry_type_reply'
+        assert reply_csv_row[5] == 'reply content'
+        assert reply_csv_row[6] == ''
+        assert reply_csv_row[7] == '0'
+        assert reply_csv_row[8] == '-'
+
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    @patch(
+        'ckanext.feedback.controllers.admin.comment_aggregation.get_monthly_comments'
+    )
+    @patch(
+        'ckanext.feedback.controllers.admin.AdminController.export_comment_csv_response'
+    )
+    def test_download_comment_monthly(
+        self,
+        mock_export,
+        mock_get_monthly_comments,
+        mock_get,
+    ):
+        mock_get.side_effect = lambda key: {
+            'group_added': 'Test Organization',
+            'comment_month': '2024-03',
+        }.get(key)
+        mock_get_monthly_comments.return_value = ['data1', 'data2']
+        mock_export.return_value = Response('mock_csv', mimetype='text/csv')
+
+        response = AdminController.download_comment_monthly()
+
+        mock_get_monthly_comments.assert_called_once_with(
+            'Test Organization',
+            '2024-03',
+        )
+        mock_export.assert_called_once()
+        assert response.mimetype == 'text/csv'
+        assert response.data == b'mock_csv'
+
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    @patch('ckanext.feedback.controllers.admin.comment_aggregation.get_yearly_comments')
+    @patch(
+        'ckanext.feedback.controllers.admin.AdminController.export_comment_csv_response'
+    )
+    def test_download_comment_yearly(
+        self,
+        mock_export,
+        mock_get_yearly_comments,
+        mock_get,
+    ):
+        mock_get.side_effect = lambda key: {
+            'group_added': 'Test Organization',
+            'comment_year': '2024',
+        }.get(key)
+        mock_get_yearly_comments.return_value = ['data1', 'data2']
+        mock_export.return_value = Response('mock_csv', mimetype='text/csv')
+
+        response = AdminController.download_comment_yearly()
+
+        mock_get_yearly_comments.assert_called_once_with(
+            'Test Organization',
+            '2024',
+        )
+        mock_export.assert_called_once()
+        assert response.mimetype == 'text/csv'
+        assert response.data == b'mock_csv'
+
+    @patch('ckanext.feedback.controllers.admin.request.args.get')
+    @patch(
+        'ckanext.feedback.controllers.admin.comment_aggregation.get_all_time_comments'
+    )
+    @patch(
+        'ckanext.feedback.controllers.admin.AdminController.export_comment_csv_response'
+    )
+    def test_download_comment_all_time(
+        self,
+        mock_export,
+        mock_get_all_time_comments,
+        mock_get,
+    ):
+        mock_get.return_value = 'Test Organization'
+        mock_get_all_time_comments.return_value = ['data1', 'data2']
+        mock_export.return_value = Response('mock_csv', mimetype='text/csv')
+
+        response = AdminController.download_comment_all_time()
+
+        mock_get_all_time_comments.assert_called_once_with('Test Organization')
+        mock_export.assert_called_once()
+        assert response.mimetype == 'text/csv'
+        assert response.data == b'mock_csv'
 
 
 @pytest.mark.db_test

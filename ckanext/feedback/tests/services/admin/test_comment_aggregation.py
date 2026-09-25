@@ -211,12 +211,24 @@ class TestCommentAggregation:
         rows = comment_aggregation.get_comments(org['name'])
 
         assert len(rows) == 3
-        assert rows[0].entry_type == comment_aggregation.ENTRY_TYPE_COMMENT
-        assert rows[0].content == 'resource a comment'
-        assert rows[1].entry_type == comment_aggregation.ENTRY_TYPE_REPLY
-        assert rows[1].content == 'resource a reply'
-        assert rows[2].entry_type == comment_aggregation.ENTRY_TYPE_COMMENT
-        assert rows[2].content == 'resource b comment'
+
+        # Ordered by Resource.id (UUID lexicographic), then comment before replies.
+        if res_a['id'] < res_b['id']:
+            expected = [
+                (comment_aggregation.ENTRY_TYPE_COMMENT, 'resource a comment'),
+                (comment_aggregation.ENTRY_TYPE_REPLY, 'resource a reply'),
+                (comment_aggregation.ENTRY_TYPE_COMMENT, 'resource b comment'),
+            ]
+        else:
+            expected = [
+                (comment_aggregation.ENTRY_TYPE_COMMENT, 'resource b comment'),
+                (comment_aggregation.ENTRY_TYPE_COMMENT, 'resource a comment'),
+                (comment_aggregation.ENTRY_TYPE_REPLY, 'resource a reply'),
+            ]
+
+        for row, (entry_type, content) in zip(rows, expected):
+            assert row.entry_type == entry_type
+            assert row.content == content
 
     def test_get_monthly_comments_includes_comment_when_reply_is_in_period(self):
         org = factories.Organization()
@@ -244,3 +256,118 @@ class TestCommentAggregation:
         assert rows[1].entry_type == comment_aggregation.ENTRY_TYPE_REPLY
         assert rows[1].content == 'march reply'
         assert rows[1].created == datetime(2024, 3, 15, 10, 0, 0)
+
+    def test_get_comments_filters_by_organization(self):
+        org_a = factories.Organization()
+        org_b = factories.Organization()
+        ds_a = factories.Dataset(owner_org=org_a['id'])
+        ds_b = factories.Dataset(owner_org=org_b['id'])
+        res_a = factories.Resource(package_id=ds_a['id'])
+        res_b = factories.Resource(package_id=ds_b['id'])
+
+        _register_resource_comment(
+            res_a['id'],
+            content='org a comment',
+            created=datetime(2024, 3, 10, 10, 0, 0),
+        )
+        _register_resource_comment(
+            res_b['id'],
+            content='org b comment',
+            created=datetime(2024, 3, 10, 11, 0, 0),
+        )
+
+        session.commit()
+
+        rows = comment_aggregation.get_comments(org_a['name'])
+
+        assert len(rows) == 1
+        assert rows[0].content == 'org a comment'
+
+    def test_get_yearly_comments_filters_by_year(self):
+        org = factories.Organization()
+        ds = factories.Dataset(owner_org=org['id'])
+        res = factories.Resource(package_id=ds['id'])
+
+        parent = _register_resource_comment(
+            res['id'],
+            content='in-year comment',
+            created=datetime(2024, 6, 15, 10, 0, 0),
+        )
+        _register_reply(
+            parent.id,
+            content='in-year reply',
+            created=datetime(2024, 7, 15, 10, 0, 0),
+        )
+        _register_resource_comment(
+            res['id'],
+            content='out-of-year comment',
+            created=datetime(2023, 12, 31, 23, 59, 59),
+        )
+
+        session.commit()
+
+        rows = comment_aggregation.get_yearly_comments(org['name'], '2024')
+
+        assert len(rows) == 2
+        assert rows[0].entry_type == comment_aggregation.ENTRY_TYPE_COMMENT
+        assert rows[0].content == 'in-year comment'
+        assert rows[1].entry_type == comment_aggregation.ENTRY_TYPE_REPLY
+        assert rows[1].content == 'in-year reply'
+
+    def test_get_all_time_comments_returns_all_approved_comments(self):
+        org = factories.Organization()
+        ds = factories.Dataset(owner_org=org['id'])
+        res = factories.Resource(package_id=ds['id'])
+
+        parent = _register_resource_comment(
+            res['id'],
+            content='older comment',
+            created=datetime(2023, 1, 1, 10, 0, 0),
+        )
+        _register_reply(
+            parent.id,
+            content='older reply',
+            created=datetime(2023, 1, 2, 10, 0, 0),
+        )
+        _register_resource_comment(
+            res['id'],
+            content='newer comment',
+            created=datetime(2024, 12, 31, 10, 0, 0),
+        )
+
+        session.commit()
+
+        rows = comment_aggregation.get_all_time_comments(org['name'])
+
+        assert len(rows) == 3
+        assert rows[0].content == 'older comment'
+        assert rows[1].content == 'older reply'
+        assert rows[2].content == 'newer comment'
+
+    def test_get_comments_without_organization_filter(self):
+        org = factories.Organization()
+        ds = factories.Dataset(owner_org=org['id'])
+        res = factories.Resource(package_id=ds['id'])
+
+        _register_resource_comment(
+            res['id'],
+            content='all orgs comment',
+            created=datetime(2024, 3, 10, 10, 0, 0),
+        )
+
+        session.commit()
+
+        rows = comment_aggregation.get_comments(None)
+
+        assert len(rows) == 1
+        assert rows[0].content == 'all orgs comment'
+
+    def test_get_comments_returns_empty_when_no_comments(self):
+        org = factories.Organization()
+        factories.Dataset(owner_org=org['id'])
+
+        session.commit()
+
+        rows = comment_aggregation.get_comments(org['name'])
+
+        assert rows == []
