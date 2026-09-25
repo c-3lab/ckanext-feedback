@@ -317,10 +317,9 @@ class TestDownloadController:
                 filename=resource['url'],
             )
 
-    @patch('ckanext.feedback.controllers.download.log')
     @patch('ckan.lib.search.rebuild')
-    def test_update_package_search_index_success(self, mock_rebuild, mock_log):
-        """Test that _update_package_search_index logs success when rebuild succeeds"""
+    def test_update_package_search_index_success(self, mock_rebuild):
+        """Test that _update_package_search_index calls rebuild with package_id"""
         from ckanext.feedback.controllers.download import _update_package_search_index
 
         package_id = 'test-package-id'
@@ -329,6 +328,18 @@ class TestDownloadController:
         _update_package_search_index(package_id)
 
         mock_rebuild.assert_called_once_with(package_id)
-        mock_log.debug.assert_called_once_with(
-            f"Updated search index for package {package_id}"
+
+    @patch('ckanext.feedback.controllers.download.log')
+    @patch('ckan.lib.search.rebuild')
+    def test_update_package_search_index_failure(self, mock_rebuild, mock_log):
+        """Test that _update_package_search_index logs a warning when rebuild fails"""
+        from ckanext.feedback.controllers.download import _update_package_search_index
+
+        package_id = 'test-package-id'
+        mock_rebuild.side_effect = Exception('rebuild failed')
+
+        _update_package_search_index(package_id)
+
+        mock_log.warning.assert_called_once_with(
+            f"Failed to update search index for package {package_id}: rebuild failed"
         )

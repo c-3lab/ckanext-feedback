@@ -1,5 +1,69 @@
 {% ckan_extends %}
 
+{% block resource_additional_information_inner %}
+  <div class="module-content">
+    <h2>{{ _('Additional Information') }}</h2>
+  
+    <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
+      <thead>
+        <tr>
+          <th scope="col">{{ _('Field') }}</th>
+          <th scope="col">{{ _('Value') }}</th>
+        </tr>
+      </thead>
+    
+      <tbody>
+      
+        <tr>
+          <th scope="row">{{ _('Data last updated') }}</th>
+          <td>{{ h.render_datetime(res.last_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
+        </tr>
+      
+        <tr>
+          <th scope="row">{{ _('Metadata last updated') }}</th>
+          <td>{{ h.render_datetime(res.metadata_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
+        </tr>
+      
+        <tr>
+          <th scope="row">{{ _('Created') }}</th>
+          <td>{{ h.render_datetime(res.created) or _('unknown') }}</td>
+        </tr>
+      
+        <tr>
+          <th scope="row">{{ _('Format') }}</th>
+          <td>{{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}</td>
+        </tr>
+      
+        <tr>
+          <th scope="row">{{ _('License') }}</th>
+          <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
+        </tr>
+      
+        {% for key, value in res.items() %}
+          {% if not h.should_hide_resource_field(key) %}
+            {% for formatted_key, formatted_value in h.format_resource_items([(key, value)]) %}
+              {% if formatted_key not in ('created', 'metadata modified', 'last modified', 'format') %}
+                <tr class="toggle-more">
+                  <th scope="row">{{ formatted_key | capitalize }}</th>
+                  <td>{{ formatted_value }}</td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+
+        {% for label, value in h.get_feedback_fields(res).items() %}
+          <tr class="toggle-more feedback-field">
+            <th scope="row">{{ label }}</th>
+            <td>{{ value }}</td>
+          </tr>
+        {% endfor %}
+          
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
+
 {% block resource_actions_inner %}
   {% asset 'feedback/feedback-resource-read-css' %}
   {% block action_manage %}
@@ -190,5 +254,3 @@
   {{ super() }}
   {% asset 'feedback/feedback-resource_read-js' %}
 {% endblock -%}
-
-
